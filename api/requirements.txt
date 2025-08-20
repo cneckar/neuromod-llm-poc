@@ -1,0 +1,22 @@
+# FastAPI and web framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+
+# Neuromodulation dependencies
+torch>=2.0.0
+transformers>=4.35.0
+accelerate>=0.24.0
+auto-gptq>=0.4.0
+
+# Additional utilities
+python-multipart==0.0.6
+python-dotenv==1.0.0
+requests==2.31.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# Development and monitoring
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
