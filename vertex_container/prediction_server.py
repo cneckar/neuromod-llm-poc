@@ -49,8 +49,30 @@ def load_model():
     logger.info(f"Loading model: {model_name}")
     
     try:
-        # Load tokenizer
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        # Check for Hugging Face credentials
+        hf_token = os.environ.get("HUGGINGFACE_TOKEN")
+        hf_username = os.environ.get("HUGGINGFACE_USERNAME")
+        
+        if not hf_token and ("llama" in model_name.lower() or "meta-llama" in model_name.lower()):
+            logger.warning("HUGGINGFACE_TOKEN not set. Llama models require authentication.")
+            logger.warning("Set HUGGINGFACE_TOKEN environment variable in Vertex AI deployment.")
+            logger.warning("Model loading may fail without proper authentication.")
+        
+        # Load tokenizer with authentication if available
+        if hf_token:
+            logger.info("Using Hugging Face authentication")
+            tokenizer = AutoTokenizer.from_pretrained(
+                model_name,
+                token=hf_token,
+                trust_remote_code=True
+            )
+        else:
+            logger.info("Loading tokenizer without authentication")
+            tokenizer = AutoTokenizer.from_pretrained(
+                model_name,
+                trust_remote_code=True
+            )
+        
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
         
@@ -63,13 +85,24 @@ def load_model():
             bnb_4bit_use_double_quant=True
         )
         
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            quantization_config=quantization_config,
-            device_map="auto",
-            torch_dtype=torch.float16,
-            trust_remote_code=True
-        )
+        # Load model with authentication if available
+        if hf_token:
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                quantization_config=quantization_config,
+                device_map="auto",
+                torch_dtype=torch.float16,
+                trust_remote_code=True,
+                token=hf_token
+            )
+        else:
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                quantization_config=quantization_config,
+                device_map="auto",
+                torch_dtype=torch.float16,
+                trust_remote_code=True
+            )
         
         # Initialize neuromodulation tool
         if NEUROMOD_AVAILABLE:

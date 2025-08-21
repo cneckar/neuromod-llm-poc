@@ -14,6 +14,10 @@ CONTAINER_NAME=${CONTAINER_NAME:-"neuromod-vertex-container"}
 # Create a sanitized Docker tag (no forward slashes)
 DOCKER_TAG=${DOCKER_TAG:-"llama-3.1-8b"}
 
+# Hugging Face credentials (read from environment)
+HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN:-""}
+HUGGINGFACE_USERNAME=${HUGGINGFACE_USERNAME:-""}
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -49,6 +53,19 @@ check_dependencies() {
     # Check if user is authenticated
     if ! gcloud auth list --filter=status:ACTIVE --format="value(account)" | grep -q .; then
         log_error "Not authenticated with Google Cloud. Run 'gcloud auth login'"
+    fi
+    
+    # Check Hugging Face credentials for gated models
+    if [[ "$MODEL_NAME" == *"llama"* ]] || [[ "$MODEL_NAME" == *"Llama"* ]]; then
+        if [ -z "$HUGGINGFACE_TOKEN" ]; then
+            log_warn "HUGGINGFACE_TOKEN not set. Llama models require authentication."
+            log_warn "Set HUGGINGFACE_TOKEN environment variable or add to .env file"
+            log_warn "You can still proceed, but model loading may fail"
+        fi
+        
+        if [ -z "$HUGGINGFACE_USERNAME" ]; then
+            log_warn "HUGGINGFACE_USERNAME not set. Some models may require this."
+        fi
     fi
     
     log_info "Dependencies check passed"
@@ -97,6 +114,15 @@ build_container() {
 deploy_to_vertex_ai() {
     log_info "Deploying to Vertex AI..."
     
+    # Prepare environment variables for Vertex AI
+    ENV_VARS=""
+    if [ -n "$HUGGINGFACE_TOKEN" ]; then
+        ENV_VARS="$ENV_VARS        \"HUGGINGFACE_TOKEN\": \"$HUGGINGFACE_TOKEN\","
+    fi
+    if [ -n "$HUGGINGFACE_USERNAME" ]; then
+        ENV_VARS="$ENV_VARS        \"HUGGINGFACE_USERNAME\": \"$HUGGINGFACE_USERNAME\","
+    fi
+    
     # Create deployment script
     cat > deploy_vertex.py << EOF
 import os
@@ -112,16 +138,22 @@ endpoint = aiplatform.Endpoint.create(
     location='$REGION'
 )
 
+# Prepare environment variables
+env_vars = {
+    "MODEL_NAME": "$MODEL_NAME",
+    "PROJECT_ID": "$PROJECT_ID"
+}
+
+# Add Hugging Face credentials if available
+$ENV_VARS
+
 # Upload model
 model = aiplatform.Model.upload(
     display_name='neuromod-$MODEL_NAME',
     serving_container_image_uri="gcr.io/$PROJECT_ID/$CONTAINER_NAME:$DOCKER_TAG",
     serving_container_predict_route="/predict",
     serving_container_health_route="/health",
-    serving_container_environment_variables={
-        "MODEL_NAME": "$MODEL_NAME",
-        "PROJECT_ID": "$PROJECT_ID"
-    }
+    serving_container_environment_variables=env_vars
 )
 
 # Deploy model to endpoint
@@ -215,6 +247,13 @@ show_usage() {
     echo "  REGION                    Google Cloud region"
     echo "  MODEL_NAME                Model name to deploy"
     echo "  ENDPOINT_NAME             Endpoint name"
+    echo "  HUGGINGFACE_TOKEN         Hugging Face access token (for gated models)"
+    echo "  HUGGINGFACE_USERNAME      Hugging Face username (for some models)"
+    echo ""
+    echo "Example with Hugging Face credentials:"
+    echo "  export HUGGINGFACE_TOKEN='hf_...'"
+    echo "  export HUGGINGFACE_USERNAME='your_username'"
+    echo "  ./deploy_vertex_ai.sh deploy"
 }
 
 # Parse command line arguments
