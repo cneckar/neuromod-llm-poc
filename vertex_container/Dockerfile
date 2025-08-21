@@ -5,7 +5,7 @@ FROM rockylinux:9
 WORKDIR /app
 
 # Install system dependencies and Python 3.11
-RUN dnf update -y && dnf install -y \
+RUN dnf update -y && dnf install -y --allowerasing \
     git \
     curl \
     python3.11 \
@@ -15,13 +15,22 @@ RUN dnf update -y && dnf install -y \
     && dnf clean all
 
 # Copy requirements
-COPY requirements.txt .
+COPY build_context/requirements.txt .
 
 # Install Python dependencies
 RUN python3.11 -m pip install --no-cache-dir -r requirements.txt
 
-# Copy all files from build context
-COPY build_context/ /app/
+# Copy neuromodulation system
+COPY build_context/neuromod/ /app/neuromod/
+
+# Copy packs
+COPY build_context/packs/ /app/packs/
+
+# Copy prediction server
+COPY build_context/prediction_server.py .
+
+# Copy test script
+COPY build_context/test_neuromodulation.py .
 
 # Test neuromodulation system
 RUN python3.11 test_neuromodulation.py

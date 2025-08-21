@@ -44,7 +44,7 @@ def prepare_build_context():
         print(f"Warning: packs not found at {packs_src}")
     
     # Copy requirements
-    requirements_src = project_root / "requirements.txt"
+    requirements_src = container_dir / "requirements.txt"
     requirements_dst = build_context / "requirements.txt"
     if requirements_src.exists():
         shutil.copy2(requirements_src, requirements_dst)

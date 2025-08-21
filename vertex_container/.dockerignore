@@ -74,6 +74,3 @@ test_*.py
 
 # API (separate build)
 api/
-
-# Build context (will be created during build)
-build_context/

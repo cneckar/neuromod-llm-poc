@@ -2,15 +2,82 @@
 
 # Vertex AI Deployment Script for Pay-Per-Use Neuromodulation
 # Deploys custom container with Llama 3 and neuromodulation effects
+[INFO] Checking dependencies...
+[INFO] Dependencies check passed
+[INFO] Deploying to Vertex AI...
+Creating Endpoint
+Create Endpoint backing LRO: projects/935902481804/locations/us-central1/endpoints/792109067370758144/operations/2602612759602397184
+Endpoint created. Resource name: projects/935902481804/locations/us-central1/endpoints/792109067370758144
+To use this Endpoint in another session:
+endpoint = aiplatform.Endpoint('projects/935902481804/locations/us-central1/endpoints/792109067370758144')
+Creating Model
+Create Model backing LRO: projects/935902481804/locations/us-central1/models/6905437698270429184/operations/7968651715614343168
+Model created. Resource name: projects/935902481804/locations/us-central1/models/6905437698270429184@1
+To use this Model in another session:
+model = aiplatform.Model('projects/935902481804/locations/us-central1/models/6905437698270429184@1')
+Deploying model to Endpoint : projects/935902481804/locations/us-central1/endpoints/792109067370758144
+Traceback (most recent call last):
+  File "/Users/cris/.pyenv/versions/3.11.5/lib/python3.11/site-packages/google/api_core/grpc_helpers.py", line 76, in error_remapped_callable
+    return callable_(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cris/.pyenv/versions/3.11.5/lib/python3.11/site-packages/grpc/_interceptor.py", line 277, in __call__
+    response, ignored_call = self._with_call(
+                             ^^^^^^^^^^^^^^^^
+  File "/Users/cris/.pyenv/versions/3.11.5/lib/python3.11/site-packages/grpc/_interceptor.py", line 332, in _with_call
+    return call.result(), call
+           ^^^^^^^^^^^^^
+  File "/Users/cris/.pyenv/versions/3.11.5/lib/python3.11/site-packages/grpc/_channel.py", line 440, in result
+    raise self
+  File "/Users/cris/.pyenv/versions/3.11.5/lib/python3.11/site-packages/grpc/_interceptor.py", line 315, in continuation
+    response, call = self._thunk(new_method).with_call(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cris/.pyenv/versions/3.11.5/lib/python3.11/site-packages/grpc/_channel.py", line 1198, in with_call
+    return _end_unary_response_blocking(state, call, True, None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cris/.pyenv/versions/3.11.5/lib/python3.11/site-packages/grpc/_channel.py", line 1006, in _end_unary_response_blocking
+    raise _InactiveRpcError(state)  # pytype: disable=not-instantiable
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+grpc._channel._InactiveRpcError: <_InactiveRpcError of RPC that terminated with:
+	status = StatusCode.INVALID_ARGUMENT
+	details = "`min_replica_count` must be greater than 0."
+	debug_error_string = "UNKNOWN:Error received from peer ipv4:142.251.35.170:443 {grpc_message:"`min_replica_count` must be greater than 0.", grpc_status:3, created_time:"2025-08-20T21:10:06.375655-04:00"}"
+>
 
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/cris/src/neuromod-llm-poc/deploy_vertex.py", line 27, in <module>
+    model.deploy(
+  File "/Users/cris/.pyenv/versions/3.11.5/lib/python3.11/site-packages/google/cloud/aiplatform/models.py", line 5927, in deploy
+    return self._deploy(
+           ^^^^^^^^^^^^^
+  File "/Users/cris/.pyenv/versions/3.11.5/lib/python3.11/site-packages/google/cloud/aiplatform/base.py", line 863, in wrapper
+    return method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cris/.pyenv/versions/3.11.5/lib/python3.11/site-packages/google/cloud/aiplatform/models.py", line 6189, in _deploy
+    endpoint._deploy_call(
+  File "/Users/cris/.pyenv/versions/3.11.5/lib/python3.11/site-packages/google/cloud/aiplatform/models.py", line 2183, in _deploy_call
+    operation_future = api_client.deploy_model(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cris/.pyenv/versions/3.11.5/lib/python3.11/site-packages/google/cloud/aiplatform_v1/services/endpoint_service/client.py", line 1803, in deploy_model
+    response = rpc(
+               ^^^^
+  File "/Users/cris/.pyenv/versions/3.11.5/lib/python3.11/site-packages/google/api_core/gapic_v1/method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cris/.pyenv/versions/3.11.5/lib/python3.11/site-packages/google/api_core/grpc_helpers.py", line 78, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.InvalidArgument: 400 `min_replica_count` must be greater than 0.
 set -e
 
 # Configuration
-PROJECT_ID=${PROJECT_ID:-"your-project-id"}
+PROJECT_ID=${PROJECT_ID:-"neuromod-469620"}
 REGION=${REGION:-"us-central1"}
 MODEL_NAME=${MODEL_NAME:-"meta-llama/Meta-Llama-3.1-8B"}
 ENDPOINT_NAME=${ENDPOINT_NAME:-"neuromod-llama-endpoint"}
 CONTAINER_NAME=${CONTAINER_NAME:-"neuromod-vertex-container"}
+# Create a sanitized Docker tag (no forward slashes)
+DOCKER_TAG=${DOCKER_TAG:-"llama-3.1-8b"}
 
 # Colors for output
 RED='\033[0;31m'
@@ -81,14 +148,14 @@ build_container() {
     cd ..
     
     # Build container
-    docker build -t gcr.io/$PROJECT_ID/$CONTAINER_NAME:$MODEL_NAME \
+    docker build -t gcr.io/$PROJECT_ID/$CONTAINER_NAME:$DOCKER_TAG \
         -f vertex_container/Dockerfile \
         --build-arg MODEL_NAME=$MODEL_NAME \
         --platform linux/amd64 \
         vertex_container/
     
     # Push to Container Registry
-    docker push gcr.io/$PROJECT_ID/$CONTAINER_NAME:$MODEL_NAME
+    docker push gcr.io/$PROJECT_ID/$CONTAINER_NAME:$DOCKER_TAG
     
     log_info "Container built and pushed successfully"
 }
@@ -115,11 +182,9 @@ endpoint = aiplatform.Endpoint.create(
 # Upload model
 model = aiplatform.Model.upload(
     display_name='neuromod-$MODEL_NAME',
-    container_spec={
-        "image_uri": "gcr.io/$PROJECT_ID/$CONTAINER_NAME:$MODEL_NAME",
-        "predict_route": "/predict",
-        "health_route": "/health"
-    },
+    serving_container_image_uri="gcr.io/$PROJECT_ID/$CONTAINER_NAME:$DOCKER_TAG",
+    serving_container_predict_route="/predict",
+    serving_container_health_route="/health",
     serving_container_environment_variables={
         "MODEL_NAME": "$MODEL_NAME",
         "PROJECT_ID": "$PROJECT_ID"
@@ -132,8 +197,8 @@ model.deploy(
     machine_type="n1-standard-4",
     accelerator_type="NVIDIA_TESLA_T4",
     accelerator_count=1,
-    min_replica_count=0,  # Scale to zero
-    max_replica_count=1   # Pay per use
+    min_replica_count=1,  # Must be at least 1
+    max_replica_count=1   # Single replica for cost control
 )
 
 print(f"Endpoint created: {endpoint.resource_name}")
