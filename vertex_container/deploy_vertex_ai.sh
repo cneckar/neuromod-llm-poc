@@ -9,7 +9,7 @@ set -e
 PROJECT_ID=${PROJECT_ID:-"neuromod-469620"}
 REGION=${REGION:-"us-central1"}
 MODEL_NAME=${MODEL_NAME:-"meta-llama/Meta-Llama-3.1-8B"}
-ENDPOINT_NAME=${ENDPOINT_NAME:-"neuromod-llama-endpoint"}
+ENDPOINT_NAME=${ENDPOINT_NAME:-"neuromod-vertex-container"}
 CONTAINER_NAME=${CONTAINER_NAME:-"neuromod-vertex-container"}
 # Create a sanitized Docker tag (no forward slashes)
 DOCKER_TAG=${DOCKER_TAG:-"llama-3.1-8b"}
@@ -37,6 +37,12 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
     exit 1
 }
+
+# Load environment variables from .env file if it exists
+if [ -f ".env" ]; then
+    log_info "Loading environment variables from .env file"
+    export $(grep -v '^#' .env | xargs)
+fi
 
 # Check dependencies
 check_dependencies() {
