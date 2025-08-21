@@ -14,23 +14,19 @@ RUN dnf update -y && dnf install -y --allowerasing \
     gcc \
     && dnf clean all
 
-# Copy requirements
-COPY requirements.txt .
-
-# Install Python dependencies
-RUN python3.11 -m pip install --no-cache-dir -r requirements.txt
-
 # Copy neuromodulation system from project root
 COPY ../neuromod/ /app/neuromod/
 
 # Copy packs from project root
 COPY ../packs/ /app/packs/
 
-# Copy prediction server
+# Copy vertex container files
+COPY requirements.txt .
 COPY prediction_server.py .
-
-# Copy test script
 COPY test_neuromodulation.py .
+
+# Install Python dependencies
+RUN python3.11 -m pip install --no-cache-dir -r requirements.txt
 
 # Test neuromodulation system
 RUN python3.11 test_neuromodulation.py

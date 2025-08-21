@@ -12,8 +12,28 @@ import time
 import requests
 import json
 from abc import ABC, abstractmethod
+import os
 
+# Disable MPS completely for Apple Silicon compatibility
+os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
+os.environ['PYTORCH_MPS_HIGH_WATERMARK_RATIO'] = '0.0'
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Import neuromodulation components
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+try:
+    from neuromod import NeuromodTool
+    from neuromod.effects import EffectRegistry
+    from neuromod.pack_system import Pack, EffectConfig
+    NEUROMOD_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Neuromodulation system not available: {e}")
+    NEUROMOD_AVAILABLE = False
 
 class BaseModelInterface(ABC):
     """Abstract base class for model interfaces"""
@@ -60,22 +80,26 @@ class LocalModelInterface(BaseModelInterface):
             if self.tokenizer.pad_token is None:
                 self.tokenizer.pad_token = self.tokenizer.eos_token
             
-            # Load model based on type
+            # Load model based on type with conservative settings
             if self.model_type == "causal":
                 self.model = AutoModelForCausalLM.from_pretrained(
                     self.model_name,
                     torch_dtype=torch.float32,
-                    low_cpu_mem_usage=True,
-                    device_map="cpu"
+                    device_map="cpu",
+                    trust_remote_code=True,
+                    low_cpu_mem_usage=True
                 )
             elif self.model_type == "seq2seq":
                 self.model = AutoModelForSeq2SeqLM.from_pretrained(
                     self.model_name,
-                    torch_dtype=torch.float16,
-                    low_cpu_mem_usage=True,
-                    device_map="cpu"
+                    torch_dtype=torch.float32,
+                    device_map="cpu",
+                    trust_remote_code=True,
+                    low_cpu_mem_usage=True
                 )
             
+            # Force CPU and eval mode
+            self.model = self.model.cpu()
             self.model.eval()
             logger.info(f"Local model {self.model_name} loaded successfully")
             
@@ -88,13 +112,15 @@ class LocalModelInterface(BaseModelInterface):
         try:
             if NEUROMOD_AVAILABLE:
                 # Initialize neuromodulation tool with the loaded model
-                self.neuromod_tool = NeuromodTool()
+                from neuromod.pack_system import PackRegistry
+                registry = PackRegistry("packs/config.json")
+                self.neuromod_tool = NeuromodTool(registry, self.model, self.tokenizer)
                 logger.info("Neuromodulation tool initialized for local model")
             else:
-                logger.warning("Neuromodulation system not available for local model")
+                logger.info("Neuromodulation system not available - basic text generation only")
                 self.neuromod_tool = None
         except Exception as e:
-            logger.warning(f"Failed to initialize neuromodulation: {e}")
+            logger.info(f"Neuromodulation not available: {e}")
             self.neuromod_tool = None
     
     def generate_text(self, prompt: str, max_tokens: int = 100, 
@@ -102,7 +128,7 @@ class LocalModelInterface(BaseModelInterface):
                      pack_name: str = None, custom_pack: Dict = None,
                      individual_effects: List[Dict] = None,
                      multiple_packs: List[str] = None) -> str:
-        """Generate text using local model with full neuromodulation support"""
+        """Generate text using local model with optional neuromodulation support"""
         if self.model is None or self.tokenizer is None:
             raise RuntimeError("Local model not loaded")
         
@@ -110,40 +136,65 @@ class LocalModelInterface(BaseModelInterface):
             # Apply neuromodulation effects if available
             neuromod_applied = False
             if self.neuromod_tool and any([pack_name, custom_pack, individual_effects, multiple_packs]):
-                neuromod_applied = self._apply_neuromodulation(
-                    pack_name=pack_name,
-                    custom_pack=custom_pack,
-                    individual_effects=individual_effects,
-                    multiple_packs=multiple_packs
-                )
-                
-                if neuromod_applied:
-                    logger.info("Neuromodulation effects applied to local model")
+                try:
+                    neuromod_applied = self._apply_neuromodulation(
+                        pack_name=pack_name,
+                        custom_pack=custom_pack,
+                        individual_effects=individual_effects,
+                        multiple_packs=multiple_packs
+                    )
+                    
+                    if neuromod_applied:
+                        logger.info("Neuromodulation effects applied to local model")
+                except Exception as e:
+                    logger.warning(f"Neuromodulation failed, continuing with basic generation: {e}")
+                    neuromod_applied = False
             
-            # Tokenize input
-            inputs = self.tokenizer.encode(prompt, return_tensors="pt", truncation=True)
+            # Tokenize input with simple, safe approach (same as working neuromod tests)
+            inputs = self.tokenizer(prompt, return_tensors="pt", padding=True)
+            inputs = {k: v.cpu() for k, v in inputs.items()}
             
-            # Generate with neuromodulation effects applied
+            # Get neuromodulation effects if available
+            logits_processors = []
+            gen_kwargs = {}
+            
+            if self.neuromod_tool:
+                # Update token position for phase-based effects
+                self.neuromod_tool.update_token_position(0)  # Reset for each new prompt
+                logits_processors = self.neuromod_tool.get_logits_processors()
+                gen_kwargs = self.neuromod_tool.get_generation_kwargs()
+            
+            # Generate text with safe settings to avoid bus errors
             with torch.no_grad():
                 if self.model_type == "causal":
                     outputs = self.model.generate(
-                        inputs,
-                        max_length=inputs.shape[1] + max_tokens,
+                        **inputs,
+                        max_new_tokens=max_tokens,
                         temperature=temperature,
-                        top_p=top_p,
                         do_sample=True,
                         pad_token_id=self.tokenizer.eos_token_id,
-                        eos_token_id=self.tokenizer.eos_token_id
+                        eos_token_id=self.tokenizer.eos_token_id,
+                        use_cache=False,
+                        repetition_penalty=1.1,
+                        no_repeat_ngram_size=2,
+                        early_stopping=False,
+                        logits_processor=logits_processors,
+                        **gen_kwargs
                     )
                 elif self.model_type == "seq2seq":
                     outputs = self.model.generate(
-                        inputs,
-                        max_length=max_tokens,
+                        **inputs,
+                        max_new_tokens=max_tokens,
                         temperature=temperature,
-                        top_p=top_p,
                         do_sample=True,
                         pad_token_id=self.tokenizer.eos_token_id,
-                        eos_token_id=self.tokenizer.eos_token_id
+                        eos_token_id=self.tokenizer.eos_token_id,
+                        use_cache=False,
+                        repetition_penalty=1.1,
+                        no_repeat_ngram_size=2,
+                        early_stopping=False,
+                        logits_processor=logits_processors,
+                        **gen_kwargs
                     )
             
             # Decode output
@@ -153,18 +204,24 @@ class LocalModelInterface(BaseModelInterface):
             if generated_text.startswith(prompt):
                 generated_text = generated_text[len(prompt):].strip()
             
-            # Clear neuromodulation effects after generation
+            # Clear neuromodulation effects after generation (if any were applied)
             if neuromod_applied and self.neuromod_tool:
-                self.neuromod_tool.clear()
-                logger.info("Neuromodulation effects cleared from local model")
+                try:
+                    self.neuromod_tool.clear()
+                    logger.info("Neuromodulation effects cleared from local model")
+                except Exception as e:
+                    logger.warning(f"Failed to clear neuromodulation effects: {e}")
             
             return generated_text
             
         except Exception as e:
             logger.error(f"Local text generation failed: {e}")
-            # Clear effects on error
+            # Try to clear effects on error
             if self.neuromod_tool:
-                self.neuromod_tool.clear()
+                try:
+                    self.neuromod_tool.clear()
+                except:
+                    pass
             raise
     
     def _apply_neuromodulation(self, pack_name: str = None, custom_pack: Dict = None,
@@ -237,9 +294,9 @@ class LocalModelInterface(BaseModelInterface):
                 
                 logger.info(f"Applied multiple packs: {multiple_packs}")
             
-            # Apply effects to the model
+            # Apply effects to the model through the pack manager
             if any([pack_name, custom_pack, individual_effects, multiple_packs]):
-                self.neuromod_tool.apply_to_model(self.model)
+                # The effects are applied through the pack manager and will be used during generation
                 logger.info("Applied neuromodulation effects to local model")
                 return True
             
