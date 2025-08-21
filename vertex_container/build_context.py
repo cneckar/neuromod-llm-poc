@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
 Build Context Preparation for Vertex AI Container
-Copies necessary files to build the container with neuromodulation support
+Prepares the build context for the container build
 """
 
 import os
-import shutil
 import sys
 from pathlib import Path
 
@@ -19,59 +18,24 @@ def prepare_build_context():
     print(f"Project root: {project_root}")
     print(f"Container dir: {container_dir}")
     
-    # Create build context directory
-    build_context = container_dir / "build_context"
-    if build_context.exists():
-        shutil.rmtree(build_context)
-    build_context.mkdir(exist_ok=True)
+    # Verify required files exist in their proper locations
+    required_files = [
+        project_root / "neuromod",
+        project_root / "packs", 
+        container_dir / "requirements.txt",
+        container_dir / "prediction_server.py",
+        container_dir / "test_neuromodulation.py"
+    ]
     
-    # Copy neuromodulation system
-    neuromod_src = project_root / "neuromod"
-    neuromod_dst = build_context / "neuromod"
-    if neuromod_src.exists():
-        shutil.copytree(neuromod_src, neuromod_dst)
-        print(f"Copied neuromodulation system to {neuromod_dst}")
-    else:
-        print(f"Warning: neuromodulation system not found at {neuromod_src}")
+    for file_path in required_files:
+        if not file_path.exists():
+            print(f"Error: Required file/directory not found: {file_path}")
+            return False
+        else:
+            print(f"✓ Found: {file_path}")
     
-    # Copy packs
-    packs_src = project_root / "packs"
-    packs_dst = build_context / "packs"
-    if packs_src.exists():
-        shutil.copytree(packs_src, packs_dst)
-        print(f"Copied packs to {packs_dst}")
-    else:
-        print(f"Warning: packs not found at {packs_src}")
-    
-    # Copy requirements
-    requirements_src = container_dir / "requirements.txt"
-    requirements_dst = build_context / "requirements.txt"
-    if requirements_src.exists():
-        shutil.copy2(requirements_src, requirements_dst)
-        print(f"Copied requirements to {requirements_dst}")
-    else:
-        print(f"Warning: requirements.txt not found at {requirements_src}")
-    
-    # Copy prediction server
-    server_src = container_dir / "prediction_server.py"
-    server_dst = build_context / "prediction_server.py"
-    if server_src.exists():
-        shutil.copy2(server_src, server_dst)
-        print(f"Copied prediction server to {server_dst}")
-    else:
-        print(f"Error: prediction_server.py not found at {server_src}")
-        return False
-    
-    # Copy test script
-    test_src = container_dir / "test_neuromodulation.py"
-    test_dst = build_context / "test_neuromodulation.py"
-    if test_src.exists():
-        shutil.copy2(test_src, test_dst)
-        print(f"Copied test script to {test_dst}")
-    else:
-        print(f"Warning: test script not found at {test_src}")
-    
-    print(f"Build context prepared at: {build_context}")
+    print("Build context verification completed successfully")
+    print("Docker will use files directly from their proper locations")
     return True
 
 if __name__ == "__main__":

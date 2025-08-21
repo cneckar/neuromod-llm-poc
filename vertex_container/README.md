@@ -21,11 +21,11 @@ bash deploy_vertex_ai.sh deploy-ai
 
 ### Manual Steps
 ```bash
-# 1. Prepare build context
+# 1. Verify build context (checks that required files exist)
 python build_context.py
 
-# 2. Build container
-docker build -t gcr.io/YOUR_PROJECT_ID/neuromod-vertex-container:llama-3.1-8b .
+# 2. Build container (Docker uses files directly from project structure)
+docker build -t gcr.io/YOUR_PROJECT_ID/neuromod-vertex-container:llama-3.1-8b -f Dockerfile ..
 
 # 3. Push to Google Container Registry
 docker push gcr.io/YOUR_PROJECT_ID/neuromod-vertex-container:llama-3.1-8b
@@ -38,10 +38,20 @@ bash deploy_vertex_ai.sh deploy-ai
 
 - **`Dockerfile`** - Container definition with Rocky Linux 9 base
 - **`deploy_vertex_ai.sh`** - Automated deployment script
-- **`build_context.py`** - Prepares files for Docker build
+- **`build_context.py`** - Verifies required files exist in project structure
 - **`prediction_server.py`** - Flask server for Vertex AI
 - **`requirements.txt`** - Python dependencies
 - **`test_neuromodulation.py`** - Tests neuromodulation system during build
+
+## 🏗️ **File Structure**
+
+The container build uses files directly from their proper locations in the project:
+- **`../neuromod/`** - Neuromodulation system from project root
+- **`../packs/`** - Pack configurations from project root  
+- **`requirements.txt`** - Container-specific requirements
+- **`prediction_server.py`** - Container-specific prediction server
+
+This ensures **single source of truth** - no duplicate files to maintain!
 
 ## ⚙️ **Configuration**
 

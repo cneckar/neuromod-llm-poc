@@ -15,22 +15,22 @@ RUN dnf update -y && dnf install -y --allowerasing \
     && dnf clean all
 
 # Copy requirements
-COPY build_context/requirements.txt .
+COPY requirements.txt .
 
 # Install Python dependencies
 RUN python3.11 -m pip install --no-cache-dir -r requirements.txt
 
-# Copy neuromodulation system
-COPY build_context/neuromod/ /app/neuromod/
+# Copy neuromodulation system from project root
+COPY ../neuromod/ /app/neuromod/
 
-# Copy packs
-COPY build_context/packs/ /app/packs/
+# Copy packs from project root
+COPY ../packs/ /app/packs/
 
 # Copy prediction server
-COPY build_context/prediction_server.py .
+COPY prediction_server.py .
 
 # Copy test script
-COPY build_context/test_neuromodulation.py .
+COPY test_neuromodulation.py .
 
 # Test neuromodulation system
 RUN python3.11 test_neuromodulation.py

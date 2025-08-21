@@ -73,19 +73,19 @@ configure_project() {
 build_container() {
     log_info "Building and pushing custom container (Rocky Linux 9 base)..."
     
-    # Prepare build context
-    log_info "Preparing build context..."
+    # Verify build context
+    log_info "Verifying build context..."
     python build_context.py
     if [ $? -ne 0 ]; then
-        log_error "Failed to prepare build context"
+        log_error "Build context verification failed"
     fi
     
-    # Build container
+    # Build container (Docker will use files directly from project structure)
     docker build -t gcr.io/$PROJECT_ID/$CONTAINER_NAME:$DOCKER_TAG \
         -f Dockerfile \
         --build-arg MODEL_NAME=$MODEL_NAME \
         --platform linux/amd64 \
-        .
+        ..
     
     # Push to Container Registry
     docker push gcr.io/$PROJECT_ID/$CONTAINER_NAME:$DOCKER_TAG
