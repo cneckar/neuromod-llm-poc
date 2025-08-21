@@ -32,6 +32,20 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+### 🐳 **Vertex AI Deployment**
+
+For deploying neuromodulated LLMs to Google Cloud Vertex AI:
+
+```bash
+# Navigate to container directory
+cd vertex_container
+
+# Full deployment (build, push, deploy)
+bash deploy_vertex_ai.sh deploy
+
+# See [vertex_container/README.md](vertex_container/README.md) for details
+```
+
 ### Basic Usage
 
 ```bash
