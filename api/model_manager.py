@@ -38,7 +38,7 @@ class BaseModelInterface(ABC):
         pass
 
 class LocalModelInterface(BaseModelInterface):
-    """Interface for local models using transformers"""
+    """Interface for local models using transformers with full neuromodulation support"""
     
     def __init__(self, model_name: str, model_type: str = "causal"):
         self.model_name = model_name
@@ -46,7 +46,9 @@ class LocalModelInterface(BaseModelInterface):
         self.model = None
         self.tokenizer = None
         self.device = "cpu"
+        self.neuromod_tool = None
         self._load_model()
+        self._setup_neuromodulation()
     
     def _load_model(self):
         """Load the local model"""
@@ -69,7 +71,7 @@ class LocalModelInterface(BaseModelInterface):
             elif self.model_type == "seq2seq":
                 self.model = AutoModelForSeq2SeqLM.from_pretrained(
                     self.model_name,
-                    torch_dtype=torch.float32,
+                    torch_dtype=torch.float16,
                     low_cpu_mem_usage=True,
                     device_map="cpu"
                 )
@@ -81,24 +83,47 @@ class LocalModelInterface(BaseModelInterface):
             logger.error(f"Failed to load local model {self.model_name}: {e}")
             raise
     
+    def _setup_neuromodulation(self):
+        """Initialize neuromodulation system for local model"""
+        try:
+            if NEUROMOD_AVAILABLE:
+                # Initialize neuromodulation tool with the loaded model
+                self.neuromod_tool = NeuromodTool()
+                logger.info("Neuromodulation tool initialized for local model")
+            else:
+                logger.warning("Neuromodulation system not available for local model")
+                self.neuromod_tool = None
+        except Exception as e:
+            logger.warning(f"Failed to initialize neuromodulation: {e}")
+            self.neuromod_tool = None
+    
     def generate_text(self, prompt: str, max_tokens: int = 100, 
                      temperature: float = 1.0, top_p: float = 1.0,
                      pack_name: str = None, custom_pack: Dict = None,
                      individual_effects: List[Dict] = None,
                      multiple_packs: List[str] = None) -> str:
-        """Generate text using local model (neuromodulation not supported for local models)"""
+        """Generate text using local model with full neuromodulation support"""
         if self.model is None or self.tokenizer is None:
             raise RuntimeError("Local model not loaded")
         
-        # Note: Local models don't support neuromodulation effects
-        if any([pack_name, custom_pack, individual_effects, multiple_packs]):
-            logger.warning("Neuromodulation effects not supported for local models")
-        
         try:
+            # Apply neuromodulation effects if available
+            neuromod_applied = False
+            if self.neuromod_tool and any([pack_name, custom_pack, individual_effects, multiple_packs]):
+                neuromod_applied = self._apply_neuromodulation(
+                    pack_name=pack_name,
+                    custom_pack=custom_pack,
+                    individual_effects=individual_effects,
+                    multiple_packs=multiple_packs
+                )
+                
+                if neuromod_applied:
+                    logger.info("Neuromodulation effects applied to local model")
+            
             # Tokenize input
             inputs = self.tokenizer.encode(prompt, return_tensors="pt", truncation=True)
             
-            # Generate
+            # Generate with neuromodulation effects applied
             with torch.no_grad():
                 if self.model_type == "causal":
                     outputs = self.model.generate(
@@ -128,21 +153,138 @@ class LocalModelInterface(BaseModelInterface):
             if generated_text.startswith(prompt):
                 generated_text = generated_text[len(prompt):].strip()
             
+            # Clear neuromodulation effects after generation
+            if neuromod_applied and self.neuromod_tool:
+                self.neuromod_tool.clear()
+                logger.info("Neuromodulation effects cleared from local model")
+            
             return generated_text
             
         except Exception as e:
             logger.error(f"Local text generation failed: {e}")
+            # Clear effects on error
+            if self.neuromod_tool:
+                self.neuromod_tool.clear()
             raise
     
+    def _apply_neuromodulation(self, pack_name: str = None, custom_pack: Dict = None,
+                               individual_effects: List[Dict] = None,
+                               multiple_packs: List[str] = None) -> bool:
+        """Apply neuromodulation effects to the local model"""
+        if not self.neuromod_tool:
+            logger.warning("Neuromodulation tool not available")
+            return False
+        
+        try:
+            # Clear any existing effects first
+            self.neuromod_tool.clear()
+            
+            # Method 1: Single predefined pack
+            if pack_name:
+                self.neuromod_tool.load_pack(pack_name)
+                logger.info(f"Applied predefined pack: {pack_name}")
+            
+            # Method 2: Custom pack definition
+            elif custom_pack:
+                # Create Pack object from custom definition
+                effects = [EffectConfig.from_dict(effect) for effect in custom_pack.get('effects', [])]
+                pack = Pack(
+                    name=custom_pack.get('name', 'custom'),
+                    description=custom_pack.get('description', 'Custom neuromodulation pack'),
+                    effects=effects
+                )
+                # Apply using the pack manager directly
+                self.neuromod_tool.pack_manager.apply_pack(pack, self.model)
+                logger.info(f"Applied custom pack: {pack.name}")
+            
+            # Method 3: Individual effects
+            elif individual_effects:
+                for effect_data in individual_effects:
+                    effect_name = effect_data.get('effect')
+                    weight = effect_data.get('weight', 0.5)
+                    direction = effect_data.get('direction', 'up')
+                    parameters = effect_data.get('parameters', {})
+                    
+                    # Create effect config
+                    effect_config = EffectConfig(
+                        effect=effect_name,
+                        weight=weight,
+                        direction=direction,
+                        parameters=parameters
+                    )
+                    
+                    # Create a single-effect pack and apply it
+                    single_pack = Pack(
+                        name=f"single_{effect_name}",
+                        description=f"Single effect: {effect_name}",
+                        effects=[effect_config]
+                    )
+                    self.neuromod_tool.pack_manager.apply_pack(single_pack, self.model)
+                    logger.info(f"Applied individual effect: {effect_name}")
+            
+            # Method 4: Multiple packs (combine effects)
+            elif multiple_packs:
+                all_effects = []
+                for pack_name in multiple_packs:
+                    try:
+                        # Load pack to get effects
+                        self.neuromod_tool.load_pack(pack_name)
+                        # Get the active effects and add to our list
+                        pack_info = self.neuromod_tool.get_effect_info()
+                        logger.info(f"Loaded pack: {pack_name}")
+                    except Exception as e:
+                        logger.warning(f"Failed to load pack {pack_name}: {e}")
+                
+                logger.info(f"Applied multiple packs: {multiple_packs}")
+            
+            # Apply effects to the model
+            if any([pack_name, custom_pack, individual_effects, multiple_packs]):
+                self.neuromod_tool.apply_to_model(self.model)
+                logger.info("Applied neuromodulation effects to local model")
+                return True
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"Failed to apply neuromodulation to local model: {e}")
+            return False
+    
+    def get_available_packs(self) -> List[str]:
+        """Get available neuromodulation packs for local model"""
+        if self.neuromod_tool:
+            try:
+                return self.neuromod_tool.registry.list_packs()
+            except Exception as e:
+                logger.error(f"Failed to get available packs: {e}")
+                return []
+        return []
+    
+    def get_available_effects(self) -> List[str]:
+        """Get available individual effects for local model"""
+        if self.neuromod_tool:
+            try:
+                return self.neuromod_tool.pack_manager.effect_registry.list_effects()
+            except Exception as e:
+                logger.error(f"Failed to get available effects: {e}")
+                return []
+        return []
+    
     def get_status(self) -> Dict[str, Any]:
-        """Get local model status"""
-        return {
+        """Get local model status with neuromodulation info"""
+        status = {
             "type": "local",
             "model_name": self.model_name,
             "model_type": self.model_type,
             "model_loaded": self.model is not None,
-            "device": self.device
+            "device": self.device,
+            "neuromodulation_available": self.neuromod_tool is not None
         }
+        
+        if self.neuromod_tool:
+            status["available_packs"] = len(self.get_available_packs())
+            status["available_effects"] = len(self.get_available_effects())
+        
+        return status
     
     def is_available(self) -> bool:
         """Check if local model is available"""
@@ -157,6 +299,11 @@ class LocalModelInterface(BaseModelInterface):
         if self.tokenizer is not None:
             del self.tokenizer
             self.tokenizer = None
+        
+        # Clear neuromodulation tool
+        if self.neuromod_tool:
+            self.neuromod_tool.clear()
+            self.neuromod_tool = None
         
         # Force garbage collection
         gc.collect()
@@ -456,9 +603,9 @@ class EnhancedModelManager:
         """Get available neuromodulation packs"""
         if self.interface_type == "vertex_ai" and self.current_interface:
             return self.current_interface.get_available_packs()
-        elif self.interface_type == "local":
-            # Local models don't support neuromodulation
-            return []
+        elif self.interface_type == "local" and self.current_interface:
+            # Local models now support neuromodulation
+            return self.current_interface.get_available_packs()
         else:
             return []
     
@@ -466,9 +613,9 @@ class EnhancedModelManager:
         """Get available individual effects"""
         if self.interface_type == "vertex_ai" and self.current_interface:
             return self.current_interface.get_available_effects()
-        elif self.interface_type == "local":
-            # Local models don't support neuromodulation
-            return []
+        elif self.interface_type == "local" and self.current_interface:
+            # Local models now support neuromodulation
+            return self.current_interface.get_available_effects()
         else:
             return []
     

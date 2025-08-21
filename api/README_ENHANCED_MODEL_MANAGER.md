@@ -22,15 +22,17 @@ EnhancedModelManager
 
 1. **Local Models** (`LocalModelInterface`)
    - Uses Hugging Face transformers
-   - CPU-optimized for Cloud Run
-   - No neuromodulation support
-   - Fast local inference
+   - **Full neuromodulation support** - All 82 packs and 100+ effects
+   - CPU-optimized for local systems
+   - Fast local inference with neuromodulation effects
+   - Perfect for beefy local development machines
 
 2. **Vertex AI Models** (`VertexAIInterface`)
    - Connects to deployed endpoints
    - Full neuromodulation support
    - GPU acceleration
    - Pay-per-use pricing
+   - Ideal for production deployments
 
 ## 🚀 **Quick Start**
 
@@ -388,10 +390,10 @@ from model_manager import enhanced_model_manager
 enhanced_model_manager.load_local_model("gpt2")
 enhanced_model_manager.connect_vertex_ai("https://endpoint.vertex.ai", "project-id")
 
-# Neuromodulation support
+# Neuromodulation support - NOW WORKS FOR BOTH!
 text = enhanced_model_manager.generate_text(
     prompt="Hello",
-    pack_name="caffeine"
+    pack_name="caffeine"  # Works with local models too!
 )
 ```
 

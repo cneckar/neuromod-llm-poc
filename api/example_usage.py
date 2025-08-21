@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def example_local_model():
-    """Example using a local model"""
+    """Example using a local model with neuromodulation support"""
     print("\n=== Local Model Example ===")
     
     # Load a local model
@@ -25,20 +25,46 @@ def example_local_model():
     status = enhanced_model_manager.get_status()
     print(f"✅ Model loaded: {status}")
     
-    # Generate text (no neuromodulation for local models)
+    # Check available packs (now supported for local models!)
+    packs = enhanced_model_manager.get_available_packs()
+    print(f"Available packs: {packs[:5] if packs else 'None'}...")
+    
+    # Generate text with neuromodulation (now supported!)
     try:
+        # Using a predefined pack
         text = enhanced_model_manager.generate_text(
-            prompt="The future of artificial intelligence is",
+            prompt="Write a creative story about coffee",
             max_tokens=50,
-            temperature=0.8
+            temperature=0.8,
+            pack_name="caffeine"  # This now works for local models!
         )
-        print(f"Generated text: {text}")
+        print(f"Generated text with caffeine pack: {text}")
+        
+        # Using individual effects
+        text = enhanced_model_manager.generate_text(
+            prompt="Explain quantum physics simply",
+            max_tokens=80,
+            temperature=0.3,
+            individual_effects=[
+                {
+                    "effect": "temperature",
+                    "weight": 0.2,
+                    "direction": "down"
+                },
+                {
+                    "effect": "steering",
+                    "weight": 0.7,
+                    "direction": "up",
+                    "parameters": {
+                        "steering_type": "analytical"
+                    }
+                }
+            ]
+        )
+        print(f"Generated text with custom effects: {text}")
+        
     except Exception as e:
         print(f"❌ Generation failed: {e}")
-    
-    # Check available packs (should be empty for local models)
-    packs = enhanced_model_manager.get_available_packs()
-    print(f"Available packs: {packs}")
 
 def example_vertex_ai():
     """Example using a Vertex AI endpoint"""
