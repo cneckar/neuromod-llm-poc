@@ -120,15 +120,6 @@ build_container() {
 deploy_to_vertex_ai() {
     log_info "Deploying to Vertex AI..."
     
-    # Prepare environment variables for Vertex AI
-    ENV_VARS=""
-    if [ -n "$HUGGINGFACE_TOKEN" ]; then
-        ENV_VARS="$ENV_VARS        \"HUGGINGFACE_TOKEN\": \"$HUGGINGFACE_TOKEN\","
-    fi
-    if [ -n "$HUGGINGFACE_USERNAME" ]; then
-        ENV_VARS="$ENV_VARS        \"HUGGINGFACE_USERNAME\": \"$HUGGINGFACE_USERNAME\","
-    fi
-    
     # Create deployment script
     cat > deploy_vertex.py << EOF
 import os
@@ -148,10 +139,23 @@ endpoint = aiplatform.Endpoint.create(
 env_vars = {
     "MODEL_NAME": "$MODEL_NAME",
     "PROJECT_ID": "$PROJECT_ID"
-}
+EOF
 
-# Add Hugging Face credentials if available
-$ENV_VARS
+    # Add Hugging Face credentials if available
+    if [ -n "$HUGGINGFACE_TOKEN" ]; then
+        cat >> deploy_vertex.py << EOF
+    ,"HUGGINGFACE_TOKEN": "$HUGGINGFACE_TOKEN"
+EOF
+    fi
+    
+    if [ -n "$HUGGINGFACE_USERNAME" ]; then
+        cat >> deploy_vertex.py << EOF
+    ,"HUGGINGFACE_USERNAME": "$HUGGINGFACE_USERNAME"
+EOF
+    fi
+    
+    cat >> deploy_vertex.py << EOF
+}
 
 # Upload model
 model = aiplatform.Model.upload(
