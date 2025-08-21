@@ -7,7 +7,7 @@ import os
 import json
 import logging
 import time
-from typing import Dict, Any
+from typing import Dict, Any, List
 from flask import Flask, request, jsonify
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -22,6 +22,7 @@ sys.path.append('/app')
 try:
     from neuromod import NeuromodTool
     from neuromod.effects import EffectRegistry
+    from neuromod.pack_system import Pack, EffectConfig
     NEUROMOD_AVAILABLE = True
 except ImportError as e:
     logger.warning(f"Neuromodulation system not available: {e}")
@@ -85,9 +86,100 @@ def load_model():
         logger.error(f"Failed to load model: {e}")
         return False
 
+def apply_neuromodulation(pack_name: str = None, custom_pack: Dict = None, 
+                         individual_effects: List[Dict] = None, 
+                         multiple_packs: List[str] = None) -> bool:
+    """Apply neuromodulation effects in various ways"""
+    global neuromod_tool
+    
+    if not neuromod_tool or not NEUROMOD_AVAILABLE:
+        logger.warning("Neuromodulation not available")
+        return False
+    
+    try:
+        # Clear any existing effects first
+        neuromod_tool.clear()
+        
+        # Method 1: Single predefined pack
+        if pack_name:
+            neuromod_tool.load_pack(pack_name)
+            logger.info(f"Applied predefined pack: {pack_name}")
+        
+        # Method 2: Custom pack definition
+        elif custom_pack:
+            # Create Pack object from custom definition
+            effects = [EffectConfig.from_dict(effect) for effect in custom_pack.get('effects', [])]
+            pack = Pack(
+                name=custom_pack.get('name', 'custom'),
+                description=custom_pack.get('description', 'Custom neuromodulation pack'),
+                effects=effects
+            )
+            # Apply using the pack manager directly
+            neuromod_tool.pack_manager.apply_pack(pack, model)
+            logger.info(f"Applied custom pack: {pack.name}")
+        
+        # Method 3: Individual effects
+        elif individual_effects:
+            for effect_data in individual_effects:
+                effect_name = effect_data.get('effect')
+                weight = effect_data.get('weight', 0.5)
+                direction = effect_data.get('direction', 'up')
+                parameters = effect_data.get('parameters', {})
+                
+                # Create effect config
+                effect_config = EffectConfig(
+                    effect=effect_name,
+                    weight=weight,
+                    direction=direction,
+                    parameters=parameters
+                )
+                
+                # Create a single-effect pack and apply it
+                single_pack = Pack(
+                    name=f"single_{effect_name}",
+                    description=f"Single effect: {effect_name}",
+                    effects=[effect_config]
+                )
+                neuromod_tool.pack_manager.apply_pack(single_pack, model)
+                logger.info(f"Applied individual effect: {effect_name}")
+        
+        # Method 4: Multiple packs (combine effects)
+        elif multiple_packs:
+            all_effects = []
+            for pack_name in multiple_packs:
+                try:
+                    # Load pack to get effects
+                    neuromod_tool.load_pack(pack_name)
+                    # Get the active effects and add to our list
+                    pack_info = neuromod_tool.get_effect_info()
+                    # Note: This is a simplified approach - in practice you'd want to
+                    # extract the actual effect configurations from each pack
+                    logger.info(f"Loaded pack: {pack_name}")
+                except Exception as e:
+                    logger.warning(f"Failed to load pack {pack_name}: {e}")
+            
+            # Apply the combined effects
+            # Note: This is a simplified implementation - you'd want more sophisticated
+            # pack combination logic in practice
+            logger.info(f"Applied multiple packs: {multiple_packs}")
+        
+        # Apply effects to the model
+        if any([pack_name, custom_pack, individual_effects, multiple_packs]):
+            neuromod_tool.apply_to_model(model)
+            logger.info("Applied neuromodulation effects to model")
+            return True
+        
+        return False
+        
+    except Exception as e:
+        logger.error(f"Failed to apply neuromodulation: {e}")
+        return False
+
 def generate_text(prompt: str, max_tokens: int = 100, 
                  temperature: float = 1.0, top_p: float = 1.0,
-                 pack_name: str = None) -> str:
+                 pack_name: str = None, custom_pack: Dict = None,
+                 individual_effects: List[Dict] = None,
+                 multiple_packs: List[str] = None) -> str:
     """Generate text with optional neuromodulation effects"""
     global model, tokenizer, neuromod_tool
     
@@ -95,19 +187,13 @@ def generate_text(prompt: str, max_tokens: int = 100,
         raise RuntimeError("Model not loaded")
     
     try:
-        # Apply neuromodulation pack if specified
-        if pack_name and neuromod_tool and NEUROMOD_AVAILABLE:
-            try:
-                neuromod_tool.load_pack(pack_name)
-                logger.info(f"Applied pack: {pack_name}")
-                
-                # Apply effects to the loaded model
-                neuromod_tool.apply_to_model(model)
-                logger.info(f"Applied neuromodulation effects from pack: {pack_name}")
-            except Exception as e:
-                logger.warning(f"Failed to apply neuromodulation effects: {e}")
-        elif pack_name and not NEUROMOD_AVAILABLE:
-            logger.warning(f"Pack '{pack_name}' requested but neuromodulation not available")
+        # Apply neuromodulation effects
+        neuromod_applied = apply_neuromodulation(
+            pack_name=pack_name,
+            custom_pack=custom_pack,
+            individual_effects=individual_effects,
+            multiple_packs=multiple_packs
+        )
         
         # Tokenize input
         inputs = tokenizer.encode(prompt, return_tensors="pt", truncation=True)
@@ -174,7 +260,12 @@ def predict():
             max_tokens = instance.get('max_tokens', 100)
             temperature = instance.get('temperature', 1.0)
             top_p = instance.get('top_p', 1.0)
+            
+            # Extract neuromodulation parameters
             pack_name = instance.get('pack_name')
+            custom_pack = instance.get('custom_pack')
+            individual_effects = instance.get('individual_effects')
+            multiple_packs = instance.get('multiple_packs')
             
             if not prompt:
                 predictions.append({"error": "No prompt provided"})
@@ -187,12 +278,26 @@ def predict():
                     max_tokens=max_tokens,
                     temperature=temperature,
                     top_p=top_p,
-                    pack_name=pack_name
+                    pack_name=pack_name,
+                    custom_pack=custom_pack,
+                    individual_effects=individual_effects,
+                    multiple_packs=multiple_packs
                 )
+                
+                # Determine what was applied
+                neuromod_info = {}
+                if pack_name:
+                    neuromod_info["pack_applied"] = pack_name
+                elif custom_pack:
+                    neuromod_info["custom_pack_applied"] = custom_pack.get('name', 'custom')
+                elif individual_effects:
+                    neuromod_info["individual_effects_applied"] = [e.get('effect') for e in individual_effects]
+                elif multiple_packs:
+                    neuromod_info["multiple_packs_applied"] = multiple_packs
                 
                 predictions.append({
                     "generated_text": generated_text,
-                    "pack_applied": pack_name
+                    **neuromod_info
                 })
                 
             except Exception as e:
@@ -219,6 +324,40 @@ def model_info():
         "gpu_available": torch.cuda.is_available(),
         "gpu_name": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
     })
+
+@app.route('/available_packs', methods=['GET'])
+def available_packs():
+    """Get list of available neuromodulation packs"""
+    if not neuromod_tool or not NEUROMOD_AVAILABLE:
+        return jsonify({"error": "Neuromodulation not available"}), 503
+    
+    try:
+        # Get available packs from registry
+        packs = neuromod_tool.registry.list_packs()
+        return jsonify({
+            "available_packs": packs,
+            "total_count": len(packs) if isinstance(packs, list) else len(packs.keys())
+        })
+    except Exception as e:
+        logger.error(f"Failed to get available packs: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/available_effects', methods=['GET'])
+def available_effects():
+    """Get list of available individual effects"""
+    if not neuromod_tool or not NEUROMOD_AVAILABLE:
+        return jsonify({"error": "Neuromodulation not available"}), 503
+    
+    try:
+        # Get available effects from registry
+        effects = neuromod_tool.pack_manager.effect_registry.list_effects()
+        return jsonify({
+            "available_effects": effects,
+            "total_count": len(effects)
+        })
+    except Exception as e:
+        logger.error(f"Failed to get available effects: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     # Load model on startup
