@@ -124,9 +124,15 @@ export MODEL_NAME="meta-llama/Meta-Llama-3.1-8B"
 ### **Manual Verification**
 
 ```bash
-# Test token with API
-curl -H "Authorization: Bearer $HUGGINGFACE_TOKEN" \
-     "https://huggingface.co/api/whoami"
+# Test token with huggingface_hub
+python3 -c "
+from huggingface_hub import whoami
+try:
+    user = whoami(token='$HUGGINGFACE_TOKEN')
+    print(f'✅ Token valid for user: {user}')
+except Exception as e:
+    print(f'❌ Token invalid: {e}')
+"
 ```
 
 ## 🚀 **Deployment**

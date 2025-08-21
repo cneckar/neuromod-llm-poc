@@ -128,29 +128,46 @@ verify_credentials() {
         return 1
     fi
     
-    # Test token with a simple API call
+    # Test token with huggingface_hub library
     log_info "Testing Hugging Face token..."
     
-    response=$(curl -s -H "Authorization: Bearer $HUGGINGFACE_TOKEN" \
-        "https://huggingface.co/api/whoami" 2>/dev/null || echo "error")
+    # Create a temporary Python script to test credentials
+    cat > test_credentials.py << EOF
+import os
+import sys
+
+try:
+    from huggingface_hub import whoami
+    user = whoami(token="$HUGGINGFACE_TOKEN")
+    print(f"SUCCESS:{user}")
+except ImportError:
+    print("ERROR:huggingface_hub not installed")
+    sys.exit(1)
+except Exception as e:
+    print(f"ERROR:{str(e)}")
+    sys.exit(1)
+EOF
+
+    # Run the test
+    response=$(python3 test_credentials.py 2>/dev/null || echo "ERROR:Python execution failed")
     
-    if [[ "$response" == "error" ]]; then
-        log_error "Failed to verify token - check your internet connection"
+    # Clean up
+    rm -f test_credentials.py
+    
+    if [[ "$response" == "ERROR:"* ]]; then
+        log_error "Failed to verify token: ${response#ERROR:}"
         return 1
     fi
     
-    if [[ "$response" == *"error"* ]]; then
-        log_error "Invalid token - please check your credentials"
-        return 1
+    if [[ "$response" == "SUCCESS:"* ]]; then
+        username="${response#SUCCESS:}"
+        log_info "✅ Hugging Face token verified successfully"
+        log_info "Username: $username"
+        return 0
     fi
     
-    log_info "✅ Hugging Face token verified successfully"
-    
-    if [ -n "$HUGGINGFACE_USERNAME" ]; then
-        log_info "Username: $HUGGINGFACE_USERNAME"
-    fi
-    
-    return 0
+    log_error "Unexpected response format: $response"
+    return 1
 }
 
 # Deploy with credentials
