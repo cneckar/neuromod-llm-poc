@@ -17,7 +17,7 @@ spec:
       containerConcurrency: 10
       timeoutSeconds: 300
       containers:
-      - image: gcr.io/PROJECT_ID/neuromodulation-api:latest
+      - image: gcr.io/neuromod-469620/neuromodulation-api:latest
         ports:
         - containerPort: 8000
         env:

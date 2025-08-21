@@ -6,7 +6,7 @@
 set -e
 
 # Configuration
-PROJECT_ID=${PROJECT_ID:-"your-project-id"}
+PROJECT_ID=${PROJECT_ID:-"neuromod-469620"}
 REGION=${REGION:-"us-central1"}
 SERVICE_NAME=${SERVICE_NAME:-"neuromodulation-api"}
 IMAGE_NAME=${IMAGE_NAME:-"gcr.io/$PROJECT_ID/$SERVICE_NAME"}
