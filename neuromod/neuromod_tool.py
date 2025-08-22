@@ -5,6 +5,7 @@ Updated neuromodulation tool using modular effects system
 from dataclasses import dataclass
 from typing import Dict, List, Any, Optional
 from .pack_system import PackRegistry, PackManager, Pack
+from .probes import ProbeBus, ProbeListener, create_novel_link_probe, create_avoid_guard_probe
 
 @dataclass
 class NeuromodState:
@@ -21,6 +22,10 @@ class NeuromodTool:
         
         # New modular pack manager
         self.pack_manager = PackManager()
+        
+        # Probe system
+        self.probe_bus = ProbeBus()
+        self._setup_default_probes()
         
         # Legacy compatibility
         self.active_hooks = {}
@@ -79,9 +84,23 @@ class NeuromodTool:
             
         return scaled_pack
 
+    def _setup_default_probes(self):
+        """Setup default probes for monitoring"""
+        # Register default probes
+        novel_probe = create_novel_link_probe(threshold=0.6)
+        avoid_probe = create_avoid_guard_probe(threshold=0.5)
+        
+        self.probe_bus.register_probe(novel_probe)
+        self.probe_bus.register_probe(avoid_probe)
+        
+        print(f"✅ Setup default probes: {list(self.probe_bus.probes.keys())}")
+    
     def update_token_position(self, token_position: int):
         """Update token position for phase-based effects"""
         self.state.token_pos = token_position
+        
+        # Update probe positions
+        self.probe_bus.token_position = token_position
         
         # Legacy psychedelic pack support
         if self.psychedelic_pack:
@@ -148,6 +167,9 @@ class NeuromodTool:
         # Clear new modular effects
         self.pack_manager.clear_effects()
         
+        # Reset probes
+        self.reset_probes()
+        
         # Clear legacy hooks
         for h in self.active_hooks.values():
             if isinstance(h, list):
@@ -177,6 +199,27 @@ class NeuromodTool:
         info["active_packs"] = [a["pack"].name for a in self.state.active]
         
         return info
+    
+    def add_probe_listener(self, probe_name: str, callback=None) -> ProbeListener:
+        """Add a listener for a specific probe"""
+        listener = ProbeListener(probe_name, callback)
+        self.probe_bus.add_listener(probe_name, listener)
+        return listener
+    
+    def get_probe_stats(self, probe_name: str = None) -> Dict[str, Any]:
+        """Get statistics for probes"""
+        if probe_name:
+            return self.probe_bus.get_probe_stats(probe_name)
+        else:
+            return self.probe_bus.get_all_stats()
+    
+    def process_probe_signals(self, **kwargs):
+        """Process signals through the probe bus"""
+        self.probe_bus.process_signals(**kwargs)
+    
+    def reset_probes(self):
+        """Reset all probes"""
+        self.probe_bus.reset()
 
     @property
     def pulse_state(self):
