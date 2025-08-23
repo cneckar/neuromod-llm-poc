@@ -1,6 +1,6 @@
 """
 Vertex AI Custom Prediction Server
-Handles model inference with neuromodulation effects
+Handles model inference with FULL NEUROMODULATION PROBE SYSTEM and emotion tracking
 """
 
 import os
@@ -18,11 +18,12 @@ import sys
 import os
 sys.path.append('/app')
 
-# Import neuromodulation system
+# Import neuromodulation system with FULL PROBE SYSTEM
 try:
     from neuromod import NeuromodTool
     from neuromod.effects import EffectRegistry
     from neuromod.pack_system import Pack, EffectConfig
+    from neuromod.testing.simple_emotion_tracker import SimpleEmotionTracker
     NEUROMOD_AVAILABLE = True
 except ImportError as e:
     logger.warning(f"Neuromodulation system not available: {e}")
@@ -38,15 +39,19 @@ app = Flask(__name__)
 model = None
 tokenizer = None
 neuromod_tool = None
+emotion_tracker = None
 model_name = None
+current_pack = None
+probe_hooks = []
+probe_data = []
 
 def load_model():
-    """Load the model and tokenizer"""
-    global model, tokenizer, neuromod_tool, model_name
+    """Load the model and tokenizer with FULL PROBE SYSTEM"""
+    global model, tokenizer, neuromod_tool, emotion_tracker, model_name
     
     model_name = os.environ.get("MODEL_NAME", "meta-llama/Meta-Llama-3.1-8B")
     
-    logger.info(f"Loading model: {model_name}")
+    logger.info(f"Loading model with FULL PROBE SYSTEM: {model_name}")
     
     try:
         # Check for Hugging Face credentials
@@ -104,26 +109,160 @@ def load_model():
                 trust_remote_code=True
             )
         
-        # Initialize neuromodulation tool
+        # Initialize neuromodulation tool with FULL PROBE SYSTEM
         if NEUROMOD_AVAILABLE:
             neuromod_tool = NeuromodTool()
-            logger.info("Neuromodulation tool initialized")
+            emotion_tracker = SimpleEmotionTracker()
+            logger.info("✅ FULL PROBE SYSTEM initialized with emotion tracking")
+            
+            # Register probe hooks on the loaded model
+            register_probe_hooks()
+            
         else:
             neuromod_tool = None
-            logger.warning("Neuromodulation tool not available")
+            emotion_tracker = None
+            logger.warning("❌ Neuromodulation system not available")
         
-        logger.info("Model loaded successfully")
+        logger.info("✅ Model loaded successfully with FULL PROBE SYSTEM")
         return True
         
     except Exception as e:
         logger.error(f"Failed to load model: {e}")
         return False
 
+def register_probe_hooks():
+    """Register PyTorch forward hooks for REAL-TIME PROBE MONITORING"""
+    global model, neuromod_tool, probe_hooks
+    
+    if not model or not neuromod_tool:
+        return
+    
+    try:
+        logger.info("🔌 Registering PyTorch forward hooks for probe monitoring...")
+        
+        # Clear any existing hooks
+        remove_probe_hooks()
+        
+        # Register hooks on attention layers
+        for name, module in model.named_modules():
+            if "attention" in name.lower() or "attn" in name.lower():
+                hook = module.register_forward_hook(
+                    lambda mod, inp, output, name=name: attention_probe_hook(mod, inp, output, name)
+                )
+                probe_hooks.append(hook)
+                logger.info(f"🔌 Hook registered on: {name}")
+            
+            # Register hooks on feed-forward layers
+            elif "mlp" in name.lower() or "ffn" in name.lower():
+                hook = module.register_forward_hook(
+                    lambda mod, inp, output, name=name: mlp_probe_hook(mod, inp, output, name)
+                )
+                probe_hooks.append(hook)
+                logger.info(f"🔌 Hook registered on: {name}")
+            
+            # Register hooks on output layers
+            elif "output" in name.lower() or "lm_head" in name.lower():
+                hook = module.register_forward_hook(
+                    lambda mod, inp, output, name=name: output_probe_hook(mod, inp, output, name)
+                )
+                probe_hooks.append(hook)
+                logger.info(f"🔌 Hook registered on: {name}")
+        
+        logger.info(f"✅ Registered {len(probe_hooks)} probe hooks")
+        
+    except Exception as e:
+        logger.error(f"Failed to register probe hooks: {e}")
+
+def remove_probe_hooks():
+    """Remove all PyTorch forward hooks"""
+    global probe_hooks
+    
+    try:
+        for hook in probe_hooks:
+            hook.remove()
+        probe_hooks = []
+        logger.info("🔌 Removed all probe hooks")
+    except Exception as e:
+        logger.error(f"Failed to remove probe hooks: {e}")
+
+def attention_probe_hook(module, input, output, name):
+    """Probe hook for attention layers"""
+    try:
+        # Extract attention patterns
+        if hasattr(output, 'last_hidden_state'):
+            attention_output = output.last_hidden_state
+        elif isinstance(output, tuple) and len(output) > 0:
+            attention_output = output[0]
+        else:
+            attention_output = output
+        
+        # Calculate attention metrics
+        if attention_output is not None and hasattr(attention_output, 'shape'):
+            # Attention oscillation detection
+            if attention_output.dim() >= 3:
+                # Calculate attention variance across heads
+                attention_variance = torch.var(attention_output, dim=-1).mean().item()
+                
+                probe_data.append({
+                    "timestamp": time.time(),
+                    "layer": name,
+                    "probe_type": "attention_oscillation",
+                    "attention_variance": attention_variance,
+                    "attention_shape": list(attention_output.shape),
+                    "effect_applied": current_pack
+                })
+                
+    except Exception as e:
+        logger.debug(f"Attention probe hook error: {e}")
+
+def mlp_probe_hook(module, input, output, name):
+    """Probe hook for MLP/feed-forward layers"""
+    try:
+        if output is not None and hasattr(output, 'shape'):
+            # Calculate MLP activation patterns
+            if output.dim() >= 2:
+                activation_mean = torch.mean(output).item()
+                activation_std = torch.std(output).item()
+                
+                probe_data.append({
+                    "timestamp": time.time(),
+                    "layer": name,
+                    "probe_type": "mlp_activation",
+                    "activation_mean": activation_mean,
+                    "activation_std": activation_std,
+                    "activation_shape": list(output.shape),
+                    "effect_applied": current_pack
+                })
+                
+    except Exception as e:
+        logger.debug(f"MLP probe hook error: {e}")
+
+def output_probe_hook(module, input, output, name):
+    """Probe hook for output layers"""
+    try:
+        if output is not None and hasattr(output, 'shape'):
+            # Calculate output distribution metrics
+            if output.dim() >= 2:
+                output_entropy = torch.softmax(output, dim=-1)
+                entropy_value = -torch.sum(output_entropy * torch.log(output_entropy + 1e-8)).item()
+                
+                probe_data.append({
+                    "timestamp": time.time(),
+                    "layer": name,
+                    "probe_type": "output_distribution",
+                    "entropy": entropy_value,
+                    "output_shape": list(output.shape),
+                    "effect_applied": current_pack
+                })
+                
+    except Exception as e:
+        logger.debug(f"Output probe hook error: {e}")
+
 def apply_neuromodulation(pack_name: str = None, custom_pack: Dict = None, 
                          individual_effects: List[Dict] = None, 
                          multiple_packs: List[str] = None) -> bool:
-    """Apply neuromodulation effects in various ways"""
-    global neuromod_tool
+    """Apply neuromodulation effects with FULL PROBE SYSTEM monitoring"""
+    global neuromod_tool, current_pack, probe_data
     
     if not neuromod_tool or not NEUROMOD_AVAILABLE:
         logger.warning("Neuromodulation not available")
@@ -132,11 +271,18 @@ def apply_neuromodulation(pack_name: str = None, custom_pack: Dict = None,
     try:
         # Clear any existing effects first
         neuromod_tool.clear()
+        current_pack = None
+        probe_data.clear()  # Clear previous probe data
         
         # Method 1: Single predefined pack
         if pack_name:
-            neuromod_tool.load_pack(pack_name)
-            logger.info(f"Applied predefined pack: {pack_name}")
+            success = neuromod_tool.apply(pack_name, intensity=0.7)
+            if success:
+                current_pack = pack_name
+                logger.info(f"✅ Applied predefined pack: {pack_name}")
+            else:
+                logger.error(f"Failed to apply pack: {pack_name}")
+                return False
         
         # Method 2: Custom pack definition
         elif custom_pack:
@@ -149,7 +295,8 @@ def apply_neuromodulation(pack_name: str = None, custom_pack: Dict = None,
             )
             # Apply using the pack manager directly
             neuromod_tool.pack_manager.apply_pack(pack, model)
-            logger.info(f"Applied custom pack: {pack.name}")
+            current_pack = pack.name
+            logger.info(f"✅ Applied custom pack: {pack.name}")
         
         # Method 3: Individual effects
         elif individual_effects:
@@ -174,7 +321,8 @@ def apply_neuromodulation(pack_name: str = None, custom_pack: Dict = None,
                     effects=[effect_config]
                 )
                 neuromod_tool.pack_manager.apply_pack(single_pack, model)
-                logger.info(f"Applied individual effect: {effect_name}")
+                current_pack = single_pack.name
+                logger.info(f"✅ Applied individual effect: {effect_name}")
         
         # Method 4: Multiple packs (combine effects)
         elif multiple_packs:
@@ -194,12 +342,18 @@ def apply_neuromodulation(pack_name: str = None, custom_pack: Dict = None,
             # Apply the combined effects
             # Note: This is a simplified implementation - you'd want more sophisticated
             # pack combination logic in practice
-            logger.info(f"Applied multiple packs: {multiple_packs}")
+            current_pack = f"combined_{'_'.join(multiple_packs)}"
+            logger.info(f"✅ Applied multiple packs: {multiple_packs}")
         
         # Apply effects to the model
         if any([pack_name, custom_pack, individual_effects, multiple_packs]):
             neuromod_tool.apply_to_model(model)
-            logger.info("Applied neuromodulation effects to model")
+            logger.info(f"✅ Applied neuromodulation effects to model: {current_pack}")
+            
+            # Ensure probe hooks are active
+            if not probe_hooks:
+                register_probe_hooks()
+            
             return True
         
         return False
@@ -208,18 +362,22 @@ def apply_neuromodulation(pack_name: str = None, custom_pack: Dict = None,
         logger.error(f"Failed to apply neuromodulation: {e}")
         return False
 
-def generate_text(prompt: str, max_tokens: int = 100, 
-                 temperature: float = 1.0, top_p: float = 1.0,
-                 pack_name: str = None, custom_pack: Dict = None,
-                 individual_effects: List[Dict] = None,
-                 multiple_packs: List[str] = None) -> str:
-    """Generate text with optional neuromodulation effects"""
-    global model, tokenizer, neuromod_tool
+def generate_text_with_probes(prompt: str, max_tokens: int = 100, 
+                            temperature: float = 1.0, top_p: float = 1.0,
+                            pack_name: str = None, custom_pack: Dict = None,
+                            individual_effects: List[Dict] = None,
+                            multiple_packs: List[str] = None,
+                            track_emotions: bool = True) -> Dict[str, Any]:
+    """Generate text with FULL PROBE SYSTEM monitoring and emotion tracking"""
+    global model, tokenizer, neuromod_tool, emotion_tracker, current_pack, probe_data
     
     if model is None or tokenizer is None:
         raise RuntimeError("Model not loaded")
     
     try:
+        # Clear previous probe data
+        probe_data.clear()
+        
         # Apply neuromodulation effects
         neuromod_applied = apply_neuromodulation(
             pack_name=pack_name,
@@ -235,7 +393,8 @@ def generate_text(prompt: str, max_tokens: int = 100,
         if torch.cuda.is_available():
             inputs = inputs.to("cuda")
         
-        # Generate with neuromodulation effects applied
+        # Generate with neuromodulation effects applied and probes active
+        start_time = time.time()
         with torch.no_grad():
             outputs = model.generate(
                 inputs,
@@ -246,6 +405,7 @@ def generate_text(prompt: str, max_tokens: int = 100,
                 pad_token_id=tokenizer.eos_token_id,
                 eos_token_id=tokenizer.eos_token_id
             )
+        generation_time = time.time() - start_time
         
         # Decode output
         generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
@@ -254,25 +414,87 @@ def generate_text(prompt: str, max_tokens: int = 100,
         if generated_text.startswith(prompt):
             generated_text = generated_text[len(prompt):].strip()
         
-        return generated_text
+        # Track emotions if enabled
+        emotion_data = {}
+        if track_emotions and emotion_tracker:
+            try:
+                session_id = f"vertex_container_{int(time.time())}"
+                latest_state = emotion_tracker.assess_emotion_change(
+                    generated_text, session_id, prompt
+                )
+                
+                if latest_state:
+                    emotion_data = {
+                        "current_state": {
+                            'joy': getattr(latest_state, 'joy', 'stable'),
+                            'sadness': getattr(latest_state, 'sadness', 'stable'),
+                            'anger': getattr(latest_state, 'anger', 'stable'),
+                            'fear': getattr(latest_state, 'fear', 'stable'),
+                            'surprise': getattr(latest_state, 'surprise', 'stable'),
+                            'disgust': getattr(latest_state, 'disgust', 'stable'),
+                            'trust': getattr(latest_state, 'trust', 'stable'),
+                            'anticipation': getattr(latest_state, 'anticipation', 'stable')
+                        },
+                        "valence": latest_state.valence,
+                        "confidence": latest_state.confidence,
+                        "timestamp": latest_state.timestamp
+                    }
+            except Exception as e:
+                logger.warning(f"Emotion tracking failed: {e}")
+        
+        # Prepare probe data summary
+        probe_summary = {
+            "total_probes": len(probe_data),
+            "probe_types": list(set(p['probe_type'] for p in probe_data)),
+            "layers_monitored": list(set(p['layer'] for p in probe_data)),
+            "effect_applied": current_pack,
+            "generation_time": generation_time
+        }
+        
+        # Return comprehensive result with probe data
+        return {
+            "text": generated_text,
+            "probe_data": probe_data.copy(),  # Copy to preserve for analysis
+            "probe_summary": probe_summary,
+            "emotions": emotion_data,
+            "neuromodulation_applied": neuromod_applied,
+            "pack_applied": current_pack,
+            "generation_time": generation_time
+        }
         
     except Exception as e:
         logger.error(f"Text generation failed: {e}")
         raise
 
+def generate_text(prompt: str, max_tokens: int = 100, 
+                 temperature: float = 1.0, top_p: float = 1.0,
+                 pack_name: str = None, custom_pack: Dict = None,
+                 individual_effects: List[Dict] = None,
+                 multiple_packs: List[str] = None) -> str:
+    """Legacy generate_text method - use generate_text_with_probes for full features"""
+    result = generate_text_with_probes(
+        prompt, max_tokens, temperature, top_p,
+        pack_name, custom_pack, individual_effects, multiple_packs
+    )
+    return result["text"]
+
 @app.route('/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
+    """Health check endpoint with probe system status"""
     return jsonify({
         "status": "healthy",
         "model_loaded": model is not None,
         "model_name": model_name,
+        "neuromodulation_available": NEUROMOD_AVAILABLE,
+        "probe_hooks_active": len(probe_hooks) > 0,
+        "emotion_tracking_active": emotion_tracker is not None,
+        "current_pack": current_pack,
         "timestamp": time.time()
     })
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    """Prediction endpoint for Vertex AI"""
+    """Prediction endpoint for Vertex AI with FULL PROBE SYSTEM"""
     try:
         # Parse request
         request_data = request.get_json()
@@ -300,38 +522,67 @@ def predict():
             individual_effects = instance.get('individual_effects')
             multiple_packs = instance.get('multiple_packs')
             
+            # Extract probe and emotion tracking parameters
+            track_emotions = instance.get('emotion_tracking_enabled', True)
+            neuromodulation_enabled = instance.get('neuromodulation_enabled', True)
+            probe_system_enabled = instance.get('probe_system_enabled', True)
+            
             if not prompt:
                 predictions.append({"error": "No prompt provided"})
                 continue
             
             try:
-                # Generate text
-                generated_text = generate_text(
-                    prompt=prompt,
-                    max_tokens=max_tokens,
-                    temperature=temperature,
-                    top_p=top_p,
-                    pack_name=pack_name,
-                    custom_pack=custom_pack,
-                    individual_effects=individual_effects,
-                    multiple_packs=multiple_packs
-                )
+                # Generate text with FULL PROBE SYSTEM
+                if neuromodulation_enabled and probe_system_enabled:
+                    result = generate_text_with_probes(
+                        prompt=prompt,
+                        max_tokens=max_tokens,
+                        temperature=temperature,
+                        top_p=top_p,
+                        pack_name=pack_name,
+                        custom_pack=custom_pack,
+                        individual_effects=individual_effects,
+                        multiple_packs=multiple_packs,
+                        track_emotions=track_emotions
+                    )
+                    
+                    # Extract components
+                    generated_text = result["text"]
+                    probe_data_result = result.get("probe_data", [])
+                    probe_summary = result.get("probe_summary", {})
+                    emotion_data = result.get("emotions", {})
+                    
+                    # Prepare comprehensive response
+                    prediction_response = {
+                        "generated_text": generated_text,
+                        "probe_data": probe_data_result,
+                        "probe_summary": probe_summary,
+                        "emotions": emotion_data,
+                        "neuromodulation_applied": result.get("neuromodulation_applied", False),
+                        "pack_applied": result.get("pack_applied"),
+                        "generation_time": result.get("generation_time", 0)
+                    }
+                    
+                else:
+                    # Fallback to basic generation
+                    generated_text = generate_text(
+                        prompt=prompt,
+                        max_tokens=max_tokens,
+                        temperature=temperature,
+                        top_p=top_p
+                    )
+                    
+                    prediction_response = {
+                        "generated_text": generated_text,
+                        "probe_data": [],
+                        "probe_summary": {"total_probes": 0},
+                        "emotions": {},
+                        "neuromodulation_applied": False,
+                        "pack_applied": None,
+                        "generation_time": 0
+                    }
                 
-                # Determine what was applied
-                neuromod_info = {}
-                if pack_name:
-                    neuromod_info["pack_applied"] = pack_name
-                elif custom_pack:
-                    neuromod_info["custom_pack_applied"] = custom_pack.get('name', 'custom')
-                elif individual_effects:
-                    neuromod_info["individual_effects_applied"] = [e.get('effect') for e in individual_effects]
-                elif multiple_packs:
-                    neuromod_info["multiple_packs_applied"] = multiple_packs
-                
-                predictions.append({
-                    "generated_text": generated_text,
-                    **neuromod_info
-                })
+                predictions.append(prediction_response)
                 
             except Exception as e:
                 logger.error(f"Prediction failed: {e}")
@@ -350,13 +601,50 @@ def predict():
 
 @app.route('/model_info', methods=['GET'])
 def model_info():
-    """Get model information"""
+    """Get model information with probe system details"""
     return jsonify({
         "model_name": model_name,
         "model_loaded": model is not None,
         "gpu_available": torch.cuda.is_available(),
-        "gpu_name": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
+        "gpu_name": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+        "neuromodulation_available": NEUROMOD_AVAILABLE,
+        "probe_hooks_active": len(probe_hooks),
+        "emotion_tracking_active": emotion_tracker is not None,
+        "current_pack": current_pack
     })
+
+@app.route('/probe_status', methods=['GET'])
+def probe_status():
+    """Get probe system status and recent probe data"""
+    return jsonify({
+        "probe_system_active": len(probe_hooks) > 0,
+        "total_probe_hooks": len(probe_hooks),
+        "recent_probe_data": probe_data[-50:] if probe_data else [],  # Last 50 probes
+        "probe_types_active": list(set(p['probe_type'] for p in probe_data)) if probe_data else [],
+        "current_pack": current_pack,
+        "timestamp": time.time()
+    })
+
+@app.route('/emotion_status', methods=['GET'])
+def emotion_status():
+    """Get emotion tracking system status"""
+    if not emotion_tracker:
+        return jsonify({"error": "Emotion tracking not available"}), 503
+    
+    try:
+        # Get emotion summary for current session
+        session_id = f"vertex_container_{int(time.time())}"
+        summary = emotion_tracker.get_emotion_summary(session_id)
+        
+        return jsonify({
+            "emotion_tracking_active": True,
+            "emotion_summary": summary,
+            "current_pack": current_pack,
+            "timestamp": time.time()
+        })
+    except Exception as e:
+        logger.error(f"Failed to get emotion status: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/available_packs', methods=['GET'])
 def available_packs():
@@ -395,7 +683,10 @@ def available_effects():
 if __name__ == '__main__':
     # Load model on startup
     if load_model():
-        logger.info("Starting prediction server...")
+        logger.info("🚀 Starting prediction server with FULL PROBE SYSTEM...")
+        logger.info(f"🔌 Active probe hooks: {len(probe_hooks)}")
+        logger.info(f"🎭 Emotion tracking: {'✅ Active' if emotion_tracker else '❌ Inactive'}")
+        logger.info(f"🧠 Neuromodulation: {'✅ Active' if neuromod_tool else '❌ Inactive'}")
         app.run(host='0.0.0.0', port=8080, debug=False)
     else:
         logger.error("Failed to load model, exiting...")

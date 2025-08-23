@@ -52,6 +52,10 @@ bash deploy_vertex_ai.sh deploy
 # Start interactive chat with neuromodulation
 python demo/chat.py
 
+# Start the API server
+cd api && python server.py
+```
+
 # Run statistical analysis
 python -m neuromod.testing.test_runner --statistical-analysis --test sdq --treatment-packs caffeine
 
@@ -174,14 +178,19 @@ class CustomEffect(BaseEffect):
 }
 ```
 
-### **Running Tests**
+### **Testing the System**
 ```bash
-# Full test suite
-python tests/run_tests.py
+# 🧪 SIMPLE TESTING - Single Entry Point
+./test                    # Run all tests (5-10 minutes)
+./test --quick            # Quick tests (30 seconds)
+./test --coverage         # Show what's tested
 
-# Specific test categories
-python -m neuromod.testing.test_runner --test sdq --packs-to-apply caffeine
+# From tests directory
+python tests/test.py      # Same as ./test
+python tests/test.py --api  # Test web interfaces
 ```
+
+**Complete testing documentation**: [`tests/README.md`](tests/README.md)
 
 ## 📚 Getting Started by Use Case
 

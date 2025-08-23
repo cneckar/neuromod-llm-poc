@@ -30,6 +30,7 @@ try:
     from neuromod import NeuromodTool
     from neuromod.effects import EffectRegistry
     from neuromod.pack_system import Pack, EffectConfig
+    from neuromod.testing.simple_emotion_tracker import SimpleEmotionTracker
     NEUROMOD_AVAILABLE = True
 except ImportError as e:
     logger.warning(f"Neuromodulation system not available: {e}")
@@ -43,8 +44,8 @@ class BaseModelInterface(ABC):
                      temperature: float = 1.0, top_p: float = 1.0,
                      pack_name: str = None, custom_pack: Dict = None,
                      individual_effects: List[Dict] = None,
-                     multiple_packs: List[str] = None) -> str:
-        """Generate text with optional neuromodulation effects"""
+                     multiple_packs: List[str] = None) -> Dict[str, Any]:
+        """Generate text with optional neuromodulation effects and emotion tracking"""
         pass
     
     @abstractmethod
@@ -67,6 +68,11 @@ class LocalModelInterface(BaseModelInterface):
         self.tokenizer = None
         self.device = "cpu"
         self.neuromod_tool = None
+        
+        # Initialize emotion tracking
+        self.emotion_tracker = SimpleEmotionTracker()
+        self.session_id = f"api_session_{int(time.time())}"
+        
         self._load_model()
         self._setup_neuromodulation()
     
@@ -204,6 +210,9 @@ class LocalModelInterface(BaseModelInterface):
             if generated_text.startswith(prompt):
                 generated_text = generated_text[len(prompt):].strip()
             
+            # Track emotions for the generated response
+            emotion_data = self._track_emotions(generated_text, prompt)
+            
             # Clear neuromodulation effects after generation (if any were applied)
             if neuromod_applied and self.neuromod_tool:
                 try:
@@ -212,7 +221,11 @@ class LocalModelInterface(BaseModelInterface):
                 except Exception as e:
                     logger.warning(f"Failed to clear neuromodulation effects: {e}")
             
-            return generated_text
+            # Return both text and emotion data
+            return {
+                "text": generated_text,
+                "emotions": emotion_data
+            }
             
         except Exception as e:
             logger.error(f"Local text generation failed: {e}")
@@ -305,6 +318,43 @@ class LocalModelInterface(BaseModelInterface):
         except Exception as e:
             logger.error(f"Failed to apply neuromodulation to local model: {e}")
             return False
+    
+    def _track_emotions(self, response: str, context: str = "") -> Dict[str, Any]:
+        """Track emotions for the generated response"""
+        try:
+            # Track emotion changes
+            latest_state = self.emotion_tracker.assess_emotion_change(response, self.session_id, context)
+            
+            if latest_state:
+                # Extract emotion data
+                emotion_changes = {}
+                for emotion in ['joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'trust', 'anticipation']:
+                    emotion_value = getattr(latest_state, emotion)
+                    emotion_changes[emotion] = emotion_value
+                
+                return {
+                    "current_state": emotion_changes,
+                    "valence": latest_state.valence,
+                    "confidence": latest_state.confidence,
+                    "timestamp": latest_state.timestamp
+                }
+            else:
+                return {
+                    "current_state": {},
+                    "valence": "neutral",
+                    "confidence": 0.0,
+                    "timestamp": None
+                }
+                
+        except Exception as e:
+            logger.warning(f"Emotion tracking error: {e}")
+            return {
+                "current_state": {},
+                "valence": "neutral",
+                "confidence": 0.0,
+                "timestamp": None,
+                "error": str(e)
+            }
     
     def get_available_packs(self) -> List[str]:
         """Get available neuromodulation packs for local model"""
@@ -447,7 +497,22 @@ class VertexAIInterface(BaseModelInterface):
             if "predictions" in response and len(response["predictions"]) > 0:
                 prediction = response["predictions"][0]
                 if "generated_text" in prediction:
-                    return prediction["generated_text"]
+                    generated_text = prediction["generated_text"]
+                    
+                    # For Vertex AI, we'll return basic emotion structure
+                    # (emotion tracking would need to be implemented on the endpoint side)
+                    emotion_data = {
+                        "current_state": {},
+                        "valence": "neutral",
+                        "confidence": 0.0,
+                        "timestamp": None,
+                        "note": "Emotion tracking not available for Vertex AI endpoints"
+                    }
+                    
+                    return {
+                        "text": generated_text,
+                        "emotions": emotion_data
+                    }
                 elif "error" in prediction:
                     raise RuntimeError(f"Vertex AI error: {prediction['error']}")
                 else:

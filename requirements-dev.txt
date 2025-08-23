@@ -1,0 +1,46 @@
+# 🧠 Neuromodulation LLM - Development Requirements
+# Install with: pip install -r requirements-dev.txt
+
+# Include all production dependencies
+-r requirements.txt
+
+# =============================================================================
+# TESTING DEPENDENCIES
+# =============================================================================
+pytest>=7.0.0                   # Testing framework
+pytest-cov>=4.0.0               # Coverage reporting
+pytest-asyncio>=0.21.0          # Async testing support
+pytest-mock>=3.10.0             # Mocking support
+httpx>=0.25.0                   # HTTP client for testing
+
+# =============================================================================
+# CODE QUALITY TOOLS
+# =============================================================================
+black>=23.0.0                   # Code formatting
+flake8>=6.0.0                   # Linting
+mypy>=1.0.0                     # Type checking
+isort>=5.12.0                   # Import sorting
+pre-commit>=3.0.0               # Git hooks
+
+# =============================================================================
+# DEVELOPMENT TOOLS
+# =============================================================================
+ipython>=8.0.0                  # Enhanced Python shell
+jupyter>=1.0.0                  # Jupyter notebooks
+ipywidgets>=8.0.0               # Interactive widgets
+plotly>=5.0.0                   # Interactive plotting
+
+# =============================================================================
+# DOCUMENTATION TOOLS
+# =============================================================================
+sphinx>=6.0.0                   # Documentation generator
+sphinx-rtd-theme>=1.2.0         # Read the Docs theme
+myst-parser>=1.0.0              # Markdown parser
+sphinx-autodoc-typehints>=1.24.0 # Type hints in docs
+
+# =============================================================================
+# PROFILING AND DEBUGGING
+# =============================================================================
+memory-profiler>=0.60.0         # Memory profiling
+line-profiler>=4.0.0            # Line-by-line profiling
+debugpy>=1.6.0                  # Python debugger

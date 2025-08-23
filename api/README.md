@@ -1,67 +1,112 @@
-# Neuromodulation API
+# 🧠 Neuromodulation API
 
-Cloud-native FastAPI service for exposing neuromodulation capabilities to language models.
-
-## 🏗️ Architecture
-
-This API provides a RESTful interface for:
-- **Chat Interface**: Multi-turn conversations with neuromodulation effects
-- **Pack Management**: Apply/clear predefined neuromodulation packs
-- **Effect Management**: Apply individual effects with custom parameters
-- **Text Generation**: Simple text generation with effects
-- **Model Management**: Load and manage language models
+A FastAPI service that provides neuromodulation capabilities to language models, supporting both local models and Vertex AI endpoints with full probe system integration.
 
 ## 🚀 Quick Start
 
-### Local Development
-
+### Prerequisites
 ```bash
 # Install dependencies
 pip install -r requirements.txt
 
-# Run the API server
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-
-# Run the web interface
-streamlit run web_interface.py
+# For Vertex AI support (optional)
+pip install google-cloud-aiplatform
 ```
 
-### Docker Deployment
-
+### Start the API Server
 ```bash
-# Build the image
-docker build -t neuromodulation-api .
-
-# Run the container
-docker run -p 8000:8000 neuromodulation-api
-
-# Access the API
-curl http://localhost:8000/health
+cd api
+python server.py
 ```
+**Server runs at**: http://localhost:8000
+
+### Start the Web Interface
+```bash
+cd api
+streamlit run web_interface.py --server.port 8501
+```
+**Web UI runs at**: http://localhost:8501
+
+### Test the System
+```bash
+# Chat with DMT pack
+curl -X POST "http://localhost:8000/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "Hello!"}], "pack_name": "dmt"}'
+
+# Check model status
+curl http://localhost:8000/model/status
+
+# Get emotion summary
+curl http://localhost:8000/emotions/summary
+```
+
+## 🏗️ Architecture
+
+### System Components
+
+```
+Neuromodulation API
+├── server.py               # Main FastAPI server
+├── web_interface.py        # Streamlit web UI
+├── model_manager.py        # Local model management
+├── vertex_ai_manager.py    # Vertex AI integration
+└── neuromod/               # Core neuromodulation engine
+```
+
+### Model Management
+
+The API supports two model interfaces:
+
+1. **Local Models** (`LocalModelInterface`)
+   - Uses Hugging Face transformers
+   - Full neuromodulation support (82 packs, 100+ effects)
+   - CPU-optimized for local development
+   - Fast local inference with real effects
+
+2. **Vertex AI Models** (`VertexAIInterface`)
+   - Connects to deployed GPU endpoints
+   - Full neuromodulation and probe system
+   - GPU acceleration for production
+   - Pay-per-use pricing
+
+### Neuromodulation System
+
+- **82 Predefined Packs**: DMT, LSD, caffeine, nicotine, etc.
+- **100+ Individual Effects**: Temperature, attention, steering, memory
+- **Real-Time Application**: Effects applied during generation
+- **Probe Integration**: Behavioral monitoring during inference
+- **Emotion Tracking**: 7 latent axes + 12 discrete emotions
 
 ## 📡 API Endpoints
 
-### Health & Status
-- `GET /health` - Health check
-- `GET /status` - System status
-- `GET /model/status` - Model loading status
+### Core Endpoints
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/` | GET | API information + model status |
+| `/health` | GET | Health check |
+| `/model/status` | GET | Model loading status (Local + Vertex AI) |
+
+### Chat & Generation
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/chat` | POST | Multi-turn chat with neuromodulation |
+| `/generate` | POST | Text generation with effects |
+| `/emotions/summary` | GET | Emotion tracking summary |
 
 ### Pack Management
-- `GET /packs` - List all available packs
-- `GET /packs/{pack_name}` - Get pack details
-- `POST /packs/{pack_name}/apply` - Apply a pack
-- `POST /packs/clear` - Clear current pack
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/packs` | GET | List available neuromodulation packs |
+| `/packs/{pack_name}/apply` | POST | Apply specific pack |
+| `/packs/clear` | POST | Clear current pack |
 
-### Effect Management
-- `GET /effects` - List all available effects
-- `POST /effects/apply` - Apply individual effect
-
-### Generation
-- `POST /chat` - Multi-turn chat with effects
-- `POST /generate` - Simple text generation
-
-### Model Management
-- `POST /model/load` - Load a model (placeholder)
+### Vertex AI Integration
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/vertex-ai/models` | GET | List available Vertex AI models |
+| `/vertex-ai/endpoints` | GET | List active endpoints |
+| `/vertex-ai/deploy` | POST | Deploy new model |
 
 ## 🔧 Configuration
 
@@ -70,21 +115,22 @@ curl http://localhost:8000/health
 # API Configuration
 PORT=8000
 HOST=0.0.0.0
+LOG_LEVEL=INFO
 
 # Model Configuration
-MODEL_NAME=microsoft/DialoGPT-medium
-DEVICE=cuda  # or cpu
+MODEL_NAME=microsoft/DialoGPT-small
+DEVICE=cpu  # or cuda
 
-# Logging
-LOG_LEVEL=INFO
+# Vertex AI Configuration (optional)
+GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
+VERTEX_AI_PROJECT_ID=your-project-id
+VERTEX_AI_LOCATION=us-central1
 ```
 
-### API Configuration
-The API supports configuration through environment variables or a config file:
-
+### Model Configuration
 ```python
-# Example configuration
-API_CONFIG = {
+# Default model settings
+DEFAULT_MODEL_CONFIG = {
     "max_tokens": 100,
     "temperature": 1.0,
     "top_p": 1.0,
@@ -93,337 +139,152 @@ API_CONFIG = {
 }
 ```
 
-## 🐳 Cloud Deployment
+## 🐳 Deployment
 
-### Google Cloud Run
-
+### Local Development
 ```bash
-# Build and push to Google Container Registry
-gcloud builds submit --tag gcr.io/PROJECT_ID/neuromodulation-api
+# Run directly
+python server.py
 
-# Deploy to Cloud Run
-gcloud run deploy neuromodulation-api \
-  --image gcr.io/PROJECT_ID/neuromodulation-api \
-  --platform managed \
-  --region us-central1 \
-  --memory 4Gi \
-  --cpu 2 \
-  --timeout 300 \
-  --concurrency 10
+# With uvicorn
+uvicorn server:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Docker Compose
-
-```yaml
-# docker-compose.yml
-version: '3.8'
-services:
-  api:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - PORT=8000
-      - MODEL_NAME=microsoft/DialoGPT-medium
-    volumes:
-      - ./models:/app/models
-    restart: unless-stopped
-
-  web:
-    build: 
-      context: .
-      dockerfile: Dockerfile.web
-    ports:
-      - "8501:8501"
-    environment:
-      - API_BASE_URL=http://api:8000
-    depends_on:
-      - api
-```
-
-## 🔌 Integration Examples
-
-### Python Client
-
-```python
-import requests
-
-# Initialize client
-API_BASE = "http://localhost:8000"
-
-# Check health
-response = requests.get(f"{API_BASE}/health")
-print(response.json())
-
-# List packs
-packs = requests.get(f"{API_BASE}/packs").json()
-print(f"Available packs: {len(packs)}")
-
-# Apply a pack
-requests.post(f"{API_BASE}/packs/caffeine/apply")
-
-# Generate text
-response = requests.post(
-    f"{API_BASE}/generate",
-    params={
-        "prompt": "Tell me about coffee",
-        "pack_name": "caffeine",
-        "max_tokens": 100
-    }
-)
-print(response.json()["generated_text"])
-```
-
-### JavaScript Client
-
-```javascript
-// Initialize client
-const API_BASE = "http://localhost:8000";
-
-// Check health
-const health = await fetch(`${API_BASE}/health`);
-console.log(await health.json());
-
-// Apply pack
-await fetch(`${API_BASE}/packs/caffeine/apply`, { method: 'POST' });
-
-// Generate text
-const response = await fetch(`${API_BASE}/generate`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    prompt: "Tell me about coffee",
-    pack_name: "caffeine",
-    max_tokens: 100
-  })
-});
-const result = await response.json();
-console.log(result.generated_text);
-```
-
-### cURL Examples
-
+### Docker Deployment
 ```bash
-# Health check
-curl http://localhost:8000/health
+# Build image
+docker build -t neuromodulation-api .
 
-# List packs
-curl http://localhost:8000/packs
+# Run container
+docker run -p 8000:8000 neuromodulation-api
+```
 
-# Apply caffeine pack
-curl -X POST http://localhost:8000/packs/caffeine/apply
+### Vertex AI Deployment
+```bash
+# Deploy to Vertex AI
+cd ../vertex_container
+bash deploy_vertex_ai.sh deploy
 
-# Generate text
-curl -X POST "http://localhost:8000/generate?prompt=Tell%20me%20about%20coffee&pack_name=caffeine&max_tokens=100"
-
-# Chat interface
-curl -X POST http://localhost:8000/chat \
+# Connect API to Vertex AI
+curl -X POST "http://localhost:8000/vertex-ai/connect" \
   -H "Content-Type: application/json" \
-  -d '{
-    "messages": [
-      {"role": "user", "content": "Hello, how are you?"}
-    ],
-    "pack_name": "caffeine",
-    "max_tokens": 100
-  }'
+  -d '{"endpoint_url": "https://your-endpoint.vertex.ai"}'
 ```
 
 ## 🧪 Testing
 
-### Run Tests
-
+### Run API Tests
 ```bash
-# Install test dependencies
-pip install pytest pytest-asyncio httpx
+# From project root
+./test --api
 
-# Run tests
-pytest tests/
-
-# Run with coverage
-pytest --cov=main tests/
+# From tests directory
+python tests/test_api_servers.py
 ```
 
-### Test Examples
+### Test Pack Loading
+```bash
+# Test local model with pack
+curl -X POST "http://localhost:8000/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "Tell me a story"}], "pack_name": "caffeine"}'
 
-```python
-# test_api.py
-import pytest
-from fastapi.testclient import TestClient
-from main import app
-
-client = TestClient(app)
-
-def test_health_check():
-    response = client.get("/health")
-    assert response.status_code == 200
-    assert response.json()["status"] == "healthy"
-
-def test_list_packs():
-    response = client.get("/packs")
-    assert response.status_code == 200
-    assert isinstance(response.json(), list)
-
-def test_apply_pack():
-    response = client.post("/packs/caffeine/apply")
-    assert response.status_code == 200
-    assert "applied successfully" in response.json()["message"]
+# Test Vertex AI with pack
+curl -X POST "http://localhost:8000/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "Explain quantum physics"}], "pack_name": "lsd", "use_vertex_ai": true}'
 ```
 
-## 📊 Monitoring
-
-### Health Checks
-The API includes built-in health checks:
-- `/health` - Basic health status
-- Docker health check with curl
-- Kubernetes liveness/readiness probes
-
-### Logging
-Structured logging with different levels:
-```python
-import logging
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-```
-
-### Metrics
-Key metrics to monitor:
-- Request latency
-- Error rates
-- Model loading status
-- Pack application success rate
-- Generation time
-
-## 🔒 Security
-
-### CORS Configuration
-```python
-# Configure CORS for production
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https://yourdomain.com"],
-    allow_credentials=True,
-    allow_methods=["GET", "POST"],
-    allow_headers=["*"],
-)
-```
-
-### Authentication
-For production, add authentication:
-```python
-# Example with API keys
-from fastapi import Security, HTTPException
-from fastapi.security import HTTPBearer
-
-security = HTTPBearer()
-
-@app.post("/chat")
-async def chat(
-    request: ChatRequest,
-    token: str = Security(security)
-):
-    if not validate_token(token):
-        raise HTTPException(status_code=401, detail="Invalid token")
-    # ... rest of function
-```
-
-## 🚀 Performance Optimization
-
-### Caching
-```python
-from functools import lru_cache
-
-@lru_cache(maxsize=100)
-def get_pack_config(pack_name: str):
-    # Cache pack configurations
-    pass
-```
-
-### Async Processing
-```python
-import asyncio
-
-async def generate_text_async(prompt: str):
-    # Async text generation
-    return await asyncio.to_thread(generate_text, prompt)
-```
-
-### Resource Management
-- Memory limits for model loading
-- CPU allocation for generation
-- Timeout handling for long requests
-- Connection pooling for external APIs
-
-## 🔧 Troubleshooting
+## 🔍 Troubleshooting
 
 ### Common Issues
 
-1. **Model not loaded**
-   - Check `/model/status` endpoint
-   - Verify model path and permissions
-   - Check GPU memory availability
+**Import Errors**
+```bash
+# Ensure dependencies are installed
+pip install -r requirements.txt
 
-2. **Pack application fails**
-   - Verify pack exists in `/packs` endpoint
-   - Check pack configuration format
-   - Review error logs
+# For Vertex AI support
+pip install google-cloud-aiplatform
+```
 
-3. **Generation timeout**
-   - Increase timeout settings
-   - Check model performance
-   - Monitor resource usage
+**Model Loading Issues**
+```bash
+# Check model status
+curl http://localhost:8000/model/status
+
+# Check logs for specific errors
+python server.py --verbose
+```
+
+**Vertex AI Connection Issues**
+```bash
+# Verify credentials
+export GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
+
+# Check endpoint status
+curl http://localhost:8000/vertex-ai/endpoints
+```
 
 ### Debug Mode
 ```bash
-# Run with debug logging
-LOG_LEVEL=DEBUG uvicorn main:app --reload
+# Run with verbose logging
+python server.py --verbose
 
-# Enable FastAPI debug mode
-uvicorn main:app --reload --log-level debug
+# Check API documentation
+curl http://localhost:8000/docs
 ```
 
-## 📈 Scaling
+## 📚 Examples
 
-### Horizontal Scaling
-- Deploy multiple API instances
-- Use load balancer
-- Implement session management
-
-### Vertical Scaling
-- Increase CPU/memory allocation
-- Use GPU instances for model inference
-- Optimize model loading
-
-### Auto-scaling
-- Configure Cloud Run auto-scaling
-- Set appropriate concurrency limits
-- Monitor resource utilization
-
-## 🔄 Updates
-
-### API Versioning
+### Python Client
 ```python
-# Version your API
-app = FastAPI(
-    title="Neuromodulation API",
-    version="1.0.0",
-    openapi_url="/api/v1/openapi.json"
-)
+import requests
+
+# Chat with neuromodulation
+response = requests.post("http://localhost:8000/chat", json={
+    "messages": [{"role": "user", "content": "Write a poem"}],
+    "pack_name": "dmt"
+})
+
+print(response.json()["response"])
 ```
 
-### Migration Guide
-When updating the API:
-1. Maintain backward compatibility
-2. Document breaking changes
-3. Provide migration scripts
-4. Test thoroughly
+### JavaScript Client
+```javascript
+// Chat with neuromodulation
+const response = await fetch("http://localhost:8000/chat", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+        messages: [{role: "user", content: "Explain consciousness"}],
+        pack_name: "lsd"
+    })
+});
 
-## 📚 Additional Resources
+const result = await response.json();
+console.log(result.response);
+```
 
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Streamlit Documentation](https://docs.streamlit.io/)
-- [Docker Documentation](https://docs.docker.com/)
-- [Google Cloud Run Documentation](https://cloud.google.com/run/docs)
+## 🎯 Use Cases
+
+### Research & Development
+- **Effect Testing**: Test different neuromodulation packs
+- **Behavioral Analysis**: Monitor model responses to interventions
+- **A/B Testing**: Compare baseline vs. modified models
+
+### Production Applications
+- **Content Generation**: Generate creative content with specific effects
+- **Conversational AI**: Chat interfaces with personality modification
+- **Educational Tools**: Adaptive learning with cognitive enhancement
+
+### Integration
+- **Web Applications**: Embed in existing web services
+- **Mobile Apps**: Mobile-friendly API endpoints
+- **Enterprise Systems**: Scale with Vertex AI deployment
+
+---
+
+**For detailed development information**: See [`neuromod/README.md`](../neuromod/README.md)  
+**For testing framework**: See [`tests/README.md`](../tests/README.md)  
+**For Vertex AI deployment**: See [`vertex_container/README.md`](../vertex_container/README.md)

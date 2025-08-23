@@ -1,38 +1,80 @@
-# Core Machine Learning Dependencies
-torch>=2.2.0
-transformers>=4.42.0
-accelerate>=0.20.0
+# 🧠 Neuromodulation LLM - Complete Requirements
+# This file covers all dependencies needed for the entire project
 
-# Statistical Analysis and Scientific Computing
-numpy>=1.25.0
-scipy>=1.11.0
-scikit-learn>=1.3.0
-pandas>=1.2.0
+# =============================================================================
+# CORE MACHINE LEARNING DEPENDENCIES
+# =============================================================================
+torch>=2.2.0                    # PyTorch for deep learning
+transformers>=4.42.0            # Hugging Face transformers
+accelerate>=0.20.0              # Hugging Face accelerate
+bitsandbytes>=0.41.0            # Quantization support
 
-# Visualization and Plotting
-matplotlib>=3.7.0
-seaborn>=0.12.0
+# =============================================================================
+# STATISTICAL ANALYSIS AND SCIENTIFIC COMPUTING
+# =============================================================================
+numpy>=1.25.0                   # Numerical computing
+scipy>=1.11.0                   # Scientific computing
+scikit-learn>=1.3.0             # Machine learning utilities
+pandas>=1.2.0                   # Data manipulation
 
-# MCP Integration
-mcp>=1.0.0
+# =============================================================================
+# VISUALIZATION AND PLOTTING
+# =============================================================================
+matplotlib>=3.7.0               # Basic plotting
+seaborn>=0.12.0                 # Statistical plotting
 
-# Additional Utilities
-tqdm>=4.65.0
-requests>=2.31.0
+# =============================================================================
+# WEB FRAMEWORK DEPENDENCIES
+# =============================================================================
+fastapi>=0.104.0                # FastAPI for API server
+uvicorn[standard]>=0.24.0       # ASGI server for FastAPI
+pydantic>=2.5.0                 # Data validation
+streamlit>=1.28.0               # Streamlit for web interface
+flask>=2.3.0                    # Flask for Vertex AI container
+gunicorn>=21.2.0                # WSGI server for Flask
 
-# Development Dependencies (optional)
-# pytest>=7.0.0
-# pytest-cov>=4.0.0
-# black>=23.0.0
-# flake8>=6.0.0
-# mypy>=1.0.0
+# =============================================================================
+# GOOGLE CLOUD DEPENDENCIES (Optional - for Vertex AI)
+# =============================================================================
+google-cloud-aiplatform>=1.35.0 # Vertex AI integration
+google-cloud-storage>=2.10.0    # Google Cloud Storage
+google-auth>=2.17.0             # Google authentication
 
-# Documentation Dependencies (optional)
-# sphinx>=6.0.0
-# sphinx-rtd-theme>=1.2.0
-# myst-parser>=1.0.0
+# =============================================================================
+# MCP INTEGRATION
+# =============================================================================
+mcp>=1.0.0                      # Model Context Protocol
 
-# Full Feature Dependencies (optional)
-# jupyter>=1.0.0
-# ipywidgets>=8.0.0
-# plotly>=5.0.0
+# =============================================================================
+# ADDITIONAL UTILITIES
+# =============================================================================
+tqdm>=4.65.0                    # Progress bars
+requests>=2.31.0                # HTTP requests
+psutil>=5.9.0                   # System monitoring
+python-multipart>=0.0.6         # File upload support
+python-dotenv>=1.0.0            # Environment variable loading
+
+# =============================================================================
+# DEVELOPMENT DEPENDENCIES (Optional)
+# =============================================================================
+# pytest>=7.0.0                 # Testing framework
+# pytest-cov>=4.0.0             # Coverage reporting
+# pytest-asyncio>=0.21.0        # Async testing support
+# httpx>=0.25.0                 # HTTP client for testing
+# black>=23.0.0                 # Code formatting
+# flake8>=6.0.0                 # Linting
+# mypy>=1.0.0                   # Type checking
+
+# =============================================================================
+# DOCUMENTATION DEPENDENCIES (Optional)
+# =============================================================================
+# sphinx>=6.0.0                 # Documentation generator
+# sphinx-rtd-theme>=1.2.0       # Read the Docs theme
+# myst-parser>=1.0.0            # Markdown parser
+
+# =============================================================================
+# FULL FEATURE DEPENDENCIES (Optional)
+# =============================================================================
+# jupyter>=1.0.0                # Jupyter notebooks
+# ipywidgets>=8.0.0             # Interactive widgets
+# plotly>=5.0.0                 # Interactive plotting
