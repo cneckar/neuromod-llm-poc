@@ -9,6 +9,7 @@ RUN pip install --no-cache-dir flask requests
 
 # Copy only essential files for testing
 COPY neuromod/ /app/neuromod/
+COPY packs/ /app/packs/
 COPY vertex_container/prediction_server.py .
 COPY vertex_container/requirements.txt .
 

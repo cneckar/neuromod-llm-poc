@@ -34,8 +34,17 @@ if [ ! -f "Dockerfile" ]; then
     exit 1
 fi
 
-# Step 1: Quick import test (fastest)
-echo "🧪 Step 1: Testing imports locally..."
+# Step 1: Check build context
+echo "🧪 Step 1: Checking Docker build context..."
+if python check_build_context.py; then
+    print_status "Build context is ready"
+else
+    print_error "Build context has issues. Fix before proceeding."
+    exit 1
+fi
+
+# Step 2: Quick import test (fastest)
+echo "🧪 Step 2: Testing imports locally..."
 if python test_prediction_server_local.py; then
     print_status "Local import test passed"
 else
@@ -45,8 +54,8 @@ fi
 
 echo ""
 
-# Step 2: Build minimal test container
-echo "🧪 Step 2: Building minimal test container..."
+# Step 3: Build minimal test container
+echo "🧪 Step 3: Building minimal test container..."
 if docker build -f Dockerfile.test -t neuromod-test:latest ..; then
     print_status "Minimal container built successfully"
 else
@@ -56,8 +65,8 @@ fi
 
 echo ""
 
-# Step 3: Test container startup
-echo "🧪 Step 3: Testing container startup..."
+# Step 4: Test container startup
+echo "🧪 Step 4: Testing container startup..."
 CONTAINER_ID=$(docker run -d -p 8080:8080 \
     -e MODEL_NAME="microsoft/DialoGPT-small" \
     -e NEUROMODULATION_ENABLED=true \
@@ -75,8 +84,8 @@ fi
 echo "⏳ Waiting for container to be ready..."
 sleep 10
 
-# Step 4: Test health endpoint
-echo "🧪 Step 4: Testing health endpoint..."
+# Step 5: Test health endpoint
+echo "🧪 Step 5: Testing health endpoint..."
 if curl -f http://localhost:8080/health > /dev/null 2>&1; then
     print_status "Health endpoint working"
 else
@@ -86,16 +95,16 @@ else
     exit 1
 fi
 
-# Step 5: Test probe status endpoint
-echo "🧪 Step 5: Testing probe status endpoint..."
+# Step 6: Test probe status endpoint
+echo "🧪 Step 6: Testing probe status endpoint..."
 if curl -f http://localhost:8080/probe_status > /dev/null 2>&1; then
     print_status "Probe status endpoint working"
 else
     print_warning "Probe status endpoint failed (may be expected if no model loaded)"
 fi
 
-# Step 6: Test model info endpoint
-echo "🧪 Step 6: Testing model info endpoint..."
+# Step 7: Test model info endpoint
+echo "🧪 Step 7: Testing model info endpoint..."
 if curl -f http://localhost:8080/model_info > /dev/null 2>&1; then
     print_status "Model info endpoint working"
 else

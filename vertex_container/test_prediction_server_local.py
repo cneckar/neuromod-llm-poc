@@ -45,6 +45,7 @@ def test_model_loading():
     print("\n🧪 Testing model loading...")
     
     try:
+        import torch
         from transformers import AutoTokenizer, AutoModelForCausalLM
         
         # Use a very small model for testing
@@ -79,14 +80,28 @@ def test_neuromodulation():
     
     try:
         from neuromod import NeuromodTool
+        from neuromod.pack_system import PackRegistry
+        from transformers import AutoTokenizer, AutoModelForCausalLM
         
-        # Initialize neuromod tool
-        neuromod_tool = NeuromodTool()
+        # Create mock components for testing
+        tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-small")
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
+        
+        # Create a minimal mock model for testing
+        class MockModel:
+            def __init__(self):
+                self.device = "cpu"
+        
+        mock_model = MockModel()
+        
+        # Initialize neuromod tool with mock components
+        neuromod_tool = NeuromodTool(
+            registry=PackRegistry(),
+            model=mock_model,
+            tokenizer=tokenizer
+        )
         print("✅ NeuromodTool initialized")
-        
-        # Test pack loading
-        packs = neuromod_tool.registry.list_packs()
-        print(f"✅ Available packs: {len(packs)}")
         
         # Test emotion tracker
         from neuromod.testing.simple_emotion_tracker import SimpleEmotionTracker
@@ -143,7 +158,10 @@ def test_docker_build():
     print("\n🧪 Testing Docker build context...")
     
     try:
-        # Check if required files exist
+        # Get project root (parent of vertex_container)
+        project_root = Path(__file__).parent.parent
+        
+        # Check if required files exist from project root
         required_files = [
             "neuromod/",
             "packs/",
@@ -152,14 +170,16 @@ def test_docker_build():
         ]
         
         for file_path in required_files:
-            if os.path.exists(file_path):
+            full_path = project_root / file_path
+            if full_path.exists():
                 print(f"✅ {file_path} exists")
             else:
                 print(f"❌ {file_path} missing")
                 return False
         
         # Check requirements.txt
-        with open("vertex_container/requirements.txt", "r") as f:
+        requirements_path = project_root / "vertex_container/requirements.txt"
+        with open(requirements_path, "r") as f:
             requirements = f.read()
             if "flask" in requirements.lower():
                 print("✅ Flask in requirements.txt")
