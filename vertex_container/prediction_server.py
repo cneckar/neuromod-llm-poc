@@ -18,6 +18,10 @@ import sys
 import os
 sys.path.append('/app')
 
+# Configure logging first
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Import neuromodulation system with FULL PROBE SYSTEM
 try:
     from neuromod import NeuromodTool
@@ -28,10 +32,6 @@ try:
 except ImportError as e:
     logger.warning(f"Neuromodulation system not available: {e}")
     NEUROMOD_AVAILABLE = False
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -111,7 +111,9 @@ def load_model():
         
         # Initialize neuromodulation tool with FULL PROBE SYSTEM
         if NEUROMOD_AVAILABLE:
-            neuromod_tool = NeuromodTool()
+            from neuromod.pack_system import PackRegistry
+            registry = PackRegistry()
+            neuromod_tool = NeuromodTool(registry=registry, model=model, tokenizer=tokenizer)
             emotion_tracker = SimpleEmotionTracker()
             logger.info("✅ FULL PROBE SYSTEM initialized with emotion tracking")
             
@@ -480,16 +482,13 @@ def generate_text(prompt: str, max_tokens: int = 100,
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    """Health check endpoint with probe system status"""
+    """Simple health check endpoint"""
     return jsonify({
         "status": "healthy",
+        "service": "vertex-ai-prediction-server",
+        "timestamp": time.time(),
         "model_loaded": model is not None,
-        "model_name": model_name,
-        "neuromodulation_available": NEUROMOD_AVAILABLE,
-        "probe_hooks_active": len(probe_hooks) > 0,
-        "emotion_tracking_active": emotion_tracker is not None,
-        "current_pack": current_pack,
-        "timestamp": time.time()
+        "neuromodulation_available": NEUROMOD_AVAILABLE
     })
 
 @app.route('/predict', methods=['POST'])
@@ -681,13 +680,24 @@ def available_effects():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    # Load model on startup
-    if load_model():
-        logger.info("🚀 Starting prediction server with FULL PROBE SYSTEM...")
-        logger.info(f"🔌 Active probe hooks: {len(probe_hooks)}")
-        logger.info(f"🎭 Emotion tracking: {'✅ Active' if emotion_tracker else '❌ Inactive'}")
-        logger.info(f"🧠 Neuromodulation: {'✅ Active' if neuromod_tool else '❌ Inactive'}")
-        app.run(host='0.0.0.0', port=8080, debug=False)
-    else:
-        logger.error("Failed to load model, exiting...")
+    try:
+        logger.info("🚀 Starting Vertex AI prediction server...")
+        logger.info(f"🔧 Environment: MODEL_NAME={os.environ.get('MODEL_NAME', 'Not set')}")
+        logger.info(f"🔧 Environment: NEUROMODULATION_ENABLED={os.environ.get('NEUROMODULATION_ENABLED', 'Not set')}")
+        logger.info(f"🔧 Environment: PROBE_SYSTEM_ENABLED={os.environ.get('PROBE_SYSTEM_ENABLED', 'Not set')}")
+        
+        # Load model on startup
+        if load_model():
+            logger.info("🚀 Starting prediction server with FULL PROBE SYSTEM...")
+            logger.info(f"🔌 Active probe hooks: {len(probe_hooks)}")
+            logger.info(f"🎭 Emotion tracking: {'✅ Active' if emotion_tracker else '❌ Inactive'}")
+            logger.info(f"🧠 Neuromodulation: {'✅ Active' if neuromod_tool else '❌ Inactive'}")
+            logger.info("🌐 Starting Flask server on port 8080...")
+            app.run(host='0.0.0.0', port=8080, debug=False)
+        else:
+            logger.error("Failed to load model, exiting...")
+            exit(1)
+    except Exception as e:
+        logger.error(f"Critical error during startup: {e}")
+        logger.error("Stack trace:", exc_info=True)
         exit(1)
