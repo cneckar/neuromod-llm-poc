@@ -92,6 +92,7 @@ def load_model():
         
         # Load model with authentication if available
         if hf_token:
+            logger.info("Loading model with authentication")
             model = AutoModelForCausalLM.from_pretrained(
                 model_name,
                 quantization_config=quantization_config,
@@ -101,6 +102,7 @@ def load_model():
                 token=hf_token
             )
         else:
+            logger.info("Loading model without authentication")
             model = AutoModelForCausalLM.from_pretrained(
                 model_name,
                 quantization_config=quantization_config,
@@ -111,12 +113,14 @@ def load_model():
         
         # Initialize neuromodulation tool with FULL PROBE SYSTEM
         if NEUROMOD_AVAILABLE:
+            logger.info("Initializing neuromodulation")
             from neuromod.pack_system import PackRegistry
             registry = PackRegistry()
             neuromod_tool = NeuromodTool(registry=registry, model=model, tokenizer=tokenizer)
             emotion_tracker = SimpleEmotionTracker()
             logger.info("✅ FULL PROBE SYSTEM initialized with emotion tracking")
             
+            logger.info("Registering Probe Hooks")
             # Register probe hooks on the loaded model
             register_probe_hooks()
             

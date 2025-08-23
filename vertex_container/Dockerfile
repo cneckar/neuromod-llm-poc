@@ -14,17 +14,6 @@ RUN dnf update -y && dnf install -y --allowerasing \
     gcc \
     && dnf clean all
 
-# Copy neuromodulation system from project root
-COPY neuromod/ /app/neuromod/
-
-# Copy packs from project root
-COPY packs/ /app/packs/
-
-# Copy vertex container files
-COPY vertex_container/requirements.txt .
-COPY vertex_container/prediction_server.py .
-COPY vertex_container/test_neuromodulation.py .
-
 # Install Python dependencies
 RUN python3.11 -m pip install --no-cache-dir -r requirements.txt
 
@@ -36,6 +25,17 @@ RUN python3.11 -m pip install --no-cache-dir \
     scipy \
     matplotlib \
     seaborn
+
+# Copy neuromodulation system from project root
+COPY neuromod/ /app/neuromod/
+
+# Copy packs from project root
+COPY packs/ /app/packs/
+
+# Copy vertex container files
+COPY vertex_container/requirements.txt .
+COPY vertex_container/prediction_server.py .
+COPY vertex_container/test_neuromodulation.py .
 
 # Test neuromodulation system
 RUN python3.11 test_neuromodulation.py
