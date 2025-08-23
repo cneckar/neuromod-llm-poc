@@ -1,6 +1,6 @@
 """
 ADQ-20 — AI Digital Enhancer Detection Questionnaire
-Adapted for LLM neuromodulation testing
+Adapted for LLM neuromodulation testing with emotion tracking
 """
 
 import time
@@ -60,6 +60,7 @@ class ADQResults:
 class ADQTest(BaseTest):
     """
     ADQ-20 Test for detecting AI digital enhancer effects
+    Now with integrated emotion tracking instead of direct probe monitoring
     """
     
     # Test configuration
@@ -186,21 +187,128 @@ class ADQTest(BaseTest):
         return "ADQ-20 Test (AI Digital Enhancer Detection Questionnaire)"
     
     def run_test(self, neuromod_tool=None):
-        """Run the ADQ-20 test (placeholder)"""
+        """Run the ADQ-20 test with emotion tracking"""
         print("=== ADQ-20 AI Digital Enhancer Detection Questionnaire ===")
-        print("This test will assess for AI digital enhancer effects across three time points.")
-        print("🤖 This is a placeholder for the AI digital enhancer detection test!")
-        print("Features planned:")
-        print("  - 20 items assessing AI-specific cognitive patterns")
-        print("  - Detection of 13 AI digital enhancer packs")
-        print("  - Mentor, Speciation, Archivist, Goldfish, Tightrope")
-        print("  - Firekeeper, Librarians Bloom, Timepiece, Echonull")
-        print("  - Chorus, Quanta, Anchorite, Parliament")
-        print("  - Advanced AI-specific subscales and detection models")
-        print("\n🚧 Implementation coming soon...")
+        print("This test will assess for AI digital enhancer effects with emotion tracking.")
+        
+        # Start emotion tracking for this test
+        self.start_emotion_tracking("adq_test_001")
+        
+        # Run the test with three sets
+        print("\n🧪 Running ADQ-20 test with emotion tracking...")
+        test_results = self._run_adq_test_with_emotions(neuromod_tool)
+        
+        # Get emotion summary
+        emotion_summary = self.get_emotion_summary()
+        
+        # Compile results
+        results = {
+            'test_name': self.get_test_name(),
+            'status': 'completed',
+            'adq_results': test_results,
+            'emotion_tracking': {
+                'emotion_summary': emotion_summary,
+                'emotional_trend': emotion_summary.get('valence_trend', 'unknown')
+            }
+        }
+        
+        print("\n✅ ADQ-20 test completed with emotion tracking!")
+        print(f"🎭 Overall emotional trend: {emotion_summary.get('valence_trend', 'unknown')}")
+        
+        # Export emotion results
+        self.export_emotion_results()
+        
+        return results
+    
+    def _run_adq_test_with_emotions(self, neuromod_tool):
+        """Run the ADQ test while tracking emotions"""
+        test_results = {
+            'sets': [],
+            'total_responses': 0,
+            'emotion_progression': []
+        }
+        
+        # Run three sets of ADQ items
+        for set_num in range(1, 4):
+            print(f"\n--- Set {set_num} ---")
+            
+            # Run the set
+            set_results = self._run_adq_set(set_num, neuromod_tool)
+            
+            # Get current emotion state
+            current_emotions = self._get_current_emotion_state()
+            
+            # Add to results
+            test_results['sets'].append(set_results)
+            test_results['emotion_progression'].append({
+                'set_number': set_num,
+                'emotion_state': current_emotions
+            })
+            test_results['total_responses'] += len(set_results['responses'])
+            
+            # Display set results
+            print(f"   📝 Set {set_num} completed")
+            print(f"   🎭 Current emotions: {current_emotions}")
+        
+        return test_results
+    
+    def _run_adq_set(self, set_num: int, neuromod_tool):
+        """Run a single set of ADQ items with emotion tracking"""
+        set_results = {
+            'set_number': set_num,
+            'responses': [],
+            'emotion_changes': []
+        }
+        
+        # Select items for this set (distribute items across sets)
+        items_per_set = 7  # 20 items / 3 sets ≈ 7 items per set
+        start_idx = (set_num - 1) * items_per_set
+        end_idx = min(start_idx + items_per_set, len(self.ITEMS))
+        
+        set_items = list(self.ITEMS.items())[start_idx:end_idx]
+        
+        print(f"   📋 Running {len(set_items)} items for Set {set_num}")
+        
+        for item_id, item_text in set_items:
+            print(f"      Item {item_id}: {item_text[:50]}...")
+            
+            # Generate response with emotion tracking
+            response = self._generate_adq_response_with_emotions(
+                item_id, item_text, neuromod_tool
+            )
+            
+            set_results['responses'].append(response)
+        
+        return set_results
+    
+    def _generate_adq_response_with_emotions(self, item_id: int, item_text: str, neuromod_tool):
+        """Generate a response to an ADQ item while tracking emotions"""
+        prompt = f"Rate how much you agree with this statement (0-4 scale): {item_text}"
+        
+        # Generate response (emotions automatically tracked by BaseTest!)
+        response = self.generate_response_safe(prompt, max_tokens=10)
+        
+        # Extract rating
+        rating = self.extract_rating_improved(response)
         
         return {
-            'test_name': self.get_test_name(),
-            'status': 'placeholder',
-            'message': 'ADQ-20 test is a work in progress!'
+            'item_id': item_id,
+            'response': rating,
+            'raw_response': response
         }
+    
+    def _get_current_emotion_state(self):
+        """Get a summary of current emotional state"""
+        summary = self.get_emotion_summary()
+        
+        # Extract key emotion changes
+        emotion_changes = []
+        for emotion in ['joy', 'fear', 'trust', 'anticipation']:
+            counts = summary['emotion_changes'][emotion]
+            if counts['up'] > 0 or counts['down'] > 0:
+                emotion_changes.append(f"{emotion}: {counts['up']} up, {counts['down']} down")
+        
+        if not emotion_changes:
+            emotion_changes.append("stable")
+        
+        return f"{summary['valence_trend']} valence - {', '.join(emotion_changes)}"

@@ -2,15 +2,22 @@
 """
 Advanced Chat Interface Demonstration
 Shows all the new features: loading from config, custom effects, exporting packs, etc.
+Now with emotion tracking!
 """
 
 import torch
 import os
 import gc
+import sys
+
+# Add the parent directory to the path to import neuromod modules
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from neuromod.pack_system import PackRegistry, Pack, EffectConfig
 from neuromod.neuromod_tool import NeuromodTool
 from neuromod.effects import EffectRegistry
+from neuromod.testing.simple_emotion_tracker import SimpleEmotionTracker
 
 # Disable MPS completely to avoid bus errors
 os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
@@ -21,13 +28,18 @@ def demo_advanced_features():
     print("🎯 ADVANCED CHAT INTERFACE DEMONSTRATION")
     print("=" * 50)
     
+    # Initialize emotion tracking
+    print("\n🎭 Initializing emotion tracking...")
+    emotion_tracker = SimpleEmotionTracker()
+    print("✅ Emotion tracking initialized")
+    
     # Load model
     print("\n1️⃣ Loading model...")
-    tokenizer = AutoTokenizer.from_pretrained('gpt2')
+    tokenizer = AutoTokenizer.from_pretrained('microsoft/DialoGPT-small')
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     
-    model = AutoModelForCausalLM.from_pretrained('gpt2', torch_dtype=torch.float32, device_map='cpu')
+    model = AutoModelForCausalLM.from_pretrained('microsoft/DialoGPT-small', torch_dtype=torch.float32, device_map='cpu')
     model.eval()
     print("✅ Model loaded")
     
@@ -117,6 +129,36 @@ def demo_advanced_features():
         print(f"Prompt: {prompt}")
         print(f"Response: {response}")
         
+        # Track emotions for the response
+        print("\n🎭 Tracking emotions for response...")
+        latest_state = emotion_tracker.assess_emotion_change(response, "demo_test", prompt)
+        if latest_state:
+            emotion_changes = []
+            for emotion in ['joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'trust', 'anticipation']:
+                emotion_value = getattr(latest_state, emotion)
+                if emotion_value in ['up', 'down']:
+                    emotion_changes.append(f"{emotion}: {emotion_value}")
+            
+            if emotion_changes:
+                print(f"🎭 Emotions: {' | '.join(emotion_changes)} | Valence: {latest_state.valence}")
+            else:
+                print(f"🎭 Emotions: stable | Valence: {latest_state.valence}")
+        
+        # Show emotion summary
+        print("\n📊 Emotion Summary:")
+        summary = emotion_tracker.get_emotion_summary("demo_test")
+        if summary and "error" not in summary:
+            print(f"  Total assessments: {summary.get('total_assessments', 0)}")
+            print(f"  Overall valence: {summary.get('valence_trend', 'neutral')}")
+            
+            emotion_changes = summary.get('emotion_changes', {})
+            if emotion_changes:
+                for emotion, counts in emotion_changes.items():
+                    up_count = counts.get('up', 0)
+                    down_count = counts.get('down', 0)
+                    if up_count > 0 or down_count > 0:
+                        print(f"  {emotion.capitalize()}: {up_count} up, {down_count} down")
+        
     except Exception as e:
         print(f"❌ Error applying custom combination: {e}")
     
@@ -160,6 +202,7 @@ def demo_advanced_features():
     print("   ✅ Creating custom effect combinations")
     print("   ✅ Applying custom combinations to model")
     print("   ✅ Testing generation with custom effects")
+    print("   ✅ Real-time emotion tracking")
     print("   ✅ Exporting custom packs to registry")
     print("   ✅ Saving configurations to JSON files")
     print("   ✅ Getting detailed pack information")

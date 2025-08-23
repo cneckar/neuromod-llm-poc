@@ -1,0 +1,22 @@
+# 🧠 Neuromodulation LLM - Minimal Requirements
+# Install with: pip install -r requirements-minimal.txt
+# This covers only the essential dependencies for basic functionality
+
+# =============================================================================
+# CORE MACHINE LEARNING (Required)
+# =============================================================================
+torch>=2.2.0                    # PyTorch for deep learning
+transformers>=4.42.0            # Hugging Face transformers
+accelerate>=0.20.0              # Hugging Face accelerate
+
+# =============================================================================
+# SCIENTIFIC COMPUTING (Required)
+# =============================================================================
+numpy>=1.25.0                   # Numerical computing
+scipy>=1.11.0                   # Scientific computing
+
+# =============================================================================
+# BASIC UTILITIES (Required)
+# =============================================================================
+requests>=2.31.0                # HTTP requests
+tqdm>=4.65.0                    # Progress bars
