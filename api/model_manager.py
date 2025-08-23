@@ -817,6 +817,12 @@ class ModelManager:
     def unload_model(self):
         """Unload model (legacy method)"""
         self._enhanced.unload_current_interface()
+    
+    @property
+    def model(self):
+        """Legacy property for backward compatibility"""
+        status = self.get_model_status()
+        return status.get("interface_available", False)
 
 # Create legacy instance for backward compatibility
 model_manager = ModelManager()

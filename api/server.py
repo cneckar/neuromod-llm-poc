@@ -121,7 +121,7 @@ async def startup_event():
 @app.get("/")
 async def root():
     """Root endpoint with API information"""
-    local_model_status = "loaded" if model_manager.model else "not loaded (simulation mode)"
+    local_model_status = "loaded" if model_manager.get_model_status().get("interface_available", False) else "not loaded (simulation mode)"
     vertex_ai_status = "available" if vertex_ai_manager else "not available"
     
     return {
@@ -152,7 +152,7 @@ async def health_check():
         "status": "healthy", 
         "service": "real-neuromodulation-api",
         "emotion_tracking": "active",
-        "local_model_loaded": model_manager.model is not None,
+        "local_model_loaded": model_manager.get_model_status().get("interface_available", False),
         "vertex_ai_available": vertex_ai_manager is not None,
         "timestamp": time.time()
     }
@@ -170,7 +170,7 @@ async def get_model_status():
         
         return {
             "local_model": {
-                "loaded": model_manager.model is not None,
+                "loaded": model_manager.get_model_status().get("interface_available", False),
                 "current_model": local_status.get("current_model", "none"),
                 "model_type": local_status.get("model_type", "none")
             },
@@ -324,7 +324,7 @@ async def chat(request: ChatRequest):
                 emotions = {}
         
         # Try to use real local model if available
-        elif model_manager.model:
+        elif model_manager.get_model_status().get("interface_available", False):
             try:
                 # Generate response with real model and pack loading
                 result = model_manager.generate_text(
@@ -442,7 +442,7 @@ async def generate_text(
                 emotions = {}
         
         # Try to use real local model if available
-        elif model_manager.model:
+        elif model_manager.get_model_status().get("interface_available", False):
             try:
                 result = model_manager.generate_text(
                     prompt=prompt,
@@ -541,7 +541,7 @@ async def export_emotions():
 async def list_packs():
     """List available neuromodulation packs from the real system"""
     try:
-        if model_manager.model:
+        if model_manager.get_model_status().get("interface_available", False):
             # Get real packs from the model manager
             available_packs = model_manager.get_available_packs()
             if available_packs:
