@@ -175,8 +175,8 @@ class NeuromodChat:
             self.neuromod_tool.clear()
         self.active_packs = []
     
-    def generate_response(self, prompt: str, max_tokens: int = 100) -> str:
-        """Generate response with current neuromodulation state"""
+    def generate_response(self, prompt: str, max_tokens: int = 5000, min_tokens: int = 100) -> str:
+        """Generate response with current neuromodulation state and emotion tracking"""
         try:
             inputs = self.tokenizer(prompt, return_tensors="pt", padding=True)
             inputs = {k: v.cpu() for k, v in inputs.items()}
@@ -195,6 +195,7 @@ class NeuromodChat:
                 outputs = self.model.generate(
                     **inputs,
                     max_new_tokens=max_tokens,
+                    min_new_tokens=min_tokens,
                     temperature=0.7,
                     do_sample=True,
                     pad_token_id=self.tokenizer.eos_token_id,

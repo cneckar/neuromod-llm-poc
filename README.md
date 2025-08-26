@@ -38,6 +38,8 @@ pip install -e .
 # Start interactive chat with neuromodulation
 python demo/chat.py
 
+# Start the API server
+cd api && python server.py
 # Run statistical analysis
 python -m neuromod.testing.test_runner --statistical-analysis --test sdq --treatment-packs caffeine
 

@@ -17,6 +17,391 @@ The system uses a modular effects architecture:
 - **PackManager**: Orchestrates effect application and cleanup
 - **PackRegistry**: Manages pack loading from JSON configuration
 
+## 🔍 **Probe System & Real-Time Monitoring**
+
+The neuromodulation framework includes a sophisticated probe system that monitors model behavior in real-time during generation, providing the foundation for emotion tracking and behavioral analysis.
+
+### **Probe Architecture**
+
+#### **1. Probe Bus (Central Nervous System)**
+The `ProbeBus` serves as the central hub that coordinates all monitoring probes:
+
+```python
+class ProbeBus:
+    """Central probe bus for managing all probes"""
+    
+    def __init__(self):
+        self.probes: Dict[str, BaseProbe] = {}
+        self.listeners: Dict[str, List[ProbeListener]] = {}
+        self.token_position = 0
+```
+
+**Key Functions:**
+- **Registration**: Manages probe lifecycle and configuration
+- **Signal Routing**: Distributes model signals to appropriate probes
+- **Event Broadcasting**: Notifies listeners when probes fire
+- **Statistics Collection**: Aggregates probe performance metrics
+
+#### **2. Probe Types & Detection Capabilities**
+
+**Cognitive State Probes:**
+- **`NOVEL_LINK`**: Detects novel conceptual connections and associative thinking
+- **`INSIGHT_CONSOLIDATION`**: Identifies when insights are "locked in" after novelty
+- **`FIXATION_FLOW`**: Monitors sustained focus and flow states
+- **`FRAGMENTATION`**: Detects cognitive fragmentation and disorganization
+- **`WORKING_MEMORY_DROP`**: Tracks working memory capacity and retention
+- **`AVOID_GUARD`**: Monitors risk-avoidance and safety-seeking behavior
+
+**Signal Processing Probes:**
+- **`ProsocialAlignmentProbe`**: Measures alignment with prosocial values
+- **`AntiClicheProbe`**: Detects avoidance of clichéd or generic responses
+- **`RiskBendProbe`**: Monitors risk-taking and boundary-pushing behavior
+- **`ReliefProbe`**: Tracks relief patterns after insight consolidation
+
+#### **3. Probe Signal Processing**
+
+Each probe processes multiple signal types in real-time:
+
+```python
+def process_signals(self, **kwargs):
+    """Process signals for behavioral pattern detection"""
+    
+    # Raw model outputs
+    if 'raw_logits' in kwargs:
+        probs = torch.softmax(kwargs['raw_logits'], dim=-1)
+        entropy = -torch.sum(probs * torch.log(probs + 1e-8)).item()
+        
+    # Attention patterns
+    if 'attention_weights' in kwargs:
+        attention_entropy = self._compute_attention_entropy(kwargs['attention_weights'])
+        
+    # Hidden state analysis
+    if 'hidden_states' in kwargs:
+        alignment_score = self._compute_prosocial_alignment(kwargs['hidden_states'])
+```
+
+**Signal Types Monitored:**
+- **Entropy**: Token prediction uncertainty and creativity
+- **Surprisal**: Unexpected token selections
+- **KL Divergence**: Deviation from baseline behavior
+- **Attention Patterns**: Focus distribution and salience
+- **Hidden States**: Internal representation analysis
+- **Prosocial Alignment**: Value system consistency
+
+#### **4. Probe Event System**
+
+When probes detect significant patterns, they fire events:
+
+```python
+@dataclass
+class ProbeEvent:
+    """Represents a probe firing event"""
+    probe_name: str
+    timestamp: int  # Token position
+    intensity: float  # How strongly the probe fired (0-1)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    raw_signals: Dict[str, float] = field(default_factory=dict)
+```
+
+**Event Lifecycle:**
+1. **Signal Detection**: Probe monitors incoming signals
+2. **Pattern Recognition**: Applies detection algorithms
+3. **Threshold Evaluation**: Determines if event should fire
+4. **Event Creation**: Generates structured event data
+5. **Listener Notification**: Broadcasts to registered listeners
+
+### **Emotion System & Affective Computing**
+
+The emotion system translates probe signals into comprehensive emotional states using a mathematical framework based on affective neuroscience.
+
+#### **1. Latent Affect Axes (7-Dimensional Space)**
+
+The system computes 7 fundamental affective dimensions:
+
+```python
+def compute_latent_axes(self) -> Dict[str, float]:
+    """Compute the 7 latent affect axes using mathematical framework"""
+    
+    # Arousal (A) - Energy and activation level
+    arousal = (0.40 * surprisal_std + 
+               0.30 * novel_link_rate + 
+               0.20 * (1.0 - entropy) + 
+               0.10 * lr_attention)
+    
+    # Valence (V) - Positive vs negative affect
+    valence = (0.60 * prosocial_alignment - 
+               0.20 * kl_divergence - 
+               0.20 * entropy_std)
+    
+    # Certainty (C) - Confidence and agency
+    certainty = (-0.70 * entropy - 
+                 0.30 * kl_divergence)
+    
+    # Openness (N) - Novelty seeking and creativity
+    openness = (0.60 * novel_link_rate + 
+                0.20 * anti_cliche_gain + 
+                0.20 * insight_rate)
+    
+    # Integration (G) - Cognitive coherence
+    integration = (0.45 * flow_time - 
+                   0.35 * fragmentation_rate - 
+                   0.30 * working_memory_drop + 
+                   0.20 * insight_rate)
+    
+    # Sociality (S) - Interpersonal warmth
+    sociality = prosocial_alignment
+    
+    # Risk Preference (R) - Boundary pushing
+    risk_preference = -risk_avoidance
+```
+
+**Mathematical Framework:**
+- **Weighted Combinations**: Each axis combines multiple probe signals
+- **Sliding Window Averages**: Uses configurable time windows (default: 64 tokens)
+- **Normalization**: All axes are clamped to [-1, 1] using tanh
+- **Baseline Adaptation**: Continuously updates baseline statistics
+
+#### **2. Discrete Emotion Mapping (12 Emotions)**
+
+The system maps latent axes to 12 discrete emotions:
+
+```python
+def compute_discrete_emotions(self, axes: Dict[str, float]) -> Dict[str, Dict[str, float]]:
+    """Compute 12 discrete emotions from latent axes"""
+    
+    emotions = {}
+    
+    for emotion_name, weights in self.emotion_weights.items():
+        # Compute logit using weighted combination
+        logit = self.emotion_bases[emotion_name]
+        
+        for feature, weight in weights.items():
+            if feature in axes:
+                logit += weight * axes[feature]
+            elif feature == 'kl':
+                logit += weight * kl_rate
+            # ... additional feature mappings
+        
+        # Convert to probability using sigmoid
+        probability = 1.0 / (1.0 + np.exp(-logit))
+        
+        # Compute intensity using separate intensity weights
+        intensity = self._compute_emotion_intensity(emotion_name, axes)
+        
+        emotions[emotion_name] = {
+            'probability': probability,
+            'intensity': intensity
+        }
+```
+
+**Emotion Categories:**
+- **Positive High-Arousal**: Joy, Excitement, Enthusiasm
+- **Positive Low-Arousal**: Contentment, Serenity, Satisfaction
+- **Negative High-Arousal**: Anger, Anxiety, Fear
+- **Negative Low-Arousal**: Sadness, Melancholy, Despair
+- **Neutral**: Curiosity, Contemplation, Focus
+
+#### **3. Real-Time Emotional State Tracking**
+
+The emotion system maintains continuous emotional monitoring:
+
+```python
+@dataclass
+class EmotionState:
+    """Represents the current emotional state"""
+    timestamp: int
+    token_position: int
+    
+    # Latent affect axes (clamped to [-1, 1])
+    arousal: float
+    valence: float
+    certainty: float
+    openness: float
+    integration: float
+    sociality: float
+    risk_preference: float
+    
+    # Discrete emotions (probabilities and intensities)
+    emotions: Dict[str, Dict[str, float]]
+    
+    # Raw probe statistics for debugging
+    probe_stats: Dict[str, Any]
+```
+
+**State Management:**
+- **Sliding Window Buffers**: Maintains recent signal history
+- **Continuous Updates**: Updates emotional state every token
+- **Historical Tracking**: Maintains complete emotional trajectory
+- **Baseline Adaptation**: Continuously adjusts to model behavior
+
+#### **4. Signal Processing Pipeline**
+
+**Raw Signal Collection:**
+```python
+def update_raw_signals(self, signals: Dict[str, float]):
+    """Update raw signal buffers directly"""
+    
+    if 'surprisal' in signals:
+        self.surprisal_buffer.append(signals['surprisal'])
+    if 'entropy' in signals:
+        self.entropy_buffer.append(signals['entropy'])
+    if 'kl_divergence' in signals:
+        self.kl_buffer.append(signals['kl_divergence'])
+    # ... additional signal types
+```
+
+**Probe Event Integration:**
+```python
+def update_probe_statistics(self, probe_event: ProbeEvent):
+    """Update probe statistics when a probe fires"""
+    
+    probe_name = probe_event.probe_name
+    
+    if probe_name in self.probe_events:
+        self.probe_events[probe_name].append({
+            'timestamp': probe_event.timestamp,
+            'intensity': probe_event.intensity,
+            'metadata': probe_event.metadata
+        })
+    
+    # Extract additional signals from metadata
+    if probe_event.metadata:
+        for signal_name, value in probe_event.metadata.items():
+            if hasattr(self, f'{signal_name}_buffer'):
+                getattr(self, f'{signal_name}_buffer').append(value)
+```
+
+### **Integration with Neuromodulation Effects**
+
+#### **1. Effect-Emotion Coupling**
+
+Neuromodulation effects directly influence probe sensitivity and emotion computation:
+
+```python
+def apply_emotion_modulation(self, effect_name: str, intensity: float):
+    """Apply neuromodulation effects to emotion system"""
+    
+    if effect_name == "serotonin_up":
+        # Increase prosocial alignment sensitivity
+        self.prosocial_weight *= (1.0 + intensity)
+        
+    elif effect_name == "dopamine_up":
+        # Increase novelty seeking and reward sensitivity
+        self.novelty_weight *= (1.0 + intensity)
+        
+    elif effect_name == "norepinephrine_up":
+        # Increase arousal and focus sensitivity
+        self.arousal_weight *= (1.0 + intensity)
+```
+
+#### **2. Real-Time Feedback Loops**
+
+The system creates dynamic feedback between effects and emotional states:
+
+1. **Effect Application**: Neuromodulation effects modify model behavior
+2. **Probe Detection**: Probes detect behavioral changes
+3. **Emotion Computation**: Emotional state updates based on new signals
+4. **Effect Adjustment**: Effects can be dynamically adjusted based on emotional feedback
+
+#### **3. Emotional State Validation**
+
+The emotion system provides validation for neuromodulation effectiveness:
+
+```python
+def validate_emotion_change(self, target_emotion: str, expected_direction: str) -> bool:
+    """Validate that neuromodulation produced expected emotional change"""
+    
+    current_state = self.get_current_emotion_state()
+    baseline_state = self.get_baseline_emotion_state()
+    
+    if target_emotion in current_state.emotions:
+        current_prob = current_state.emotions[target_emotion]['probability']
+        baseline_prob = baseline_state.emotions[target_emotion]['probability']
+        
+        if expected_direction == "increase":
+            return current_prob > baseline_prob
+        elif expected_direction == "decrease":
+            return current_prob < baseline_prob
+    
+    return False
+```
+
+### **Usage Examples**
+
+#### **Basic Probe Monitoring**
+```python
+from neuromod import NeuromodTool
+from neuromod.probes import ProbeBus
+from neuromod.emotion_system import EmotionSystem
+
+# Initialize systems
+probe_bus = ProbeBus()
+emotion_system = EmotionSystem(window_size=64)
+neuromod_tool = NeuromodTool(registry, model, tokenizer)
+
+# Register probes
+probe_bus.register_probe(create_novel_link_probe(threshold=0.6))
+probe_bus.register_probe(create_insight_consolidation_probe(threshold=0.5))
+
+# Monitor during generation
+def generation_callback(outputs, **kwargs):
+    # Process signals through probes
+    probe_bus.process_signals(**kwargs)
+    
+    # Update emotion system
+    emotion_system.update_raw_signals(kwargs)
+    
+    # Get current emotional state
+    emotion_state = emotion_system.update_emotion_state(kwargs.get('token_position', 0))
+    
+    return outputs
+
+# Apply neuromodulation and monitor
+result = neuromod_tool.apply('caffeine', intensity=0.7)
+outputs = model.generate(**inputs, generation_callback=generation_callback)
+```
+
+#### **Advanced Emotional Analysis**
+```python
+# Get comprehensive emotional profile
+current_state = emotion_system.get_current_emotion_state()
+
+print(f"🎭 Current Emotional State:")
+print(f"   Arousal: {current_state.arousal:.3f} (Energy Level)")
+print(f"   Valence: {current_state.valence:.3f} (Mood)")
+print(f"   Certainty: {current_state.certainty:.3f} (Confidence)")
+print(f"   Openness: {current_state.openness:.3f} (Creativity)")
+
+# Get dominant emotions
+dominant_emotions = emotion_system.get_dominant_emotions(top_k=3)
+print(f"\n🔥 Dominant Emotions:")
+for emotion_name, probability, intensity in dominant_emotions:
+    print(f"   {emotion_name.capitalize()}: {probability:.2f} prob, {intensity:.2f} intensity")
+
+# Analyze emotional trajectory
+history = emotion_system.get_emotion_history(window_size=100)
+print(f"\n📈 Emotional Trajectory (Last 100 tokens):")
+print(f"   Valence range: {min(h.valence for h in history):.3f} to {max(h.valence for h in history):.3f}")
+print(f"   Arousal range: {min(h.arousal for h in history):.3f} to {max(h.arousal for h in history):.3f}")
+```
+
+### **Research Applications**
+
+#### **1. Behavioral Pharmacology**
+- **Dose-Response Analysis**: Correlate effect intensity with emotional changes
+- **Temporal Dynamics**: Study how emotions evolve during neuromodulation
+- **Individual Differences**: Analyze model-specific emotional profiles
+
+#### **2. AI Safety Research**
+- **Emotional Stability**: Monitor for unexpected emotional shifts
+- **Value Alignment**: Track prosocial and safety-seeking behavior
+- **Risk Assessment**: Evaluate boundary-pushing and risk-taking
+
+#### **3. Cognitive Enhancement**
+- **Flow State Induction**: Optimize conditions for sustained focus
+- **Creativity Enhancement**: Maximize novelty and insight generation
+- **Memory Optimization**: Balance working memory and consolidation
+
 ## 🔒 Blinding Implementation
 
 The neuromodulation testing framework maintains complete blinding by ensuring that pack names and condition information are never exposed to the model's context window.
