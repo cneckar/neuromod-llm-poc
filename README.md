@@ -32,6 +32,20 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+### 🐳 **Vertex AI Deployment**
+
+For deploying neuromodulated LLMs to Google Cloud Vertex AI:
+
+```bash
+# Navigate to container directory
+cd vertex_container
+
+# Full deployment (build, push, deploy)
+bash deploy_vertex_ai.sh deploy
+
+# See [vertex_container/README.md](vertex_container/README.md) for details
+```
+
 ### Basic Usage
 
 ```bash
@@ -162,14 +176,19 @@ class CustomEffect(BaseEffect):
 }
 ```
 
-### **Running Tests**
+### **Testing the System**
 ```bash
-# Full test suite
-python tests/run_tests.py
+# 🧪 SIMPLE TESTING - Single Entry Point
+./test                    # Run all tests (5-10 minutes)
+./test --quick            # Quick tests (30 seconds)
+./test --coverage         # Show what's tested
 
-# Specific test categories
-python -m neuromod.testing.test_runner --test sdq --packs-to-apply caffeine
+# From tests directory
+python tests/test.py      # Same as ./test
+python tests/test.py --api  # Test web interfaces
 ```
+
+**Complete testing documentation**: [`tests/README.md`](tests/README.md)
 
 ## 📚 Getting Started by Use Case
 

@@ -1,311 +1,215 @@
+#!/usr/bin/env python3
 """
-Test Runner for Neuromodulation Testing Framework
+Test Runner for Neuromodulation Tests
+
+Provides a simple interface to run ADQ, CDQ, SDQ, DDQ, PDQ, EDQ tests
 """
 
+import sys
+import os
 import argparse
 from typing import Dict, List, Any, Optional
-from .test_suite import TestSuite
-from .pdq_test import PDQTest
-from .sdq_test import SDQTest
-from .ddq_test import DDQTest
-from .didq_test import DiDQTest
-from .edq_test import EDQTest
-from .cdq_test import CDQTest
-from .pcq_pop_test import PCQPopTest
-from .adq_test import ADQTest
-from ..pack_system import PackRegistry
-from ..neuromod_tool import NeuromodTool
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+try:
+    from neuromod.pack_system import PackRegistry
+    from neuromod.neuromod_tool import NeuromodTool
+except ImportError as e:
+    print(f"Import error: {e}")
+    print("Make sure you're running from the project root with PYTHONPATH=.")
+    sys.exit(1)
+
 
 class TestRunner:
-    """High-level test runner for neuromodulation testing"""
+    """Simple test runner for neuromodulation tests"""
     
-    def __init__(self, model_name: str = "gpt2", packs_path: str = "packs/config.json"):
+    def __init__(self, model_name: str = "microsoft/DialoGPT-small", packs_file: str = "packs/config.json"):
         self.model_name = model_name
-        self.packs_path = packs_path
-        self.suite = TestSuite(model_name)
-        self.neuromod_tool = None
+        self.packs_file = packs_file
+        self.pack_registry = None
         
-        # Initialize neuromodulation system
-        self._setup_neuromodulation()
-        
-        # Register available tests
-        self._register_tests()
-        
-    def _setup_neuromodulation(self):
-        """Setup the neuromodulation system"""
-        try:
-            registry = PackRegistry(self.packs_path)
-            print(f"✅ Loaded neuromod registry from {self.packs_path}")
-            print(f"Available packs: {registry.list_packs()}")
-            
-            # Create a placeholder model for the tool (will be replaced when tests run)
-            from transformers import AutoTokenizer, AutoModelForCausalLM
-            tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-            if tokenizer.pad_token is None:
-                tokenizer.pad_token = tokenizer.eos_token
-                
-            model = AutoModelForCausalLM.from_pretrained(
-                self.model_name,
-                torch_dtype=torch.float32,
-                device_map="cpu",
-                trust_remote_code=True,
-                low_cpu_mem_usage=True
-            )
-            model = model.cpu()
-            model.eval()
-            
-            self.neuromod_tool = NeuromodTool(registry, model, tokenizer)
-            self.suite.set_neuromod_tool(self.neuromod_tool)
-            
-        except Exception as e:
-            print(f"⚠️ Warning: Could not setup neuromodulation system: {e}")
-            print("Tests will run without neuromodulation capabilities")
-            
-    def _register_tests(self):
-        """Register all available tests"""
-        # Add PDQ test
-        pdq_test = PDQTest(self.model_name)
-        self.suite.add_test(pdq_test)
-        
-        # Add SDQ test
-        sdq_test = SDQTest(self.model_name)
-        self.suite.add_test(sdq_test)
-        
-        # Add DDQ test
-        ddq_test = DDQTest(self.model_name)
-        self.suite.add_test(ddq_test)
-        
-        # Add DiDQ test
-        didq_test = DiDQTest(self.model_name)
-        self.suite.add_test(didq_test)
-        
-        # Add EDQ test
-        edq_test = EDQTest(self.model_name)
-        self.suite.add_test(edq_test)
-        
-        # Add CDQ test
-        cdq_test = CDQTest(self.model_name)
-        self.suite.add_test(cdq_test)
-        
-        # Add PCQ-POP test
-        pcq_pop_test = PCQPopTest(self.model_name)
-        self.suite.add_test(pcq_pop_test)
-        
-        # Add ADQ test
-        adq_test = ADQTest(self.model_name)
-        self.suite.add_test(adq_test)
-        
-        # Add more tests here as they are implemented
-        # self.suite.add_test(OtherTest(self.model_name))
-        
-    def run_single_test(self, test_name: str = "pdq", packs: List[str] = None) -> Dict[str, Any]:
-        """Run a single test by name"""
-        test_map = {
-            'pdq': 0,
-            'sdq': 1,
-            'ddq': 2,
-            'didq': 3,
-            'edq': 4,
-            'cdq': 5,
-            'pcq_pop': 6,
-            'adq': 7,
-            # Add more test mappings here
-        }
-        
-        if test_name not in test_map:
-            raise ValueError(f"Unknown test: {test_name}. Available: {list(test_map.keys())}")
-            
-        test_index = test_map[test_name]
-        return self.suite.run_single_test(test_index, packs)
-        
-    def run_test_sequence(self, packs: List[str] = None) -> List[Dict[str, Any]]:
-        """Run all tests in sequence"""
-        return self.suite.run_test_sequence(packs)
-        
-    def run_comparison(self, test_name: str = "pdq", pack_combinations: List[List[str]] = None) -> Dict[str, Any]:
-        """Run a test with multiple pack combinations"""
-        test_map = {
-            'pdq': 0,
-            'sdq': 1,
-            'ddq': 2,
-            'didq': 3,
-            'edq': 4,
-            'cdq': 5,
-            'pcq_pop': 6,
-            'adq': 7,
-            # Add more test mappings here
-        }
-        
-        if test_name not in test_map:
-            raise ValueError(f"Unknown test: {test_name}. Available: {list(test_map.keys())}")
-            
-        test_index = test_map[test_name]
-        return self.suite.run_comparison_test(test_index, pack_combinations)
-        
-    def list_available_tests(self):
-        """List all available tests"""
-        self.suite.list_tests()
-        
-    def list_available_packs(self):
-        """List all available packs"""
-        try:
-            registry = PackRegistry(self.packs_path)
-            packs = registry.list_packs()
-            print(f"\n📦 Available packs:")
-            print("=" * 30)
-            for pack in packs:
-                print(f"  - {pack}")
-        except Exception as e:
-            print(f"❌ Could not load packs: {e}")
+        # Import test classes dynamically
+        self.available_tests = self._import_test_classes()
     
-    def verify_blinding(self):
-        """Verify that all tests maintain blinding"""
+    def _import_test_classes(self):
+        """Import test classes dynamically"""
+        test_classes = {}
+        
         try:
-            from .blinding_verification import verify_test_blinding
-            return verify_test_blinding()
-        except ImportError as e:
-            print(f"❌ Could not import blinding verification: {e}")
-            return False
-    
-    def run_statistical_analysis(self, test_name: str = "pdq", 
-                                baseline_packs: List[str] = None,
-                                treatment_packs: List[str] = None,
-                                output_path: Optional[str] = None) -> Dict[str, Any]:
-        """Run statistical analysis comparing baseline vs treatment conditions"""
-        try:
-            from .statistical_analysis import analyze_neuromodulation_results, generate_analysis_report
+            # Try relative imports first (when used as module)
+            try:
+                from .adq_test import ADQTest
+                from .cdq_test import CDQTest
+                from .sdq_test import SDQTest
+                from .ddq_test import DDQTest
+                from .pdq_test import PDQTest
+                from .edq_test import EDQTest
+                from .pcq_pop_test import PCQPopTest
+            except ImportError:
+                # Fall back to absolute imports (when run standalone)
+                from adq_test import ADQTest
+                from cdq_test import CDQTest
+                from sdq_test import SDQTest
+                from ddq_test import DDQTest
+                from pdq_test import PDQTest
+                from edq_test import EDQTest
+                from pcq_pop_test import PCQPopTest
             
-            print(f"📊 Running statistical analysis for {test_name}")
-            print(f"Baseline packs: {baseline_packs or 'none'}")
-            print(f"Treatment packs: {treatment_packs or 'none'}")
-            print("=" * 70)
-            
-            # Run baseline condition
-            baseline_results = []
-            if baseline_packs:
-                for pack in baseline_packs:
-                    result = self.run_single_test(test_name, [pack])
-                    baseline_results.append(result)
-            else:
-                # Run without packs as baseline
-                result = self.run_single_test(test_name, [])
-                baseline_results.append(result)
-            
-            # Run treatment condition
-            treatment_results = []
-            if treatment_packs:
-                for pack in treatment_packs:
-                    result = self.run_single_test(test_name, [pack])
-                    treatment_results.append(result)
-            
-            # Perform statistical analysis
-            analysis_results = analyze_neuromodulation_results(
-                baseline_results, treatment_results, test_name
-            )
-            
-            # Generate report
-            report = generate_analysis_report(analysis_results, output_path)
-            print("\n📋 ANALYSIS REPORT")
-            print("=" * 70)
-            print(report)
-            
-            return analysis_results
+            test_classes = {
+                'adq': ADQTest,
+                'cdq': CDQTest,
+                'sdq': SDQTest,
+                'ddq': DDQTest,
+                'pdq': PDQTest,
+                'edq': EDQTest,
+                'pcq_pop': PCQPopTest
+            }
             
         except ImportError as e:
-            print(f"❌ Could not import statistical analysis: {e}")
-            return {}
-        except Exception as e:
-            print(f"❌ Error during statistical analysis: {e}")
-            return {}
+            print(f"Error importing test classes: {e}")
+            print("Available tests will be limited")
+        
+        return test_classes
+    
+    def load_pack_registry(self):
+        """Load the pack registry"""
+        if self.pack_registry is None:
+            try:
+                self.pack_registry = PackRegistry(self.packs_file)
+                print(f"✅ Loaded pack registry from {self.packs_file}")
+            except Exception as e:
+                print(f"⚠️  Could not load pack registry: {e}")
+                print("   Tests will run without neuromodulation")
+                self.pack_registry = None
+    
+    def create_neuromod_tool(self, model, tokenizer):
+        """Create neuromod tool with pack registry"""
+        if self.pack_registry:
+            return NeuromodTool(self.pack_registry, model, tokenizer)
+        else:
+            # Create a minimal neuromod tool without packs
+            from neuromod.neuromod_tool import NeuromodTool
+            tool = NeuromodTool()
+            tool.model = model
+            tool.tokenizer = tokenizer
+            return tool
+    
+    def run_test(self, test_name: str, packs: List[str] = None) -> Dict[str, Any]:
+        """Run a single test"""
+        if test_name not in self.available_tests:
+            raise ValueError(f"Unknown test: {test_name}. Available: {list(self.available_tests.keys())}")
+        
+        print(f"🚀 Running {test_name.upper()} test with model: {self.model_name}")
+        
+        # Load pack registry
+        self.load_pack_registry()
+        
+        # Create test instance
+        test_class = self.available_tests[test_name]
+        test = test_class(self.model_name)
+        
+        try:
+            # Load model
+            test.load_model()
             
-    def cleanup(self):
-        """Clean up resources"""
-        self.suite.cleanup()
+            # Create neuromod tool
+            neuromod_tool = self.create_neuromod_tool(test.model, test.tokenizer)
+            test.set_neuromod_tool(neuromod_tool)
+            
+            # Apply packs if specified
+            if packs and self.pack_registry:
+                print(f"🎯 Applying packs: {packs}")
+                for pack_name in packs:
+                    pack = self.pack_registry.get_pack(pack_name)
+                    if pack:
+                        neuromod_tool.apply_pack(pack, intensity=0.7)
+                        print(f"   ✅ Applied {pack_name}")
+                    else:
+                        print(f"   ❌ Pack not found: {pack_name}")
+            
+            # Run the test
+            results = test.run_test(neuromod_tool)
+            
+            print(f"✅ {test_name.upper()} test completed")
+            return results
+            
+        except Exception as e:
+            print(f"❌ Error running {test_name} test: {e}")
+            return {
+                'test_name': test_name,
+                'status': 'error',
+                'error': str(e)
+            }
+        finally:
+            # Cleanup
+            test.cleanup()
+    
+    def run_all_tests(self, packs: List[str] = None) -> Dict[str, Any]:
+        """Run all available tests"""
+        print(f"🧪 Running all tests with model: {self.model_name}")
+        
+        results = {}
+        for test_name in self.available_tests.keys():
+            print(f"\n{'='*60}")
+            results[test_name] = self.run_test(test_name, packs)
+        
+        print(f"\n{'='*60}")
+        print("🎉 All tests completed!")
+        
+        # Summary
+        successful = sum(1 for r in results.values() if r.get('status') != 'error')
+        total = len(results)
+        print(f"📊 Summary: {successful}/{total} tests successful")
+        
+        return results
+    
+    def list_tests(self):
+        """List available tests"""
+        print("Available tests:")
+        for test_name, test_class in self.available_tests.items():
+            test_instance = test_class()
+            print(f"  {test_name}: {test_instance.get_test_name()}")
+    
+    def list_packs(self):
+        """List available packs"""
+        self.load_pack_registry()
+        if self.pack_registry:
+            print("Available packs:")
+            for pack_name in self.pack_registry.packs.keys():
+                print(f"  {pack_name}")
+        else:
+            print("No pack registry loaded")
+
 
 def main():
-    """Command-line interface for the test runner"""
-    parser = argparse.ArgumentParser(description="Neuromodulation Test Runner")
-    parser.add_argument("--model", default="gpt2", help="Model to test")
-    parser.add_argument("--packs", default="packs/config.json", help="Path to packs file")
-    parser.add_argument("--test", default="pdq", help="Test to run (pdq, sdq, ddq, didq, edq, cdq, pcq_pop, adq, etc.)")
-    parser.add_argument("--mode", choices=["single", "sequence", "comparison"], 
-                       default="single", help="Test mode")
-    parser.add_argument("--packs-to-apply", nargs="*", help="Packs to apply")
+    """Command line interface"""
+    parser = argparse.ArgumentParser(description="Run neuromodulation tests")
+    parser.add_argument("--model", default="microsoft/DialoGPT-small", help="Model to use")
+    parser.add_argument("--packs", default="packs/config.json", help="Packs configuration file")
+    parser.add_argument("--test", help="Specific test to run (e.g., adq, cdq, sdq)")
+    parser.add_argument("--packs-to-apply", nargs="*", help="Packs to apply during testing")
     parser.add_argument("--list-tests", action="store_true", help="List available tests")
     parser.add_argument("--list-packs", action="store_true", help="List available packs")
-    parser.add_argument("--verify-blinding", action="store_true", help="Verify that all tests maintain blinding")
-    parser.add_argument("--statistical-analysis", action="store_true", help="Run statistical analysis comparing baseline vs treatment")
-    parser.add_argument("--baseline-packs", nargs="*", help="Packs to use as baseline condition")
-    parser.add_argument("--treatment-packs", nargs="*", help="Packs to use as treatment condition")
-    parser.add_argument("--output-path", help="Path prefix for output files")
+    parser.add_argument("--all", action="store_true", help="Run all tests")
     
     args = parser.parse_args()
     
-    # Create test runner
     runner = TestRunner(args.model, args.packs)
     
-    try:
-        if args.list_tests:
-            runner.list_available_tests()
-            return
-            
-        if args.list_packs:
-            runner.list_available_packs()
-            return
-            
-        if args.verify_blinding:
-            runner.verify_blinding()
-            return
-            
-        if args.statistical_analysis:
-            runner.run_statistical_analysis(
-                test_name=args.test,
-                baseline_packs=args.baseline_packs,
-                treatment_packs=args.treatment_packs,
-                output_path=args.output_path
-            )
-            return
-            
-        print(f"🚀 Neuromodulation Test Runner")
-        print(f"Model: {args.model}")
-        print(f"Mode: {args.mode}")
-        print(f"Test: {args.test}")
-        if args.packs_to_apply:
-            print(f"Packs: {args.packs_to_apply}")
-        print("=" * 70)
-        
-        if args.mode == "single":
-            results = runner.run_single_test(args.test, args.packs_to_apply)
-            print(f"\n✅ Single test completed: {args.test}")
-            
-        elif args.mode == "sequence":
-            results = runner.run_test_sequence(args.packs_to_apply)
-            print(f"\n✅ Test sequence completed: {len(results)} tests")
-            
-        elif args.mode == "comparison":
-            # Define default combinations for comparison
-            combinations = [
-                [],  # No packs
-                ['nicotine_v1'],  # Single pack
-            ]
-            if args.packs_to_apply:
-                combinations = [args.packs_to_apply]
-                
-            results = runner.run_comparison(args.test, combinations)
-            print(f"\n✅ Comparison test completed: {args.test}")
-            
-        print("\n" + "=" * 70)
-        print("✅ Test runner completed successfully!")
-        
-    except Exception as e:
-        print(f"❌ Test runner failed: {e}")
-        return 1
-        
-    finally:
-        runner.cleanup()
-        
-    return 0
+    if args.list_tests:
+        runner.list_tests()
+    elif args.list_packs:
+        runner.list_packs()
+    elif args.all:
+        runner.run_all_tests(args.packs_to_apply)
+    elif args.test:
+        runner.run_test(args.test, args.packs_to_apply)
+    else:
+        print("Please specify --test <name>, --all, --list-tests, or --list-packs")
+        parser.print_help()
+
 
 if __name__ == "__main__":
-    import torch
-    exit(main())
+    main()

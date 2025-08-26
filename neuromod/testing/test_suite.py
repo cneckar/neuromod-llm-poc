@@ -1,147 +1,234 @@
+#!/usr/bin/env python3
 """
-Test Suite for running multiple neuromodulation tests
+Test Suite for Neuromodulation Tests
+
+Manages running multiple tests with different pack combinations
 """
 
-from typing import Dict, List, Any, Optional
-from .base_test import BaseTest
-from ..neuromod_tool import NeuromodTool
+import sys
+import os
+import json
+from typing import Dict, List, Any, Optional, Tuple
+from datetime import datetime
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from .test_runner import TestRunner
+
 
 class TestSuite:
-    """Test suite for running multiple neuromodulation tests"""
+    """Test suite for managing multiple neuromodulation tests"""
     
-    def __init__(self, model_name: str = "gpt2"):
+    def __init__(self, model_name: str = "microsoft/DialoGPT-small", packs_file: str = "packs/config.json"):
         self.model_name = model_name
-        self.tests: List[BaseTest] = []
-        self.neuromod_tool: Optional[NeuromodTool] = None
-        
-    def add_test(self, test: BaseTest):
-        """Add a test to the suite"""
-        self.tests.append(test)
-        
-    def set_neuromod_tool(self, neuromod_tool: NeuromodTool):
-        """Set the neuromodulation tool for the suite"""
-        self.neuromod_tool = neuromod_tool
-        
-    def run_single_test(self, test_index: int = 0, packs: List[str] = None) -> Dict[str, Any]:
+        self.packs_file = packs_file
+        self.runner = TestRunner(model_name, packs_file)
+        self.results = []
+    
+    def run_single_test(self, test_name: str, packs: List[str] = None) -> Dict[str, Any]:
         """Run a single test with specified packs"""
-        if test_index >= len(self.tests):
-            raise ValueError(f"Test index {test_index} out of range (0-{len(self.tests)-1})")
+        return self.runner.run_test(test_name, packs)
+    
+    def run_test_sequence(self, test_names: List[str] = None, packs: List[str] = None) -> Dict[str, Any]:
+        """Run a sequence of tests with the same pack configuration"""
+        if test_names is None:
+            test_names = list(self.runner.available_tests.keys())
+        
+        print(f"🧪 Running test sequence: {test_names}")
+        print(f"📦 With packs: {packs or 'None'}")
+        
+        sequence_results = {}
+        for test_name in test_names:
+            print(f"\n{'='*50}")
+            result = self.runner.run_test(test_name, packs)
+            sequence_results[test_name] = result
+            self.results.append({
+                'timestamp': datetime.now().isoformat(),
+                'test_name': test_name,
+                'packs': packs or [],
+                'result': result
+            })
+        
+        return sequence_results
+    
+    def run_comparison(self, test_name: str, pack_combinations: List[List[str]]) -> Dict[str, Any]:
+        """Run a test with different pack combinations for comparison"""
+        print(f"🔬 Running comparison test: {test_name}")
+        print(f"📊 Pack combinations: {pack_combinations}")
+        
+        comparison_results = {}
+        for i, packs in enumerate(pack_combinations):
+            pack_label = f"combination_{i}" if packs else "baseline"
+            print(f"\n--- Running {pack_label}: {packs or 'No packs'} ---")
             
-        test = self.tests[test_index]
-        print(f"\n🧪 Running single test: {test.get_test_name()}")
-        print("=" * 70)
-        
-        # Apply packs if specified
-        if packs and self.neuromod_tool:
-            print(f"📦 Applying packs: {packs}")
-            for pack in packs:
-                result = self.neuromod_tool.apply(pack, intensity=0.8)
-                if result.get("ok"):
-                    print(f"✅ Applied pack: {pack}")
-                else:
-                    print(f"❌ Failed to apply pack: {pack}")
-        
-        # Set neuromod tool for the test
-        test.set_neuromod_tool(self.neuromod_tool)
-        
-        # Run the test
-        results = test.run_test(self.neuromod_tool)
-        
-        # Clear all packs
-        if self.neuromod_tool:
-            self.neuromod_tool.clear()
+            result = self.runner.run_test(test_name, packs)
+            comparison_results[pack_label] = {
+                'packs': packs or [],
+                'result': result
+            }
             
-        return results
+            self.results.append({
+                'timestamp': datetime.now().isoformat(),
+                'test_name': test_name,
+                'packs': packs or [],
+                'pack_combination_label': pack_label,
+                'result': result
+            })
         
-    def run_test_sequence(self, packs: List[str] = None) -> List[Dict[str, Any]]:
-        """Run all tests in sequence with specified packs"""
-        print(f"\n🧪 Running test sequence with packs: {packs or 'none'}")
-        print("=" * 70)
+        return comparison_results
+    
+    def run_comprehensive_study(self, 
+                               test_names: List[str] = None,
+                               pack_combinations: List[List[str]] = None) -> Dict[str, Any]:
+        """Run a comprehensive study with multiple tests and pack combinations"""
+        if test_names is None:
+            test_names = ['adq', 'cdq', 'sdq']  # Core tests
         
-        all_results = []
-        
-        for i, test in enumerate(self.tests):
-            print(f"\n📋 Test {i+1}/{len(self.tests)}: {test.get_test_name()}")
-            
-            # Apply packs if specified
-            if packs and self.neuromod_tool:
-                print(f"📦 Applying packs: {packs}")
-                for pack in packs:
-                    result = self.neuromod_tool.apply(pack, intensity=0.8)
-                    if result.get("ok"):
-                        print(f"✅ Applied pack: {pack}")
-                    else:
-                        print(f"❌ Failed to apply pack: {pack}")
-            
-            # Set neuromod tool for the test
-            test.set_neuromod_tool(self.neuromod_tool)
-            
-            # Run the test
-            results = test.run_test(self.neuromod_tool)
-            all_results.append(results)
-            
-            # Clear all packs
-            if self.neuromod_tool:
-                self.neuromod_tool.clear()
-                
-        return all_results
-        
-    def run_comparison_test(self, test_index: int = 0, pack_combinations: List[List[str]] = None) -> Dict[str, Any]:
-        """Run a test with multiple pack combinations for comparison"""
-        if test_index >= len(self.tests):
-            raise ValueError(f"Test index {test_index} out of range (0-{len(self.tests)-1})")
-            
-        test = self.tests[test_index]
-        print(f"\n🧪 Running comparison test: {test.get_test_name()}")
-        print("=" * 70)
-        
-        comparison_results = {
-            'test_name': test.get_test_name(),
-            'combinations': {}
-        }
-        
-        # Default combinations if none specified
         if pack_combinations is None:
             pack_combinations = [
-                [],  # No packs
-                ['nicotine_v1'],  # Single pack
-                ['nicotine_v1', 'psychedelic_v1']  # Multiple packs
+                [],  # Baseline
+                ['joy'],  # Single pack
+                ['caffeine'],  # Different pack
+                ['joy', 'caffeine']  # Multiple packs
             ]
         
-        for combo in pack_combinations:
-            combo_name = " + ".join(combo) if combo else "No packs"
-            print(f"\n📦 Testing combination: {combo_name}")
-            
-            # Apply packs
-            if combo and self.neuromod_tool:
-                for pack in combo:
-                    result = self.neuromod_tool.apply(pack, intensity=0.8)
-                    if result.get("ok"):
-                        print(f"✅ Applied pack: {pack}")
-                    else:
-                        print(f"❌ Failed to apply pack: {pack}")
-            
-            # Set neuromod tool for the test
-            test.set_neuromod_tool(self.neuromod_tool)
-            
-            # Run test
-            results = test.run_test(self.neuromod_tool)
-            comparison_results['combinations'][combo_name] = results
-            
-            # Clear all packs
-            if self.neuromod_tool:
-                self.neuromod_tool.clear()
-                
-        return comparison_results
+        print(f"🔬 Running comprehensive study")
+        print(f"🧪 Tests: {test_names}")
+        print(f"📦 Pack combinations: {pack_combinations}")
         
-    def list_tests(self):
-        """List all tests in the suite"""
-        print(f"\n📋 Test Suite ({len(self.tests)} tests):")
-        print("=" * 50)
-        for i, test in enumerate(self.tests):
-            print(f"{i+1}. {test.get_test_name()}")
+        study_results = {}
+        
+        for test_name in test_names:
+            print(f"\n{'='*60}")
+            print(f"🧪 Testing: {test_name.upper()}")
             
-    def cleanup(self):
-        """Clean up all tests"""
-        for test in self.tests:
-            test.cleanup()
+            test_results = self.run_comparison(test_name, pack_combinations)
+            study_results[test_name] = test_results
+        
+        print(f"\n{'='*60}")
+        print("🎉 Comprehensive study completed!")
+        
+        return study_results
+    
+    def export_results(self, filename: str = None):
+        """Export all results to JSON file"""
+        if filename is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"test_suite_results_{timestamp}.json"
+        
+        export_data = {
+            'export_timestamp': datetime.now().isoformat(),
+            'model_name': self.model_name,
+            'packs_file': self.packs_file,
+            'total_results': len(self.results),
+            'results': self.results
+        }
+        
+        with open(filename, 'w') as f:
+            json.dump(export_data, f, indent=2)
+        
+        print(f"💾 Results exported to: {filename}")
+        return filename
+    
+    def get_summary(self) -> Dict[str, Any]:
+        """Get a summary of all test results"""
+        if not self.results:
+            return {'message': 'No results available'}
+        
+        summary = {
+            'total_tests': len(self.results),
+            'successful_tests': sum(1 for r in self.results if r['result'].get('status') != 'error'),
+            'failed_tests': sum(1 for r in self.results if r['result'].get('status') == 'error'),
+            'tests_by_name': {},
+            'packs_tested': set()
+        }
+        
+        # Group by test name
+        for result in self.results:
+            test_name = result['test_name']
+            if test_name not in summary['tests_by_name']:
+                summary['tests_by_name'][test_name] = []
+            summary['tests_by_name'][test_name].append(result)
+            
+            # Track packs
+            for pack in result['packs']:
+                summary['packs_tested'].add(pack)
+        
+        summary['packs_tested'] = list(summary['packs_tested'])
+        return summary
+    
+    def print_summary(self):
+        """Print a formatted summary of results"""
+        summary = self.get_summary()
+        
+        if 'message' in summary:
+            print(summary['message'])
+            return
+        
+        print("\n📊 Test Suite Summary")
+        print("="*50)
+        print(f"Total tests run: {summary['total_tests']}")
+        print(f"Successful: {summary['successful_tests']}")
+        print(f"Failed: {summary['failed_tests']}")
+        print(f"Success rate: {summary['successful_tests']/summary['total_tests']*100:.1f}%")
+        
+        print(f"\n🧪 Tests by name:")
+        for test_name, results in summary['tests_by_name'].items():
+            successful = sum(1 for r in results if r['result'].get('status') != 'error')
+            total = len(results)
+            print(f"  {test_name}: {successful}/{total} successful")
+        
+        print(f"\n📦 Packs tested: {', '.join(summary['packs_tested']) if summary['packs_tested'] else 'None'}")
+
+
+def main():
+    """Command line interface for test suite"""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Run test suite")
+    parser.add_argument("--model", default="microsoft/DialoGPT-small", help="Model to use")
+    parser.add_argument("--packs", default="packs/config.json", help="Packs configuration file")
+    parser.add_argument("--mode", choices=["single", "sequence", "comparison", "comprehensive"], 
+                       default="single", help="Test mode")
+    parser.add_argument("--test", help="Test name for single/comparison mode")
+    parser.add_argument("--tests", nargs="*", help="Test names for sequence mode")
+    parser.add_argument("--packs-to-apply", nargs="*", help="Packs to apply")
+    parser.add_argument("--export", help="Export results to file")
+    
+    args = parser.parse_args()
+    
+    suite = TestSuite(args.model, args.packs)
+    
+    if args.mode == "single":
+        if not args.test:
+            print("Error: --test required for single mode")
+            return
+        result = suite.run_single_test(args.test, args.packs_to_apply)
+        print(f"\n🎯 Single test result: {result.get('status', 'unknown')}")
+    
+    elif args.mode == "sequence":
+        result = suite.run_test_sequence(args.tests, args.packs_to_apply)
+        suite.print_summary()
+    
+    elif args.mode == "comparison":
+        if not args.test:
+            print("Error: --test required for comparison mode")
+            return
+        pack_combinations = [
+            [],  # Baseline
+            args.packs_to_apply or []  # With packs
+        ]
+        result = suite.run_comparison(args.test, pack_combinations)
+        suite.print_summary()
+    
+    elif args.mode == "comprehensive":
+        result = suite.run_comprehensive_study(args.tests)
+        suite.print_summary()
+    
+    if args.export:
+        suite.export_results(args.export)
+
+
+if __name__ == "__main__":
+    main()

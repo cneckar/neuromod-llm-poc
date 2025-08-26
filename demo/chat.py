@@ -3,17 +3,25 @@
 Advanced Interactive Chat Interface with Neuromodulation Packs
 Chat with a language model under the influence of 0, 1, or more neuromodulation packs
 Supports loading from config, exporting to config, and custom effect combinations
+Now with real-time emotion tracking!
 """
 
 import torch
 import os
 import gc
 import json
+import sys
+import time
 from typing import Dict, List, Any
+
+# Add the parent directory to the path to import neuromod modules
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from neuromod.pack_system import PackRegistry, Pack, EffectConfig
 from neuromod.neuromod_tool import NeuromodTool
 from neuromod.effects import EffectRegistry
+from neuromod.testing.simple_emotion_tracker import SimpleEmotionTracker
 
 # Disable MPS completely to avoid bus errors
 os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
@@ -29,6 +37,10 @@ class NeuromodChat:
         self.neuromod_tool = None
         self.active_packs = []
         self.custom_effects = []  # Store custom effect combinations
+        
+        # Initialize emotion tracking
+        self.emotion_tracker = SimpleEmotionTracker()
+        self.chat_session_id = f"chat_{int(os.getpid())}_{int(time.time())}"
         
         # Load model and setup
         self._load_model()
@@ -211,6 +223,9 @@ class NeuromodChat:
             response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
             response = response[len(prompt):].strip()
             
+            # Track emotions for this response
+            self._track_emotions(response, prompt)
+            
             return response if response else "I don't have a response for that."
             
         except Exception as e:
@@ -223,6 +238,7 @@ class NeuromodChat:
         print("🧠 Neuromodulation Chat Interface")
         print("=" * 60)
         print(f"Model: {self.model_name}")
+        print(f"🎭 Emotion tracking: Active")
         
         # Initial pack selection
         self.select_packs()
@@ -239,6 +255,8 @@ class NeuromodChat:
         print("  /export_pack - Export current combination as a pack")
         print("  /load_pack - Load a pack from config file")
         print("  /save_config - Save current config to file")
+        print("  /emotions - Show emotion tracking summary")
+        print("  /export_emotions - Export emotion results to file")
         print("  /quit - Exit chat")
         print("  /help - Show this help")
         print("-" * 60)
@@ -293,6 +311,14 @@ class NeuromodChat:
                 for i, effect in enumerate(self.custom_effects, 1):
                     print(f"    {i}. {effect.effect} (weight={effect.weight}, direction={effect.direction})")
             print(f"  Neuromodulation: {'Available' if self.neuromod_tool else 'Not available'}")
+            
+            # Show emotion tracking status
+            summary = self.get_emotion_summary()
+            if summary:
+                print(f"  Emotion tracking: Active ({summary.get('total_states', 0)} assessments)")
+                print(f"  Current valence: {summary.get('valence_trend', 'neutral')}")
+            else:
+                print(f"  Emotion tracking: Inactive")
         
         elif cmd == "/quit":
             print("\n👋 Goodbye!")
@@ -319,6 +345,12 @@ class NeuromodChat:
         elif cmd == "/save_config":
             self.save_config()
         
+        elif cmd == "/emotions":
+            self.show_emotion_summary()
+        
+        elif cmd == "/export_emotions":
+            self.export_emotion_results()
+        
         elif cmd == "/help":
             print("\n💬 Chat Commands:")
             print("  /packs - Show available packs")
@@ -332,6 +364,8 @@ class NeuromodChat:
             print("  /export_pack - Export current combination as a pack")
             print("  /load_pack - Load a pack from config file")
             print("  /save_config - Save current config to file")
+            print("  /emotions - Show emotion tracking summary")
+            print("  /export_emotions - Export emotion results to file")
             print("  /quit - Exit chat")
             print("  /help - Show this help")
         
@@ -517,6 +551,78 @@ class NeuromodChat:
         except Exception as e:
             print(f"❌ Error saving config: {e}")
     
+    def _track_emotions(self, response: str, context: str = ""):
+        """Track emotions for the generated response"""
+        try:
+            # Track emotion changes
+            latest_state = self.emotion_tracker.assess_emotion_change(response, self.chat_session_id, context)
+            
+            if latest_state:
+                # Check for any emotion changes
+                emotion_changes = []
+                for emotion in ['joy', 'sadness', 'anger', 'fear', 'surprise', 'disgust', 'trust', 'anticipation']:
+                    emotion_value = getattr(latest_state, emotion)
+                    if emotion_value in ['up', 'down']:
+                        emotion_changes.append(f"{emotion}: {emotion_value}")
+                
+                if emotion_changes:
+                    print(f"🎭 Emotions: {' | '.join(emotion_changes)} | Valence: {latest_state.valence}")
+                else:
+                    print(f"🎭 Emotions: stable | Valence: {latest_state.valence}")
+                    
+        except Exception as e:
+            print(f"⚠️ Emotion tracking error: {e}")
+    
+    def get_emotion_summary(self):
+        """Get a summary of emotional changes during the chat session"""
+        try:
+            return self.emotion_tracker.get_emotion_summary()
+        except Exception as e:
+            print(f"⚠️ Error getting emotion summary: {e}")
+            return None
+    
+    def export_emotion_results(self, filename: str = None):
+        """Export emotion tracking results to file"""
+        try:
+            if not filename:
+                filename = f"emotion_results_{self.chat_session_id}.json"
+            self.emotion_tracker.export_results(filename)
+            print(f"💾 Emotion results exported to: {filename}")
+        except Exception as e:
+            print(f"⚠️ Error exporting emotion results: {e}")
+    
+    def show_emotion_summary(self):
+        """Show a summary of emotional changes during the chat session"""
+        try:
+            summary = self.get_emotion_summary()
+            if not summary:
+                print("❌ No emotion data available")
+                return
+            
+            print(f"\n🎭 Emotion Tracking Summary:")
+            print("=" * 40)
+            print(f"  Total assessments: {summary.get('total_states', 0)}")
+            print(f"  Overall valence: {summary.get('valence_trend', 'neutral')}")
+            
+            # Show emotion changes
+            emotion_changes = summary.get('emotion_changes', {})
+            if emotion_changes:
+                print(f"\n  📊 Emotion Changes:")
+                for emotion, counts in emotion_changes.items():
+                    up_count = counts.get('up', 0)
+                    down_count = counts.get('down', 0)
+                    stable_count = counts.get('stable', 0)
+                    
+                    if up_count > 0 or down_count > 0:
+                        print(f"    {emotion.capitalize()}: {up_count} up, {down_count} down, {stable_count} stable")
+                    elif stable_count > 0:
+                        print(f"    {emotion.capitalize()}: {stable_count} stable")
+            else:
+                print(f"  📊 No emotion changes detected")
+                
+        except Exception as e:
+            print(f"⚠️ Error showing emotion summary: {e}")
+
     def _apply_custom_combination(self):
         """Apply current custom effect combination"""
         if not self.neuromod_tool or not self.custom_effects:
