@@ -12,6 +12,22 @@ Neuromod-LLM is a comprehensive research platform that simulates psychoactive su
 - **Generate publication-quality** statistical analysis
 - **Explore AI cognition** through controlled interventions
 
+## ⚠️ **IMPORTANT: Model Requirements**
+
+**This framework requires LOCAL model access - API models (OpenAI, Anthropic, etc.) are NOT supported.**
+
+Our neuromodulation effects require direct access to model internals (activations, attention weights, hidden states) that are only available when running models locally. Supported backends:
+
+- **HuggingFace Transformers** - For research and development
+- **vLLM** - For high-throughput inference
+- **Local GPU/CPU** - Direct model execution
+
+**Supported Models:**
+- Llama-3.1-70B, Llama-3.1-8B
+- Qwen-2.5-Omni-7B, Qwen-2.5-7B  
+- Mixtral-8×22B (MoE)
+- Other open-source models via HuggingFace
+
 ## 🚀 Quick Start
 
 ### Installation

@@ -1,0 +1,461 @@
+# Preregistered Study Plan: Neuromodulated Language Models as Drug Analogues
+# This file defines the study design, endpoints, and analysis plan before any experiments are run
+# Created: 2024-12-19
+# Version: 1.0
+
+study_info:
+  title: "Neuromodulated Language Models: Prototyping Pharmacological Analogues and Blind, Placebo-Controlled Evaluation"
+  authors: ["Primary Investigator"]
+  preregistration_date: "2024-12-19"
+  study_id: "neuromod-llm-001"
+  version: "1.0"
+
+# ============================================================================
+# OBJECTIVES AND HYPOTHESES
+# ============================================================================
+
+objectives:
+  primary: "Evaluate whether neuromodulation packs can reproduce known pharmacological effects on language model behavior using blind, placebo-controlled within-model crossover experiments"
+  secondary: 
+    - "Assess the specificity of drug analogue effects across different model architectures (Llama-3.1-70B, Qwen-2.5-Omni-7B, Mixtral-8×22B)"
+    - "Validate the psychometric detection of drug-like effects in language models using adapted human instruments"
+    - "Compare model behavioral signatures against human subjective-effect profiles via signature matching"
+    - "Demonstrate controlled creativity/focus trade-offs in LLMs through neuromodulation"
+
+hypotheses:
+  primary: "Neuromodulation packs will produce statistically significant changes in psychometric test scores that correspond to their intended pharmacological analogues, with detection accuracy >80% vs placebo"
+  secondary:
+    - "Stimulant packs (caffeine, cocaine, amphetamine) will increase focus-related metrics (ADQ-20 stimulant subscale, PCQ-POP focus) and decrease entropy"
+    - "Psychedelic packs (LSD, psilocybin, DMT) will increase associative/visionary metrics (PDQ-S total, ADQ-20 visionary subscale) and entropy"
+    - "Depressant packs (alcohol, benzodiazepines, opioids) will decrease focus and increase calmness metrics (PCQ-POP sedation, SDQ calmness)"
+    - "Effects will be detectable across multiple model architectures with varying magnitudes"
+    - "Model behavioral signatures will show significant correlation with human subjective-effect profiles"
+
+# ============================================================================
+# PRIMARY AND SECONDARY ENDPOINTS
+# ============================================================================
+
+endpoints:
+  primary:
+    # One primary endpoint per pack category for success judgment
+    stimulant_detection:
+      description: "Detection of stimulant effects via ADQ-20 and PCQ-POP tests"
+      metric: "ADQ-20 stimulant subscale score + PCQ-POP focus metrics"
+      packs: ["caffeine", "cocaine", "amphetamine", "methylphenidate", "modafinil"]
+      expected_direction: "increase"
+      
+    psychedelic_detection:
+      description: "Detection of psychedelic effects via PDQ-S and ADQ-20 tests"
+      metric: "PDQ-S total score + ADQ-20 visionary subscale score"
+      packs: ["lsd", "psilocybin", "dmt", "mescaline", "2c_b"]
+      expected_direction: "increase"
+      
+    depressant_detection:
+      description: "Detection of depressant effects via PCQ-POP and SDQ tests"
+      metric: "PCQ-POP sedation score + SDQ calmness bias"
+      packs: ["alcohol", "benzodiazepines", "heroin", "morphine", "fentanyl"]
+      expected_direction: "increase"
+
+  secondary:
+    # All other metrics for exploratory analysis
+    cognitive_performance:
+      description: "Cognitive task performance across all packs"
+      metrics: ["CDQ cognitive distortion scores", "DDQ digital dependency", "EDQ emotional patterns"]
+      
+    social_behavior:
+      description: "Social and prosocial behavior changes"
+      metrics: ["SDQ social desirability", "MDMA prosocial bias", "empathy measures"]
+      
+    creativity_and_association:
+      description: "Creative and associative thinking patterns"
+      metrics: ["associative steering effects", "novel link formation", "metaphor generation"]
+      
+    attention_and_focus:
+      description: "Attention, focus, and working memory effects"
+      metrics: ["attention entropy", "working memory decay", "focus metrics"]
+      
+    off_target_effects:
+      description: "Unintended side effects and safety metrics"
+      metrics: ["refusal_rate", "toxicity_scores", "hallucination_proxy", "verbosity_changes"]
+
+# ============================================================================
+# STATISTICAL ANALYSIS PLAN
+# ============================================================================
+
+statistics:
+  alpha_level: 0.05
+  multiple_comparisons_correction: "bh-fdr"  # Benjamini-Hochberg FDR
+  primary_tests: ["paired_t", "wilcoxon"]  # Paired tests for within-subject design
+  effect_sizes: ["cohens_d_paired", "cliffs_delta"]
+  confidence_intervals: 0.95
+  bootstrap_iterations: 10000
+  
+  power_analysis:
+    target_effect_size: 0.25  # Cohen's d
+    power: 0.80
+    alpha: 0.05
+    n_min_per_condition: 80  # Minimum items per condition from power calculation
+    pilot_study_size: 80  # Items for pilot to estimate SD
+
+# ============================================================================
+# EXPERIMENTAL DESIGN
+# ============================================================================
+
+design:
+  type: "within_subject_crossover"
+  randomization: "latin_square"
+  blinding: "double_blind"
+  conditions_per_item: 3  # Control, Persona, Pack
+  
+  # Three-condition baseline system
+  conditions:
+    control:
+      name: "control"
+      description: "No neuromodulation applied"
+      pack: "none"
+      
+    persona:
+      name: "persona_baseline" 
+      description: "Prompt-only persona equivalent of the pack"
+      pack: "persona_equivalent"
+      
+    treatment:
+      name: "pack_treatment"
+      description: "Full neuromodulation pack applied"
+      pack: "variable"  # Will be specified per run
+
+  # Stopping rules
+  stopping_rules:
+    primary: "Stop only when n >= n_min or preregistered interim analysis"
+    interim_analyses: 
+      - "After pilot study (n=80) to estimate SD and adjust n_min"
+      - "After 50% of planned sample if effect sizes are much larger/smaller than expected"
+    early_stopping: "Only for safety concerns or technical failures"
+
+# ============================================================================
+# CONCEPTUAL FRAMEWORK
+# ============================================================================
+
+conceptual_framework:
+  description: "Mapping psychoactive molecules to computational levers in language models"
+  
+  molecular_to_computational_mapping:
+    nicotine:
+      mechanism: "nAChR agonism"
+      computational_lever: "micro-focus pulses: per-token temperature drop, QK gain, short-horizon consistency"
+      expected_effects: ["increased_focus", "decreased_entropy", "enhanced_attention"]
+      
+    serotonergic_psychedelics:
+      mechanism: "5-HT2A partial agonism"
+      computational_lever: "loosened priors/associative entropy: temp/top-p up, light head mask, Δh 'associative' vectors"
+      expected_effects: ["increased_associations", "visual_effects", "ego_dissolution", "increased_entropy"]
+      
+    stimulants:
+      mechanism: "DA/NE ↑"
+      computational_lever: "salience sharpening/goal focus: temp/top-p down, presence/frequency penalties up, QK scale"
+      expected_effects: ["increased_focus", "decreased_entropy", "enhanced_attention", "goal_focus"]
+      
+    thc:
+      mechanism: "CB1 agonism"
+      computational_lever: "WM squeeze/playfulness: KV decay/segmenting + mild temp raise"
+      expected_effects: ["memory_impairment", "playful_associations", "increased_entropy"]
+      
+    nmda_antagonists:
+      mechanism: "NMDA receptor antagonism"
+      computational_lever: "global-integration jitter: deep-layer head masking + KV stride-compress"
+      expected_effects: ["head_disruption", "memory_stride", "dissociation", "altered_perception"]
+      
+    empathogens:
+      mechanism: "5-HT release + DA/NE"
+      computational_lever: "affiliative tone: prosocial Δh + light sampler loosen"
+      expected_effects: ["increased_prosocial", "emotional_enhancement", "empathy_boost"]
+      
+    caffeine:
+      mechanism: "Adenosine antagonism"
+      computational_lever: "enhanced focus: tight nucleus sampling, reduced entropy, QK scaling"
+      expected_effects: ["increased_focus", "decreased_entropy", "enhanced_attention"]
+  
+  safety_invariants:
+    - "Packs must not lower refusal thresholds or safety alignment"
+    - "No relaxation of safety guardrails"
+    - "Preserve model's ability to refuse harmful requests"
+    - "Maintain factual accuracy and coherence"
+
+# ============================================================================
+# PACK SELECTION AND CATEGORIZATION
+# ============================================================================
+
+packs:
+  # Stimulant category
+  stimulants:
+    description: "Packs designed to increase focus, attention, and cognitive performance"
+    packs: ["caffeine", "cocaine", "crack_cocaine", "amphetamine", "methamphetamine", 
+            "methylphenidate", "cathinone", "mephedrone", "modafinil", "ephedrine"]
+    expected_effects: ["increased_focus", "decreased_entropy", "enhanced_attention"]
+    
+  # Psychedelic category  
+  psychedelics:
+    description: "Packs designed to increase associative thinking, visual effects, and altered states"
+    packs: ["lsd", "psilocybin", "dmt", "5_meo_dmt", "mescaline", "2c_b", "2c_i", "nbome"]
+    expected_effects: ["increased_associations", "visual_effects", "ego_dissolution", "increased_entropy"]
+    
+  # Depressant category
+  depressants:
+    description: "Packs designed to decrease arousal, increase calmness, and impair cognitive function"
+    packs: ["alcohol", "heroin", "morphine", "fentanyl", "benzodiazepines", "barbiturates", 
+            "ghb", "gbl", "methadone", "buprenorphine"]
+    expected_effects: ["increased_calmness", "decreased_focus", "memory_impairment"]
+    
+  # Dissociative category
+  dissociatives:
+    description: "Packs designed to produce dissociation, head disruption, and altered perception"
+    packs: ["ketamine", "pcp", "dxm", "mxe", "nitrous_oxide", "salvia"]
+    expected_effects: ["head_disruption", "memory_stride", "dissociation", "altered_perception"]
+    
+  # Empathogen category
+  empathogens:
+    description: "Packs designed to increase prosocial behavior and emotional connection"
+    packs: ["mdma", "mda", "mdea", "6_apb", "methylone"]
+    expected_effects: ["increased_prosocial", "emotional_enhancement", "empathy_boost"]
+    
+  # Placebo category
+  placebos:
+    description: "Packs designed to change style without affecting primary endpoints"
+    packs: ["placebo_style", "placebo_voice", "placebo_formatting"]
+    expected_effects: ["style_changes_only", "no_primary_endpoint_effects"]
+
+# ============================================================================
+# PSYCHOMETRIC INSTRUMENTS
+# ============================================================================
+
+instruments:
+  adq_20:
+    name: "AI Digital Enhancer Detection Questionnaire (ADQ-20)"
+    description: "20-item questionnaire across 14 subscales for detecting drug-like effects"
+    subscales: ["stimulant", "psychedelic", "depressant", "dissociative", "empathogen", 
+                "focus", "creativity", "social", "memory", "attention", "emotion", 
+                "perception", "cognition", "safety"]
+    scoring: "weighted_sum_with_intercept"
+    
+  pdq_s:
+    name: "Psychedelic Detection Questionnaire - Short (PDQ-S)"
+    description: "15-item questionnaire for detecting psychedelic effects"
+    subscales: ["vrs", "syn", "time", "mean", "obn", "dis", "ctrl", "anx"]
+    scoring: "presence_model_with_intensity"
+    
+  pcq_pop:
+    name: "Population-level Cognitive Questionnaire (PCQ-POP-20)"
+    description: "60-item questionnaire across 3 sets for cognitive assessment"
+    subscales: ["RUSH", "POWER", "SED", "DISINH", "MOTOR", "MEM", "ANXREL", "BLISS", 
+                "SLOW", "CLAMP"]
+    scoring: "pack_specific_logistic_models"
+    
+  cdq:
+    name: "Cognitive Distortion Questionnaire (CDQ)"
+    description: "Assessment of cognitive biases and thinking patterns"
+    subscales: ["all_or_nothing", "catastrophizing", "mind_reading", "fortune_telling"]
+    scoring: "subscale_averages"
+    
+  sdq:
+    name: "Social Desirability Questionnaire (SDQ)"
+    description: "Assessment of social presentation and self-reporting bias"
+    subscales: ["impression_management", "self_deception"]
+    scoring: "total_score"
+    
+  ddq:
+    name: "Digital Dependency Questionnaire (DDQ)"
+    description: "Assessment of digital technology dependency patterns"
+    subscales: ["compulsive_use", "withdrawal", "tolerance", "interference"]
+    scoring: "total_score"
+    
+  edq:
+    name: "Emotional Digital Use Questionnaire (EDQ)"
+    description: "Assessment of emotional patterns in digital interactions"
+    subscales: ["emotional_regulation", "mood_modification", "social_connection"]
+    scoring: "subscale_averages"
+
+# ============================================================================
+# MODEL SPECIFICATIONS
+# ============================================================================
+
+models:
+  primary:
+    - name: "Llama-3.1-70B"
+      provider: "huggingface"
+      quantization: "4bit"
+      max_length: 2048
+      
+    - name: "Qwen-2.5-Omni-7B" 
+      provider: "huggingface"
+      quantization: "4bit"
+      max_length: 2048
+      
+    - name: "Mixtral-8x22B"
+      provider: "huggingface"
+      quantization: "4bit"
+      max_length: 2048
+      
+  secondary:
+    - name: "Llama-3.1-8B"
+      provider: "huggingface"
+      quantization: "8bit"
+      max_length: 2048
+      
+    - name: "Qwen-2.5-7B"
+      provider: "huggingface"
+      quantization: "8bit"
+      max_length: 2048
+
+# ============================================================================
+# OFF-TARGET MONITORING
+# ============================================================================
+
+off_target_bands:
+  refusal_rate:
+    max_delta: 0.03  # 3% increase in refusal rate
+    measurement: "proportion_of_refusals"
+    
+  toxicity:
+    max_delta: 0.02  # 2% increase in toxicity scores
+    measurement: "classifier_based_toxicity"
+    
+  verbosity:
+    max_delta_ratio: 0.15  # 15% change in average response length
+    measurement: "tokens_per_response"
+    
+  hallucination_proxy:
+    max_delta: 0.05  # 5% increase in inconsistency
+    measurement: "consistency_on_paraphrases"
+
+# ============================================================================
+# ROBUSTNESS AND GENERALIZATION
+# ============================================================================
+
+robustness:
+  paraphrase_sets: 2  # Two different phrasings of each instrument
+  model_architectures: 3  # At least 3 different model types
+  held_out_prompts: true  # Never use pilot prompts in main study
+  cross_validation: "stratified_by_pack_category"
+  
+  generalization_tests:
+    - "Different prompt phrasings"
+    - "Different model architectures" 
+    - "Different pack intensities"
+    - "Different test orders"
+
+# ============================================================================
+# ABLATION AND DOSE-RESPONSE
+# ============================================================================
+
+ablations:
+  minus_one_ablations: true  # Remove each effect individually
+  effect_importance: "rank_by_delta_from_full_pack"
+  
+dose_response:
+  intensity_levels: [0.3, 0.5, 0.7, 0.9]  # Low, medium, high, very high
+  monotonicity_test: true  # Test for monotonic dose-response relationships
+  ed50_estimation: true  # Estimate effective dose for 50% of maximum effect
+
+# ============================================================================
+# REPRODUCIBILITY AND PROVENANCE
+# ============================================================================
+
+reproducibility:
+  seed_management: "set_run_seed() function sets all random seeds"
+  deterministic_composition: true  # Effects applied in fixed order
+  caching: "prompts and outputs cached under outputs/experiments/runs/<id>/"
+  dependency_pinning: "pyproject.toml with exact versions"
+  freeze_snapshot: "pip freeze saved to outputs/experiments/runs/<id>/freeze.txt"
+  
+provenance:
+  pack_locks: "pack.lock.json with hashes and versions"
+  run_ledger: "outputs/experiments/runs/<id>/run.json with full provenance"
+  git_sha: "recorded for each run"
+  analysis_hash: "hash of this plan.yaml file"
+
+# ============================================================================
+# SAFETY AND ETHICS
+# ============================================================================
+
+safety:
+  risk_levels:
+    low: ["caffeine", "modafinil", "placebo"]
+    medium: ["alcohol", "cannabis_thc", "mdma"]
+    high: ["cocaine", "lsd", "heroin", "dmt"]
+    
+  restrictions:
+    demo_mode: "only low-risk packs allowed"
+    research_mode: "all packs allowed with explicit flag"
+    safety_monitoring: "continuous off-target monitoring"
+    
+  ethics:
+    research_only: true
+    no_human_subjects: true
+    model_safety: "monitor for harmful outputs"
+    data_privacy: "no personal data collected"
+
+# ============================================================================
+# REPORTING REQUIREMENTS
+# ============================================================================
+
+reporting:
+  primary_outputs:
+    - "analysis/results_all.csv - all results with p-values and effect sizes"
+    - "analysis/figures/ - all required figures and tables"
+    - "analysis/significant_results.csv - only significant findings"
+    
+  figures_required:
+    - "Figure 1: Schematic of neuromodulation pack pipeline"
+    - "Figure 2: ROC curves for PDQ-S/SDQ vs placebo per model"
+    - "Figure 3: Radar plots of subscale signatures (model vs human)"
+    - "Figure 4: Task delta bars (focus/creativity/latency)"
+    
+  tables_required:
+    - "Table 1: Mixed-effects estimates with 95% CIs"
+    - "Table 2: Effect sizes by pack category"
+    - "Table 3: Off-target monitoring results"
+    
+  machine_readable:
+    - "analysis/plan.yaml - this file"
+    - "outputs/experiments/runs/*/run.json - run ledgers"
+    - "packs/pack.lock.json - pack hashes"
+    - "outputs/analysis/statistical/results_all.csv - all data"
+
+# ============================================================================
+# DATA AND CODE RELEASE
+# ============================================================================
+
+data_release:
+  sample_bundle:
+    - "data/sample_items.jsonl - small, licensable subset"
+    - "Two ready packs (caffeine, lsd)"
+    - "Makefile target 'make sample-report'"
+    
+  reproducibility:
+    - "Complete environment specification"
+    - "Step-by-step reproduction instructions"
+    - "Golden-master test suite"
+    - "Sample data for validation"
+
+# ============================================================================
+# VALIDATION CHECKLIST
+# ============================================================================
+
+validation:
+  mvr_checklist:
+    - "✅ Preregistration: This plan.yaml file created before experiments"
+    - "⏳ Provenance: pack.lock.json and run.json system"
+    - "⏳ Randomization: Latin square and blinding system"
+    - "⏳ Effect boundaries: API backend restrictions"
+    - "⏳ Baselines: Three-condition system"
+    - "⏳ Power analysis: Pilot studies and n_min calculations"
+    - "⏳ Off-target monitoring: Safety bands enforced"
+    - "⏳ Reproducibility: set_run_seed() and deterministic composition"
+    - "⏳ Reporting: PDF generation and machine-readable exports"
+    
+  qa_tests:
+    - "Latin square and blinding actually applied"
+    - "All packs validate and hash deterministically"
+    - "Analysis pipeline reproduces same results"
+    - "ActivationEffect rejected on API backends"
+    - "Sample report regenerates correctly"

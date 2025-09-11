@@ -62,11 +62,17 @@ def run_all_tests(verbose=False, specific_test=None):
     
     # Define test files
     test_files = [
+        # Core functionality tests
         "tests/test_core.py",
         "tests/test_effects.py", 
         "tests/test_integration.py",
+        "tests/test_simple_generation.py",  # Critical generation test
+        
+        # Probe system tests
         "tests/test_probes.py",
         "tests/test_probe_integration.py",
+        
+        # Full stack and deployment tests
         "tests/test_full_stack.py",
         "tests/test_container_simulation.py",
         "tests/test_api_servers.py"

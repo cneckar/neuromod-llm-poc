@@ -1,6 +1,9 @@
 from .pack_system import PackRegistry
 from .neuromod_tool import NeuromodTool
 from .emotion_system import EmotionSystem, EmotionState
+from .effects import EffectRegistry
+from .model_support import ModelSupportManager, create_model_support
+from .neuromod_factory import create_neuromod_tool, cleanup_neuromod_tool
 from .probes import (
     ProbeBus, 
     ProbeListener, 

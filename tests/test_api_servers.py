@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 API Server Testing Module
-Tests all API server components including server_real.py, model_manager.py, and vertex_ai_manager.py
+Tests all API server components including server.py, model_manager.py, and vertex_ai_manager.py
 """
 
 import unittest
@@ -162,16 +162,16 @@ class TestVertexAIManager(unittest.TestCase):
         
         print("✅ VertexAIManager structure test: OK")
 
-class TestServerReal(unittest.TestCase):
-    """Test server_real.py functionality"""
+class TestServer(unittest.TestCase):
+    """Test server.py functionality"""
     
     def setUp(self):
         """Set up test environment"""
         self.temp_dir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.temp_dir)
     
-    def test_server_real_import(self):
-        """Test server_real.py can be imported"""
+    def test_server_import(self):
+        """Test server.py can be imported"""
         try:
             # Mock dependencies
             with patch.dict('sys.modules', {
@@ -182,8 +182,8 @@ class TestServerReal(unittest.TestCase):
                 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'api'))
                 
                 # Test that we can read the file
-                server_path = os.path.join(os.path.dirname(__file__), '..', 'api', 'server_real.py')
-                self.assertTrue(os.path.exists(server_path), "server_real.py should exist")
+                server_path = os.path.join(os.path.dirname(__file__), '..', 'api', 'server.py')
+                self.assertTrue(os.path.exists(server_path), "server.py should exist")
                 
                 with open(server_path, 'r') as f:
                     content = f.read()
@@ -194,14 +194,14 @@ class TestServerReal(unittest.TestCase):
                 self.assertIn("@app.post", content, "Should have POST endpoints")
                 self.assertIn("@app.get", content, "Should have GET endpoints")
                 
-                print("✅ server_real.py structure test: OK")
+                print("✅ server.py structure test: OK")
                 
         except Exception as e:
-            self.fail(f"server_real.py test failed: {e}")
+            self.fail(f"server.py test failed: {e}")
     
-    def test_server_real_endpoints(self):
-        """Test server_real.py endpoint definitions"""
-        server_path = os.path.join(os.path.dirname(__file__), '..', 'api', 'server_real.py')
+    def test_server_endpoints(self):
+        """Test server.py endpoint definitions"""
+        server_path = os.path.join(os.path.dirname(__file__), '..', 'api', 'server.py')
         
         with open(server_path, 'r') as f:
             content = f.read()
@@ -218,7 +218,7 @@ class TestServerReal(unittest.TestCase):
         for endpoint in required_endpoints:
             self.assertIn(endpoint, content, f"Should have {endpoint} endpoint")
         
-        print("✅ server_real.py endpoints test: OK")
+        print("✅ server.py endpoints test: OK")
 
 class TestWebInterface(unittest.TestCase):
     """Test web_interface.py functionality"""
@@ -234,7 +234,7 @@ class TestWebInterface(unittest.TestCase):
             # Mock Streamlit
             with patch.dict('sys.modules', {
                 'streamlit': Mock(),
-                'api.server_real': Mock()
+                'api.server': Mock()
             }):
                 # Test that we can read the file
                 web_interface_path = os.path.join(os.path.dirname(__file__), '..', 'api', 'web_interface.py')
@@ -399,38 +399,32 @@ class TestDemoApplications(unittest.TestCase):
             self.fail(f"chat.py demo test failed: {e}")
     
     def test_advanced_chat_demo_import(self):
-        """Test advanced_chat_demo.py can be imported"""
+        """Test advanced_chat_demo.py consolidation (should not exist as it was merged into chat.py)"""
         try:
-            # Mock dependencies
-            with patch.dict('sys.modules', {
-                'neuromod': Mock(),
-                'neuromod.testing.simple_emotion_tracker': Mock()
-            }):
-                # Test that we can read the file
-                advanced_demo_path = os.path.join(os.path.dirname(__file__), '..', 'demo', 'advanced_chat_demo.py')
-                self.assertTrue(os.path.exists(advanced_demo_path), "advanced_chat_demo.py should exist")
-                
-                with open(advanced_demo_path, 'r') as f:
-                    content = f.read()
-                
-                # Check for essential components
-                self.assertIn("if __name__", content, "Should have main guard")
-                self.assertIn("demo_advanced_features", content, "Should have demo function")
-                
-                print("✅ advanced_chat_demo.py structure test: OK")
+            # advanced_chat_demo.py was consolidated into chat.py, so this test should pass
+            # by confirming it doesn't exist (which is correct)
+            advanced_demo_path = os.path.join(os.path.dirname(__file__), '..', 'demo', 'advanced_chat_demo.py')
+            self.assertFalse(os.path.exists(advanced_demo_path), "advanced_chat_demo.py should not exist (consolidated into chat.py)")
+            
+            print("✅ advanced_chat_demo.py consolidation test: OK")
                 
         except Exception as e:
-            self.fail(f"advanced_chat_demo.py demo test failed: {e}")
+            self.fail(f"advanced_chat_demo.py consolidation test failed: {e}")
 
 class TestAPIConfiguration(unittest.TestCase):
     """Test API configuration and settings"""
     
     def test_api_requirements(self):
         """Test API requirements.txt"""
-        requirements_path = os.path.join(os.path.dirname(__file__), '..', 'api', 'requirements.txt')
+        # Check if requirements.txt exists in api directory or use root requirements.txt
+        api_requirements_path = os.path.join(os.path.dirname(__file__), '..', 'api', 'requirements.txt')
+        root_requirements_path = os.path.join(os.path.dirname(__file__), '..', 'requirements.txt')
         
-        self.assertTrue(os.path.exists(requirements_path), "requirements.txt should exist")
+        requirements_exist = os.path.exists(api_requirements_path) or os.path.exists(root_requirements_path)
+        self.assertTrue(requirements_exist, "requirements.txt should exist in api/ or root directory")
         
+        # Use the existing requirements file
+        requirements_path = api_requirements_path if os.path.exists(api_requirements_path) else root_requirements_path
         with open(requirements_path, 'r') as f:
             requirements = f.read()
         

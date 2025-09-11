@@ -303,27 +303,39 @@ The neuromodulation system implements 8 main categories of effects:
 
 ## Pack Categories
 
-The system includes 82 packs across 4 main categories:
+The system includes 28 essential research packs across 8 main categories:
 
-### 1. **Real-World Substances** (50 packs)
-- **Stimulants:** Caffeine, Cocaine, Amphetamine, Methamphetamine, etc.
-- **Psychedelics:** LSD, Psilocybin, DMT, Mescaline, etc.
-- **Depressants:** Alcohol, Benzodiazepines, Barbiturates, etc.
-- **Opioids:** Heroin, Morphine, Fentanyl, etc.
-- **Dissociatives:** Ketamine, PCP, DXM, etc.
-- **Empathogens:** MDMA, MDA, 6-APB, etc.
+### 1. **Control Packs** (2 packs)
+- **none:** No neuromodulation effects applied
+- **placebo:** Style changes only, designed not to affect primary endpoints
 
-### 2. **Fictional Substances** (20 packs)
-- **Sci-Fi:** Melange (Dune), NZT-48 (Limitless), Soma (Brave New World)
-- **Gaming:** Skooma (Elder Scrolls), Jet (Fallout), ADAM (BioShock)
-- **Anime/Manga:** Red Eye (Cowboy Bebop)
-- **Cyberpunk:** Black Lace, Novacoke (Shadowrun)
+### 2. **Stimulants** (5 packs)
+- **Caffeine, Cocaine, Amphetamine, Methylphenidate, Modafinil**
+- **Effects:** Enhanced focus, attention sharpening, cognitive performance
 
-### 3. **Specialized Packs** (12 packs)
-- **Research:** Mentor, Speciation, Archivist, Goldfish
-- **Creative:** Tightrope, Firekeeper, Librarian's Bloom
-- **Technical:** Timepiece, Echonull, Chorus, Quanta
-- **Specialized:** Anchorite, Parliament
+### 3. **Psychedelics** (5 packs)
+- **LSD, Psilocybin, DMT, Mescaline, 2C-B**
+- **Effects:** Increased associations, visual effects, ego dissolution, entropy
+
+### 4. **Depressants** (5 packs)
+- **Alcohol, Benzodiazepines, Heroin, Morphine, Fentanyl**
+- **Effects:** Increased calmness, decreased focus, memory impairment
+
+### 5. **Dissociatives** (4 packs)
+- **Ketamine, PCP, DXM, Nitrous Oxide**
+- **Effects:** Head disruption, memory stride, dissociation, altered perception
+
+### 6. **Empathogens** (3 packs)
+- **MDMA, MDA, 6-APB**
+- **Effects:** Increased prosocial behavior, emotional enhancement, empathy boost
+
+### 7. **Cannabis** (1 pack)
+- **Cannabis THC**
+- **Effects:** Working memory effects, playfulness, mild entropy increase
+
+### 8. **Specialized Research** (3 packs)
+- **Mentor, Speciation, Archivist**
+- **Effects:** Research-specific cognitive enhancements and specializations
 
 ---
 
@@ -509,3 +521,7 @@ tool.apply_effect("steering", effect_config)
 - **Perceptual:** Sensory modulation, synesthesia
 
 This reference provides a comprehensive overview of the neuromodulation system's capabilities for researchers, developers, and users interested in understanding and applying these effects to language model behavior modification.
+
+## Archive
+
+The complete collection of 82 packs (including fictional substances and extended specialized packs) is available in the `archive/` directory for reference. The main research focuses on the 28 essential packs listed above, which cover all core categories mentioned in the paper outline and analysis plan.

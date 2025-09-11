@@ -8,6 +8,7 @@ torch>=2.2.0                    # PyTorch for deep learning
 transformers>=4.42.0            # Hugging Face transformers
 accelerate>=0.20.0              # Hugging Face accelerate
 bitsandbytes>=0.41.0            # Quantization support
+psutil>=5.9.0                   # System resource monitoring
 
 # =============================================================================
 # STATISTICAL ANALYSIS AND SCIENTIFIC COMPUTING
@@ -16,12 +17,16 @@ numpy>=1.25.0                   # Numerical computing
 scipy>=1.11.0                   # Scientific computing
 scikit-learn>=1.3.0             # Machine learning utilities
 pandas>=1.2.0                   # Data manipulation
+statsmodels>=0.14.0             # Statistical modeling
+pymc>=5.0.0                     # Bayesian analysis (optional)
+arviz>=0.15.0                   # Bayesian visualization (optional)
 
 # =============================================================================
 # VISUALIZATION AND PLOTTING
 # =============================================================================
 matplotlib>=3.7.0               # Basic plotting
 seaborn>=0.12.0                 # Statistical plotting
+jinja2>=3.1.0                   # Template engine for reports
 
 # =============================================================================
 # WEB FRAMEWORK DEPENDENCIES

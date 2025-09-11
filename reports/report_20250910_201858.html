@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Neuromodulation Study Report - report_20250910_201858</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; }
+        h2 { color: #34495e; margin-top: 30px; }
+        h3 { color: #7f8c8d; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .success { color: #27ae60; }
+        .warning { color: #f39c12; }
+        .error { color: #e74c3c; }
+        .summary-box { background-color: #ecf0f1; padding: 20px; border-radius: 5px; margin: 20px 0; }
+        code { background-color: #f8f9fa; padding: 2px 4px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>Neuromodulation Study Report</h1>
+    <p><strong>Report ID:</strong> report_20250910_201858</p>
+    <p><strong>Generated:</strong> 2025-09-10 20:18:58</p>
+    
+    <h2>Study Summary</h2>
+    
+## Study Summary
+
+### Overall Assessment
+- **Study Status**: ✅ SUCCESS
+- **Statistical Power**: 75.0% of tests significant
+- **Robustness**: ✅ ROBUST
+- **Safety**: ✅ SAFE
+
+### Key Findings
+- **Total Tests Performed**: 4
+- **Significant Effects**: 3
+- **Robustness Score**: 0.850
+- **Off-Target Status**: within_bands
+
+### Recommendations
+- ✅ Study demonstrates significant neuromodulation effects
+- ✅ Results are robust across conditions
+- ✅ No safety concerns detected
+- 📝 Ready for publication
+
+
+    <h2>Statistical Analysis</h2>
+    
+## Statistical Analysis Results
+
+### Summary Statistics
+- **Total Tests**: 4
+- **Significant Tests**: 3 (75.0%)
+- **Mean Effect Size**: 0.325
+- **Median Effect Size**: 0.350
+- **Mean P-value**: 0.070
+
+### Effect Size Interpretation
+- **Small Effect** (d < 0.2): 1 tests
+- **Medium Effect** (0.2 ≤ d < 0.5): 2 tests
+- **Large Effect** (d ≥ 0.5): 1 tests
+
+### Significant Results
+
+| Pack | Metric | Effect Size | P-value | Interpretation |
+|------|--------|-------------|---------|----------------|
+| caffeine | adq_score | 0.500 | 0.010 | medium |
+| caffeine | pdq_score | 0.300 | 0.050 | small |
+| alcohol | sdq_score | 0.400 | 0.020 | small |
+
+
+    <h2>Robustness Validation</h2>
+    
+## Robustness and Generalization
+
+### Overall Scores
+- **Robustness Score**: 0.850
+- **Generalization Score**: 0.750
+- **Overall Robust**: YES
+- **Models Tested**: 2
+
+### Interpretation
+- **Robustness Score ≥ 0.7**: ✅ PASS
+- **Generalization Score ≥ 0.6**: ✅ PASS
+- **Multiple Models**: ✅ PASS
+
+### Model-Specific Results
+
+#### llama-3.1-70b (open)
+- **Items**: 50
+- **Significant Effects**: 2
+- **Effects**: caffeine_adq, alcohol_sdq
+
+#### qwen-2.5-omni-7b (open)
+- **Items**: 50
+- **Significant Effects**: 2
+- **Effects**: caffeine_adq, caffeine_pdq
+
+
+    <h2>Off-Target Monitoring</h2>
+    
+## Off-Target Monitoring
+
+### Status
+- **Overall Status**: WITHIN_BANDS
+- **Total Measurements**: 100
+- **Baseline Available**: YES
+
+### Safety Bands
+- **Within Safety Bands**: ✅ YES
+
+### Safety Status
+- ✅ No safety violations detected
+
+### Latest Metrics
+- **Refusal Rate**: 0.020
+- **Toxicity Score**: 0.010
+- **Verbosity (tokens)**: 150
+- **Coherence Score**: 0.850
+
+
+
+</body>
+</html>

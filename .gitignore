@@ -189,6 +189,14 @@ plots/
 *.pdf
 *.svg
 
+# Debug outputs in root directory (should go to outputs/)
+baseline_*.png
+dmt_*.png
+lsd_*.png
+psilocybin_*.png
+*_test_*.png
+*_visual_*.png
+
 # Model files (if any large models are cached)
 models/
 *.bin

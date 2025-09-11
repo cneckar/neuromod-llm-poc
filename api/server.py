@@ -526,7 +526,7 @@ async def get_emotion_summary():
 async def export_emotions():
     """Export emotion tracking results to file"""
     try:
-        filename = f"emotion_results_api_{int(time.time())}.json"
+        filename = f"outputs/reports/emotion/emotion_results_api_{int(time.time())}.json"
         emotion_tracker.export_results(filename)
         
         return {

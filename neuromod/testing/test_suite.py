@@ -115,7 +115,7 @@ class TestSuite:
         """Export all results to JSON file"""
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"test_suite_results_{timestamp}.json"
+            filename = f"outputs/reports/test_suite/test_suite_results_{timestamp}.json"
         
         export_data = {
             'export_timestamp': datetime.now().isoformat(),
