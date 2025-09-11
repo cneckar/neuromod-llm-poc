@@ -7,7 +7,7 @@ name = "neuromod-llm"
 version = "0.1.0"
 description = "Neuromodulation effects for large language models"
 authors = [
-    {name = "Neuromod Research Team", email = "research@neuromod.ai"}
+    {name = "Cris Neckar", email = "hi@pihk.ai"}
 ]
 readme = "README.md"
 license = {text = "MIT"}
@@ -115,10 +115,10 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/neuromod-ai/neuromod-llm"
-Documentation = "https://neuromod-llm.readthedocs.io"
-Repository = "https://github.com/neuromod-ai/neuromod-llm.git"
-Issues = "https://github.com/neuromod-ai/neuromod-llm/issues"
+Homepage = "https://pihk.ai"
+Documentation = "https://pihk.ai"
+Repository = "https://github.com/cneckar/neuromod-llm-poc.git"
+Issues = "https://github.com/cneckar/neuromod-llm-poc/issues"
 
 [project.scripts]
 neuromod = "neuromod.cli:main"

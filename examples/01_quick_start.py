@@ -192,7 +192,7 @@ def main():
     print("\n9. Next Steps")
     print("Now that you've completed the quick start guide, you can:")
     print("1. Explore More Examples: Check out the other examples in this directory")
-    print("2. Read the Documentation: Visit https://neuromod-llm.readthedocs.io")
+    print("2. Read the Documentation: Visit https://pihk.ai")
     print("3. Try Different Packs: Experiment with the 80+ available packs")
     print("4. Create Custom Targets: Design your own behavioral optimization goals")
     print("5. Run Research Experiments: Use the scientific testing framework")
@@ -206,7 +206,7 @@ def main():
     print("neuromod optimize --pack placebo --target creative_writing")
     
     print("\nResources:")
-    print("- Documentation: https://neuromod-llm.readthedocs.io")
+    print("- Documentation: https://pihk.ai")
     print("- GitHub: https://github.com/cneckar/neuromod-llm-poc")
     print("- Issues: https://github.com/cneckar/neuromod-llm-poc/issues")
     print("- Discussions: https://github.com/cneckar/neuromod-llm-poc/discussions")

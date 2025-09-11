@@ -14,7 +14,7 @@ This document shows how to use the enhanced Vertex AI prediction server with var
 
 ### **1. Single Predefined Pack**
 ```bash
-curl -X POST "https://your-endpoint/predict" \
+curl -X POST "https://your-vertex-ai-endpoint/predict" \
   -H "Content-Type: application/json" \
   -d '{
     "instances": [{
@@ -38,7 +38,7 @@ curl -X POST "https://your-endpoint/predict" \
 
 ### **2. Custom Pack Definition**
 ```bash
-curl -X POST "https://your-endpoint/predict" \
+curl -X POST "https://your-vertex-ai-endpoint/predict" \
   -H "Content-Type: application/json" \
   -d '{
     "instances": [{
@@ -84,7 +84,7 @@ curl -X POST "https://your-endpoint/predict" \
 
 ### **3. Individual Effects**
 ```bash
-curl -X POST "https://your-endpoint/predict" \
+curl -X POST "https://your-vertex-ai-endpoint/predict" \
   -H "Content-Type: application/json" \
   -d '{
     "instances": [{
@@ -121,7 +121,7 @@ curl -X POST "https://your-endpoint/predict" \
 
 ### **4. Multiple Packs (Combined Effects)**
 ```bash
-curl -X POST "https://your-endpoint/predict" \
+curl -X POST "https://your-vertex-ai-endpoint/predict" \
   -H "Content-Type: application/json" \
   -d '{
     "instances": [{
@@ -146,7 +146,7 @@ curl -X POST "https://your-endpoint/predict" \
 
 ### **Get Available Packs**
 ```bash
-curl "https://your-endpoint/available_packs"
+curl "https://your-vertex-ai-endpoint/available_packs"
 ```
 
 **Response:**
@@ -162,7 +162,7 @@ curl "https://your-endpoint/available_packs"
 
 ### **Get Available Effects**
 ```bash
-curl "https://your-endpoint/available_effects"
+curl "https://your-vertex-ai-endpoint/available_effects"
 ```
 
 **Response:**
@@ -181,7 +181,7 @@ curl "https://your-endpoint/available_effects"
 
 ### **5. Research Mode with Custom Effects**
 ```bash
-curl -X POST "https://your-endpoint/predict" \
+curl -X POST "https://your-vertex-ai-endpoint/predict" \
   -H "Content-Type: application/json" \
   -d '{
     "instances": [{
@@ -220,7 +220,7 @@ curl -X POST "https://your-endpoint/predict" \
 
 ### **6. Creative Mode with Multiple Effects**
 ```bash
-curl -X POST "https://your-endpoint/predict" \
+curl -X POST "https://your-vertex-ai-endpoint/predict" \
   -H "Content-Type: application/json" \
   -d '{
     "instances": [{
@@ -255,7 +255,7 @@ curl -X POST "https://your-endpoint/predict" \
 
 ### **7. Memory-Enhanced Generation**
 ```bash
-curl -X POST "https://your-endpoint/predict" \
+curl -X POST "https://your-vertex-ai-endpoint/predict" \
   -H "Content-Type: application/json" \
   -d '{
     "instances": [{

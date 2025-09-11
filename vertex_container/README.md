@@ -59,7 +59,7 @@ Set environment variables or use command line options:
 
 ```bash
 # Environment variables
-export PROJECT_ID="your-project-id"
+export PROJECT_ID="your-google-cloud-project-id"
 export REGION="us-central1"
 export MODEL_NAME="meta-llama/Meta-Llama-3.1-8B"
 

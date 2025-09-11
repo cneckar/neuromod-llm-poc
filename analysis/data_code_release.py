@@ -144,8 +144,8 @@ class DataCodeReleaseManager:
             description="Neuromodulated LLMs as Drug Analogues - Research Release",
             authors=["Research Team"],
             license="MIT",
-            repository_url="https://github.com/your-org/neuromod-llm-poc",
-            documentation_url=f"https://github.com/your-org/neuromod-llm-poc/releases/tag/v{version}",
+            repository_url="https://github.com/cneckar/neuromod-llm-poc",
+            documentation_url=f"https://github.com/cneckar/neuromod-llm-poc/releases/tag/v{version}",
             data_files=[f.file_path for f in data_files],
             code_files=[f.file_path for f in code_files],
             dependency_files=dependency_files,
@@ -481,7 +481,7 @@ class DataCodeReleaseManager:
         sensitive_patterns = [
             (r'user_id:\s*\d+', 'user_id: ANONYMIZED'),
             (r'participant_id:\s*\d+', 'participant_id: ANONYMIZED'),
-            (r'email:\s*[^\s]+', 'email: ANONYMIZED@example.com'),
+            (r'email:\s*[^\s]+', 'email: hi@pihk.ai'),
             (r'name:\s*[^\s]+', 'name: ANONYMIZED'),
         ]
         
@@ -809,7 +809,7 @@ All data has been anonymized and de-identified. No personal information is inclu
 
 1. **Clone Repository**:
    ```bash
-   git clone https://github.com/your-org/neuromod-llm-poc.git
+   git clone https://github.com/cneckar/neuromod-llm-poc.git
    cd neuromod-llm-poc
    ```
 

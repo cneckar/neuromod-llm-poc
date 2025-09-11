@@ -182,7 +182,7 @@ pip install neuromod-llm
 
 ### Getting Help
 
-- **Documentation**: https://neuromod-llm.readthedocs.io
+- **Documentation**: https://pihk.ai
 - **Issues**: https://github.com/cneckar/neuromod-llm-poc/issues
 - **Discussions**: https://github.com/cneckar/neuromod-llm-poc/discussions
 

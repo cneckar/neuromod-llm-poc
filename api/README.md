@@ -123,7 +123,7 @@ DEVICE=cpu  # or cuda
 
 # Vertex AI Configuration (optional)
 GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
-VERTEX_AI_PROJECT_ID=your-project-id
+VERTEX_AI_PROJECT_ID=your-google-cloud-project-id
 VERTEX_AI_LOCATION=us-central1
 ```
 
@@ -168,7 +168,7 @@ bash deploy_vertex_ai.sh deploy
 # Connect API to Vertex AI
 curl -X POST "http://localhost:8000/vertex-ai/connect" \
   -H "Content-Type: application/json" \
-  -d '{"endpoint_url": "https://your-endpoint.vertex.ai"}'
+  -d '{"endpoint_url": "https://your-vertex-ai-endpoint.vertex.ai"}'
 ```
 
 ## 🧪 Testing

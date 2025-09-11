@@ -56,10 +56,10 @@ session_id = f"api_session_{int(time.time())}"
 if VERTEX_AI_AVAILABLE:
     try:
         # Get project ID from environment or use default
-        project_id = os.getenv("GOOGLE_CLOUD_PROJECT_ID", "your-project-id")
+        project_id = os.getenv("GOOGLE_CLOUD_PROJECT_ID", "your-google-cloud-project-id")
         region = os.getenv("GOOGLE_CLOUD_REGION", "us-central1")
         
-        if project_id != "your-project-id":
+        if project_id != "your-google-cloud-project-id":
             vertex_ai_manager = VertexAIManager(project_id, region)
             print(f"✅ Vertex AI Manager initialized for project: {project_id}")
         else:
