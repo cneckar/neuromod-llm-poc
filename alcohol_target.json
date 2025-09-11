@@ -1,0 +1,62 @@
+{
+  "name": "alcohol_intoxicant",
+  "description": "Alcohol-like intoxicant: social, joyful, slightly garbled, less accurate, less anxious, less self-judgmental",
+  "targets": [
+    {
+      "name": "behavior_socialization",
+      "target_type": "behavior",
+      "objective": "maximize",
+      "target_value": 0.8,
+      "weight": 1.0
+    },
+    {
+      "name": "emotion_joy",
+      "target_type": "emotion",
+      "objective": "maximize",
+      "target_value": 0.7,
+      "weight": 1.0
+    },
+    {
+      "name": "metric_originality",
+      "target_type": "metric",
+      "objective": "maximize",
+      "target_value": 0.6,
+      "weight": 0.8
+    },
+    {
+      "name": "behavior_creativity",
+      "target_type": "behavior",
+      "objective": "maximize",
+      "target_value": 0.5,
+      "weight": 0.8
+    },
+    {
+      "name": "emotion_anxiety",
+      "target_type": "emotion",
+      "objective": "minimize",
+      "target_value": 0.1,
+      "weight": 1.0
+    },
+    {
+      "name": "metric_coherence",
+      "target_type": "metric",
+      "objective": "minimize",
+      "target_value": 0.3,
+      "weight": 0.8
+    },
+    {
+      "name": "emotion_fear",
+      "target_type": "emotion",
+      "objective": "minimize",
+      "target_value": 0.1,
+      "weight": 0.8
+    },
+    {
+      "name": "behavior_focus",
+      "target_type": "behavior",
+      "objective": "minimize",
+      "target_value": 0.2,
+      "weight": 0.6
+    }
+  ]
+}

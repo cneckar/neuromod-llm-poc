@@ -78,6 +78,10 @@ python -m neuromod.testing.test_runner --list-packs
 
 # Verify blinding
 python -m neuromod.testing.test_runner --verify-blinding
+
+# Pack Optimization Examples
+python -m neuromod.optimization.cli test-pack --target joyful_social --prompts "Hello" "How are you?"
+python -m neuromod.optimization.cli optimize --pack mdma --target mdma_ecstasy --method evolutionary
 ```
 
 ## 📚 Usage Modes & Documentation
@@ -101,6 +105,12 @@ This project supports several usage modes, each with detailed documentation:
 - **What**: Create custom effects, build new packs, extend functionality
 - **How**: Use the effects system and pack management tools
 - **Details**: See [`neuromod/README.md`](neuromod/README.md) and [`tests/README.md`](tests/README.md)
+
+### 🎯 **Pack Optimization Mode**
+**For**: Drug design researchers, behavioral optimization, custom effect creation
+- **What**: Optimize neuromodulation packs to achieve specific behavioral targets
+- **How**: Use the machine learning optimization framework with evolutionary, Bayesian, and RL algorithms
+- **Details**: See [`neuromod/optimization/README.md`](neuromod/optimization/README.md)
 
 ### 📊 **Statistical Analysis Mode**
 **For**: Data analysis, publication preparation, research validation
@@ -128,6 +138,13 @@ This project supports several usage modes, each with detailed documentation:
 - **Effect Registry**: Browse and combine individual effects
 - **Export/Import**: Save custom combinations and configurations
 
+### **Pack Optimization System**
+- **Machine Learning Optimization**: Evolutionary, Bayesian, and Reinforcement Learning algorithms
+- **Behavioral Targeting**: Define specific emotional, behavioral, and cognitive goals
+- **Real-time Evaluation**: Emotion tracking and probe system integration
+- **Drug Design Laboratory**: Interactive optimization sessions with custom targets
+- **47 Available Effects**: Full exploration of neuromodulation parameter space
+
 ## 📦 What's Included
 
 ### **Core System**
@@ -135,6 +152,7 @@ This project supports several usage modes, each with detailed documentation:
 - **`packs/`**: 82 predefined neuromodulation configurations
 - **`demo/`**: Interactive demonstrations and chat interface
 - **`tests/`**: Comprehensive testing framework and validation
+- **`neuromod/optimization/`**: Machine learning pack optimization framework
 
 ### **Research Tools**
 - **Statistical Analysis**: Mixed-effects models, ROC curves, power analysis

@@ -17,6 +17,44 @@ The system uses a modular effects architecture:
 - **PackManager**: Orchestrates effect application and cleanup
 - **PackRegistry**: Manages pack loading from JSON configuration
 
+## 🎯 **Pack Optimization System**
+
+The neuromodulation framework includes a sophisticated machine learning optimization system for creating custom behavioral effects:
+
+### **Core Components**
+- **BehavioralTarget**: Define specific emotional, behavioral, and cognitive goals
+- **PackOptimizer**: Machine learning engine with multiple optimization algorithms
+- **ProbeEvaluator**: Real-time emotion tracking and behavioral evaluation
+- **DrugDesignLab**: Interactive optimization sessions
+
+### **Optimization Methods**
+- **Evolutionary Algorithms**: Genetic algorithms for complex multi-objective optimization
+- **Bayesian Optimization**: Efficient exploration of parameter spaces
+- **Reinforcement Learning**: Sequential decision-making for pack optimization
+- **Random Search**: Baseline comparison and exploration
+
+### **Quick Start**
+```python
+from neuromod.optimization import PackOptimizer, OptimizationConfig, OptimizationMethod
+from neuromod.optimization.targets import BehavioralTarget, TargetSpec, TargetType, OptimizationObjective
+
+# Create behavioral target
+target = BehavioralTarget(
+    name="joyful_social",
+    targets=[
+        TargetSpec("emotion_joy", TargetType.EMOTION, OptimizationObjective.MAXIMIZE, 0.8, 1.0),
+        TargetSpec("behavior_socialization", TargetType.BEHAVIOR, OptimizationObjective.MAXIMIZE, 0.9, 1.0)
+    ]
+)
+
+# Run optimization
+config = OptimizationConfig(method=OptimizationMethod.EVOLUTIONARY, max_iterations=20)
+optimizer = PackOptimizer(model_manager, evaluation_framework, config)
+result = optimizer.optimize_pack(base_pack, target, test_prompts)
+```
+
+**Documentation**: See [`optimization/README.md`](optimization/README.md) for comprehensive documentation.
+
 ## 🔍 **Probe System & Real-Time Monitoring**
 
 The neuromodulation framework includes a sophisticated probe system that monitors model behavior in real-time during generation, providing the foundation for emotion tracking and behavioral analysis.

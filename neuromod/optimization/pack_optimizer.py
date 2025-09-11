@@ -18,6 +18,10 @@ from pathlib import Path
 
 from .targets import BehavioralTarget, TargetManager
 from .evaluation import EvaluationFramework, BehavioralMetrics
+from .probe_evaluator import ProbeEvaluator, ProbeEvaluationResult
+from .bayesian_optimizer import BayesianOptimizer, BayesianOptimizationConfig
+from .rl_optimizer import RLOptimizer, RLOptimizationConfig
+from .evolutionary_ops import PackMutator, PackCrossover, MutationConfig, CrossoverConfig
 from ..pack_system import Pack, PackManager, PackRegistry
 from ..model_support import ModelSupportManager
 
@@ -54,6 +58,8 @@ class OptimizationResult:
     best_loss: float
     convergence_iteration: int
     success: bool
+    iterations: int
+    converged: bool
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 class PackOptimizer:
@@ -61,12 +67,17 @@ class PackOptimizer:
     
     def __init__(self, 
                  model_manager: ModelSupportManager,
-                 evaluation_framework: EvaluationFramework,
+                 evaluation_framework: EvaluationFramework = None,
                  config: OptimizationConfig = None):
         self.model_manager = model_manager
-        self.evaluation_framework = evaluation_framework
+        self.evaluation_framework = evaluation_framework or EvaluationFramework()
+        self.probe_evaluator = ProbeEvaluator(model_manager)
         self.config = config or OptimizationConfig()
         self.pack_registry = PackRegistry()
+        
+        # Initialize evolutionary operators
+        self.mutator = PackMutator(MutationConfig(mutation_rate=self.config.mutation_rate))
+        self.crossover = PackCrossover(CrossoverConfig(crossover_rate=self.config.crossover_rate))
         
         if self.config.random_seed is not None:
             np.random.seed(self.config.random_seed)
@@ -187,6 +198,8 @@ class PackOptimizer:
             best_loss=best_loss,
             convergence_iteration=len(iteration_history),
             success=best_loss < float('inf'),
+            iterations=len(iteration_history),
+            converged=best_loss < float('inf'),
             metadata={'method': 'evolutionary'}
         )
     
@@ -230,6 +243,8 @@ class PackOptimizer:
             best_loss=best_loss,
             convergence_iteration=len(iteration_history),
             success=best_loss < float('inf'),
+            iterations=len(iteration_history),
+            converged=best_loss < float('inf'),
             metadata={'method': 'random_search'}
         )
     
@@ -239,10 +254,42 @@ class PackOptimizer:
                           test_prompts: List[str]) -> OptimizationResult:
         """Optimize using Bayesian optimization"""
         
-        # For now, fall back to random search
-        # In a full implementation, we'd use a library like scikit-optimize
-        logger.warning("Bayesian optimization not fully implemented - falling back to random search")
-        return self._optimize_random_search(pack, target, test_prompts)
+        logger.info("Starting Bayesian optimization")
+        
+        # Define parameter bounds (simplified - in practice we'd need to know pack structure)
+        # For now, we'll use a simplified approach with effect parameters
+        bounds = self._get_pack_parameter_bounds(pack)
+        
+        # Create objective function
+        def objective(params):
+            # Create pack with given parameters
+            test_pack = self._create_pack_from_parameters(pack, params)
+            return self._evaluate_pack(test_pack, target, test_prompts)
+        
+        # Run Bayesian optimization
+        bayesian_config = BayesianOptimizationConfig(
+            n_initial_points=min(10, self.config.max_iterations // 5),
+            n_iterations=self.config.max_iterations,
+            random_seed=self.config.random_seed
+        )
+        
+        optimizer = BayesianOptimizer(bayesian_config)
+        best_params, best_loss, history = optimizer.optimize(objective, bounds)
+        
+        # Create optimized pack
+        optimized_pack = self._create_pack_from_parameters(pack, best_params)
+        
+        return OptimizationResult(
+            optimized_pack=optimized_pack,
+            final_loss=best_loss,
+            iteration_history=history,
+            best_loss=best_loss,
+            convergence_iteration=len(history),
+            success=best_loss < float('inf'),
+            iterations=len(history),
+            converged=best_loss < float('inf'),
+            metadata={'method': 'bayesian'}
+        )
     
     def _optimize_reinforcement_learning(self, 
                                        pack: Pack, 
@@ -250,10 +297,40 @@ class PackOptimizer:
                                        test_prompts: List[str]) -> OptimizationResult:
         """Optimize using reinforcement learning"""
         
-        # For now, fall back to random search
-        # In a full implementation, we'd use RL algorithms
-        logger.warning("Reinforcement learning optimization not fully implemented - falling back to random search")
-        return self._optimize_random_search(pack, target, test_prompts)
+        logger.info("Starting reinforcement learning optimization")
+        
+        # Define parameter bounds
+        bounds = self._get_pack_parameter_bounds(pack)
+        
+        # Create objective function (negate for reward)
+        def objective(params):
+            test_pack = self._create_pack_from_parameters(pack, params)
+            loss = self._evaluate_pack(test_pack, target, test_prompts)
+            return loss  # RL optimizer will negate this for reward
+        
+        # Run RL optimization
+        rl_config = RLOptimizationConfig(
+            n_episodes=self.config.max_iterations,
+            random_seed=self.config.random_seed
+        )
+        
+        optimizer = RLOptimizer(rl_config)
+        best_params, best_loss, history = optimizer.optimize(objective, bounds)
+        
+        # Create optimized pack
+        optimized_pack = self._create_pack_from_parameters(pack, best_params)
+        
+        return OptimizationResult(
+            optimized_pack=optimized_pack,
+            final_loss=best_loss,
+            iteration_history=history,
+            best_loss=best_loss,
+            convergence_iteration=len(history),
+            success=best_loss < float('inf'),
+            iterations=len(history),
+            converged=best_loss < float('inf'),
+            metadata={'method': 'reinforcement_learning'}
+        )
     
     def _initialize_population(self, base_pack: Pack, size: int) -> List[Pack]:
         """Initialize population for evolutionary algorithms"""
@@ -270,10 +347,70 @@ class PackOptimizer:
         return population
     
     def _evaluate_pack(self, pack: Pack, target: BehavioralTarget, test_prompts: List[str]) -> float:
-        """Evaluate a pack against the target"""
+        """Evaluate a pack against the target using probe system"""
+        try:
+            # Use probe evaluator for real emotion tracking
+            result = self.probe_evaluator.evaluate_with_pack(
+                pack_name=pack.name if hasattr(pack, 'name') else 'custom',
+                test_prompts=test_prompts,
+                model_name="microsoft/DialoGPT-small"
+            )
+            
+            # Convert probe evaluation to target format
+            actual_metrics = BehavioralMetrics()
+            
+            # Map probe emotions to target emotions
+            for target_spec in target.targets:
+                if target_spec.target_type.value == "emotion":
+                    # Map probe emotions to target emotions
+                    emotion_name = target_spec.name.replace('emotion_', '')
+                    actual_value = result.emotions.get(emotion_name, 0.0)
+                    actual_metrics.emotions[target_spec.name] = actual_value
+                
+                elif target_spec.target_type.value == "behavior":
+                    # Map probe behaviors to target behaviors
+                    behavior_name = target_spec.name.replace('behavior_', '')
+                    # Use probe stats as behavior indicators
+                    if behavior_name == 'creativity':
+                        actual_value = result.probe_stats.get('NOVEL_LINK', {}).get('firing_rate', 0.0)
+                    elif behavior_name == 'focus':
+                        actual_value = result.probe_stats.get('FIXATION_FLOW', {}).get('firing_rate', 0.0)
+                    elif behavior_name == 'socialization':
+                        actual_value = result.latent_axes.get('sociality', 0.0)
+                    else:
+                        actual_value = 0.0
+                    actual_metrics.behaviors[target_spec.name] = actual_value
+                
+                elif target_spec.target_type.value == "metric":
+                    # Map probe metrics to target metrics
+                    metric_name = target_spec.name.replace('metric_', '')
+                    if metric_name == 'coherence':
+                        actual_value = result.latent_axes.get('integration', 0.0)
+                    elif metric_name == 'optimism':
+                        actual_value = result.latent_axes.get('valence', 0.0)
+                    elif metric_name == 'thoughtfulness':
+                        actual_value = result.latent_axes.get('certainty', 0.0)
+                    else:
+                        actual_value = 0.0
+                    actual_metrics.metrics[target_spec.name] = actual_value
+            
+            # Compute loss using target's loss function
+            loss = target.compute_loss(actual_metrics.get_all_metrics())
+            
+            logger.debug(f"Pack evaluation: loss={loss:.4f}, emotions={result.emotions}")
+            
+            return loss
+            
+        except Exception as e:
+            logger.error(f"Error evaluating pack with probe system: {e}")
+            # Fallback to simple evaluation
+            return self._evaluate_pack_simple(pack, target, test_prompts)
+    
+    def _evaluate_pack_simple(self, pack: Pack, target: BehavioralTarget, test_prompts: List[str]) -> float:
+        """Fallback simple evaluation without probe system"""
         try:
             # Load model
-            model_name = "microsoft/DialoGPT-small"  # Use small model for speed
+            model_name = "microsoft/DialoGPT-small"
             model, tokenizer, _ = self.model_manager.load_model(model_name)
             
             # Apply pack
@@ -314,25 +451,16 @@ class PackOptimizer:
             return loss
             
         except Exception as e:
-            logger.error(f"Error evaluating pack: {e}")
+            logger.error(f"Error in simple pack evaluation: {e}")
             return float('inf')
     
     def _mutate(self, pack: Pack) -> Pack:
-        """Mutate a pack by randomly adjusting parameters"""
-        # This is a simplified mutation - in practice, we'd need to know
-        # which parameters are optimizable and how to adjust them
-        
-        # For now, just return a copy (no actual mutation)
-        # In a full implementation, we'd adjust effect parameters
-        return copy.deepcopy(pack)
+        """Mutate a pack using the evolutionary operators"""
+        return self.mutator.mutate(pack)
     
     def _crossover(self, parent1: Pack, parent2: Pack) -> Tuple[Pack, Pack]:
-        """Create offspring through crossover"""
-        # This is a simplified crossover - in practice, we'd need to know
-        # how to combine pack parameters
-        
-        # For now, just return copies of parents
-        return copy.deepcopy(parent1), copy.deepcopy(parent2)
+        """Create offspring through crossover using evolutionary operators"""
+        return self.crossover.crossover(parent1, parent2)
     
     def _tournament_selection(self, population: List[Pack], fitness_scores: List[float]) -> Pack:
         """Select individual using tournament selection"""
@@ -351,6 +479,83 @@ class PackOptimizer:
         improvement = recent_losses[0] - recent_losses[-1]
         
         return improvement < self.config.convergence_threshold
+    
+    def _get_pack_parameter_bounds(self, pack: Pack) -> List[Tuple[float, float]]:
+        """Get parameter bounds for optimization - includes all available effects"""
+        # Get all available effects directly from the effect registry
+        from ..effects import EffectRegistry
+        effect_registry = EffectRegistry()
+        available_effects = effect_registry.list_effects()
+        
+        bounds = []
+        
+        # For each available effect, add parameters:
+        # 1. Effect selection (0 or 1)
+        # 2. Effect weight (0-1) 
+        # 3. Effect strength (0-1)
+        # 4. Effect mode (0-1, maps to low/medium/high)
+        for effect_name in available_effects:
+            bounds.extend([
+                (0.0, 1.0),  # Effect selection (binary)
+                (0.0, 1.0),  # Effect weight
+                (0.0, 1.0),  # Effect strength
+                (0.0, 1.0),  # Effect mode
+            ])
+        
+        return bounds
+    
+    def _create_pack_from_parameters(self, base_pack: Pack, params: np.ndarray) -> Pack:
+        """Create a pack with given parameters - can include any available effects"""
+        # Get all available effects directly from the effect registry
+        from ..effects import EffectRegistry
+        effect_registry = EffectRegistry()
+        available_effects = effect_registry.list_effects()
+        
+        # Create a new pack with effects based on parameters
+        from ..pack_system import EffectConfig
+        new_pack = Pack(
+            name=f"optimized_{base_pack.name}",
+            description=f"Optimized version of {base_pack.name}",
+            effects=[]
+        )
+        
+        param_idx = 0
+        
+        # For each available effect, check if it should be included
+        for effect_name in available_effects:
+            if param_idx + 3 < len(params):  # Need at least 4 parameters per effect
+                # Check if effect should be included (selection > 0.5)
+                if params[param_idx] > 0.5:
+                    # Get effect parameters
+                    weight = np.clip(params[param_idx + 1], 0.0, 1.0)
+                    strength = np.clip(params[param_idx + 2], 0.0, 1.0)
+                    mode_val = np.clip(params[param_idx + 3], 0.0, 1.0)
+                    
+                    # Map mode value to string
+                    if mode_val < 0.33:
+                        mode = 'low'
+                    elif mode_val < 0.66:
+                        mode = 'medium'
+                    else:
+                        mode = 'high'
+                    
+                    # Create effect configuration
+                    effect_config = EffectConfig(
+                        effect=effect_name,
+                        weight=weight,
+                        direction='up',  # Default direction
+                        parameters={
+                            'strength': strength,
+                            'mode': mode,
+                            'enabled': True
+                        }
+                    )
+                    
+                    new_pack.effects.append(effect_config)
+                
+                param_idx += 4  # Move to next effect's parameters
+        
+        return new_pack
 
 # Convenience functions
 def optimize_pack_for_target(pack: Pack, 

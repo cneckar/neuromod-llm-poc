@@ -17,6 +17,10 @@ from .targets import (
 )
 from .pack_optimizer import PackOptimizer, OptimizationMethod
 from .evaluation import EvaluationFramework, BehavioralMetrics
+from .probe_evaluator import ProbeEvaluator, ProbeEvaluationResult
+from .bayesian_optimizer import BayesianOptimizer, BayesianOptimizationConfig
+from .rl_optimizer import RLOptimizer, RLOptimizationConfig
+from .evolutionary_ops import PackMutator, PackCrossover, MutationConfig, CrossoverConfig
 from .laboratory import DrugDesignLab, create_lab
 
 __all__ = [
@@ -26,6 +30,16 @@ __all__ = [
     'OptimizationMethod',
     'EvaluationFramework',
     'BehavioralMetrics',
+    'ProbeEvaluator',
+    'ProbeEvaluationResult',
+    'BayesianOptimizer',
+    'BayesianOptimizationConfig',
+    'RLOptimizer',
+    'RLOptimizationConfig',
+    'PackMutator',
+    'PackCrossover',
+    'MutationConfig',
+    'CrossoverConfig',
     'DrugDesignLab',
     'create_lab',
     'create_joyful_social_target',

@@ -17,6 +17,7 @@ class TargetType(Enum):
     """Types of behavioral targets"""
     EMOTION = "emotion"
     BEHAVIOR = "behavior"
+    LATENT_AXIS = "latent_axis"
     METRIC = "metric"
     COMPOSITE = "composite"
 
