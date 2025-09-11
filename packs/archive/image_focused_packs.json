@@ -1,0 +1,239 @@
+{
+  "packs": {
+    "dmt_visual": {
+      "name": "dmt_visual",
+      "description": "DMT visual effects: intense color saturation, geometric patterns, fractal-like structures, synesthetic color mapping, high visual entropy",
+      "effects": [
+        {
+          "effect": "temperature",
+          "weight": 0.6,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "color_bias",
+          "weight": 0.8,
+          "direction": "up",
+          "parameters": {
+            "color_palette": "neon_cyberpunk",
+            "saturation_boost": 0.4,
+            "contrast_boost": 0.3
+          }
+        },
+        {
+          "effect": "style_transfer",
+          "weight": 0.7,
+          "direction": "up",
+          "parameters": {
+            "style": "fractal_geometric",
+            "pattern_density": 0.6,
+            "symmetry_enhancement": 0.5
+          }
+        },
+        {
+          "effect": "composition_bias",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {
+            "composition_type": "radial_symmetry",
+            "depth_enhancement": 0.4,
+            "perspective_distortion": 0.3
+          }
+        },
+        {
+          "effect": "visual_entropy",
+          "weight": 0.8,
+          "direction": "up",
+          "parameters": {
+            "noise_level": 0.3,
+            "texture_complexity": 0.6,
+            "detail_amplification": 0.5
+          }
+        },
+        {
+          "effect": "synesthetic_mapping",
+          "weight": 0.7,
+          "direction": "up",
+          "parameters": {
+            "color_sound_mapping": true,
+            "texture_emotion_mapping": true,
+            "pattern_frequency_mapping": 0.4
+          }
+        }
+      ]
+    },
+    "lsd_visual": {
+      "name": "lsd_visual",
+      "description": "LSD visual effects: flowing patterns, color shifting, breathing textures, organic morphing, enhanced pattern recognition, visual trails",
+      "effects": [
+        {
+          "effect": "temperature",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "color_bias",
+          "weight": 0.7,
+          "direction": "up",
+          "parameters": {
+            "color_palette": "psychedelic_flow",
+            "hue_shift_rate": 0.4,
+            "color_bleeding": 0.3,
+            "chromatic_aberration": 0.2
+          }
+        },
+        {
+          "effect": "style_transfer",
+          "weight": 0.6,
+          "direction": "up",
+          "parameters": {
+            "style": "organic_flowing",
+            "morphing_rate": 0.5,
+            "pattern_flow": 0.6,
+            "texture_breathing": 0.4
+          }
+        },
+        {
+          "effect": "composition_bias",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {
+            "composition_type": "flowing_organic",
+            "curvature_enhancement": 0.5,
+            "organic_symmetry": 0.4
+          }
+        },
+        {
+          "effect": "visual_entropy",
+          "weight": 0.6,
+          "direction": "up",
+          "parameters": {
+            "noise_level": 0.2,
+            "texture_complexity": 0.5,
+            "pattern_recognition_boost": 0.6
+          }
+        },
+        {
+          "effect": "motion_blur",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {
+            "blur_direction": "flowing",
+            "trail_length": 0.3,
+            "motion_sensitivity": 0.4
+          }
+        }
+      ]
+    },
+    "psilocybin_visual": {
+      "name": "psilocybin_visual",
+      "description": "Psilocybin visual effects: enhanced natural patterns, organic fractals, nature connection, gentle color enhancement, breathing textures",
+      "effects": [
+        {
+          "effect": "temperature",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "color_bias",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {
+            "color_palette": "enhanced_natural",
+            "saturation_boost": 0.3,
+            "warmth_enhancement": 0.4,
+            "natural_tones": 0.5
+          }
+        },
+        {
+          "effect": "style_transfer",
+          "weight": 0.6,
+          "direction": "up",
+          "parameters": {
+            "style": "organic_natural",
+            "fractal_nature": 0.5,
+            "pattern_enhancement": 0.4,
+            "texture_breathing": 0.3
+          }
+        },
+        {
+          "effect": "composition_bias",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {
+            "composition_type": "natural_harmony",
+            "organic_balance": 0.4,
+            "nature_connection": 0.5
+          }
+        },
+        {
+          "effect": "visual_entropy",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {
+            "noise_level": 0.1,
+            "texture_complexity": 0.4,
+            "natural_patterns": 0.6
+          }
+        }
+      ]
+    },
+    "mescaline_visual": {
+      "name": "mescaline_visual",
+      "description": "Mescaline visual effects: geometric patterns, enhanced colors, spiritual symbolism, sacred geometry, enhanced depth perception",
+      "effects": [
+        {
+          "effect": "temperature",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "color_bias",
+          "weight": 0.6,
+          "direction": "up",
+          "parameters": {
+            "color_palette": "sacred_geometric",
+            "saturation_boost": 0.4,
+            "spiritual_colors": 0.5,
+            "depth_enhancement": 0.3
+          }
+        },
+        {
+          "effect": "style_transfer",
+          "weight": 0.7,
+          "direction": "up",
+          "parameters": {
+            "style": "sacred_geometry",
+            "geometric_patterns": 0.6,
+            "spiritual_symbols": 0.5,
+            "sacred_proportions": 0.4
+          }
+        },
+        {
+          "effect": "composition_bias",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {
+            "composition_type": "sacred_geometry",
+            "golden_ratio": 0.6,
+            "spiritual_balance": 0.5
+          }
+        },
+        {
+          "effect": "visual_entropy",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {
+            "noise_level": 0.1,
+            "texture_complexity": 0.3,
+            "geometric_clarity": 0.7
+          }
+        }
+      ]
+    }
+  }
+}
+

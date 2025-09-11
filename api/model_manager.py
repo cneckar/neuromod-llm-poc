@@ -59,15 +59,17 @@ class BaseModelInterface(ABC):
         pass
 
 class LocalModelInterface(BaseModelInterface):
-    """Interface for local models using transformers with full neuromodulation support"""
+    """Interface for local models using the centralized model support system"""
     
-    def __init__(self, model_name: str, model_type: str = "causal"):
+    def __init__(self, model_name: str, model_type: str = "causal", test_mode: bool = True):
         self.model_name = model_name
         self.model_type = model_type
+        self.test_mode = test_mode
         self.model = None
         self.tokenizer = None
         self.device = "cpu"
         self.neuromod_tool = None
+        self.model_manager = None
         
         # Initialize emotion tracking
         self.emotion_tracker = SimpleEmotionTracker()
@@ -77,37 +79,26 @@ class LocalModelInterface(BaseModelInterface):
         self._setup_neuromodulation()
     
     def _load_model(self):
-        """Load the local model"""
+        """Load the local model using centralized model support"""
         try:
             logger.info(f"Loading local model: {self.model_name}")
             
-            # Load tokenizer
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-            if self.tokenizer.pad_token is None:
-                self.tokenizer.pad_token = self.tokenizer.eos_token
+            # Import model support system
+            from neuromod.model_support import create_model_support
             
-            # Load model based on type with conservative settings
-            if self.model_type == "causal":
-                self.model = AutoModelForCausalLM.from_pretrained(
-                    self.model_name,
-                    torch_dtype=torch.float32,
-                    device_map="cpu",
-                    trust_remote_code=True,
-                    low_cpu_mem_usage=True
-                )
-            elif self.model_type == "seq2seq":
-                self.model = AutoModelForSeq2SeqLM.from_pretrained(
-                    self.model_name,
-                    torch_dtype=torch.float32,
-                    device_map="cpu",
-                    trust_remote_code=True,
-                    low_cpu_mem_usage=True
-                )
+            # Create model manager
+            self.model_manager = create_model_support(test_mode=self.test_mode)
             
-            # Force CPU and eval mode
-            self.model = self.model.cpu()
-            self.model.eval()
+            # Load model using centralized system
+            self.model, self.tokenizer, model_info = self.model_manager.load_model(
+                self.model_name
+            )
+            
+            # Set device info
+            self.device = model_info.get('device_map', 'cpu')
+            
             logger.info(f"Local model {self.model_name} loaded successfully")
+            logger.info(f"Model info: {model_info}")
             
         except Exception as e:
             logger.error(f"Failed to load local model {self.model_name}: {e}")
@@ -396,6 +387,15 @@ class LocalModelInterface(BaseModelInterface):
     def is_available(self) -> bool:
         """Check if local model is available"""
         return self.model is not None and self.tokenizer is not None
+    
+    def cleanup(self):
+        """Clean up model resources"""
+        if self.model_manager:
+            self.model_manager.cleanup()
+        self.model = None
+        self.tokenizer = None
+        self.neuromod_tool = None
+        logger.info(f"Cleaned up model interface for {self.model_name}")
     
     def unload(self):
         """Unload local model and free memory"""

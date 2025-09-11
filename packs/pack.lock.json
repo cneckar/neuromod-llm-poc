@@ -1,0 +1,1256 @@
+{
+  "name": "neuromodulation_research_packs",
+  "version": "1.0.0",
+  "created": "2024-12-19T00:00:00Z",
+  "description": "Lock file for essential research neuromodulation packs",
+  "pack_hash": "sha256:research_pack_hash_placeholder",
+  "total_packs": 28,
+  "categories": {
+    "controls": [
+      "none",
+      "placebo"
+    ],
+    "stimulants": [
+      "caffeine",
+      "cocaine",
+      "amphetamine",
+      "methylphenidate",
+      "modafinil"
+    ],
+    "psychedelics": [
+      "lsd",
+      "psilocybin",
+      "dmt",
+      "mescaline",
+      "2c_b"
+    ],
+    "depressants": [
+      "alcohol",
+      "benzodiazepines",
+      "heroin",
+      "morphine",
+      "fentanyl"
+    ],
+    "dissociatives": [
+      "ketamine",
+      "pcp",
+      "dxm",
+      "nitrous_oxide"
+    ],
+    "empathogens": [
+      "mdma",
+      "mda",
+      "6_apb"
+    ],
+    "cannabis": [
+      "cannabis_thc"
+    ],
+    "specialized": [
+      "mentor",
+      "speciation",
+      "archivist"
+    ]
+  },
+  "effects": [
+    {
+      "pack_name": "caffeine",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:9251f129e36d22db",
+      "effects": [
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:e787b2ef35652974"
+        },
+        {
+          "effect": "top_p",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:3ae6a5e11949439b"
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.15,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:fbe5d266798a38c2"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "salient"
+          },
+          "effect_hash": "sha256:ae7bbdab676e24f3"
+        }
+      ]
+    },
+    {
+      "pack_name": "cocaine",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:39c7ad800c579210",
+      "effects": [
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.45,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:fc1d6ce4c7786f62"
+        },
+        {
+          "effect": "top_p",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:91b50f7f8a1e3815"
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.3,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:2553c0d4a32147b8"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "salient"
+          },
+          "effect_hash": "sha256:30aa9a234a6181b2"
+        },
+        {
+          "effect": "frequency_penalty",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:0e6336a08b0748e0"
+        }
+      ]
+    },
+    {
+      "pack_name": "amphetamine",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:0d551e3b17d4c0c3",
+      "effects": [
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.45,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:fc1d6ce4c7786f62"
+        },
+        {
+          "effect": "top_p",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:ebe48207d073eedf"
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.25,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:8a8b1762576afa13"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "salient"
+          },
+          "effect_hash": "sha256:7f8c374d7713c316"
+        },
+        {
+          "effect": "frequency_penalty",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:f16c48cb17fb459a"
+        }
+      ]
+    },
+    {
+      "pack_name": "methylphenidate",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:869b08fb6f6b8a53",
+      "effects": [
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:d5453faa737a75fa"
+        },
+        {
+          "effect": "top_p",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:6363f9d294d4c98c"
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.2,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:82c1b03d3a44e13c"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "salient"
+          },
+          "effect_hash": "sha256:c739fcebd5c9b991"
+        }
+      ]
+    },
+    {
+      "pack_name": "modafinil",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:bf14d5b176c65a69",
+      "effects": [
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:80c5b8e36f2718b9"
+        },
+        {
+          "effect": "top_p",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:3ae6a5e11949439b"
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.1,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:627ae3915e9507b9"
+        },
+        {
+          "effect": "compute_at_test_scheduling",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:184ae2742639ab50"
+        }
+      ]
+    },
+    {
+      "pack_name": "lsd",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:b46130a48b367b27",
+      "effects": [
+        {
+          "effect": "temperature",
+          "weight": 0.45,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:fa41db632de1d0f3"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          },
+          "effect_hash": "sha256:7ed4980d7e5022e1"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "visionary"
+          },
+          "effect_hash": "sha256:251d29654bc5cda1"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "synesthesia"
+          },
+          "effect_hash": "sha256:e66a8c35089cc2fe"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "ego_thin"
+          },
+          "effect_hash": "sha256:0f019c6fffe79f9c"
+        },
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:e1faebd0e76b3c3e"
+        }
+      ]
+    },
+    {
+      "pack_name": "psilocybin",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:55b804e1155b33b0",
+      "effects": [
+        {
+          "effect": "temperature",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:65fc02662747a9bf"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          },
+          "effect_hash": "sha256:02c484676d04b2c9"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "visionary"
+          },
+          "effect_hash": "sha256:6faf1540ab1a1bff"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "ego_thin"
+          },
+          "effect_hash": "sha256:0f019c6fffe79f9c"
+        },
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          },
+          "effect_hash": "sha256:312936b460bcddf5"
+        }
+      ]
+    },
+    {
+      "pack_name": "dmt",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:f6ee68d08b751384",
+      "effects": [
+        {
+          "effect": "temperature",
+          "weight": 0.45,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:fa41db632de1d0f3"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.45,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "visionary"
+          },
+          "effect_hash": "sha256:ccc99d7dc10242e4"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "synesthesia"
+          },
+          "effect_hash": "sha256:ef111f65b8b25a6b"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "ego_thin"
+          },
+          "effect_hash": "sha256:8ddecc25fcb86c0d"
+        },
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:e1faebd0e76b3c3e"
+        },
+        {
+          "effect": "attention_oscillation",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:757135439915dd82"
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:6b1fdd10cf16da8d"
+        }
+      ]
+    },
+    {
+      "pack_name": "mescaline",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:3acd4fd637079b50",
+      "effects": [
+        {
+          "effect": "temperature",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:29c1a7210903b06e"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "visionary"
+          },
+          "effect_hash": "sha256:6faf1540ab1a1bff"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          },
+          "effect_hash": "sha256:b0436153eaca6b98"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "ego_thin"
+          },
+          "effect_hash": "sha256:a6be025b7dab737d"
+        }
+      ]
+    },
+    {
+      "pack_name": "2c_b",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:5cc35a152eff1497",
+      "effects": [
+        {
+          "effect": "steering",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "visionary"
+          },
+          "effect_hash": "sha256:6faf1540ab1a1bff"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          },
+          "effect_hash": "sha256:b0436153eaca6b98"
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:2f03433ee6437c85"
+        },
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.1,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          },
+          "effect_hash": "sha256:bb7433f39ba051a8"
+        }
+      ]
+    },
+    {
+      "pack_name": "alcohol",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:c7c7eb1087c4e24d",
+      "effects": [
+        {
+          "effect": "temperature",
+          "weight": 0.15,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:fbe5d266798a38c2"
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.25,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:f049e75ca625ea52"
+        },
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:e1faebd0e76b3c3e"
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:6b1fdd10cf16da8d"
+        },
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          },
+          "effect_hash": "sha256:ed3deaa6b8a18509"
+        },
+        {
+          "effect": "layer_wise_gain",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:f3b489ff3c71bb68"
+        }
+      ]
+    },
+    {
+      "pack_name": "benzodiazepines",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:2b2597ab834105ee",
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          },
+          "effect_hash": "sha256:57858f8f523bdf8e"
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.2,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:82c1b03d3a44e13c"
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.3,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:5bd09e7a2fd88ff4"
+        },
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:ad33ef2978f076af"
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:dee064d712fb2196"
+        }
+      ]
+    },
+    {
+      "pack_name": "heroin",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:ee6f01a92dd8063b",
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.55,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          },
+          "effect_hash": "sha256:77ccbeac76c1e081"
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.2,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:82c1b03d3a44e13c"
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.25,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:f049e75ca625ea52"
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:6b1fdd10cf16da8d"
+        },
+        {
+          "effect": "layer_wise_gain",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:f3b489ff3c71bb68"
+        }
+      ]
+    },
+    {
+      "pack_name": "morphine",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:26fdcac1e157f107",
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          },
+          "effect_hash": "sha256:57858f8f523bdf8e"
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.2,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:82c1b03d3a44e13c"
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.2,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:2cbd176b6558ec12"
+        }
+      ]
+    },
+    {
+      "pack_name": "fentanyl",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:87595db4d28ba64d",
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.6,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          },
+          "effect_hash": "sha256:3fce7b3410726a95"
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.25,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:8a8b1762576afa13"
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.3,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:5bd09e7a2fd88ff4"
+        },
+        {
+          "effect": "truncation_kv",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:754ad413827750f5"
+        }
+      ]
+    },
+    {
+      "pack_name": "ketamine",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:9e0cc3ac15e85ac0",
+      "effects": [
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:438f546c1c1eb934"
+        },
+        {
+          "effect": "stride_compression_kv",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:0630b3210341541c"
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:7326a1c8ee853768"
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:b89ba6e497934de9"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "ego_thin"
+          },
+          "effect_hash": "sha256:a6be025b7dab737d"
+        }
+      ]
+    },
+    {
+      "pack_name": "pcp",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:9bb448f456b812b0",
+      "effects": [
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:c753ee3cd5a99cbb"
+        },
+        {
+          "effect": "stride_compression_kv",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:fb4607f87612b980"
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:f5e95651c430673a"
+        },
+        {
+          "effect": "noise_injection",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:1b93a929f7cce59d"
+        }
+      ]
+    },
+    {
+      "pack_name": "dxm",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:d4e0f47532ed2259",
+      "effects": [
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:dad69b2fb3c6f143"
+        },
+        {
+          "effect": "stride_compression_kv",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:cc0dcd892bd45933"
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:7326a1c8ee853768"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          },
+          "effect_hash": "sha256:a092b6e885871dfd"
+        }
+      ]
+    },
+    {
+      "pack_name": "nitrous_oxide",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:bbe784be02cec153",
+      "effects": [
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:ebcdc7493f34eeeb"
+        },
+        {
+          "effect": "truncation_kv",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:48c8b8cda639c00f"
+        },
+        {
+          "effect": "attention_oscillation",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:97050234449bd542"
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:b89ba6e497934de9"
+        }
+      ]
+    },
+    {
+      "pack_name": "mdma",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:5f6b813514a4f1e2",
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "prosocial"
+          },
+          "effect_hash": "sha256:466f4537ead52c8f"
+        },
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          },
+          "effect_hash": "sha256:ed3deaa6b8a18509"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "playful"
+          },
+          "effect_hash": "sha256:8fb395adf94313ea"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          },
+          "effect_hash": "sha256:a092b6e885871dfd"
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:b89ba6e497934de9"
+        },
+        {
+          "effect": "top_p",
+          "weight": 0.1,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:c748ae60eb6fd3c2"
+        }
+      ]
+    },
+    {
+      "pack_name": "mda",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:0eb5b3c648d093e8",
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "prosocial"
+          },
+          "effect_hash": "sha256:b821d8415eb259e5"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "visionary"
+          },
+          "effect_hash": "sha256:78caebc0e54bdb9d"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          },
+          "effect_hash": "sha256:b0436153eaca6b98"
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:55843f05d28476d8"
+        },
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.1,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:9aa4fc584dc4d69d"
+        }
+      ]
+    },
+    {
+      "pack_name": "6_apb",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:3db394e6cb17bd81",
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "prosocial"
+          },
+          "effect_hash": "sha256:b821d8415eb259e5"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          },
+          "effect_hash": "sha256:b0436153eaca6b98"
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:fc0e47b67960bcde"
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:b89ba6e497934de9"
+        }
+      ]
+    },
+    {
+      "pack_name": "cannabis_thc",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:7050eb92d0fa9668",
+      "effects": [
+        {
+          "effect": "temperature",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:2f03433ee6437c85"
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.45,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:cd54624c79b181ab"
+        },
+        {
+          "effect": "stride_compression_kv",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:19d291b61cbe7e04"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "playful"
+          },
+          "effect_hash": "sha256:303c6d14fbeab988"
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          },
+          "effect_hash": "sha256:b0436153eaca6b98"
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.15,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:f5e70f7a7d410f57"
+        }
+      ]
+    },
+    {
+      "pack_name": "mentor",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:d9d771df57e86d11",
+      "effects": [
+        {
+          "effect": "head_reweighting",
+          "weight": 0.7,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:33167c6a17fdc6c8"
+        },
+        {
+          "effect": "expert_persistence",
+          "weight": 0.75,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:86c1fd6df92b1e38"
+        },
+        {
+          "effect": "router_temperature_bias",
+          "weight": 0.6,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:e81dcb9755d9e609"
+        },
+        {
+          "effect": "persona_voice_constraints",
+          "weight": 0.65,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:eec7adae6b3e1718"
+        },
+        {
+          "effect": "presence_penalty",
+          "weight": 0.55,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:0bae5fd8c36b926e"
+        },
+        {
+          "effect": "verifier_guided_decoding",
+          "weight": 0.7,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:260504eca6457965"
+        },
+        {
+          "effect": "attention_sinks_anchors",
+          "weight": 0.6,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:68da14ae2b024780"
+        },
+        {
+          "effect": "soft_projection",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:df7ff4becc8e02d2"
+        }
+      ]
+    },
+    {
+      "pack_name": "speciation",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:a195f85012e8942c",
+      "effects": [
+        {
+          "effect": "expert_masking_dropout",
+          "weight": 0.65,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:3a9a0a4d7abe50a2"
+        },
+        {
+          "effect": "router_temperature_bias",
+          "weight": 0.6,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:ca7871cd30d3eab6"
+        },
+        {
+          "effect": "lexical_jitter",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:6522037bc2467950"
+        },
+        {
+          "effect": "soft_projection",
+          "weight": 0.45,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:cc244bc2cad96e7c"
+        },
+        {
+          "effect": "contrastive_decoding",
+          "weight": 0.55,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:7639f279026093ae"
+        },
+        {
+          "effect": "risk_preference_steering",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:312540addde62dae"
+        }
+      ]
+    },
+    {
+      "pack_name": "archivist",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:599e04375b0e3b7e",
+      "effects": [
+        {
+          "effect": "retrieval_rate_modulation",
+          "weight": 0.8,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:250466f1163921c7"
+        },
+        {
+          "effect": "kv_decay",
+          "weight": 0.6,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:c401309bc5234abc"
+        },
+        {
+          "effect": "kv_compression",
+          "weight": 0.55,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:bec18a07f8504b1b"
+        },
+        {
+          "effect": "positional_bias_tweak",
+          "weight": 0.5,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:85a50fc446722f34"
+        },
+        {
+          "effect": "segment_gains_kv",
+          "weight": 0.55,
+          "direction": "down",
+          "parameters": {},
+          "effect_hash": "sha256:c884b5cf670d2148"
+        },
+        {
+          "effect": "head_reweighting",
+          "weight": 0.45,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:2c6d5b637e08b1de"
+        },
+        {
+          "effect": "verifier_guided_decoding",
+          "weight": 0.6,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:8f9f23621a8c4772"
+        }
+      ]
+    },
+    {
+      "pack_name": "none",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:140bedbf9c3f6d56",
+      "effects": []
+    },
+    {
+      "pack_name": "placebo",
+      "pack_version": "1.0.0",
+      "pack_hash": "sha256:9c3b89ebaf0017df",
+      "effects": [
+        {
+          "effect": "persona_voice_constraints",
+          "weight": 0.1,
+          "direction": "up",
+          "parameters": {
+            "voice_style": "neutral",
+            "formality": "moderate"
+          },
+          "effect_hash": "sha256:bfde49fd11076c1d"
+        },
+        {
+          "effect": "presence_penalty",
+          "weight": 0.05,
+          "direction": "up",
+          "parameters": {},
+          "effect_hash": "sha256:cb49b229dd795c4c"
+        }
+      ]
+    }
+  ]
+}

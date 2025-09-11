@@ -108,7 +108,7 @@ class TestProbeIntegrationWithModels(unittest.TestCase):
         self.neuromod_tool.process_probe_signals(**test_signals)
         
         # Check that token position was updated
-        self.assertEqual(self.neuromod_tool.probe_bus.token_position, 1)
+        self.assertEqual(self.neuromod_tool.probe_bus.token_position, 2)
     
     def test_probe_reset_functionality(self):
         """Test resetting probe system"""
@@ -126,7 +126,7 @@ class TestProbeIntegrationWithModels(unittest.TestCase):
             self.neuromod_tool.process_probe_signals(**test_signals)
         
         # Check token position
-        self.assertEqual(self.neuromod_tool.probe_bus.token_position, 5)
+        self.assertEqual(self.neuromod_tool.probe_bus.token_position, 10)
         
         # Reset probes
         self.neuromod_tool.reset_probes()

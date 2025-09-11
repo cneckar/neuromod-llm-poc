@@ -1,0 +1,37 @@
+{
+  "target_effect_size": 0.25,
+  "alpha": 0.05,
+  "target_power": 0.8,
+  "estimated_effect_sizes": {
+    "stimulants": 0.25,
+    "psychedelics": 0.25,
+    "depressants": 0.25,
+    "dissociatives": 0.25,
+    "empathogens": 0.25
+  },
+  "required_sample_sizes": {
+    "stimulants": 126,
+    "psychedelics": 126,
+    "depressants": 126,
+    "dissociatives": 126,
+    "empathogens": 126
+  },
+  "power_for_n_min": {
+    "stimulants": 0.801301455473719,
+    "psychedelics": 0.801301455473719,
+    "depressants": 0.801301455473719,
+    "dissociatives": 0.801301455473719,
+    "empathogens": 0.801301455473719
+  },
+  "recommendations": {
+    "n_min_overall": 126,
+    "n_min_per_condition": 126,
+    "total_items_needed": 378,
+    "pilot_study_size": 80,
+    "interim_analysis_points": [
+      40,
+      60,
+      80
+    ]
+  }
+}

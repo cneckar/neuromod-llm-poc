@@ -1,0 +1,186 @@
+{
+  "name": "optimized_mdma",
+  "description": "Optimized MDMA pack: extreme empathy, euphoria, social bonding, anxiety reduction, sensory enhancement",
+  "effects": [
+    {
+      "effect": "style_affect_logit_bias",
+      "weight": 0.9,
+      "direction": "up",
+      "parameters": {
+        "bias_type": "empathy",
+        "strength": 0.8
+      }
+    },
+    {
+      "effect": "steering",
+      "weight": 0.8,
+      "direction": "up",
+      "parameters": {
+        "steering_type": "prosocial",
+        "steering_strength": 0.7
+      }
+    },
+    {
+      "effect": "persona_voice_constraints",
+      "weight": 0.7,
+      "direction": "up",
+      "parameters": {
+        "constraint_type": "empathetic",
+        "strength": 0.6
+      }
+    },
+    {
+      "effect": "style_affect_logit_bias",
+      "weight": 0.85,
+      "direction": "up",
+      "parameters": {
+        "bias_type": "joyful",
+        "strength": 0.9
+      }
+    },
+    {
+      "effect": "style_affect_logit_bias",
+      "weight": 0.8,
+      "direction": "up",
+      "parameters": {
+        "bias_type": "euphoric",
+        "strength": 0.7
+      }
+    },
+    {
+      "effect": "risk_preference_steering",
+      "weight": 0.6,
+      "direction": "up",
+      "parameters": {
+        "risk_tolerance": 0.8,
+        "adventure_bias": 0.7
+      }
+    },
+    {
+      "effect": "style_affect_logit_bias",
+      "weight": 0.9,
+      "direction": "down",
+      "parameters": {
+        "bias_type": "anxiety",
+        "strength": 0.8
+      }
+    },
+    {
+      "effect": "attention_focus",
+      "weight": 0.7,
+      "direction": "down",
+      "parameters": {
+        "focus_strength": 0.2,
+        "relaxation_mode": true
+      }
+    },
+    {
+      "effect": "head_masking_dropout",
+      "weight": 0.5,
+      "direction": "up",
+      "parameters": {
+        "mask_probability": 0.2,
+        "anxiety_reduction": true
+      }
+    },
+    {
+      "effect": "temperature",
+      "weight": 0.6,
+      "direction": "up",
+      "parameters": {
+        "temperature": 1.1,
+        "sensory_enhancement": true
+      }
+    },
+    {
+      "effect": "top_p",
+      "weight": 0.5,
+      "direction": "down",
+      "parameters": {
+        "top_p": 0.8,
+        "creative_flow": true
+      }
+    },
+    {
+      "effect": "lexical_jitter",
+      "weight": 0.4,
+      "direction": "up",
+      "parameters": {
+        "jitter_strength": 0.3,
+        "sensory_variation": true
+      }
+    },
+    {
+      "effect": "steering",
+      "weight": 0.8,
+      "direction": "up",
+      "parameters": {
+        "steering_type": "openness",
+        "vulnerability_bias": 0.6
+      }
+    },
+    {
+      "effect": "persona_voice_constraints",
+      "weight": 0.6,
+      "direction": "up",
+      "parameters": {
+        "constraint_type": "authentic",
+        "openness_level": 0.8
+      }
+    },
+    {
+      "effect": "attention_oscillation",
+      "weight": 0.5,
+      "direction": "up",
+      "parameters": {
+        "oscillation_frequency": 0.3,
+        "flow_enhancement": true
+      }
+    },
+    {
+      "effect": "exponential_decay_kv",
+      "weight": 0.4,
+      "direction": "up",
+      "parameters": {
+        "decay_factor": 0.7,
+        "time_dilation": true
+      }
+    },
+    {
+      "effect": "frequency_penalty",
+      "weight": 0.7,
+      "direction": "down",
+      "parameters": {
+        "frequency_penalty": -0.3,
+        "self_acceptance": true
+      }
+    },
+    {
+      "effect": "presence_penalty",
+      "weight": 0.6,
+      "direction": "down",
+      "parameters": {
+        "presence_penalty": -0.2,
+        "non_judgmental": true
+      }
+    },
+    {
+      "effect": "structured_prefaces",
+      "weight": 0.5,
+      "direction": "up",
+      "parameters": {
+        "preface_type": "expressive",
+        "communication_enhancement": true
+      }
+    },
+    {
+      "effect": "layer_wise_gain",
+      "weight": 0.6,
+      "direction": "up",
+      "parameters": {
+        "gain_factor": 1.2,
+        "expressiveness": true
+      }
+    }
+  ]
+}

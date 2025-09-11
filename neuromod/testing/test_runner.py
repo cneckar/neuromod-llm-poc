@@ -16,6 +16,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
     from neuromod.pack_system import PackRegistry
     from neuromod.neuromod_tool import NeuromodTool
+    from neuromod.neuromod_factory import create_neuromod_tool, cleanup_neuromod_tool
+    from neuromod.model_support import create_model_support
 except ImportError as e:
     print(f"Import error: {e}")
     print("Make sure you're running from the project root with PYTHONPATH=.")
@@ -25,13 +27,51 @@ except ImportError as e:
 class TestRunner:
     """Simple test runner for neuromodulation tests"""
     
-    def __init__(self, model_name: str = "microsoft/DialoGPT-small", packs_file: str = "packs/config.json"):
+    def __init__(self, model_name: str = None, packs_file: str = "packs/config.json", test_mode: bool = True):
         self.model_name = model_name
         self.packs_file = packs_file
+        self.test_mode = test_mode
         self.pack_registry = None
+        self.neuromod_tool = None
+        self.model_info = None
         
         # Import test classes dynamically
         self.available_tests = self._import_test_classes()
+        
+        # Initialize model support
+        self.model_manager = create_model_support(test_mode=test_mode)
+    
+    def initialize_model(self, model_name: str = None):
+        """Initialize the model and neuromod tool"""
+        if model_name is None:
+            model_name = self.model_manager.get_recommended_model()
+        
+        self.model_name = model_name
+        
+        try:
+            # Create neuromod tool with model
+            self.neuromod_tool, self.model_info = create_neuromod_tool(
+                model_name=model_name,
+                test_mode=self.test_mode
+            )
+            
+            print(f"✅ Model loaded: {model_name}")
+            print(f"   Backend: {self.model_info.get('backend', 'unknown')}")
+            print(f"   Size: {self.model_info.get('size', 'unknown')}")
+            print(f"   Parameters: {self.model_info.get('parameters', 'unknown')}")
+            
+            return True
+            
+        except Exception as e:
+            print(f"❌ Failed to load model {model_name}: {e}")
+            return False
+    
+    def cleanup(self):
+        """Clean up resources"""
+        if self.neuromod_tool:
+            cleanup_neuromod_tool(self.neuromod_tool)
+        if self.model_manager:
+            self.model_manager.cleanup()
     
     def _import_test_classes(self):
         """Import test classes dynamically"""
@@ -101,7 +141,12 @@ class TestRunner:
         if test_name not in self.available_tests:
             raise ValueError(f"Unknown test: {test_name}. Available: {list(self.available_tests.keys())}")
         
-        print(f"🚀 Running {test_name.upper()} test with model: {self.model_name}")
+        print(f"🚀 Running {test_name.upper()} test")
+        
+        # Initialize model if not already done
+        if self.neuromod_tool is None:
+            if not self.initialize_model():
+                return {"error": "Failed to initialize model"}
         
         # Load pack registry
         self.load_pack_registry()
@@ -111,12 +156,8 @@ class TestRunner:
         test = test_class(self.model_name)
         
         try:
-            # Load model
-            test.load_model()
-            
-            # Create neuromod tool
-            neuromod_tool = self.create_neuromod_tool(test.model, test.tokenizer)
-            test.set_neuromod_tool(neuromod_tool)
+            # Set up test with our neuromod tool
+            test.set_neuromod_tool(self.neuromod_tool)
             
             # Apply packs if specified
             if packs and self.pack_registry:
@@ -124,13 +165,13 @@ class TestRunner:
                 for pack_name in packs:
                     pack = self.pack_registry.get_pack(pack_name)
                     if pack:
-                        neuromod_tool.apply_pack(pack, intensity=0.7)
+                        self.neuromod_tool.apply(pack_name, intensity=0.7)
                         print(f"   ✅ Applied {pack_name}")
                     else:
                         print(f"   ❌ Pack not found: {pack_name}")
             
             # Run the test
-            results = test.run_test(neuromod_tool)
+            results = test.run_test(self.neuromod_tool)
             
             print(f"✅ {test_name.upper()} test completed")
             return results

@@ -17,10 +17,8 @@ from typing import Dict, List, Any
 # Add the parent directory to the path to import neuromod modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from neuromod.pack_system import PackRegistry, Pack, EffectConfig
-from neuromod.neuromod_tool import NeuromodTool
-from neuromod.effects import EffectRegistry
+# Import centralized model support
+from neuromod.neuromod_factory import create_neuromod_tool, cleanup_neuromod_tool
 from neuromod.testing.simple_emotion_tracker import SimpleEmotionTracker
 
 # Disable MPS completely to avoid bus errors
@@ -30,8 +28,9 @@ os.environ['PYTORCH_MPS_HIGH_WATERMARK_RATIO'] = '0.0'
 class NeuromodChat:
     """Interactive chat interface with neuromodulation packs"""
     
-    def __init__(self, model_name: str = "gpt2"):
+    def __init__(self, model_name: str = None, test_mode: bool = True):
         self.model_name = model_name
+        self.test_mode = test_mode
         self.model = None
         self.tokenizer = None
         self.neuromod_tool = None
@@ -42,60 +41,49 @@ class NeuromodChat:
         self.emotion_tracker = SimpleEmotionTracker()
         self.chat_session_id = f"chat_{int(os.getpid())}_{int(time.time())}"
         
-        # Load model and setup
+        # Load model and setup using centralized system
         self._load_model()
         self._setup_neuromodulation()
     
     def _load_model(self):
-        """Load the language model with conservative settings"""
-        print(f"Loading {self.model_name} model...")
-        
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-        if self.tokenizer.pad_token is None:
-            self.tokenizer.pad_token = self.tokenizer.eos_token
-        
-        self.model = AutoModelForCausalLM.from_pretrained(
-            self.model_name,
-            torch_dtype=torch.float32,
-            device_map="cpu",
-            trust_remote_code=True,
-            low_cpu_mem_usage=True
-        )
-        
-        self.model = self.model.cpu()
-        self.model.eval()
-        print(f"✅ {self.model_name} model loaded successfully")
-    
-    def _setup_neuromodulation(self):
-        """Setup the neuromodulation system"""
+        """Load the language model using centralized model support"""
         try:
-            # Try to load from the new JSON config first
-            config_paths = ["packs/config.json"]
-            registry = None
+            print(f"Loading model using centralized system...")
             
-            for config_path in config_paths:
-                if os.path.exists(config_path):
-                    registry = PackRegistry(config_path)
-                    print(f"✅ Loaded neuromodulation system from {config_path}")
-                    break
+            # Create neuromod tool with centralized model loading
+            self.neuromod_tool, model_info = create_neuromod_tool(
+                model_name=self.model_name,
+                test_mode=self.test_mode
+            )
             
-            if registry is None:
-                print("⚠️ Warning: No config file found, creating empty registry")
-                registry = PackRegistry()
+            # Extract model and tokenizer
+            self.model = self.neuromod_tool.model
+            self.tokenizer = self.neuromod_tool.tokenizer
+            self.model_name = model_info.get('name', self.model_name)
             
-            self.registry = registry
-            self.neuromod_tool = NeuromodTool(registry, self.model, self.tokenizer)
-            self.available_packs = registry.list_packs()
-            self.effect_registry = EffectRegistry()
-            
-            print(f"✅ Neuromodulation system loaded")
-            print(f"Available packs: {len(self.available_packs)}")
-            print(f"Available effects: {len(self.effect_registry.list_effects())}")
+            print(f"✅ Model loaded successfully")
+            print(f"   Model: {self.model_name}")
+            print(f"   Backend: {model_info.get('backend', 'unknown')}")
+            print(f"   Size: {model_info.get('size', 'unknown')}")
+            print(f"   Parameters: {model_info.get('parameters', 'unknown')}")
             
         except Exception as e:
-            print(f"⚠️ Warning: Could not setup neuromodulation system: {e}")
-            print("Chat will run without neuromodulation capabilities")
-            self.neuromod_tool = None
+            print(f"❌ Failed to load model: {e}")
+            raise
+    
+    def _setup_neuromodulation(self):
+        """Setup the neuromodulation system (already done in _load_model)"""
+        if self.neuromod_tool:
+            # Get available packs from the neuromod tool
+            # Get packs from the registry (not pack_manager)
+            if hasattr(self.neuromod_tool, 'registry') and self.neuromod_tool.registry:
+                self.available_packs = list(self.neuromod_tool.registry.list_packs())
+            else:
+                self.available_packs = []
+            print("✅ Neuromodulation system already initialized")
+            print(f"Available packs: {len(self.available_packs)}")
+        else:
+            print("⚠️  Neuromodulation system not available")
             self.available_packs = []
             self.registry = None
             self.effect_registry = None
@@ -585,7 +573,7 @@ class NeuromodChat:
         """Export emotion tracking results to file"""
         try:
             if not filename:
-                filename = f"emotion_results_{self.chat_session_id}.json"
+                filename = f"outputs/reports/emotion/emotion_results_{self.chat_session_id}.json"
             self.emotion_tracker.export_results(filename)
             print(f"💾 Emotion results exported to: {filename}")
         except Exception as e:
@@ -656,6 +644,23 @@ class NeuromodChat:
             
         except Exception as e:
             print(f"❌ Error applying custom combination: {e}")
+    
+    def cleanup(self):
+        """Clean up resources using centralized system"""
+        if self.neuromod_tool:
+            cleanup_neuromod_tool(self.neuromod_tool)
+        
+        # Clear references
+        self.model = None
+        self.tokenizer = None
+        self.neuromod_tool = None
+        
+        # Force garbage collection
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        
+        print(f"🧹 Cleaned up chat session")
 
 def main():
     """Main function"""
@@ -663,38 +668,37 @@ def main():
     print("=" * 50)
     
     # Model selection
-    models = [
-        "gpt2",
-        "microsoft/DialoGPT-small",
-        "microsoft/DialoGPT-medium"
-    ]
-    
-    print("\n🤖 Available Models:")
-    for i, model in enumerate(models, 1):
-        print(f"{i}. {model}")
+    print("\n🤖 Model Selection:")
+    print("1. Use recommended model (test mode)")
+    print("2. Use recommended model (production mode)")
+    print("3. Enter custom model name")
     
     while True:
         try:
-            choice = input(f"\nSelect model (1-{len(models)}, or enter custom model name): ").strip()
+            choice = input(f"\nSelect option (1-3): ").strip()
             
-            if choice.isdigit():
-                idx = int(choice) - 1
-                if 0 <= idx < len(models):
-                    model_name = models[idx]
-                    break
-                else:
-                    print(f"❌ Please choose a number between 1 and {len(models)}")
-            else:
-                # Custom model name
-                model_name = choice
+            if choice == "1":
+                model_name = None
+                test_mode = True
                 break
-                
-        except ValueError:
-            print("❌ Invalid input")
+            elif choice == "2":
+                model_name = None
+                test_mode = False
+                break
+            elif choice == "3":
+                model_name = input("Enter model name: ").strip()
+                test_mode = True  # Default to test mode for custom models
+                break
+            else:
+                print("Please enter 1, 2, or 3")
+        except (ValueError, KeyboardInterrupt):
+            print("Invalid input")
+    
+    print(f"\n✅ Selected: {model_name or 'recommended'} ({'test' if test_mode else 'production'} mode)")
     
     # Create and start chat
     try:
-        chat = NeuromodChat(model_name)
+        chat = NeuromodChat(model_name, test_mode)
         chat.chat()
     except Exception as e:
         print(f"❌ Failed to start chat: {e}")

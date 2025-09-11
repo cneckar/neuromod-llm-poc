@@ -177,7 +177,7 @@ Each test generates:
   - Overall valence trends
   - Confidence scores
 
-Example: `emotion_results_adq_test_001.json`
+Example: `reports/emotion_results_adq_test_001.json`
 
 ## Benefits
 

@@ -72,22 +72,38 @@ def run_all_tests(verbose=False, specific_test=None, test_categories=None):
             "tests/test_probes.py",
             "tests/test_probe_integration.py"
         ],
+        "analysis": [
+            "tests/test_analysis_working.py",
+            "tests/test_rigor_validation.py"
+        ],
+        "neuromod_testing": [
+            "tests/test_neuromod_testing.py"
+        ],
+        "scientific_framework": [
+            "tests/test_scientific_framework_simple.py"
+        ],
         "full_stack": [
             "test_full_stack.py",
             "test_container_simulation.py"
         ],
         "api_servers": [
-            "test_api_servers.py"
+            "tests/test_api_servers.py",
+            "tests/test_api_comprehensive.py"
         ],
         "all": [
-            "test_core.py",
-            "test_effects.py", 
-            "test_integration.py",
-            "test_probes.py",
-            "test_probe_integration.py",
-            "test_full_stack.py",
-            "test_container_simulation.py",
-            "test_api_servers.py"
+            "tests/test_core.py",
+            "tests/test_effects.py",
+            "tests/test_integration.py",
+            "tests/test_probes.py",
+            "tests/test_probe_integration.py",
+            "tests/test_analysis_working.py",
+            "tests/test_neuromod_testing.py",
+            "tests/test_scientific_framework_simple.py",
+            "tests/test_rigor_validation.py",
+            "tests/test_full_stack.py",
+            "tests/test_container_simulation.py",
+            "tests/test_api_servers.py",
+            "tests/test_api_comprehensive.py"
         ]
     }
     
@@ -302,7 +318,7 @@ def main():
     parser.add_argument("--container", "-c", action="store_true", help="Run container simulation tests only")
     parser.add_argument("--coverage", action="store_true", help="Show coverage report")
     parser.add_argument("--categories", action="store_true", help="Show available test categories")
-    parser.add_argument("--category", help="Run specific test category (core, integration, full_stack, all)")
+    parser.add_argument("--category", help="Run specific test category (core, integration, analysis, neuromod_testing, scientific_framework, full_stack, api_servers, all)")
     parser.add_argument("--test", "-t", help="Run specific test file")
     
     args = parser.parse_args()

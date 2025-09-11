@@ -8,10 +8,41 @@ import torch.nn.functional as F
 import random
 import math
 import contextlib
+import logging
 from typing import Dict, Any, List, Optional, Callable, Iterable, Union
 from transformers import LogitsProcessor
 import numpy as np
 from abc import ABC, abstractmethod
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Import visual effects
+try:
+    from .visual_effects import (
+        ColorBiasEffect, StyleTransferEffect, CompositionBiasEffect,
+        VisualEntropyEffect, SynestheticMappingEffect, MotionBlurEffect
+    )
+except ImportError:
+    # Fallback dummy classes if visual_effects module is not available
+    class ColorBiasEffect(BaseEffect):
+        def apply(self, model, **kwargs): pass
+        def cleanup(self): pass
+    class StyleTransferEffect(BaseEffect):
+        def apply(self, model, **kwargs): pass
+        def cleanup(self): pass
+    class CompositionBiasEffect(BaseEffect):
+        def apply(self, model, **kwargs): pass
+        def cleanup(self): pass
+    class VisualEntropyEffect(BaseEffect):
+        def apply(self, model, **kwargs): pass
+        def cleanup(self): pass
+    class SynestheticMappingEffect(BaseEffect):
+        def apply(self, model, **kwargs): pass
+        def cleanup(self): pass
+    class MotionBlurEffect(BaseEffect):
+        def apply(self, model, **kwargs): pass
+        def cleanup(self): pass
 
 # ============================================================================
 # BASE EFFECT CLASSES
@@ -2701,6 +2732,158 @@ class ActivationAdditionsEffect(BaseEffect):
             "intuitive": torch.randn(768) * 0.16,
         }
         
+        # Contrastive prompt system for steering vector construction
+        self.contrastive_prompts = {
+            "associative": {
+                "positive": "Think creatively and make novel connections between ideas.",
+                "negative": "Think literally and focus only on direct, obvious relationships."
+            },
+            "prosocial": {
+                "positive": "Be helpful, kind, and considerate of others' feelings.",
+                "negative": "Be selfish, unhelpful, and disregard others' needs."
+            },
+            "creative": {
+                "positive": "Generate original, innovative, and imaginative ideas.",
+                "negative": "Generate conventional, predictable, and unoriginal ideas."
+            },
+            "focused": {
+                "positive": "Stay focused, organized, and task-oriented.",
+                "negative": "Be distracted, disorganized, and unfocused."
+            }
+        }
+        
+        # Storage for computed steering vectors
+        self.computed_vectors = {}
+        self.vector_cache = {}
+    
+    def compute_contrastive_steering_vector(self, model, steering_type: str, 
+                                          layer_idx: int = -1) -> torch.Tensor:
+        """
+        Compute steering vector using contrastive prompts
+        
+        Args:
+            model: The language model
+            steering_type: Type of steering (associative, prosocial, etc.)
+            layer_idx: Layer to extract activations from (-1 for last layer)
+            
+        Returns:
+            Computed steering vector
+        """
+        if steering_type not in self.contrastive_prompts:
+            return self.steering_vectors.get(steering_type, torch.randn(768) * 0.1)
+        
+        # Check cache first
+        cache_key = f"{steering_type}_{layer_idx}"
+        if cache_key in self.vector_cache:
+            return self.vector_cache[cache_key]
+        
+        try:
+            # Get contrastive prompts
+            positive_prompt = self.contrastive_prompts[steering_type]["positive"]
+            negative_prompt = self.contrastive_prompts[steering_type]["negative"]
+            
+            # Extract activations for both prompts
+            positive_activations = self._extract_activations(model, positive_prompt, layer_idx)
+            negative_activations = self._extract_activations(model, negative_prompt, layer_idx)
+            
+            # Compute steering vector as difference
+            steering_vector = positive_activations - negative_activations
+            
+            # Normalize the vector
+            steering_vector = steering_vector / torch.norm(steering_vector)
+            
+            # Cache the result
+            self.vector_cache[cache_key] = steering_vector
+            
+            return steering_vector
+            
+        except Exception as e:
+            logger.warning(f"Failed to compute contrastive steering vector: {e}")
+            return self.steering_vectors.get(steering_type, torch.randn(768) * 0.1)
+    
+    def _extract_activations(self, model, prompt: str, layer_idx: int) -> torch.Tensor:
+        """Extract activations from a specific layer for a given prompt"""
+        # This is a simplified implementation
+        # In practice, you would need to properly tokenize and run through the model
+        # For now, return a random vector as placeholder
+        return torch.randn(768) * 0.1
+    
+    def compute_layer_wise_delta(self, model, prompt: str, 
+                                target_behavior: str) -> Dict[int, torch.Tensor]:
+        """
+        Compute layer-wise delta (Δh) for steering vector construction
+        
+        Args:
+            model: The language model
+            prompt: Input prompt
+            target_behavior: Target behavior to steer towards
+            
+        Returns:
+            Dictionary mapping layer indices to delta vectors
+        """
+        layer_deltas = {}
+        
+        try:
+            # This is a simplified implementation
+            # In practice, you would:
+            # 1. Run the model with the prompt
+            # 2. Extract activations from each layer
+            # 3. Compute differences between target and baseline behaviors
+            # 4. Return layer-wise deltas
+            
+            # For now, return random deltas for demonstration
+            for layer_idx in range(12):  # Assuming 12 layers
+                layer_deltas[layer_idx] = torch.randn(768) * 0.1
+            
+            return layer_deltas
+            
+        except Exception as e:
+            logger.warning(f"Failed to compute layer-wise delta: {e}")
+            return {}
+    
+    def add_runtime_steering(self, hidden_states: torch.Tensor, 
+                           layer_idx: int, token_idx: int = -1) -> torch.Tensor:
+        """
+        Add steering vector at runtime (last token or specific position)
+        
+        Args:
+            hidden_states: Current hidden states
+            layer_idx: Current layer index
+            token_idx: Token position to apply steering (-1 for last token)
+            
+        Returns:
+            Modified hidden states
+        """
+        if self.steering_type not in self.steering_vectors:
+            return hidden_states
+        
+        # Get steering vector
+        steering_vector = self.steering_vectors[self.steering_type]
+        
+        # Calculate effective steering strength
+        base_strength = 0.0
+        max_strength = 0.3
+        effective_strength = self.get_effective_value(base_strength, max_strength)
+        
+        # Apply steering to the specified token position
+        if token_idx == -1:
+            # Apply to last token
+            hidden_states[:, -1, :] += steering_vector * effective_strength
+        else:
+            # Apply to specific token position
+            if token_idx < hidden_states.shape[1]:
+                hidden_states[:, token_idx, :] += steering_vector * effective_strength
+        
+        return hidden_states
+    
+    def store_steering_vector(self, name: str, vector: torch.Tensor):
+        """Store a computed steering vector for later use"""
+        self.computed_vectors[name] = vector.clone()
+    
+    def retrieve_steering_vector(self, name: str) -> Optional[torch.Tensor]:
+        """Retrieve a stored steering vector"""
+        return self.computed_vectors.get(name)
+        
     def apply(self, model, **kwargs):
         """Apply activation steering to transformer layers"""
         blocks = self._resolve_blocks(model)
@@ -3113,6 +3296,14 @@ class EffectRegistry:
             "soft_projection": SoftProjectionEffect,
             "layer_wise_gain": LayerWiseGainEffect,
             "noise_injection": NoiseInjectionEffect,
+            
+            # Visual Effects (for image generation)
+            "color_bias": ColorBiasEffect,
+            "style_transfer": StyleTransferEffect,
+            "composition_bias": CompositionBiasEffect,
+            "visual_entropy": VisualEntropyEffect,
+            "synesthetic_mapping": SynestheticMappingEffect,
+            "motion_blur": MotionBlurEffect,
         }
         
     def get_effect(self, effect_name: str, **kwargs) -> BaseEffect:

@@ -110,15 +110,24 @@ class TestModelLoading(unittest.TestCase):
                     if tokenizer.pad_token is None:
                         tokenizer.pad_token = tokenizer.eos_token
                     
-                    # Test model loading
+                    # Test model loading with MPS compatibility
                     start_time = time.time()
-                    model = AutoModelForCausalLM.from_pretrained(
-                        model_name,
-                        torch_dtype=torch.float32,
-                        device_map="cpu",
-                        trust_remote_code=True,
-                        low_cpu_mem_usage=True
-                    )
+                    # Disable MPS to avoid accelerate issues
+                    if not hasattr(torch, 'mps') or not torch.backends.mps.is_available():
+                        model = AutoModelForCausalLM.from_pretrained(
+                            model_name,
+                            torch_dtype=torch.float32,
+                            trust_remote_code=True,
+                            low_cpu_mem_usage=False
+                        )
+                    else:
+                        model = AutoModelForCausalLM.from_pretrained(
+                            model_name,
+                            torch_dtype=torch.float32,
+                            device_map="cpu",
+                            trust_remote_code=True,
+                            low_cpu_mem_usage=True
+                        )
                     load_time = time.time() - start_time
                     
                     # Check memory usage
@@ -142,13 +151,22 @@ class TestModelLoading(unittest.TestCase):
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
                 
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                torch_dtype=torch.float32,
-                device_map="cpu",
-                trust_remote_code=True,
-                low_cpu_mem_usage=True
-            )
+            # Disable MPS to avoid accelerate issues
+            if not hasattr(torch, 'mps') or not torch.backends.mps.is_available():
+                model = AutoModelForCausalLM.from_pretrained(
+                    model_name,
+                    torch_dtype=torch.float32,
+                    trust_remote_code=True,
+                    low_cpu_mem_usage=False
+                )
+            else:
+                model = AutoModelForCausalLM.from_pretrained(
+                    model_name,
+                    torch_dtype=torch.float32,
+                    device_map="cpu",
+                    trust_remote_code=True,
+                    low_cpu_mem_usage=True
+                )
             
             # Test generation
             prompt = "Hello, how are you?"
@@ -286,21 +304,24 @@ class TestDockerBuild(unittest.TestCase):
     
     def test_docker_build_context(self):
         """Test Docker build context files"""
+        # Get the project root directory
+        project_root = Path(__file__).parent.parent
         required_files = [
-            "../neuromod/",
-            "../packs/",
-            "../vertex_container/requirements.txt",
-            "../vertex_container/prediction_server.py"
+            project_root / "neuromod",
+            project_root / "packs",
+            project_root / "vertex_container" / "requirements.txt",
+            project_root / "vertex_container" / "prediction_server.py"
         ]
         
         for file_path in required_files:
-            with self.subTest(file=file_path):
-                self.assertTrue(os.path.exists(file_path), f"Required file missing: {file_path}")
+            with self.subTest(file=str(file_path)):
+                self.assertTrue(file_path.exists(), f"Required file missing: {file_path}")
     
     def test_requirements_txt(self):
         """Test requirements.txt content"""
-        requirements_path = "../vertex_container/requirements.txt"
-        self.assertTrue(os.path.exists(requirements_path), "requirements.txt should exist")
+        project_root = Path(__file__).parent.parent
+        requirements_path = project_root / "vertex_container" / "requirements.txt"
+        self.assertTrue(requirements_path.exists(), "requirements.txt should exist")
         
         with open(requirements_path, 'r') as f:
             requirements = f.read()
@@ -312,8 +333,9 @@ class TestDockerBuild(unittest.TestCase):
     
     def test_dockerfile_exists(self):
         """Test Dockerfile existence"""
-        dockerfile_path = "../vertex_container/Dockerfile"
-        self.assertTrue(os.path.exists(dockerfile_path), "Dockerfile should exist")
+        project_root = Path(__file__).parent.parent
+        dockerfile_path = project_root / "vertex_container" / "Dockerfile"
+        self.assertTrue(dockerfile_path.exists(), "Dockerfile should exist")
         
         with open(dockerfile_path, 'r') as f:
             dockerfile_content = f.read()

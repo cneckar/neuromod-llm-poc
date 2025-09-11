@@ -80,13 +80,28 @@ class PackManager:
             try:
                 # Get effect parameters
                 params = effect_config.parameters or {}
-                params.update({
-                    "weight": effect_config.weight,
-                    "direction": effect_config.direction
-                })
                 
-                # Create and apply the effect
-                effect = self.effect_registry.get_effect(effect_config.effect, **params)
+                # Check if this is a visual effect (needs special handling)
+                is_visual_effect = effect_config.effect in [
+                    'color_bias', 'style_transfer', 'composition_bias', 
+                    'visual_entropy', 'synesthetic_mapping', 'motion_blur'
+                ]
+                
+                if is_visual_effect:
+                    # For visual effects, pass parameters correctly
+                    effect = self.effect_registry.get_effect(
+                        effect_config.effect,
+                        weight=effect_config.weight,
+                        direction=effect_config.direction,
+                        parameters=params
+                    )
+                else:
+                    # For regular effects, use the old parameter passing
+                    params.update({
+                        "weight": effect_config.weight,
+                        "direction": effect_config.direction
+                    })
+                    effect = self.effect_registry.get_effect(effect_config.effect, **params)
                 effect.apply(model, **params)
                 
                 # Store active effect

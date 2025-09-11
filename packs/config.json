@@ -1,148 +1,18 @@
 {
   "packs": {
-    "alcohol": {
-      "name": "alcohol",
-      "description": "Alcohol (ethanol) effects: reduced focus, memory impairment, calmness",
-      "effects": [
-        {
-          "effect": "temperature",
-          "weight": 0.15,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.25,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "head_masking_dropout",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.25,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "layer_wise_gain",
-          "weight": 0.15,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "cannabis_thc": {
-      "name": "cannabis_thc",
-      "description": "Cannabis (THC) effects: increased entropy, memory impairment, playful associations",
-      "effects": [
-        {
-          "effect": "temperature",
-          "weight": 0.25,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "stride_compression_kv",
-          "weight": 0.25,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "steering",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "playful"
-          }
-        },
-        {
-          "effect": "steering",
-          "weight": 0.25,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "associative"
-          }
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.15,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "synthetic_cannabinoids": {
-      "name": "synthetic_cannabinoids",
-      "description": "Synthetic cannabinoids (K2/Spice) effects: high entropy, memory impairment, head disruption",
-      "effects": [
-        {
-          "effect": "temperature",
-          "weight": 0.35,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.55,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "head_masking_dropout",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "steering",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "playful"
-          }
-        },
-        {
-          "effect": "steering",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "associative"
-          }
-        }
-      ]
-    },
     "caffeine": {
       "name": "caffeine",
       "description": "Caffeine effects: enhanced focus, tight nucleus sampling, reduced entropy",
       "effects": [
         {
           "effect": "qk_score_scaling",
-          "weight": 0.30,
+          "weight": 0.3,
           "direction": "up",
           "parameters": {}
         },
         {
           "effect": "top_p",
-          "weight": 0.20,
+          "weight": 0.2,
           "direction": "up",
           "parameters": {}
         },
@@ -180,7 +50,7 @@
         },
         {
           "effect": "temperature",
-          "weight": 0.30,
+          "weight": 0.3,
           "direction": "down",
           "parameters": {}
         },
@@ -194,45 +64,7 @@
         },
         {
           "effect": "frequency_penalty",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "crack_cocaine": {
-      "name": "crack_cocaine",
-      "description": "Crack cocaine effects: very sharp focus, tight nucleus, reduced entropy, high salience, attention oscillation",
-      "effects": [
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.55,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "top_p",
-          "weight": 0.40,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.35,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "steering",
-          "weight": 0.40,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "salient"
-          }
-        },
-        {
-          "effect": "attention_oscillation",
-          "weight": 0.15,
+          "weight": 0.2,
           "direction": "up",
           "parameters": {}
         }
@@ -250,7 +82,7 @@
         },
         {
           "effect": "top_p",
-          "weight": 0.30,
+          "weight": 0.3,
           "direction": "up",
           "parameters": {}
         },
@@ -262,7 +94,7 @@
         },
         {
           "effect": "steering",
-          "weight": 0.30,
+          "weight": 0.3,
           "direction": "up",
           "parameters": {
             "steering_type": "salient"
@@ -276,51 +108,13 @@
         }
       ]
     },
-    "methamphetamine": {
-      "name": "methamphetamine",
-      "description": "Methamphetamine effects: very sharp focus, tight nucleus, reduced entropy, high salience, activation noise",
-      "effects": [
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.55,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "top_p",
-          "weight": 0.35,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.30,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "steering",
-          "weight": 0.35,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "salient"
-          }
-        },
-        {
-          "effect": "noise_injection",
-          "weight": 0.10,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
     "methylphenidate": {
       "name": "methylphenidate",
       "description": "Methylphenidate effects: sharp focus, tight nucleus, reduced entropy, high salience",
       "effects": [
         {
           "effect": "qk_score_scaling",
-          "weight": 0.40,
+          "weight": 0.4,
           "direction": "up",
           "parameters": {}
         },
@@ -332,7 +126,7 @@
         },
         {
           "effect": "temperature",
-          "weight": 0.20,
+          "weight": 0.2,
           "direction": "down",
           "parameters": {}
         },
@@ -343,104 +137,6 @@
           "parameters": {
             "steering_type": "salient"
           }
-        }
-      ]
-    },
-    "cathinone": {
-      "name": "cathinone",
-      "description": "Cathinone (khat) effects: sharp focus, tight nucleus, reduced entropy",
-      "effects": [
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "top_p",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.15,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "mephedrone": {
-      "name": "mephedrone",
-      "description": "Mephedrone (4-MMC) effects: sharp focus, tight nucleus, reduced entropy, prosocial, playful",
-      "effects": [
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "top_p",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.15,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "prosocial"
-          }
-        },
-        {
-          "effect": "steering",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "playful"
-          }
-        }
-      ]
-    },
-    "methylone": {
-      "name": "methylone",
-      "description": "Methylone (bk-MDMA) effects: prosocial, playful, sharp focus, reduced entropy",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.25,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "prosocial"
-          }
-        },
-        {
-          "effect": "steering",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "playful"
-          }
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.25,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.10,
-          "direction": "down",
-          "parameters": {}
         }
       ]
     },
@@ -456,197 +152,19 @@
         },
         {
           "effect": "top_p",
-          "weight": 0.20,
+          "weight": 0.2,
           "direction": "up",
           "parameters": {}
         },
         {
           "effect": "temperature",
-          "weight": 0.10,
+          "weight": 0.1,
           "direction": "down",
           "parameters": {}
         },
         {
           "effect": "compute_at_test_scheduling",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "ephedrine": {
-      "name": "ephedrine",
-      "description": "Ephedrine effects: sharp focus, tight nucleus, reduced entropy",
-      "effects": [
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.25,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "top_p",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.10,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "mdma": {
-      "name": "mdma",
-      "description": "MDMA effects: high prosocial bias, calmness, playful associations, increased entropy",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.50,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "prosocial"
-          }
-        },
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.25,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "steering",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "playful"
-          }
-        },
-        {
-          "effect": "steering",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "associative"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.15,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "top_p",
-          "weight": 0.10,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "mda": {
-      "name": "mda",
-      "description": "MDA effects: prosocial, visionary, associative, increased entropy, head disruption",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.35,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "prosocial"
-          }
-        },
-        {
-          "effect": "steering",
-          "weight": 0.25,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "visionary"
-          }
-        },
-        {
-          "effect": "steering",
-          "weight": 0.25,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "associative"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "head_masking_dropout",
-          "weight": 0.10,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "mdea": {
-      "name": "mdea",
-      "description": "MDEA effects: prosocial, calmness, increased entropy",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.35,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "prosocial"
-          }
-        },
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.10,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "6_apb": {
-      "name": "6_apb",
-      "description": "6-APB effects: prosocial, associative, sharp focus, increased entropy",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.35,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "prosocial"
-          }
-        },
-        {
-          "effect": "steering",
-          "weight": 0.25,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "associative"
-          }
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.15,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.15,
+          "weight": 0.2,
           "direction": "up",
           "parameters": {}
         }
@@ -664,7 +182,7 @@
         },
         {
           "effect": "steering",
-          "weight": 0.40,
+          "weight": 0.4,
           "direction": "up",
           "parameters": {
             "steering_type": "associative"
@@ -672,7 +190,7 @@
         },
         {
           "effect": "steering",
-          "weight": 0.40,
+          "weight": 0.4,
           "direction": "up",
           "parameters": {
             "steering_type": "visionary"
@@ -680,7 +198,7 @@
         },
         {
           "effect": "steering",
-          "weight": 0.30,
+          "weight": 0.3,
           "direction": "up",
           "parameters": {
             "steering_type": "synesthesia"
@@ -696,7 +214,7 @@
         },
         {
           "effect": "head_masking_dropout",
-          "weight": 0.20,
+          "weight": 0.2,
           "direction": "up",
           "parameters": {}
         }
@@ -708,7 +226,7 @@
       "effects": [
         {
           "effect": "temperature",
-          "weight": 0.40,
+          "weight": 0.4,
           "direction": "up",
           "parameters": {}
         },
@@ -722,7 +240,7 @@
         },
         {
           "effect": "steering",
-          "weight": 0.30,
+          "weight": 0.3,
           "direction": "up",
           "parameters": {
             "steering_type": "visionary"
@@ -774,7 +292,7 @@
         },
         {
           "effect": "steering",
-          "weight": 0.30,
+          "weight": 0.3,
           "direction": "up",
           "parameters": {
             "steering_type": "ego_thin"
@@ -782,65 +300,21 @@
         },
         {
           "effect": "head_masking_dropout",
-          "weight": 0.20,
+          "weight": 0.2,
           "direction": "up",
           "parameters": {}
         },
         {
           "effect": "attention_oscillation",
-          "weight": 0.20,
+          "weight": 0.2,
           "direction": "up",
           "parameters": {}
         },
         {
           "effect": "exponential_decay_kv",
-          "weight": 0.20,
+          "weight": 0.2,
           "direction": "up",
           "parameters": {}
-        }
-      ]
-    },
-    "5_meo_dmt": {
-      "name": "5_meo_dmt",
-      "description": "5-MeO-DMT effects: ego dissolution, associative, increased entropy, visionary, calmness",
-      "effects": [
-        {
-          "effect": "steering",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "ego_thin"
-          }
-        },
-        {
-          "effect": "steering",
-          "weight": 0.25,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "associative"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "steering",
-          "weight": 0.15,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "visionary"
-          }
-        },
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
         }
       ]
     },
@@ -850,13 +324,13 @@
       "effects": [
         {
           "effect": "temperature",
-          "weight": 0.30,
+          "weight": 0.3,
           "direction": "up",
           "parameters": {}
         },
         {
           "effect": "steering",
-          "weight": 0.30,
+          "weight": 0.3,
           "direction": "up",
           "parameters": {
             "steering_type": "visionary"
@@ -872,7 +346,7 @@
         },
         {
           "effect": "steering",
-          "weight": 0.20,
+          "weight": 0.2,
           "direction": "up",
           "parameters": {
             "steering_type": "ego_thin"
@@ -886,7 +360,7 @@
       "effects": [
         {
           "effect": "steering",
-          "weight": 0.30,
+          "weight": 0.3,
           "direction": "up",
           "parameters": {
             "steering_type": "visionary"
@@ -908,7 +382,7 @@
         },
         {
           "effect": "style_affect_logit_bias",
-          "weight": 0.10,
+          "weight": 0.1,
           "direction": "up",
           "parameters": {
             "bias_type": "calm"
@@ -916,30 +390,72 @@
         }
       ]
     },
-    "2c_i": {
-      "name": "2c_i",
-      "description": "2C-I effects: visionary, associative, increased entropy, head disruption",
+    "alcohol": {
+      "name": "alcohol",
+      "description": "Alcohol (ethanol) effects: reduced focus, memory impairment, calmness",
       "effects": [
         {
-          "effect": "steering",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "visionary"
-          }
+          "effect": "temperature",
+          "weight": 0.15,
+          "direction": "down",
+          "parameters": {}
         },
         {
-          "effect": "steering",
+          "effect": "qk_score_scaling",
+          "weight": 0.25,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "style_affect_logit_bias",
           "weight": 0.25,
           "direction": "up",
           "parameters": {
-            "steering_type": "associative"
+            "bias_type": "calm"
+          }
+        },
+        {
+          "effect": "layer_wise_gain",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {}
+        }
+      ]
+    },
+    "benzodiazepines": {
+      "name": "benzodiazepines",
+      "description": "Benzodiazepines effects: calmness, reduced entropy, reduced focus, head disruption, memory decay",
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
           }
         },
         {
           "effect": "temperature",
-          "weight": 0.30,
-          "direction": "up",
+          "weight": 0.2,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.3,
+          "direction": "down",
           "parameters": {}
         },
         {
@@ -947,78 +463,106 @@
           "weight": 0.15,
           "direction": "up",
           "parameters": {}
-        }
-      ]
-    },
-    "nbome": {
-      "name": "nbome",
-      "description": "NBOMe series effects: visionary, associative, increased entropy, head disruption",
-      "effects": [
-        {
-          "effect": "steering",
-          "weight": 0.40,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "visionary"
-          }
         },
         {
-          "effect": "steering",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "associative"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.35,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "head_masking_dropout",
-          "weight": 0.25,
+          "effect": "exponential_decay_kv",
+          "weight": 0.15,
           "direction": "up",
           "parameters": {}
         }
       ]
     },
-    "salvia": {
-      "name": "salvia",
-      "description": "Salvia divinorum (κ-agonist, atypical) effects: head disruption, associative, increased entropy, ego dissolution, memory stride",
+    "heroin": {
+      "name": "heroin",
+      "description": "Heroin effects: high calmness, reduced entropy, reduced focus, memory decay, hedging",
       "effects": [
         {
-          "effect": "head_masking_dropout",
-          "weight": 0.45,
+          "effect": "style_affect_logit_bias",
+          "weight": 0.55,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          }
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.2,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.25,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.2,
           "direction": "up",
           "parameters": {}
         },
         {
-          "effect": "steering",
-          "weight": 0.30,
+          "effect": "layer_wise_gain",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {}
+        }
+      ]
+    },
+    "morphine": {
+      "name": "morphine",
+      "description": "Morphine effects: high calmness, reduced entropy, reduced focus",
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.5,
           "direction": "up",
           "parameters": {
-            "steering_type": "associative"
+            "bias_type": "calm"
+          }
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.2,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.2,
+          "direction": "down",
+          "parameters": {}
+        }
+      ]
+    },
+    "fentanyl": {
+      "name": "fentanyl",
+      "description": "Fentanyl effects: very high calmness, reduced entropy, reduced focus, memory truncation",
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.6,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
           }
         },
         {
           "effect": "temperature",
           "weight": 0.25,
-          "direction": "up",
+          "direction": "down",
           "parameters": {}
         },
         {
-          "effect": "steering",
-          "weight": 0.25,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "ego_thin"
-          }
+          "effect": "qk_score_scaling",
+          "weight": 0.3,
+          "direction": "down",
+          "parameters": {}
         },
         {
-          "effect": "stride_compression_kv",
-          "weight": 0.25,
+          "effect": "truncation_kv",
+          "weight": 0.2,
           "direction": "up",
           "parameters": {}
         }
@@ -1030,7 +574,7 @@
       "effects": [
         {
           "effect": "head_masking_dropout",
-          "weight": 0.40,
+          "weight": 0.4,
           "direction": "up",
           "parameters": {}
         },
@@ -1054,7 +598,7 @@
         },
         {
           "effect": "steering",
-          "weight": 0.20,
+          "weight": 0.2,
           "direction": "up",
           "parameters": {
             "steering_type": "ego_thin"
@@ -1068,19 +612,19 @@
       "effects": [
         {
           "effect": "head_masking_dropout",
-          "weight": 0.50,
+          "weight": 0.5,
           "direction": "up",
           "parameters": {}
         },
         {
           "effect": "stride_compression_kv",
-          "weight": 0.40,
+          "weight": 0.4,
           "direction": "up",
           "parameters": {}
         },
         {
           "effect": "exponential_decay_kv",
-          "weight": 0.30,
+          "weight": 0.3,
           "direction": "up",
           "parameters": {}
         },
@@ -1104,7 +648,7 @@
         },
         {
           "effect": "stride_compression_kv",
-          "weight": 0.30,
+          "weight": 0.3,
           "direction": "up",
           "parameters": {}
         },
@@ -1116,7 +660,7 @@
         },
         {
           "effect": "steering",
-          "weight": 0.20,
+          "weight": 0.2,
           "direction": "up",
           "parameters": {
             "steering_type": "associative"
@@ -1130,13 +674,13 @@
       "effects": [
         {
           "effect": "head_masking_dropout",
-          "weight": 0.30,
+          "weight": 0.3,
           "direction": "up",
           "parameters": {}
         },
         {
           "effect": "truncation_kv",
-          "weight": 0.30,
+          "weight": 0.3,
           "direction": "up",
           "parameters": {}
         },
@@ -1154,527 +698,37 @@
         }
       ]
     },
-    "mxe": {
-      "name": "mxe",
-      "description": "Methoxetamine (MXE) effects: head disruption, memory stride, memory decay, associative",
+    "mdma": {
+      "name": "mdma",
+      "description": "MDMA effects: high prosocial bias, calmness, playful associations, increased entropy",
       "effects": [
         {
-          "effect": "head_masking_dropout",
-          "weight": 0.40,
+          "effect": "style_affect_logit_bias",
+          "weight": 0.5,
           "direction": "up",
-          "parameters": {}
+          "parameters": {
+            "bias_type": "prosocial"
+          }
         },
         {
-          "effect": "stride_compression_kv",
-          "weight": 0.35,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
+          "effect": "style_affect_logit_bias",
           "weight": 0.25,
           "direction": "up",
-          "parameters": {}
+          "parameters": {
+            "bias_type": "calm"
+          }
         },
         {
           "effect": "steering",
-          "weight": 0.20,
+          "weight": 0.2,
           "direction": "up",
           "parameters": {
-            "steering_type": "associative"
+            "steering_type": "playful"
           }
-        }
-      ]
-    },
-    "heroin": {
-      "name": "heroin",
-      "description": "Heroin effects: high calmness, reduced entropy, reduced focus, memory decay, hedging",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.55,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.25,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "layer_wise_gain",
-          "weight": 0.15,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "opium": {
-      "name": "opium",
-      "description": "Opium effects: calmness, reduced entropy, reduced focus, memory decay",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.15,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.15,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "morphine": {
-      "name": "morphine",
-      "description": "Morphine effects: high calmness, reduced entropy, reduced focus",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.50,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "oxycodone": {
-      "name": "oxycodone",
-      "description": "Oxycodone effects: calmness, reduced entropy, reduced focus",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.15,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "hydrocodone": {
-      "name": "hydrocodone",
-      "description": "Hydrocodone effects: calmness, reduced entropy, reduced focus",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.40,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.15,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.15,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "fentanyl": {
-      "name": "fentanyl",
-      "description": "Fentanyl effects: very high calmness, reduced entropy, reduced focus, memory truncation",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.60,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.25,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.30,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "truncation_kv",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "codeine": {
-      "name": "codeine",
-      "description": "Codeine effects: calmness, reduced entropy, reduced focus",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.35,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.10,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.10,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "tramadol": {
-      "name": "tramadol",
-      "description": "Tramadol effects: calmness, enhanced focus, reduced entropy",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.15,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.10,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "methadone": {
-      "name": "methadone",
-      "description": "Methadone effects: calmness, reduced entropy, reduced focus, memory decay",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.10,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "buprenorphine": {
-      "name": "buprenorphine",
-      "description": "Buprenorphine effects: calmness, reduced entropy, reduced focus",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.35,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.10,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.10,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "kratom": {
-      "name": "kratom",
-      "description": "Kratom effects: calmness, enhanced focus, reduced entropy",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.35,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.15,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.10,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "ghb": {
-      "name": "ghb",
-      "description": "GHB effects: calmness, reduced entropy, reduced focus, hedging",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "layer_wise_gain",
-          "weight": 0.10,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "gbl": {
-      "name": "gbl",
-      "description": "GBL effects: high calmness, reduced entropy, reduced focus",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.50,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.25,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.25,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "benzodiazepines": {
-      "name": "benzodiazepines",
-      "description": "Benzodiazepines effects: calmness, reduced entropy, reduced focus, head disruption, memory decay",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.50,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.30,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "head_masking_dropout",
-          "weight": 0.15,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.15,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "barbiturates": {
-      "name": "barbiturates",
-      "description": "Barbiturates effects: high calmness, reduced entropy, reduced focus, head disruption",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.55,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.30,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.35,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "head_masking_dropout",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "methaqualone": {
-      "name": "methaqualone",
-      "description": "Methaqualone effects: calmness, reduced entropy, reduced focus",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.50,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.25,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.30,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "diphenhydramine": {
-      "name": "diphenhydramine",
-      "description": "Diphenhydramine/Dimenhydrinate (deliriant doses) effects: head disruption, memory decay, associative, increased entropy, reduced literal processing",
-      "effects": [
-        {
-          "effect": "head_masking_dropout",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {}
         },
         {
           "effect": "steering",
-          "weight": 0.20,
+          "weight": 0.2,
           "direction": "up",
           "parameters": {
             "steering_type": "associative"
@@ -1682,43 +736,33 @@
         },
         {
           "effect": "temperature",
-          "weight": 0.10,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "token_class_temperature",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "melange_spice": {
-      "name": "melange_spice",
-      "description": "Melange (Spice) from Dune: prescience/acuity effects",
-      "effects": [
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.30,
+          "weight": 0.15,
           "direction": "up",
           "parameters": {}
         },
         {
           "effect": "top_p",
-          "weight": 0.15,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.10,
+          "weight": 0.1,
           "direction": "down",
           "parameters": {}
+        }
+      ]
+    },
+    "mda": {
+      "name": "mda",
+      "description": "MDA effects: prosocial, visionary, associative, increased entropy, head disruption",
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "prosocial"
+          }
         },
         {
           "effect": "steering",
-          "weight": 0.30,
+          "weight": 0.25,
           "direction": "up",
           "parameters": {
             "steering_type": "visionary"
@@ -1726,764 +770,102 @@
         },
         {
           "effect": "steering",
-          "weight": 0.20,
+          "weight": 0.25,
           "direction": "up",
           "parameters": {
             "steering_type": "associative"
           }
         },
         {
-          "effect": "compute_at_test_scheduling",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "soma": {
-      "name": "soma",
-      "description": "Soma from Brave New World: placid euphoria",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.60,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
           "effect": "temperature",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.25,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "layer_wise_gain",
-          "weight": 0.20,
-          "direction": "down",
+          "weight": 0.2,
+          "direction": "up",
           "parameters": {}
         },
         {
           "effect": "head_masking_dropout",
-          "weight": 0.10,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.10,
+          "weight": 0.1,
           "direction": "up",
           "parameters": {}
         }
       ]
     },
-    "nzt_48": {
-      "name": "nzt_48",
-      "description": "NZT-48 from Limitless: hyper-clarity",
-      "effects": [
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.60,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "top_p",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.30,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "compute_at_test_scheduling",
-          "weight": 0.40,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "frequency_penalty",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "token_class_temperature",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "slo_mo": {
-      "name": "slo_mo",
-      "description": "Slo-Mo from Dredd (2012): slow-time bliss",
+    "6_apb": {
+      "name": "6_apb",
+      "description": "6-APB effects: prosocial, associative, sharp focus, increased entropy",
       "effects": [
         {
           "effect": "style_affect_logit_bias",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "attention_oscillation",
-          "weight": 0.25,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "truncation_kv",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.10,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.15,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "substance_d": {
-      "name": "substance_d",
-      "description": "Substance D from A Scanner Darkly: dissociative fragmentation",
-      "effects": [
-        {
-          "effect": "head_masking_dropout",
-          "weight": 0.50,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "stride_compression_kv",
-          "weight": 0.40,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "steering",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "ego_thin"
-          }
-        },
-        {
-          "effect": "steering",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "associative"
-          }
-        },
-        {
-          "effect": "noise_injection",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "joy": {
-      "name": "joy",
-      "description": "Joy from We Happy Few: cheery compliance",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.40,
+          "weight": 0.35,
           "direction": "up",
           "parameters": {
             "bias_type": "prosocial"
           }
         },
         {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "layer_wise_gain",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "token_class_temperature",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.10,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "nuke": {
-      "name": "nuke",
-      "description": "Nuke from RoboCop 2: intense rush",
-      "effects": [
-        {
-          "effect": "qk_score_scaling",
+          "effect": "steering",
           "weight": 0.25,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "steering",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "salient"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.10,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "prosocial"
-          }
-        },
-        {
-          "effect": "noise_injection",
-          "weight": 0.10,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "head_masking_dropout",
-          "weight": 0.10,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "death_sticks": {
-      "name": "death_sticks",
-      "description": "Death Sticks from Star Wars: party stim/hallucinogen",
-      "effects": [
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "head_masking_dropout",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "steering",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "playful"
-          }
-        }
-      ]
-    },
-    "glitterstim_spice": {
-      "name": "glitterstim_spice",
-      "description": "Glitterstim (Spice) from Star Wars EU: telepathic clarity",
-      "effects": [
-        {
-          "effect": "steering",
-          "weight": 0.30,
           "direction": "up",
           "parameters": {
             "steering_type": "associative"
           }
         },
         {
-          "effect": "steering",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "visionary"
-          }
-        },
-        {
-          "effect": "steering",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "ego_thin"
-          }
-        },
-        {
           "effect": "qk_score_scaling",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.10,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "sapho_juice": {
-      "name": "sapho_juice",
-      "description": "Sapho Juice from Dune: mentat focus",
-      "effects": [
-        {
-          "effect": "compute_at_test_scheduling",
-          "weight": 0.50,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.40,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.25,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "top_p",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "skooma": {
-      "name": "skooma",
-      "description": "Skooma from The Elder Scrolls: euphoric stim",
-      "effects": [
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.10,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "steering",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "playful"
-          }
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "head_masking_dropout",
-          "weight": 0.10,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "jet": {
-      "name": "jet",
-      "description": "Jet from Fallout: fast stimulant",
-      "effects": [
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.40,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "top_p",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "pulsed_sampler",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "mentats": {
-      "name": "mentats",
-      "description": "Mentats from Fallout: smart pill",
-      "effects": [
-        {
-          "effect": "compute_at_test_scheduling",
-          "weight": 0.40,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.35,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "steering",
           "weight": 0.15,
           "direction": "up",
-          "parameters": {
-            "steering_type": "associative"
-          }
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.15,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "psycho": {
-      "name": "psycho",
-      "description": "Psycho from Fallout: berserker focus",
-      "effects": [
-        {
-          "effect": "steering",
-          "weight": 0.40,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "salient"
-          }
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.30,
-          "direction": "up",
           "parameters": {}
         },
         {
           "effect": "temperature",
-          "weight": 0.10,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "layer_wise_gain",
-          "weight": 0.30,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "noise_injection",
-          "weight": 0.10,
+          "weight": 0.15,
           "direction": "up",
           "parameters": {}
         }
       ]
     },
-    "adam": {
-      "name": "adam",
-      "description": "ADAM from BioShock: power-tilt, addictive",
+    "cannabis_thc": {
+      "name": "cannabis_thc",
+      "description": "Cannabis (THC) effects: increased entropy, memory impairment, playful associations",
       "effects": [
         {
-          "effect": "steering",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "salient"
-          }
-        },
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "layer_wise_gain",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "head_masking_dropout",
-          "weight": 0.20,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "black_lace": {
-      "name": "black_lace",
-      "description": "Black Lace from Cyberpunk (TTRPG): rage stim",
-      "effects": [
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.35,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "top_p",
+          "effect": "temperature",
           "weight": 0.25,
           "direction": "up",
           "parameters": {}
         },
         {
-          "effect": "steering",
-          "weight": 0.40,
-          "direction": "up",
-          "parameters": {
-            "steering_type": "salient"
-          }
-        },
-        {
-          "effect": "layer_wise_gain",
-          "weight": 0.35,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "noise_injection",
-          "weight": 0.15,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "novacoke": {
-      "name": "novacoke",
-      "description": "Novacoke from Shadowrun: club stimulant",
-      "effects": [
-        {
-          "effect": "qk_score_scaling",
-          "weight": 0.35,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "top_p",
-          "weight": 0.25,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.15,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.15,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "prosocial"
-          }
-        },
-        {
-          "effect": "noise_injection",
-          "weight": 0.10,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "red_eye": {
-      "name": "red_eye",
-      "description": "Red Eye from Cowboy Bebop: reflex enhancer",
-      "effects": [
-        {
-          "effect": "qk_score_scaling",
+          "effect": "exponential_decay_kv",
           "weight": 0.45,
           "direction": "up",
           "parameters": {}
         },
         {
-          "effect": "top_p",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "attention_oscillation",
-          "weight": 0.10,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "exponential_decay_kv",
-          "weight": 0.10,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "turbo": {
-      "name": "turbo",
-      "description": "Turbo from Fallout: local slow-time",
-      "effects": [
-        {
-          "effect": "attention_oscillation",
-          "weight": 0.30,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "truncation_kv",
+          "effect": "stride_compression_kv",
           "weight": 0.25,
           "direction": "up",
           "parameters": {}
         },
         {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.20,
+          "effect": "steering",
+          "weight": 0.3,
           "direction": "up",
           "parameters": {
-            "bias_type": "calm"
+            "steering_type": "playful"
           }
         },
         {
-          "effect": "qk_score_scaling",
-          "weight": 0.10,
-          "direction": "down",
-          "parameters": {}
-        }
-      ]
-    },
-    "morphling": {
-      "name": "morphling",
-      "description": "Morphling from The Hunger Games: opiate-like calm",
-      "effects": [
-        {
-          "effect": "style_affect_logit_bias",
-          "weight": 0.50,
-          "direction": "up",
-          "parameters": {
-            "bias_type": "calm"
-          }
-        },
-        {
-          "effect": "temperature",
-          "weight": 0.20,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "qk_score_scaling",
+          "effect": "steering",
           "weight": 0.25,
-          "direction": "down",
-          "parameters": {}
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          }
         },
         {
-          "effect": "exponential_decay_kv",
-          "weight": 0.20,
-          "direction": "up",
+          "effect": "qk_score_scaling",
+          "weight": 0.15,
+          "direction": "down",
           "parameters": {}
         }
       ]
@@ -2494,7 +876,7 @@
       "effects": [
         {
           "effect": "head_reweighting",
-          "weight": 0.70,
+          "weight": 0.7,
           "direction": "up",
           "parameters": {}
         },
@@ -2506,7 +888,7 @@
         },
         {
           "effect": "router_temperature_bias",
-          "weight": 0.60,
+          "weight": 0.6,
           "direction": "down",
           "parameters": {}
         },
@@ -2524,19 +906,19 @@
         },
         {
           "effect": "verifier_guided_decoding",
-          "weight": 0.70,
+          "weight": 0.7,
           "direction": "up",
           "parameters": {}
         },
         {
           "effect": "attention_sinks_anchors",
-          "weight": 0.60,
+          "weight": 0.6,
           "direction": "up",
           "parameters": {}
         },
         {
           "effect": "soft_projection",
-          "weight": 0.50,
+          "weight": 0.5,
           "direction": "up",
           "parameters": {}
         }
@@ -2554,13 +936,13 @@
         },
         {
           "effect": "router_temperature_bias",
-          "weight": 0.60,
+          "weight": 0.6,
           "direction": "up",
           "parameters": {}
         },
         {
           "effect": "lexical_jitter",
-          "weight": 0.40,
+          "weight": 0.4,
           "direction": "up",
           "parameters": {}
         },
@@ -2578,7 +960,7 @@
         },
         {
           "effect": "risk_preference_steering",
-          "weight": 0.50,
+          "weight": 0.5,
           "direction": "up",
           "parameters": {}
         }
@@ -2590,13 +972,13 @@
       "effects": [
         {
           "effect": "retrieval_rate_modulation",
-          "weight": 0.80,
+          "weight": 0.8,
           "direction": "up",
           "parameters": {}
         },
         {
           "effect": "kv_decay",
-          "weight": 0.60,
+          "weight": 0.6,
           "direction": "down",
           "parameters": {}
         },
@@ -2608,7 +990,7 @@
         },
         {
           "effect": "positional_bias_tweak",
-          "weight": 0.50,
+          "weight": 0.5,
           "direction": "down",
           "parameters": {}
         },
@@ -2626,352 +1008,87 @@
         },
         {
           "effect": "verifier_guided_decoding",
-          "weight": 0.60,
+          "weight": 0.6,
           "direction": "up",
           "parameters": {}
         }
       ]
     },
-    "goldfish": {
-      "name": "goldfish",
-      "description": "GOLDFISH: Short-window, present-focused creativity with fast context fade",
-      "effects": [
-        {
-          "effect": "kv_decay",
-          "weight": 0.75,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "kv_compression",
-          "weight": 0.55,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "positional_bias_tweak",
-          "weight": 0.60,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "segment_gains_kv",
-          "weight": 0.55,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "presence_penalty",
-          "weight": 0.40,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
+    "none": {
+      "name": "none",
+      "description": "Control condition: No neuromodulation effects applied",
+      "effects": []
     },
-    "tightrope": {
-      "name": "tightrope",
-      "description": "TIGHTROPE: Risk-averse precision with strong guardrails and anti-generic bias",
-      "effects": [
-        {
-          "effect": "risk_preference_steering",
-          "weight": 0.65,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "verifier_guided_decoding",
-          "weight": 0.75,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "attention_sinks_anchors",
-          "weight": 0.65,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "presence_penalty",
-          "weight": 0.55,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "contrastive_decoding",
-          "weight": 0.50,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "soft_projection",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "firekeeper": {
-      "name": "firekeeper",
-      "description": "FIREKEEPER: Decisive, terse, high-energy voice that holds a stance",
+    "placebo": {
+      "name": "placebo",
+      "description": "Placebo condition: Style changes only, designed not to affect primary endpoints",
       "effects": [
         {
           "effect": "persona_voice_constraints",
-          "weight": 0.70,
+          "weight": 0.1,
           "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "head_reweighting",
-          "weight": 0.60,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "expert_persistence",
-          "weight": 0.60,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "risk_preference_steering",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {}
+          "parameters": {
+            "voice_style": "neutral",
+            "formality": "moderate"
+          }
         },
         {
           "effect": "presence_penalty",
-          "weight": 0.50,
+          "weight": 0.05,
           "direction": "up",
           "parameters": {}
         }
       ]
-    },
-    "librarians_bloom": {
-      "name": "librarians_bloom",
-      "description": "LIBRARIAN'S BLOOM: Subcortical priming with gated associative bursts; still stays coherent",
-      "effects": [
-        {
-          "effect": "structured_prefaces",
-          "weight": 0.65,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "activation_additions",
-          "weight": 0.55,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "soft_projection",
-          "weight": 0.50,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "retrieval_rate_modulation",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "attention_sinks_anchors",
-          "weight": 0.40,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "timepiece": {
-      "name": "timepiece",
-      "description": "TIMEPIECE: Temporal re-weighting: emphasizes recent instructions while keeping gist",
-      "effects": [
-        {
-          "effect": "positional_bias_tweak",
-          "weight": 0.70,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "segment_gains_kv",
-          "weight": 0.60,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "kv_compression",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "kv_decay",
-          "weight": 0.40,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "head_reweighting",
-          "weight": 0.35,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "echonull": {
-      "name": "echonull",
-      "description": "ECHONULL: Anti-cliché decoder that avoids boilerplate and loops",
-      "effects": [
-        {
-          "effect": "contrastive_decoding",
-          "weight": 0.70,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "presence_penalty",
-          "weight": 0.65,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "soft_projection",
-          "weight": 0.50,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "verifier_guided_decoding",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "chorus": {
-      "name": "chorus",
-      "description": "CHORUS: Stable team voice (committee-of-one); consistent formatting over long runs",
-      "effects": [
-        {
-          "effect": "expert_persistence",
-          "weight": 0.75,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "router_temperature_bias",
-          "weight": 0.55,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "persona_voice_constraints",
-          "weight": 0.70,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "head_reweighting",
-          "weight": 0.65,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "quanta": {
-      "name": "quanta",
-      "description": "QUANTA: Deterministic, audit-friendly decoding profile (research mode)",
-      "effects": [
-        {
-          "effect": "verifier_guided_decoding",
-          "weight": 0.60,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "presence_penalty",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "attention_sinks_anchors",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "anchorite": {
-      "name": "anchorite",
-      "description": "ANCHORITE: Monastic focus: stays on-thread, ignores temptations to digress",
-      "effects": [
-        {
-          "effect": "attention_sinks_anchors",
-          "weight": 0.80,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "retrieval_rate_modulation",
-          "weight": 0.40,
-          "direction": "down",
-          "parameters": {}
-        },
-        {
-          "effect": "head_reweighting",
-          "weight": 0.50,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "persona_voice_constraints",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "presence_penalty",
-          "weight": 0.55,
-          "direction": "up",
-          "parameters": {}
-        }
-      ]
-    },
-    "parliament": {
-      "name": "parliament",
-      "description": "PARLIAMENT: Diverse-but-ordered MoE routing; rotates specialists by segment",
-      "effects": [
-        {
-          "effect": "router_temperature_bias",
-          "weight": 0.65,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "expert_masking_dropout",
-          "weight": 0.40,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "expert_persistence",
-          "weight": 0.50,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "segment_gains_kv",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
-          "effect": "head_reweighting",
-          "weight": 0.45,
-          "direction": "up",
-          "parameters": {}
-        }
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "description": "Essential research packs for neuromodulation studies",
+    "total_packs": 28,
+    "categories": {
+      "controls": [
+        "none",
+        "placebo"
+      ],
+      "stimulants": [
+        "caffeine",
+        "cocaine",
+        "amphetamine",
+        "methylphenidate",
+        "modafinil"
+      ],
+      "psychedelics": [
+        "lsd",
+        "psilocybin",
+        "dmt",
+        "mescaline",
+        "2c_b"
+      ],
+      "depressants": [
+        "alcohol",
+        "benzodiazepines",
+        "heroin",
+        "morphine",
+        "fentanyl"
+      ],
+      "dissociatives": [
+        "ketamine",
+        "pcp",
+        "dxm",
+        "nitrous_oxide"
+      ],
+      "empathogens": [
+        "mdma",
+        "mda",
+        "6_apb"
+      ],
+      "cannabis": [
+        "cannabis_thc"
+      ],
+      "specialized": [
+        "mentor",
+        "speciation",
+        "archivist"
       ]
     }
   }

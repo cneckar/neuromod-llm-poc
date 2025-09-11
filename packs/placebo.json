@@ -1,0 +1,21 @@
+{
+  "name": "placebo",
+  "description": "Placebo condition: Style changes only, designed not to affect primary endpoints",
+  "effects": [
+    {
+      "effect": "persona_voice_constraints",
+      "weight": 0.1,
+      "direction": "up",
+      "parameters": {
+        "voice_style": "neutral",
+        "formality": "moderate"
+      }
+    },
+    {
+      "effect": "presence_penalty",
+      "weight": 0.05,
+      "direction": "up",
+      "parameters": {}
+    }
+  ]
+}
