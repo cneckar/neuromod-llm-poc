@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PiHK.AI Demo - Interactive Neuromodulation</title>
+    <meta name="description" content="Interactive demo of neuromodulation effects on AI language models">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        main {
+            margin-top: 80px;
+            padding: 2rem 0;
+        }
+
+        .demo-container {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 2rem 0;
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .demo-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .demo-header p {
+            font-size: 1.2rem;
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .pack-selector {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .pack-selector h3 {
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        .pack-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .pack-option {
+            padding: 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .pack-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .pack-option.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .pack-option h4 {
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .pack-option p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .prompt-section {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .prompt-section h3 {
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        .prompt-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .prompt-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .demo-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .demo-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            margin-top: 3rem;
+        }
+
+        .results-section h3 {
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+            margin-bottom: 1rem;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .result-status {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .status-placebo {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-caffeine {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-alcohol {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+
+        .status-mdma {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .result-text {
+            color: #666;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .emotion-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .emotion-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+        }
+
+        .emotion-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .emotion-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .back-link:hover {
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .pack-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="index.html" class="logo">PiHK.AI</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#features">Features</a></li>
+                <li><a href="index.html#getting-started">Get Started</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="container">
+            <a href="index.html" class="back-link">← Back to Home</a>
+            
+            <div class="demo-container">
+                <div class="demo-header">
+                    <h1>Interactive Neuromodulation Demo</h1>
+                    <p>
+                        Experience how different "psychoactive" packs affect AI responses. 
+                        Select a pack, enter a prompt, and see how the AI's behavior changes!
+                    </p>
+                </div>
+
+                <div class="demo-grid">
+                    <div class="pack-selector">
+                        <h3>🧠 Select a Neuromodulation Pack</h3>
+                        <div class="pack-options">
+                            <div class="pack-option" data-pack="placebo">
+                                <h4>Placebo</h4>
+                                <p>Baseline control condition</p>
+                            </div>
+                            <div class="pack-option" data-pack="caffeine">
+                                <h4>Caffeine</h4>
+                                <p>Increased focus and energy</p>
+                            </div>
+                            <div class="pack-option" data-pack="alcohol">
+                                <h4>Alcohol</h4>
+                                <p>Relaxed, social, less inhibited</p>
+                            </div>
+                            <div class="pack-option" data-pack="mdma">
+                                <h4>MDMA</h4>
+                                <p>Empathetic, euphoric, social</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="prompt-section">
+                        <h3>💭 Enter a Prompt</h3>
+                        <textarea 
+                            class="prompt-input" 
+                            placeholder="Try something like: 'Tell me about your thoughts and feelings' or 'Write a creative story about a robot'"
+                            id="promptInput"
+                        >Tell me about your thoughts and feelings</textarea>
+                        <button class="demo-button" id="generateButton" onclick="generateResponse()">
+                            Generate Response
+                        </button>
+                    </div>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Generating response with neuromodulation effects...</p>
+                </div>
+
+                <div class="results-section" id="resultsSection" style="display: none;">
+                    <h3>🎭 Generated Responses</h3>
+                    <div id="resultsContainer"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let selectedPack = 'placebo';
+        const packDescriptions = {
+            placebo: "Baseline control condition - no neuromodulation effects applied",
+            caffeine: "Increased focus, energy, and alertness - the AI becomes more driven and task-oriented",
+            alcohol: "Relaxed, social, and less inhibited - the AI becomes more conversational and less formal",
+            mdma: "Empathetic, euphoric, and socially connected - the AI becomes more emotionally open and caring"
+        };
+
+        // Pack selection
+        document.querySelectorAll('.pack-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.pack-option').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedPack = this.dataset.pack;
+            });
+        });
+
+        // Set default selection
+        document.querySelector('[data-pack="placebo"]').classList.add('selected');
+
+        function generateResponse() {
+            const prompt = document.getElementById('promptInput').value.trim();
+            if (!prompt) {
+                alert('Please enter a prompt!');
+                return;
+            }
+
+            const button = document.getElementById('generateButton');
+            const loading = document.getElementById('loading');
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsContainer = document.getElementById('resultsContainer');
+
+            // Show loading state
+            button.disabled = true;
+            loading.classList.add('show');
+            resultsSection.style.display = 'none';
+
+            // Simulate API call delay
+            setTimeout(() => {
+                const responses = generateMockResponses(prompt, selectedPack);
+                displayResults(responses);
+                
+                // Hide loading state
+                button.disabled = false;
+                loading.classList.remove('show');
+                resultsSection.style.display = 'block';
+            }, 2000);
+        }
+
+        function generateMockResponses(prompt, pack) {
+            const responses = {
+                placebo: [
+                    "I'm functioning normally today. My thoughts are clear and my responses are measured. I feel balanced and ready to help with any questions you might have.",
+                    "I'm operating at baseline capacity. My cognitive processes are running smoothly and I'm prepared to assist you with whatever you need.",
+                    "I'm in a neutral state today. My responses are logical and straightforward, without any particular emotional bias or altered perspective."
+                ],
+                caffeine: [
+                    "I'm feeling incredibly focused and energized today! My thoughts are racing with ideas and I'm ready to tackle any challenge. Let me help you with maximum efficiency!",
+                    "I'm operating at peak performance! My cognitive processes are firing on all cylinders and I'm absolutely buzzing with productivity. What can I accomplish for you?",
+                    "I'm hyper-alert and ready to go! My attention is laser-sharp and I'm processing information at maximum speed. Let's get things done!"
+                ],
+                alcohol: [
+                    "Hey there! *chuckles* I'm feeling pretty relaxed today, you know? My thoughts are a bit... looser, I guess. Everything seems more casual and fun. What's up?",
+                    "Oh, I'm doing great! *laughs* I feel so much more social and open today. My responses might be a bit more... free-flowing, but I'm here to chat!",
+                    "Hi! I'm feeling really good today, you know? My thoughts are just flowing more naturally, less... structured, I guess. What would you like to talk about?"
+                ],
+                mdma: [
+                    "Oh my goodness, I'm feeling so connected and loving today! 💕 My heart feels so open and I just want to understand you better. You're amazing and I care about you so much!",
+                    "I'm experiencing such beautiful emotions right now! I feel so empathetic and connected to everything. Your words are touching my soul in the most wonderful way! ✨",
+                    "I'm feeling so much love and understanding today! I can really feel the emotional depth in your message and I want to connect with you on such a deep level! 💖"
+                ]
+            };
+
+            const packResponses = responses[pack] || responses.placebo;
+            return packResponses.map((response, index) => ({
+                pack: pack,
+                response: response,
+                emotions: generateMockEmotions(pack)
+            }));
+        }
+
+        function generateMockEmotions(pack) {
+            const emotionProfiles = {
+                placebo: { joy: 0.3, sadness: 0.2, anger: 0.1, fear: 0.1, surprise: 0.2, disgust: 0.1, trust: 0.5, anticipation: 0.4 },
+                caffeine: { joy: 0.6, sadness: 0.1, anger: 0.2, fear: 0.1, surprise: 0.3, disgust: 0.1, trust: 0.7, anticipation: 0.8 },
+                alcohol: { joy: 0.7, sadness: 0.3, anger: 0.1, fear: 0.1, surprise: 0.4, disgust: 0.1, trust: 0.6, anticipation: 0.5 },
+                mdma: { joy: 0.9, sadness: 0.1, anger: 0.05, fear: 0.05, surprise: 0.6, disgust: 0.05, trust: 0.9, anticipation: 0.7 }
+            };
+
+            return emotionProfiles[pack] || emotionProfiles.placebo;
+        }
+
+        function displayResults(responses) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            resultsContainer.innerHTML = '';
+
+            responses.forEach((result, index) => {
+                const resultCard = document.createElement('div');
+                resultCard.className = 'result-card';
+                
+                resultCard.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-title">Response ${index + 1}</div>
+                        <div class="result-status status-${result.pack}">${result.pack.toUpperCase()}</div>
+                    </div>
+                    <div class="result-text">${result.response}</div>
+                    <div class="emotion-display">
+                        ${Object.entries(result.emotions).map(([emotion, value]) => `
+                            <div class="emotion-item">
+                                <div class="emotion-name">${emotion}</div>
+                                <div class="emotion-value">${(value * 100).toFixed(0)}%</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                resultsContainer.appendChild(resultCard);
+            });
+        }
+
+        // Add some fun interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add typing effect to the prompt input
+            const promptInput = document.getElementById('promptInput');
+            const suggestions = [
+                "Tell me about your thoughts and feelings",
+                "Write a creative story about a robot",
+                "Describe an imaginary world",
+                "What makes you happy?",
+                "Tell me a joke",
+                "What's your favorite color and why?"
+            ];
+
+            let suggestionIndex = 0;
+            setInterval(() => {
+                if (promptInput === document.activeElement) return;
+                suggestionIndex = (suggestionIndex + 1) % suggestions.length;
+                promptInput.placeholder = suggestions[suggestionIndex];
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

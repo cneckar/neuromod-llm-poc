@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://pihk.ai/sitemap.xml
+
+# Disallow certain paths if needed
+# Disallow: /private/
+# Disallow: /admin/

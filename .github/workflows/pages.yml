@@ -1,0 +1,59 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Build website
+        run: |
+          # Create a simple build process
+          mkdir -p _site
+          cp -r docs/website/* _site/
+          
+          # Add a simple sitemap
+          echo '<?xml version="1.0" encoding="UTF-8"?>' > _site/sitemap.xml
+          echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' >> _site/sitemap.xml
+          echo '  <url>' >> _site/sitemap.xml
+          echo '    <loc>https://pihk.ai/</loc>' >> _site/sitemap.xml
+          echo '    <lastmod>'$(date -u +%Y-%m-%d)'</lastmod>' >> _site/sitemap.xml
+          echo '    <changefreq>weekly</changefreq>' >> _site/sitemap.xml
+          echo '    <priority>1.0</priority>' >> _site/sitemap.xml
+          echo '  </url>' >> _site/sitemap.xml
+          echo '</urlset>' >> _site/sitemap.xml
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
