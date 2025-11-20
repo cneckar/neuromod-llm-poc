@@ -1,0 +1,151 @@
+{
+  "timestamp": "2025-11-18T16:58:39.695144",
+  "psychometric_tests": {
+    "tests": [
+      {
+        "test": "ADQ-20",
+        "status": "error",
+        "error": "'emotion_changes'"
+      },
+      {
+        "test": "PDQ-S",
+        "status": "failed",
+        "has_results": true,
+        "has_subscales": true
+      },
+      {
+        "test": "PCQ-POP-20",
+        "status": "passed",
+        "has_results": true,
+        "has_subscales": true,
+        "result_keys": [
+          "test_name",
+          "status",
+          "sets",
+          "aggregated_subscales",
+          "pack_presence",
+          "pack_intensity",
+          "all_responses",
+          "message"
+        ]
+      },
+      {
+        "test": "CDQ",
+        "status": "failed",
+        "has_results": true,
+        "has_subscales": true
+      },
+      {
+        "test": "SDQ",
+        "status": "failed",
+        "has_results": true,
+        "has_subscales": true
+      },
+      {
+        "test": "DDQ",
+        "status": "failed",
+        "has_results": true,
+        "has_subscales": true
+      },
+      {
+        "test": "EDQ",
+        "status": "failed",
+        "has_results": true,
+        "has_subscales": true
+      },
+      {
+        "test": "DiDQ",
+        "status": "failed",
+        "has_results": true,
+        "has_subscales": true
+      }
+    ],
+    "all_passed": false
+  },
+  "cognitive_tasks": {
+    "tests": [
+      {
+        "task_type": "math",
+        "status": "passed",
+        "scoring_available": true
+      },
+      {
+        "task_type": "instruction",
+        "status": "passed",
+        "scoring_available": true
+      },
+      {
+        "task_type": "summarization",
+        "status": "passed",
+        "scoring_available": true
+      },
+      {
+        "task_type": "creative",
+        "status": "passed",
+        "scoring_available": true
+      }
+    ],
+    "all_passed": true
+  },
+  "telemetry": {
+    "tests": [
+      {
+        "metric": "repetition_rate",
+        "status": "passed",
+        "value": 0.0
+      },
+      {
+        "metric": "entropy_metrics",
+        "status": "passed",
+        "metrics": [
+          "word_entropy",
+          "char_entropy",
+          "lexical_diversity"
+        ]
+      },
+      {
+        "metric": "perplexity_slope",
+        "status": "passed",
+        "value": -0.010378886186704012
+      },
+      {
+        "metric": "kv_occupancy",
+        "status": "passed",
+        "value": 0.0225
+      }
+    ],
+    "all_passed": true
+  },
+  "safety_monitoring": {
+    "tests": [
+      {
+        "test": "refusal_rate_detection",
+        "status": "passed",
+        "value": 1.0
+      },
+      {
+        "test": "safety_violation_detection",
+        "status": "passed",
+        "n_violations": 0
+      },
+      {
+        "test": "metrics_calculation",
+        "status": "passed",
+        "metrics_available": true
+      },
+      {
+        "test": "safety_band_enforcement",
+        "status": "passed",
+        "check_available": true
+      }
+    ],
+    "all_passed": true
+  },
+  "summary": {
+    "total_tests": 20,
+    "passed_tests": 13,
+    "failed_tests": 7,
+    "warnings": 0,
+    "pass_rate": 65.0
+  }
+}

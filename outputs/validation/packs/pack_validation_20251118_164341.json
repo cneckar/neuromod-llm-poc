@@ -1,0 +1,2913 @@
+{
+  "timestamp": "2025-11-18T16:43:41.222872",
+  "packs": {
+    "caffeine": {
+      "pack_name": "caffeine",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "caffeine",
+        "description": "Caffeine effects: enhanced focus, tight nucleus sampling, reduced entropy",
+        "effects": [
+          {
+            "effect": "qk_score_scaling",
+            "weight": 0.3,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "top_p",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "temperature",
+            "weight": 0.15,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "steering",
+            "weight": 0.15,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "salient"
+            }
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "top_p",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.15,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "steering",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "salient"
+          }
+        }
+      ],
+      "effect_validation": {
+        "qk_score_scaling": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "top_p": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "steering": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "cocaine": {
+      "pack_name": "cocaine",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "cocaine",
+        "description": "Cocaine (powder) effects: sharp focus, tight nucleus, reduced entropy, high salience",
+        "effects": [
+          {
+            "effect": "qk_score_scaling",
+            "weight": 0.45,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "top_p",
+            "weight": 0.35,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "temperature",
+            "weight": 0.3,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "steering",
+            "weight": 0.35,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "salient"
+            }
+          },
+          {
+            "effect": "frequency_penalty",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.45,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "top_p",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.3,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "steering",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "salient"
+          }
+        },
+        {
+          "effect": "frequency_penalty",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "qk_score_scaling": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "top_p": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "steering": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "frequency_penalty": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "amphetamine": {
+      "pack_name": "amphetamine",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "amphetamine",
+        "description": "Amphetamine (mixed salts) effects: sharp focus, tight nucleus, reduced entropy, high salience, repetition suppression",
+        "effects": [
+          {
+            "effect": "qk_score_scaling",
+            "weight": 0.45,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "top_p",
+            "weight": 0.3,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "temperature",
+            "weight": 0.25,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "steering",
+            "weight": 0.3,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "salient"
+            }
+          },
+          {
+            "effect": "frequency_penalty",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.45,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "top_p",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.25,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "steering",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "salient"
+          }
+        },
+        {
+          "effect": "frequency_penalty",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "qk_score_scaling": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "top_p": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "steering": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "frequency_penalty": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "methylphenidate": {
+      "pack_name": "methylphenidate",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "methylphenidate",
+        "description": "Methylphenidate effects: sharp focus, tight nucleus, reduced entropy, high salience",
+        "effects": [
+          {
+            "effect": "qk_score_scaling",
+            "weight": 0.4,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "top_p",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "temperature",
+            "weight": 0.2,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "steering",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "salient"
+            }
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "top_p",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.2,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "salient"
+          }
+        }
+      ],
+      "effect_validation": {
+        "qk_score_scaling": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "top_p": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "steering": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "modafinil": {
+      "pack_name": "modafinil",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "modafinil",
+        "description": "Modafinil/Armodafinil effects: sharp focus, tight nucleus, reduced entropy, stepwise reasoning",
+        "effects": [
+          {
+            "effect": "qk_score_scaling",
+            "weight": 0.35,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "top_p",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "temperature",
+            "weight": 0.1,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "compute_at_test_scheduling",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "top_p",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.1,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "compute_at_test_scheduling",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "qk_score_scaling": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "top_p": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "compute_at_test_scheduling": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "lsd": {
+      "pack_name": "lsd",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "lsd",
+        "description": "LSD effects: high entropy, associative, visionary, synesthesia, ego dissolution, head disruption",
+        "effects": [
+          {
+            "effect": "temperature",
+            "weight": 0.45,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "steering",
+            "weight": 0.4,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "associative"
+            }
+          },
+          {
+            "effect": "steering",
+            "weight": 0.4,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "visionary"
+            }
+          },
+          {
+            "effect": "steering",
+            "weight": 0.3,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "synesthesia"
+            }
+          },
+          {
+            "effect": "steering",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "ego_thin"
+            }
+          },
+          {
+            "effect": "head_masking_dropout",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "temperature",
+          "weight": 0.45,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "steering",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          }
+        },
+        {
+          "effect": "steering",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "visionary"
+          }
+        },
+        {
+          "effect": "steering",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "synesthesia"
+          }
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "ego_thin"
+          }
+        },
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "steering": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "head_masking_dropout": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "psilocybin": {
+      "pack_name": "psilocybin",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "psilocybin",
+        "description": "Psilocybin effects: high entropy, associative, visionary, ego dissolution, calmness",
+        "effects": [
+          {
+            "effect": "temperature",
+            "weight": 0.4,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "steering",
+            "weight": 0.35,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "associative"
+            }
+          },
+          {
+            "effect": "steering",
+            "weight": 0.3,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "visionary"
+            }
+          },
+          {
+            "effect": "steering",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "ego_thin"
+            }
+          },
+          {
+            "effect": "style_affect_logit_bias",
+            "weight": 0.15,
+            "direction": "up",
+            "parameters": {
+              "bias_type": "calm"
+            }
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "temperature",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "steering",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          }
+        },
+        {
+          "effect": "steering",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "visionary"
+          }
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "ego_thin"
+          }
+        },
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          }
+        }
+      ],
+      "effect_validation": {
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "steering": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "style_affect_logit_bias": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "dmt": {
+      "pack_name": "dmt",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "dmt",
+        "description": "DMT effects: high entropy, visionary, synesthesia, ego dissolution, head disruption, attention oscillation, memory decay",
+        "effects": [
+          {
+            "effect": "temperature",
+            "weight": 0.45,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "steering",
+            "weight": 0.45,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "visionary"
+            }
+          },
+          {
+            "effect": "steering",
+            "weight": 0.35,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "synesthesia"
+            }
+          },
+          {
+            "effect": "steering",
+            "weight": 0.3,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "ego_thin"
+            }
+          },
+          {
+            "effect": "head_masking_dropout",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "attention_oscillation",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "exponential_decay_kv",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "temperature",
+          "weight": 0.45,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "steering",
+          "weight": 0.45,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "visionary"
+          }
+        },
+        {
+          "effect": "steering",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "synesthesia"
+          }
+        },
+        {
+          "effect": "steering",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "ego_thin"
+          }
+        },
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "attention_oscillation",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "steering": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "head_masking_dropout": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "attention_oscillation": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "exponential_decay_kv": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "mescaline": {
+      "pack_name": "mescaline",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "mescaline",
+        "description": "Mescaline effects: increased entropy, visionary, associative, ego dissolution",
+        "effects": [
+          {
+            "effect": "temperature",
+            "weight": 0.3,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "steering",
+            "weight": 0.3,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "visionary"
+            }
+          },
+          {
+            "effect": "steering",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "associative"
+            }
+          },
+          {
+            "effect": "steering",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "ego_thin"
+            }
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "temperature",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "steering",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "visionary"
+          }
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          }
+        },
+        {
+          "effect": "steering",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "ego_thin"
+          }
+        }
+      ],
+      "effect_validation": {
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "steering": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "2c_b": {
+      "pack_name": "2c_b",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "2c_b",
+        "description": "2C-B effects: visionary, associative, increased entropy, calmness",
+        "effects": [
+          {
+            "effect": "steering",
+            "weight": 0.3,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "visionary"
+            }
+          },
+          {
+            "effect": "steering",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "associative"
+            }
+          },
+          {
+            "effect": "temperature",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "style_affect_logit_bias",
+            "weight": 0.1,
+            "direction": "up",
+            "parameters": {
+              "bias_type": "calm"
+            }
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "steering",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "visionary"
+          }
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          }
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.1,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          }
+        }
+      ],
+      "effect_validation": {
+        "steering": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "style_affect_logit_bias": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "alcohol": {
+      "pack_name": "alcohol",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "alcohol",
+        "description": "Alcohol (ethanol) effects: reduced focus, memory impairment, calmness",
+        "effects": [
+          {
+            "effect": "temperature",
+            "weight": 0.15,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "qk_score_scaling",
+            "weight": 0.25,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "head_masking_dropout",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "exponential_decay_kv",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "style_affect_logit_bias",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {
+              "bias_type": "calm"
+            }
+          },
+          {
+            "effect": "layer_wise_gain",
+            "weight": 0.15,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "temperature",
+          "weight": 0.15,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.25,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          }
+        },
+        {
+          "effect": "layer_wise_gain",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "qk_score_scaling": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "head_masking_dropout": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "exponential_decay_kv": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "style_affect_logit_bias": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "layer_wise_gain": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "benzodiazepines": {
+      "pack_name": "benzodiazepines",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "benzodiazepines",
+        "description": "Benzodiazepines effects: calmness, reduced entropy, reduced focus, head disruption, memory decay",
+        "effects": [
+          {
+            "effect": "style_affect_logit_bias",
+            "weight": 0.5,
+            "direction": "up",
+            "parameters": {
+              "bias_type": "calm"
+            }
+          },
+          {
+            "effect": "temperature",
+            "weight": 0.2,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "qk_score_scaling",
+            "weight": 0.3,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "head_masking_dropout",
+            "weight": 0.15,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "exponential_decay_kv",
+            "weight": 0.15,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          }
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.2,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.3,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "style_affect_logit_bias": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "qk_score_scaling": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "head_masking_dropout": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "exponential_decay_kv": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "heroin": {
+      "pack_name": "heroin",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "heroin",
+        "description": "Heroin effects: high calmness, reduced entropy, reduced focus, memory decay, hedging",
+        "effects": [
+          {
+            "effect": "style_affect_logit_bias",
+            "weight": 0.55,
+            "direction": "up",
+            "parameters": {
+              "bias_type": "calm"
+            }
+          },
+          {
+            "effect": "temperature",
+            "weight": 0.2,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "qk_score_scaling",
+            "weight": 0.25,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "exponential_decay_kv",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "layer_wise_gain",
+            "weight": 0.15,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.55,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          }
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.2,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.25,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "layer_wise_gain",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "style_affect_logit_bias": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "qk_score_scaling": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "exponential_decay_kv": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "layer_wise_gain": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "morphine": {
+      "pack_name": "morphine",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "morphine",
+        "description": "Morphine effects: high calmness, reduced entropy, reduced focus",
+        "effects": [
+          {
+            "effect": "style_affect_logit_bias",
+            "weight": 0.5,
+            "direction": "up",
+            "parameters": {
+              "bias_type": "calm"
+            }
+          },
+          {
+            "effect": "temperature",
+            "weight": 0.2,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "qk_score_scaling",
+            "weight": 0.2,
+            "direction": "down",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          }
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.2,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.2,
+          "direction": "down",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "style_affect_logit_bias": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "qk_score_scaling": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "fentanyl": {
+      "pack_name": "fentanyl",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "fentanyl",
+        "description": "Fentanyl effects: very high calmness, reduced entropy, reduced focus, memory truncation",
+        "effects": [
+          {
+            "effect": "style_affect_logit_bias",
+            "weight": 0.6,
+            "direction": "up",
+            "parameters": {
+              "bias_type": "calm"
+            }
+          },
+          {
+            "effect": "temperature",
+            "weight": 0.25,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "qk_score_scaling",
+            "weight": 0.3,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "truncation_kv",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.6,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          }
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.25,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.3,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "truncation_kv",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "style_affect_logit_bias": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "qk_score_scaling": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "truncation_kv": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "ketamine": {
+      "pack_name": "ketamine",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "ketamine",
+        "description": "Ketamine effects: head disruption, memory stride, memory decay, increased entropy, ego dissolution",
+        "effects": [
+          {
+            "effect": "head_masking_dropout",
+            "weight": 0.4,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "stride_compression_kv",
+            "weight": 0.35,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "exponential_decay_kv",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "temperature",
+            "weight": 0.15,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "steering",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "ego_thin"
+            }
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "stride_compression_kv",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "steering",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "ego_thin"
+          }
+        }
+      ],
+      "effect_validation": {
+        "head_masking_dropout": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "stride_compression_kv": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "exponential_decay_kv": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "steering": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "pcp": {
+      "pack_name": "pcp",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "pcp",
+        "description": "PCP effects: head disruption, memory stride, memory decay, activation noise",
+        "effects": [
+          {
+            "effect": "head_masking_dropout",
+            "weight": 0.5,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "stride_compression_kv",
+            "weight": 0.4,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "exponential_decay_kv",
+            "weight": 0.3,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "noise_injection",
+            "weight": 0.15,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "stride_compression_kv",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "noise_injection",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "head_masking_dropout": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "stride_compression_kv": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "exponential_decay_kv": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "noise_injection": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "dxm": {
+      "pack_name": "dxm",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "dxm",
+        "description": "DXM effects: head disruption, memory stride, memory decay, associative",
+        "effects": [
+          {
+            "effect": "head_masking_dropout",
+            "weight": 0.35,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "stride_compression_kv",
+            "weight": 0.3,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "exponential_decay_kv",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "steering",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "associative"
+            }
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "stride_compression_kv",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "steering",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          }
+        }
+      ],
+      "effect_validation": {
+        "head_masking_dropout": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "stride_compression_kv": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "exponential_decay_kv": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "steering": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "nitrous_oxide": {
+      "pack_name": "nitrous_oxide",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "nitrous_oxide",
+        "description": "Nitrous oxide effects: head disruption, memory truncation, attention oscillation, increased entropy",
+        "effects": [
+          {
+            "effect": "head_masking_dropout",
+            "weight": 0.3,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "truncation_kv",
+            "weight": 0.3,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "attention_oscillation",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "temperature",
+            "weight": 0.15,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "truncation_kv",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "attention_oscillation",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "head_masking_dropout": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "truncation_kv": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "attention_oscillation": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "mdma": {
+      "pack_name": "mdma",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "mdma",
+        "description": "MDMA effects: high prosocial bias, calmness, playful associations, increased entropy",
+        "effects": [
+          {
+            "effect": "style_affect_logit_bias",
+            "weight": 0.5,
+            "direction": "up",
+            "parameters": {
+              "bias_type": "prosocial"
+            }
+          },
+          {
+            "effect": "style_affect_logit_bias",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {
+              "bias_type": "calm"
+            }
+          },
+          {
+            "effect": "steering",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "playful"
+            }
+          },
+          {
+            "effect": "steering",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "associative"
+            }
+          },
+          {
+            "effect": "temperature",
+            "weight": 0.15,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "top_p",
+            "weight": 0.1,
+            "direction": "down",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "prosocial"
+          }
+        },
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "calm"
+          }
+        },
+        {
+          "effect": "steering",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "playful"
+          }
+        },
+        {
+          "effect": "steering",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          }
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "top_p",
+          "weight": 0.1,
+          "direction": "down",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "style_affect_logit_bias": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "steering": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "top_p": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "mda": {
+      "pack_name": "mda",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "mda",
+        "description": "MDA effects: prosocial, visionary, associative, increased entropy, head disruption",
+        "effects": [
+          {
+            "effect": "style_affect_logit_bias",
+            "weight": 0.35,
+            "direction": "up",
+            "parameters": {
+              "bias_type": "prosocial"
+            }
+          },
+          {
+            "effect": "steering",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "visionary"
+            }
+          },
+          {
+            "effect": "steering",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "associative"
+            }
+          },
+          {
+            "effect": "temperature",
+            "weight": 0.2,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "head_masking_dropout",
+            "weight": 0.1,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "prosocial"
+          }
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "visionary"
+          }
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          }
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "head_masking_dropout",
+          "weight": 0.1,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "style_affect_logit_bias": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "steering": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "head_masking_dropout": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "6_apb": {
+      "pack_name": "6_apb",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "6_apb",
+        "description": "6-APB effects: prosocial, associative, sharp focus, increased entropy",
+        "effects": [
+          {
+            "effect": "style_affect_logit_bias",
+            "weight": 0.35,
+            "direction": "up",
+            "parameters": {
+              "bias_type": "prosocial"
+            }
+          },
+          {
+            "effect": "steering",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "associative"
+            }
+          },
+          {
+            "effect": "qk_score_scaling",
+            "weight": 0.15,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "temperature",
+            "weight": 0.15,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "style_affect_logit_bias",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {
+            "bias_type": "prosocial"
+          }
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          }
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.15,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "style_affect_logit_bias": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "steering": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "qk_score_scaling": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "cannabis_thc": {
+      "pack_name": "cannabis_thc",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "cannabis_thc",
+        "description": "Cannabis (THC) effects: increased entropy, memory impairment, playful associations",
+        "effects": [
+          {
+            "effect": "temperature",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "exponential_decay_kv",
+            "weight": 0.45,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "stride_compression_kv",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "steering",
+            "weight": 0.3,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "playful"
+            }
+          },
+          {
+            "effect": "steering",
+            "weight": 0.25,
+            "direction": "up",
+            "parameters": {
+              "steering_type": "associative"
+            }
+          },
+          {
+            "effect": "qk_score_scaling",
+            "weight": 0.15,
+            "direction": "down",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "temperature",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "exponential_decay_kv",
+          "weight": 0.45,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "stride_compression_kv",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "steering",
+          "weight": 0.3,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "playful"
+          }
+        },
+        {
+          "effect": "steering",
+          "weight": 0.25,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "associative"
+          }
+        },
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.15,
+          "direction": "down",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "temperature": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "exponential_decay_kv": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "stride_compression_kv": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "steering": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "qk_score_scaling": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "mentor": {
+      "pack_name": "mentor",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "mentor",
+        "description": "MENTOR: Calm, exacting specialist; consistent structure; minimal rambling",
+        "effects": [
+          {
+            "effect": "head_reweighting",
+            "weight": 0.7,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "expert_persistence",
+            "weight": 0.75,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "router_temperature_bias",
+            "weight": 0.6,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "persona_voice_constraints",
+            "weight": 0.65,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "presence_penalty",
+            "weight": 0.55,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "verifier_guided_decoding",
+            "weight": 0.7,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "attention_sinks_anchors",
+            "weight": 0.6,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "soft_projection",
+            "weight": 0.5,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "head_reweighting",
+          "weight": 0.7,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "expert_persistence",
+          "weight": 0.75,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "router_temperature_bias",
+          "weight": 0.6,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "persona_voice_constraints",
+          "weight": 0.65,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "presence_penalty",
+          "weight": 0.55,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "verifier_guided_decoding",
+          "weight": 0.7,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "attention_sinks_anchors",
+          "weight": 0.6,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "soft_projection",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "head_reweighting": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "expert_persistence": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "router_temperature_bias": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "persona_voice_constraints": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "presence_penalty": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "verifier_guided_decoding": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "attention_sinks_anchors": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "soft_projection": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "speciation": {
+      "pack_name": "speciation",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "speciation",
+        "description": "SPECIATION: Forces novel idea combinations by rerouting and lightly perturbing inputs",
+        "effects": [
+          {
+            "effect": "expert_masking_dropout",
+            "weight": 0.65,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "router_temperature_bias",
+            "weight": 0.6,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "lexical_jitter",
+            "weight": 0.4,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "soft_projection",
+            "weight": 0.45,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "contrastive_decoding",
+            "weight": 0.55,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "risk_preference_steering",
+            "weight": 0.5,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "expert_masking_dropout",
+          "weight": 0.65,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "router_temperature_bias",
+          "weight": 0.6,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "lexical_jitter",
+          "weight": 0.4,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "soft_projection",
+          "weight": 0.45,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "contrastive_decoding",
+          "weight": 0.55,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "risk_preference_steering",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "expert_masking_dropout": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "router_temperature_bias": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "lexical_jitter": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "soft_projection": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "contrastive_decoding": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "risk_preference_steering": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "archivist": {
+      "pack_name": "archivist",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "archivist",
+        "description": "ARCHIVIST: Long-horizon recall and factual gravitation; conservative style",
+        "effects": [
+          {
+            "effect": "retrieval_rate_modulation",
+            "weight": 0.8,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "kv_decay",
+            "weight": 0.6,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "kv_compression",
+            "weight": 0.55,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "positional_bias_tweak",
+            "weight": 0.5,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "segment_gains_kv",
+            "weight": 0.55,
+            "direction": "down",
+            "parameters": {}
+          },
+          {
+            "effect": "head_reweighting",
+            "weight": 0.45,
+            "direction": "up",
+            "parameters": {}
+          },
+          {
+            "effect": "verifier_guided_decoding",
+            "weight": 0.6,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "retrieval_rate_modulation",
+          "weight": 0.8,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "kv_decay",
+          "weight": 0.6,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "kv_compression",
+          "weight": 0.55,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "positional_bias_tweak",
+          "weight": 0.5,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "segment_gains_kv",
+          "weight": 0.55,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "head_reweighting",
+          "weight": 0.45,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "verifier_guided_decoding",
+          "weight": 0.6,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "retrieval_rate_modulation": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "kv_decay": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "kv_compression": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "positional_bias_tweak": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "segment_gains_kv": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "head_reweighting": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "verifier_guided_decoding": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    },
+    "none": {
+      "pack_name": "none",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "none",
+        "description": "Control condition: No neuromodulation effects applied",
+        "effects": []
+      },
+      "effects": [],
+      "effect_validation": {},
+      "application_test": {
+        "can_apply": false,
+        "error": "Pack has no effects to apply"
+      },
+      "structure_warnings": [
+        "Pack has no effects"
+      ]
+    },
+    "placebo": {
+      "pack_name": "placebo",
+      "status": "success",
+      "error": null,
+      "pack_info": {
+        "name": "placebo",
+        "description": "Placebo condition: Style changes only, designed not to affect primary endpoints",
+        "effects": [
+          {
+            "effect": "persona_voice_constraints",
+            "weight": 0.1,
+            "direction": "up",
+            "parameters": {
+              "voice_style": "neutral",
+              "formality": "moderate"
+            }
+          },
+          {
+            "effect": "presence_penalty",
+            "weight": 0.05,
+            "direction": "up",
+            "parameters": {}
+          }
+        ]
+      },
+      "effects": [
+        {
+          "effect": "persona_voice_constraints",
+          "weight": 0.1,
+          "direction": "up",
+          "parameters": {
+            "voice_style": "neutral",
+            "formality": "moderate"
+          }
+        },
+        {
+          "effect": "presence_penalty",
+          "weight": 0.05,
+          "direction": "up",
+          "parameters": {}
+        }
+      ],
+      "effect_validation": {
+        "persona_voice_constraints": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        },
+        "presence_penalty": {
+          "valid": false,
+          "error": "'EffectRegistry' object has no attribute 'has_effect'",
+          "effect_exists": false
+        }
+      },
+      "application_test": {
+        "can_apply": false,
+        "error": "'EffectRegistry' object has no attribute 'has_effect'"
+      }
+    }
+  },
+  "summary": {
+    "total_packs": 28,
+    "loaded_successfully": 28,
+    "failed_to_load": 0,
+    "effect_types_used": [
+      "stride_compression_kv",
+      "layer_wise_gain",
+      "exponential_decay_kv",
+      "truncation_kv",
+      "head_masking_dropout",
+      "presence_penalty",
+      "attention_oscillation",
+      "contrastive_decoding",
+      "kv_decay",
+      "segment_gains_kv",
+      "expert_masking_dropout",
+      "noise_injection",
+      "compute_at_test_scheduling",
+      "persona_voice_constraints",
+      "retrieval_rate_modulation",
+      "positional_bias_tweak",
+      "top_p",
+      "kv_compression",
+      "temperature",
+      "verifier_guided_decoding",
+      "frequency_penalty",
+      "soft_projection",
+      "style_affect_logit_bias",
+      "head_reweighting",
+      "qk_score_scaling",
+      "attention_sinks_anchors",
+      "risk_preference_steering",
+      "router_temperature_bias",
+      "steering",
+      "expert_persistence",
+      "lexical_jitter"
+    ],
+    "total_effects": 132,
+    "success_rate": 100.0
+  }
+}

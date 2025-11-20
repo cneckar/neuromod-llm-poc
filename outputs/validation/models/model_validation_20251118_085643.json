@@ -1,0 +1,44 @@
+{
+  "timestamp": "2025-11-18T08:56:43.770805",
+  "system_info": {
+    "cpu_count": 32,
+    "total_ram_gb": 125.71,
+    "available_ram_gb": 45.25,
+    "python_version": "3.13.9 (tags/v3.13.9:8183fa5, Oct 14 2025, 14:09:13) [MSC v.1944 64 bit (AMD64)]",
+    "pytorch_version": "2.7.1+cu118",
+    "cuda_available": true,
+    "cuda_version": "11.8",
+    "gpu_count": 1,
+    "gpu_details": [
+      {
+        "device_id": 0,
+        "name": "NVIDIA GeForce RTX 4070 Ti SUPER",
+        "memory_total_gb": 15.99,
+        "memory_allocated_gb": 0.0,
+        "memory_reserved_gb": 0.0
+      }
+    ]
+  },
+  "models": {
+    "meta-llama/Llama-3.1-70B-Instruct": {
+      "model_name": "meta-llama/Llama-3.1-70B-Instruct",
+      "test_mode": false,
+      "status": "skipped",
+      "error": "HuggingFace token required for Meta Llama models",
+      "loading_time_seconds": null,
+      "memory_before": {
+        "system_ram_used_gb": 80.47,
+        "system_ram_available_gb": 45.24,
+        "system_ram_percent": 64.0,
+        "gpu_0_allocated_gb": 0.0,
+        "gpu_0_reserved_gb": 0.0,
+        "gpu_0_free_gb": 15.99
+      },
+      "memory_after": null,
+      "memory_delta": null,
+      "model_info": null,
+      "quantization": null,
+      "note": "Set HUGGINGFACE_HUB_TOKEN environment variable"
+    }
+  }
+}

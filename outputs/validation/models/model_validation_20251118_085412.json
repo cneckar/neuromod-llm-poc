@@ -1,0 +1,67 @@
+{
+  "timestamp": "2025-11-18T08:52:08.811912",
+  "system_info": {
+    "cpu_count": 32,
+    "total_ram_gb": 125.71,
+    "available_ram_gb": 45.59,
+    "python_version": "3.13.9 (tags/v3.13.9:8183fa5, Oct 14 2025, 14:09:13) [MSC v.1944 64 bit (AMD64)]",
+    "pytorch_version": "2.7.1+cu118",
+    "cuda_available": true,
+    "cuda_version": "11.8",
+    "gpu_count": 1,
+    "gpu_details": [
+      {
+        "device_id": 0,
+        "name": "NVIDIA GeForce RTX 4070 Ti SUPER",
+        "memory_total_gb": 15.99,
+        "memory_allocated_gb": 0.0,
+        "memory_reserved_gb": 0.0
+      }
+    ]
+  },
+  "models": {
+    "Qwen/Qwen2.5-Omni-7B": {
+      "model_name": "Qwen/Qwen2.5-Omni-7B",
+      "test_mode": false,
+      "status": "success",
+      "error": null,
+      "loading_time_seconds": 39.39,
+      "memory_before": {
+        "system_ram_used_gb": 80.13,
+        "system_ram_available_gb": 45.58,
+        "system_ram_percent": 63.7,
+        "gpu_0_allocated_gb": 0.0,
+        "gpu_0_reserved_gb": 0.0,
+        "gpu_0_free_gb": 15.99
+      },
+      "memory_after": {
+        "system_ram_used_gb": 80.56,
+        "system_ram_available_gb": 45.15,
+        "system_ram_percent": 64.1,
+        "gpu_0_allocated_gb": 10.71,
+        "gpu_0_reserved_gb": 11.35,
+        "gpu_0_free_gb": 4.65
+      },
+      "memory_delta": {
+        "system_ram_used_gb": 0.43,
+        "system_ram_available_gb": -0.43,
+        "system_ram_percent": 0.4,
+        "gpu_0_allocated_gb": 10.71,
+        "gpu_0_reserved_gb": 11.35,
+        "gpu_0_free_gb": -11.34
+      },
+      "model_info": {
+        "name": "Qwen/Qwen2.5-Omni-7B",
+        "size": "small",
+        "backend": "huggingface",
+        "device_map": null,
+        "torch_dtype": "torch.float16",
+        "parameters": "10.7B"
+      },
+      "quantization": "unknown",
+      "generation_test": "skipped",
+      "generation_error": "argument 'ids': 'list' object cannot be interpreted as an integer",
+      "generation_note": "Qwen2.5-Omni is multimodal and requires special input format"
+    }
+  }
+}

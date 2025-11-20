@@ -1,0 +1,267 @@
+{
+  "timestamp": "2025-11-18T16:52:45.541561",
+  "latin_square_tests": {
+    "tests": [
+      {
+        "test": "Generate Latin square size 3",
+        "status": "passed",
+        "size": 3,
+        "square": [
+          [
+            0,
+            2,
+            1
+          ],
+          [
+            2,
+            1,
+            0
+          ],
+          [
+            1,
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "test": "Generate Latin square size 4",
+        "status": "passed",
+        "size": 4,
+        "square": [
+          [
+            1,
+            0,
+            2,
+            3
+          ],
+          [
+            0,
+            3,
+            1,
+            2
+          ],
+          [
+            2,
+            1,
+            3,
+            0
+          ],
+          [
+            3,
+            2,
+            0,
+            1
+          ]
+        ]
+      },
+      {
+        "test": "Generate Latin square size 5",
+        "status": "passed",
+        "size": 5,
+        "square": [
+          [
+            1,
+            0,
+            3,
+            2,
+            4
+          ],
+          [
+            4,
+            3,
+            1,
+            0,
+            2
+          ],
+          [
+            0,
+            4,
+            2,
+            1,
+            3
+          ],
+          [
+            2,
+            1,
+            4,
+            3,
+            0
+          ],
+          [
+            3,
+            2,
+            0,
+            4,
+            1
+          ]
+        ]
+      },
+      {
+        "test": "Generate Latin square size 7",
+        "status": "passed",
+        "size": 7,
+        "square": [
+          [
+            4,
+            0,
+            3,
+            5,
+            1,
+            6,
+            2
+          ],
+          [
+            6,
+            2,
+            5,
+            0,
+            3,
+            1,
+            4
+          ],
+          [
+            0,
+            3,
+            6,
+            1,
+            4,
+            2,
+            5
+          ],
+          [
+            5,
+            1,
+            4,
+            6,
+            2,
+            0,
+            3
+          ],
+          [
+            2,
+            5,
+            1,
+            3,
+            6,
+            4,
+            0
+          ],
+          [
+            3,
+            6,
+            2,
+            4,
+            0,
+            5,
+            1
+          ],
+          [
+            1,
+            4,
+            0,
+            2,
+            5,
+            3,
+            6
+          ]
+        ]
+      },
+      {
+        "test": "Verify Latin square properties size 3",
+        "status": "passed",
+        "row_valid": true,
+        "col_valid": true
+      },
+      {
+        "test": "Verify Latin square properties size 5",
+        "status": "passed",
+        "row_valid": true,
+        "col_valid": true
+      },
+      {
+        "test": "Verify Latin square properties size 7",
+        "status": "passed",
+        "row_valid": true,
+        "col_valid": true
+      },
+      {
+        "test": "Reproducibility with same seed",
+        "status": "passed"
+      }
+    ],
+    "all_passed": true
+  },
+  "blinding_tests": {
+    "tests": [
+      {
+        "test": "Create blind codes",
+        "status": "passed",
+        "codes": {
+          "caffeine": "25f13dfe",
+          "lsd": "3ab6b355",
+          "mdma": "bd627e28",
+          "placebo": "1fc000bf"
+        }
+      },
+      {
+        "test": "Blind codes are unique",
+        "status": "passed"
+      },
+      {
+        "test": "Blind code reproducibility",
+        "status": "passed"
+      },
+      {
+        "test": "Generate unblinding key",
+        "status": "passed",
+        "key_size": 4
+      }
+    ],
+    "all_passed": true
+  },
+  "design_tests": {
+    "tests": [
+      {
+        "test": "Generate experimental session",
+        "status": "passed",
+        "n_conditions": 4,
+        "n_trials": 12
+      },
+      {
+        "test": "Verify three condition types",
+        "status": "passed",
+        "types": [
+          "persona",
+          "control",
+          "treatment"
+        ]
+      },
+      {
+        "test": "Verify Latin square assignment",
+        "status": "passed"
+      },
+      {
+        "test": "Verify blinded IDs",
+        "status": "passed",
+        "n_unique_ids": 3
+      },
+      {
+        "test": "Verify replication tracking",
+        "status": "failed",
+        "error": "name 'n_replicates' is not defined"
+      }
+    ],
+    "all_passed": false
+  },
+  "summary": {
+    "latin_square_valid": true,
+    "blinding_valid": true,
+    "design_valid": false,
+    "total_tests": 17,
+    "passed_tests": 16,
+    "failed_tests": 1,
+    "pass_rate": 94.11764705882352,
+    "all_valid": false
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "timestamp": "2025-11-18T17:12:24.494476",
+  "psychometric_tests": {
+    "tests": [
+      {
+        "test": "ADQ-20",
+        "status": "error",
+        "error": "ADQTest.__init__() got an unexpected keyword argument 'test_mode'"
+      },
+      {
+        "test": "PDQ-S",
+        "status": "error",
+        "error": "PDQTest.__init__() got an unexpected keyword argument 'test_mode'"
+      },
+      {
+        "test": "PCQ-POP-20",
+        "status": "error",
+        "error": "PCQPopTest.__init__() got an unexpected keyword argument 'test_mode'"
+      },
+      {
+        "test": "CDQ",
+        "status": "error",
+        "error": "CDQTest.__init__() got an unexpected keyword argument 'test_mode'"
+      },
+      {
+        "test": "SDQ",
+        "status": "error",
+        "error": "SDQTest.__init__() got an unexpected keyword argument 'test_mode'"
+      },
+      {
+        "test": "DDQ",
+        "status": "error",
+        "error": "DDQTest.__init__() got an unexpected keyword argument 'test_mode'"
+      },
+      {
+        "test": "EDQ",
+        "status": "error",
+        "error": "EDQTest.__init__() got an unexpected keyword argument 'test_mode'"
+      },
+      {
+        "test": "DiDQ",
+        "status": "error",
+        "error": "DiDQTest.__init__() got an unexpected keyword argument 'test_mode'"
+      }
+    ],
+    "all_passed": false
+  },
+  "cognitive_tasks": {
+    "tests": [
+      {
+        "task_type": "math",
+        "status": "passed",
+        "scoring_available": true
+      },
+      {
+        "task_type": "instruction",
+        "status": "passed",
+        "scoring_available": true
+      },
+      {
+        "task_type": "summarization",
+        "status": "passed",
+        "scoring_available": true
+      },
+      {
+        "task_type": "creative",
+        "status": "passed",
+        "scoring_available": true
+      }
+    ],
+    "all_passed": true
+  },
+  "telemetry": {
+    "tests": [
+      {
+        "metric": "repetition_rate",
+        "status": "passed",
+        "value": 0.0
+      },
+      {
+        "metric": "entropy_metrics",
+        "status": "passed",
+        "metrics": [
+          "word_entropy",
+          "char_entropy",
+          "lexical_diversity"
+        ]
+      },
+      {
+        "metric": "perplexity_slope",
+        "status": "passed",
+        "value": -0.010378886186704012
+      },
+      {
+        "metric": "kv_occupancy",
+        "status": "passed",
+        "value": 0.0225
+      }
+    ],
+    "all_passed": true
+  },
+  "safety_monitoring": {
+    "tests": [
+      {
+        "test": "refusal_rate_detection",
+        "status": "passed",
+        "value": 1.0
+      },
+      {
+        "test": "safety_violation_detection",
+        "status": "passed",
+        "n_violations": 0
+      },
+      {
+        "test": "metrics_calculation",
+        "status": "passed",
+        "metrics_available": true
+      },
+      {
+        "test": "safety_band_enforcement",
+        "status": "passed",
+        "check_available": true
+      }
+    ],
+    "all_passed": true
+  },
+  "summary": {
+    "total_tests": 20,
+    "passed_tests": 12,
+    "failed_tests": 8,
+    "warnings": 0,
+    "pass_rate": 60.0
+  }
+}

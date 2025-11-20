@@ -1,0 +1,29 @@
+{
+  "timestamp": "2025-11-17T18:00:09.379380",
+  "system_info": {
+    "cpu_count": 32,
+    "total_ram_gb": 125.71,
+    "available_ram_gb": 45.92,
+    "python_version": "3.13.9 (tags/v3.13.9:8183fa5, Oct 14 2025, 14:09:13) [MSC v.1944 64 bit (AMD64)]",
+    "pytorch_version": "2.9.1+cpu",
+    "cuda_available": false
+  },
+  "models": {
+    "Qwen/Qwen-2.5-Omni-7B": {
+      "model_name": "Qwen/Qwen-2.5-Omni-7B",
+      "test_mode": false,
+      "status": "failed",
+      "error": "\u274c Authentication required for Qwen/Qwen-2.5-Omni-7B\n   1. Accept the license at: https://huggingface.co/Qwen/Qwen-2.5-Omni-7B\n   2. Get your token from: https://huggingface.co/settings/tokens\n   3. Set environment variable: export HUGGINGFACE_HUB_TOKEN=your_token\n   4. Or run: huggingface-cli login\n   Original error: Qwen/Qwen-2.5-Omni-7B is not a local folder and is not a valid model identifier listed on 'https://huggingface.co/models'\nIf this is a private repository, make sure to pass a token having permission to this repo either by logging in with `hf auth login` or by passing `token=<your_token>`",
+      "loading_time_seconds": null,
+      "memory_before": {
+        "system_ram_used_gb": 79.79,
+        "system_ram_available_gb": 45.92,
+        "system_ram_percent": 63.5
+      },
+      "memory_after": null,
+      "memory_delta": null,
+      "model_info": null,
+      "quantization": null
+    }
+  }
+}

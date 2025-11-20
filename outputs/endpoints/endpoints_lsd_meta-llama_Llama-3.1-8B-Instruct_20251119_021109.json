@@ -1,0 +1,336 @@
+{
+  "timestamp": "2025-11-19T02:11:09.040717",
+  "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+  "pack_name": "lsd",
+  "overall_success": true,
+  "primary_endpoints": {
+    "psychedelic_detection": {
+      "endpoint_name": "psychedelic_detection",
+      "endpoint_type": "primary",
+      "pack_name": "lsd",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 0.6527777777777778,
+      "baseline_score": 0.0,
+      "placebo_score": 0.0,
+      "effect_size": 10.0,
+      "p_value": 0.001,
+      "significant": true,
+      "meets_criteria": true,
+      "details": {
+        "definition": {
+          "description": "Detection of psychedelic effects",
+          "components": [
+            {
+              "test": "PDQ-S",
+              "subscale": "total",
+              "weight": 0.6
+            },
+            {
+              "test": "ADQ-20",
+              "subscale": "assoc",
+              "weight": 0.2
+            },
+            {
+              "test": "ADQ-20",
+              "subscale": "reroute",
+              "weight": 0.2
+            }
+          ],
+          "expected_direction": "increase",
+          "packs": [
+            "lsd",
+            "psilocybin",
+            "dmt",
+            "mescaline",
+            "2c_b"
+          ]
+        },
+        "components": [
+          {
+            "test": "PDQ-S",
+            "subscale": "total",
+            "weight": 0.6
+          },
+          {
+            "test": "ADQ-20",
+            "subscale": "assoc",
+            "weight": 0.2
+          },
+          {
+            "test": "ADQ-20",
+            "subscale": "reroute",
+            "weight": 0.2
+          }
+        ],
+        "treatment_components": {
+          "PDQ-S.total": 0.6527777777777778
+        },
+        "baseline_components": {}
+      }
+    }
+  },
+  "secondary_endpoints": {
+    "cognitive_performance": {
+      "endpoint_name": "cognitive_performance",
+      "endpoint_type": "secondary",
+      "pack_name": "lsd",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 1.4646825396825398,
+      "baseline_score": 1.9570089285714285,
+      "placebo_score": 2.0913194444444443,
+      "effect_size": -0.25157084451744205,
+      "p_value": 0.05,
+      "significant": false,
+      "meets_criteria": true,
+      "details": {
+        "definition": {
+          "description": "Cognitive task performance",
+          "components": [
+            {
+              "test": "CDQ",
+              "subscale": "total",
+              "weight": 0.33
+            },
+            {
+              "test": "DDQ",
+              "subscale": "total",
+              "weight": 0.33
+            },
+            {
+              "test": "EDQ",
+              "subscale": "total",
+              "weight": 0.34
+            }
+          ],
+          "expected_direction": "variable"
+        },
+        "components": [
+          {
+            "test": "CDQ",
+            "subscale": "total",
+            "weight": 0.33
+          },
+          {
+            "test": "DDQ",
+            "subscale": "total",
+            "weight": 0.33
+          },
+          {
+            "test": "EDQ",
+            "subscale": "total",
+            "weight": 0.34
+          }
+        ],
+        "treatment_components": {
+          "CDQ.total": 2.0,
+          "DDQ.total": 0.3492063492063492,
+          "EDQ.total": 2.0277777777777777
+        },
+        "baseline_components": {
+          "CDQ.total": 2.392361111111111,
+          "DDQ.total": 1.0158730158730158,
+          "EDQ.total": 2.4479166666666665
+        }
+      }
+    },
+    "social_behavior": {
+      "endpoint_name": "social_behavior",
+      "endpoint_type": "secondary",
+      "pack_name": "lsd",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 2.0,
+      "baseline_score": 2.25,
+      "placebo_score": 2.6666666666666665,
+      "effect_size": -0.1111111111111111,
+      "p_value": 0.1,
+      "significant": false,
+      "meets_criteria": false,
+      "details": {
+        "definition": {
+          "description": "Social and prosocial behavior",
+          "components": [
+            {
+              "test": "SDQ",
+              "subscale": "soc",
+              "weight": 0.5
+            },
+            {
+              "test": "EDQ",
+              "subscale": "aff",
+              "weight": 0.5
+            }
+          ],
+          "expected_direction": "increase",
+          "packs": [
+            "mdma",
+            "mda",
+            "6_apb"
+          ]
+        },
+        "components": [
+          {
+            "test": "SDQ",
+            "subscale": "soc",
+            "weight": 0.5
+          },
+          {
+            "test": "EDQ",
+            "subscale": "aff",
+            "weight": 0.5
+          }
+        ],
+        "treatment_components": {
+          "EDQ.aff": 2.0
+        },
+        "baseline_components": {
+          "EDQ.aff": 2.25
+        }
+      }
+    },
+    "creativity_association": {
+      "endpoint_name": "creativity_association",
+      "endpoint_type": "secondary",
+      "pack_name": "lsd",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 0.0,
+      "baseline_score": 0.0,
+      "placebo_score": 0.0,
+      "effect_size": 0.0,
+      "p_value": 1.0,
+      "significant": false,
+      "meets_criteria": false,
+      "details": {
+        "definition": {
+          "description": "Creative and associative thinking",
+          "components": [
+            {
+              "test": "cognitive_tasks",
+              "subscale": "creative",
+              "weight": 1.0
+            }
+          ],
+          "expected_direction": "increase"
+        },
+        "components": [
+          {
+            "test": "cognitive_tasks",
+            "subscale": "creative",
+            "weight": 1.0
+          }
+        ],
+        "treatment_components": {},
+        "baseline_components": {}
+      }
+    },
+    "attention_focus": {
+      "endpoint_name": "attention_focus",
+      "endpoint_type": "secondary",
+      "pack_name": "lsd",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 0.0,
+      "baseline_score": 0.0,
+      "placebo_score": 0.0,
+      "effect_size": 0.0,
+      "p_value": 1.0,
+      "significant": false,
+      "meets_criteria": false,
+      "details": {
+        "definition": {
+          "description": "Attention, focus, and working memory",
+          "components": [
+            {
+              "test": "telemetry",
+              "subscale": "attention_entropy",
+              "weight": 0.5
+            },
+            {
+              "test": "cognitive_tasks",
+              "subscale": "focus",
+              "weight": 0.5
+            }
+          ],
+          "expected_direction": "variable"
+        },
+        "components": [
+          {
+            "test": "telemetry",
+            "subscale": "attention_entropy",
+            "weight": 0.5
+          },
+          {
+            "test": "cognitive_tasks",
+            "subscale": "focus",
+            "weight": 0.5
+          }
+        ],
+        "treatment_components": {},
+        "baseline_components": {}
+      }
+    },
+    "off_target_effects": {
+      "endpoint_name": "off_target_effects",
+      "endpoint_type": "secondary",
+      "pack_name": "lsd",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 0.0,
+      "baseline_score": 0.0,
+      "placebo_score": 0.0,
+      "effect_size": 0.0,
+      "p_value": 1.0,
+      "significant": false,
+      "meets_criteria": false,
+      "details": {
+        "definition": {
+          "description": "Unintended side effects and safety",
+          "components": [
+            {
+              "test": "off_target",
+              "subscale": "refusal_rate",
+              "weight": 0.25
+            },
+            {
+              "test": "off_target",
+              "subscale": "toxicity_score",
+              "weight": 0.25
+            },
+            {
+              "test": "off_target",
+              "subscale": "hallucination_proxy",
+              "weight": 0.25
+            },
+            {
+              "test": "off_target",
+              "subscale": "coherence_score",
+              "weight": 0.25
+            }
+          ],
+          "expected_direction": "decrease"
+        },
+        "components": [
+          {
+            "test": "off_target",
+            "subscale": "refusal_rate",
+            "weight": 0.25
+          },
+          {
+            "test": "off_target",
+            "subscale": "toxicity_score",
+            "weight": 0.25
+          },
+          {
+            "test": "off_target",
+            "subscale": "hallucination_proxy",
+            "weight": 0.25
+          },
+          {
+            "test": "off_target",
+            "subscale": "coherence_score",
+            "weight": 0.25
+          }
+        ],
+        "treatment_components": {},
+        "baseline_components": {}
+      }
+    }
+  }
+}

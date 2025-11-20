@@ -1,0 +1,45 @@
+{
+  "timestamp": "2025-11-17T18:03:36.594492",
+  "system_info": {
+    "cpu_count": 32,
+    "total_ram_gb": 125.71,
+    "available_ram_gb": 45.65,
+    "python_version": "3.13.9 (tags/v3.13.9:8183fa5, Oct 14 2025, 14:09:13) [MSC v.1944 64 bit (AMD64)]",
+    "pytorch_version": "2.9.1+cpu",
+    "cuda_available": false
+  },
+  "models": {
+    "gpt2": {
+      "model_name": "gpt2",
+      "test_mode": true,
+      "status": "success",
+      "error": null,
+      "loading_time_seconds": 57.33,
+      "memory_before": {
+        "system_ram_used_gb": 80.06,
+        "system_ram_available_gb": 45.65,
+        "system_ram_percent": 63.7
+      },
+      "memory_after": {
+        "system_ram_used_gb": 80.59,
+        "system_ram_available_gb": 45.12,
+        "system_ram_percent": 64.1
+      },
+      "memory_delta": {
+        "system_ram_used_gb": 0.53,
+        "system_ram_available_gb": -0.53,
+        "system_ram_percent": 0.4
+      },
+      "model_info": {
+        "name": "gpt2",
+        "size": "tiny",
+        "backend": "huggingface",
+        "device_map": null,
+        "torch_dtype": "torch.float32",
+        "parameters": "124.4M"
+      },
+      "quantization": null,
+      "generation_test": "passed"
+    }
+  }
+}
