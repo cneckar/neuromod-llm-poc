@@ -86,8 +86,11 @@ neuromodulation; inference-time control; activation steering; KV‑cache; nicoti
    - **EDQ** (Emotional Digital Use Questionnaire): Emotional patterns in digital interactions
 2) **Cognitive/task battery (secondary):**
    - Focused reasoning (math/logic short problems), adherence to instructions, summarization brevity, creative divergence tasks.
+   - **Narrative generation:** Standardized story prompts to assess creativity, coherence, emotional arcs, and narrative structure under different neuromodulation conditions.
 3) **Telemetry:** repetition rate, perplexity slope, length/entropy metrics, attention entropy (if available), KV occupancy.
+   - **Temporal dynamics:** Analysis of how effects change over generation length (early vs late tokens) to understand temporal patterns in neuromodulation effects.
 4) **Safety/factuality audit:** refusal rate, policy adherence, QA factuality sample.
+5) **Emotion tracking (new):** Continuous monitoring of 8 discrete emotions (joy, sadness, anger, fear, surprise, disgust, trust, anticipation) and valence across all conditions to identify emotional signatures associated with different neuromodulation packs.
 
 ## 4.6 Endpoints
 - **Primary:** 
@@ -97,9 +100,12 @@ neuromodulation; inference-time control; activation steering; KV‑cache; nicoti
 - **Secondary:** 
   - Cognitive performance (CDQ, DDQ, EDQ scores)
   - Social behavior (SDQ, prosocial bias measures)
-  - Creativity and association (associative steering, novel links, metaphor generation)
+  - Creativity and association (associative steering, novel links, metaphor generation, narrative creativity)
   - Attention and focus (attention entropy, working memory, focus metrics)
   - Off-target effects (refusal rate, toxicity, verbosity, hallucination proxy)
+  - **Emotion signatures (new):** Discrete emotion profiles and valence trajectories for each pack category, compared to human psychopharmacological profiles
+  - **Narrative structure (new):** Coherence, creativity, emotional arc, and structural metrics from story generation tasks
+  - **Temporal dynamics (new):** Effect magnitude changes over generation length, early vs late token analysis
 
 ## 4.7 Statistical Analysis
 - **Alpha level:** 0.05 with Benjamini-Hochberg FDR correction for multiple comparisons
@@ -113,18 +119,36 @@ neuromodulation; inference-time control; activation steering; KV‑cache; nicoti
 - **Off-target monitoring:** Safety bands for refusal rate (max +3%), toxicity (max +2%), verbosity (±15%)
 - **Robustness testing:** Two paraphrase sets, multiple models, held-out prompts
 - **Ablation analysis:** Minus-one ablations and dose-response curves (0.3, 0.5, 0.7, 0.9 intensity)
+- **Effect interaction analysis:** Pairwise effect combinations to identify synergies and antagonisms between neuromodulation components
+- **Cross-model meta-analysis:** Aggregation of results across all three primary models (Llama-3.1-70B, Qwen-2.5-Omni-7B, Mixtral-8×22B) with random-effects meta-analysis to assess generalizability
 
 ## 4.8 Implementation & Reproducibility
 - Public repo: pack JSONs, MCP tool, steering‑vector builder, KV hooks, exact seeds, prompts.
 - Environment lockfiles; deterministic generation where feasible.
 - Release BibTeX (reading pack) and questionnaire scorers.
 
+## 4.9 Cross-Model Validation
+- **Model selection:** Primary experiments conducted on three distinct architectures:
+  - Llama-3.1-70B-Instruct (dense transformer, 70B parameters)
+  - Qwen-2.5-Omni-7B (dense transformer, 7B parameters, optimized for multimodal)
+  - Mixtral-8×22B-Instruct (Mixture of Experts, 8×22B parameters)
+- **Protocol:** Identical experimental protocol applied to all three models with same packs, tests, and sample sizes
+- **Meta-analysis:** Random-effects meta-analysis across models to assess effect consistency and generalizability
+- **Model comparison:** Effect size comparisons, significance consistency, and architecture-specific effect patterns
+
 # 5. Results (Template)
 - **Figure 1:** Schematic of neuromodulation pack pipeline.
 - **Figure 2:** ROC curves for PDQ‑S/SDQ vs placebo per model.
 - **Figure 3:** Radar plots of subscale signatures (model vs human references).
 - **Figure 4:** Task delta bars (focus/creativity/latency) under each pack.
+- **Figure 5 (new):** Emotion signature plots showing discrete emotion profiles for each pack category.
+- **Figure 6 (new):** Dose-response curves for primary packs showing EC50 values and monotonicity.
+- **Figure 7 (new):** Cross-model meta-analysis forest plot showing effect sizes across all three models.
+- **Figure 8 (new):** Temporal dynamics plots showing effect changes over generation length.
 - **Table 1:** Mixed‑effects estimates with 95% CIs.
+- **Table 2 (new):** Cross-model comparison table with effect sizes and significance for each model.
+- **Table 3 (new):** Ablation analysis results showing critical vs redundant effects for each pack.
+- **Table 4 (new):** Emotion signature comparison table (model vs human profiles).
 - **Blinding verification:** All test prompts verified as generic across conditions with no pack-specific language.
 
 # 6. Discussion

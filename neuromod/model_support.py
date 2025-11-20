@@ -15,6 +15,7 @@ Key Features:
 import torch
 import logging
 import os
+import time
 from typing import Dict, List, Optional, Any, Union, Tuple
 from dataclasses import dataclass
 from pathlib import Path
@@ -139,17 +140,25 @@ class ModelSupportManager:
         else:
             # Production environment - full model suite
             configs.update({
-                "meta-llama/Llama-3.1-8B": ModelConfig(
-                    name="meta-llama/Llama-3.1-8B",
+                "meta-llama/Llama-3.1-8B-Instruct": ModelConfig(
+                    name="meta-llama/Llama-3.1-8B-Instruct",
                     size=ModelSize.SMALL,
                     backend=BackendType.HUGGINGFACE,
                     quantization="8bit",
                     max_length=2048,
                     torch_dtype=torch.float16
                 ),
-                "meta-llama/Llama-3.1-70B": ModelConfig(
-                    name="meta-llama/Llama-3.1-70B",
+                "meta-llama/Llama-3.1-70B-Instruct": ModelConfig(
+                    name="meta-llama/Llama-3.1-70B-Instruct",
                     size=ModelSize.LARGE,
+                    backend=BackendType.HUGGINGFACE,
+                    quantization="4bit",
+                    max_length=2048,
+                    torch_dtype=torch.float16
+                ),
+                "meta-llama/Llama-4-Scout-17B-16E-Instruct": ModelConfig(
+                    name="meta-llama/Llama-4-Scout-17B-16E-Instruct",
+                    size=ModelSize.MEDIUM,
                     backend=BackendType.HUGGINGFACE,
                     quantization="4bit",
                     max_length=2048,
@@ -163,12 +172,28 @@ class ModelSupportManager:
                     max_length=2048,
                     torch_dtype=torch.float16
                 ),
-                "Qwen/Qwen-2.5-Omni-7B": ModelConfig(
-                    name="Qwen/Qwen-2.5-Omni-7B",
+                "Qwen/Qwen2.5-Omni-7B": ModelConfig(
+                    name="Qwen/Qwen2.5-Omni-7B",
                     size=ModelSize.SMALL,
                     backend=BackendType.HUGGINGFACE,
                     quantization="8bit",
                     max_length=2048,
+                    torch_dtype=torch.float16
+                ),
+                "Qwen/Qwen-2.5-Omni-7B": ModelConfig(
+                    name="Qwen/Qwen2.5-Omni-7B",  # Alias for correct name
+                    size=ModelSize.SMALL,
+                    backend=BackendType.HUGGINGFACE,
+                    quantization="8bit",
+                    max_length=2048,
+                    torch_dtype=torch.float16
+                ),
+                "Qwen/Qwen2.5-32B-Instruct": ModelConfig(
+                    name="Qwen/Qwen2.5-32B-Instruct",
+                    size=ModelSize.MEDIUM,
+                    backend=BackendType.HUGGINGFACE,
+                    quantization="4bit",
+                    max_length=32768,
                     torch_dtype=torch.float16
                 ),
                 "mistralai/Mixtral-8x22B-Instruct-v0.1": ModelConfig(
@@ -194,9 +219,15 @@ class ModelSupportManager:
         else:
             # Recommend based on available resources
             if self.system_info.gpu_memory_gb and self.system_info.gpu_memory_gb > 40:
-                return "meta-llama/Llama-3.1-70B"
+                return "meta-llama/Llama-3.1-70B-Instruct"
+            elif self.system_info.gpu_memory_gb and self.system_info.gpu_memory_gb > 24:
+                # 32B models with 4-bit quantization need ~20-24GB VRAM
+                return "Qwen/Qwen2.5-32B-Instruct"
+            elif self.system_info.gpu_memory_gb and self.system_info.gpu_memory_gb > 18:
+                # 17B models with 4-bit quantization need ~16-18GB VRAM
+                return "meta-llama/Llama-4-Scout-17B-16E-Instruct"
             elif self.system_info.gpu_memory_gb and self.system_info.gpu_memory_gb > 16:
-                return "meta-llama/Llama-3.1-8B"
+                return "meta-llama/Llama-3.1-8B-Instruct"
             else:
                 return "Qwen/Qwen-2.5-7B"
     
@@ -294,8 +325,58 @@ class ModelSupportManager:
         
         from transformers import AutoTokenizer, AutoModelForCausalLM
         
-        # Load tokenizer
-        tokenizer = AutoTokenizer.from_pretrained(config.name)
+        # Get HuggingFace token from environment or kwargs
+        hf_token = kwargs.get('token') or os.getenv('HUGGINGFACE_HUB_TOKEN') or os.getenv('HF_TOKEN')
+        
+        # Check if this is a Meta Llama model that requires authentication
+        requires_auth = 'meta-llama' in config.name.lower()
+        if requires_auth and not hf_token:
+            logger.warning(
+                f"⚠️  Model {config.name} requires HuggingFace authentication.\n"
+                f"   Please set HUGGINGFACE_HUB_TOKEN environment variable or accept the license at:\n"
+                f"   https://huggingface.co/{config.name}\n"
+                f"   Then run: huggingface-cli login"
+            )
+        
+        # Load tokenizer with token if available (with retry for network issues)
+        max_retries = 3
+        retry_delay = 5
+        
+        for attempt in range(max_retries):
+            try:
+                tokenizer = AutoTokenizer.from_pretrained(
+                    config.name,
+                    token=hf_token,
+                    resume_download=True  # Enable resume for interrupted downloads
+                )
+                break  # Success
+            except Exception as e:
+                error_str = str(e).lower()
+                is_network_error = (
+                    'incompleteread' in error_str or
+                    'connection broken' in error_str or
+                    'connection error' in error_str or
+                    'timeout' in error_str
+                )
+                
+                if is_network_error and attempt < max_retries - 1:
+                    logger.warning(f"Network error loading tokenizer (attempt {attempt + 1}/{max_retries}), retrying...")
+                    time.sleep(retry_delay)
+                    retry_delay *= 2
+                    continue
+                else:
+                    # Check for authentication errors
+                    if '401' in error_str or 'authentication' in error_str or 'permission' in error_str:
+                        raise RuntimeError(
+                            f"❌ Authentication required for {config.name}\n"
+                            f"   1. Accept the license at: https://huggingface.co/{config.name}\n"
+                            f"   2. Get your token from: https://huggingface.co/settings/tokens\n"
+                            f"   3. Set environment variable: export HUGGINGFACE_HUB_TOKEN=your_token\n"
+                            f"   4. Or run: huggingface-cli login\n"
+                            f"   Original error: {e}"
+                        )
+                    raise
+        
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
         
@@ -303,13 +384,35 @@ class ModelSupportManager:
         device_map = self._get_device_map(config)
         torch_dtype = config.torch_dtype or torch.float32
         
+        # Setup quantization if specified
+        quantization_config = None
+        if config.quantization and not self.test_mode:
+            try:
+                from transformers import BitsAndBytesConfig
+                
+                if config.quantization == "4bit":
+                    quantization_config = BitsAndBytesConfig(
+                        load_in_4bit=True,
+                        bnb_4bit_compute_dtype=torch_dtype,
+                        bnb_4bit_quant_type="nf4",
+                        bnb_4bit_use_double_quant=True
+                    )
+                    logger.info(f"Using 4-bit quantization for {config.name}")
+                elif config.quantization == "8bit":
+                    quantization_config = BitsAndBytesConfig(
+                        load_in_8bit=True,
+                        bnb_8bit_compute_dtype=torch_dtype
+                    )
+                    logger.info(f"Using 8-bit quantization for {config.name}")
+            except ImportError:
+                logger.warning("bitsandbytes not available, loading model without quantization")
+                quantization_config = None
+        
         # Check if MPS is available to avoid accelerate issues
         if not hasattr(torch, 'mps') or not torch.backends.mps.is_available():
             # Force CPU loading to avoid accelerate MPS issues
             device_map = None  # Don't use device_map at all
             kwargs.pop('device_map', None)  # Remove device_map from kwargs
-            # Disable accelerate to avoid MPS issues
-            kwargs['use_safetensors'] = False
             # Override low_cpu_mem_usage if it exists
             kwargs.pop('low_cpu_mem_usage', None)
             kwargs['low_cpu_mem_usage'] = False
@@ -319,17 +422,119 @@ class ModelSupportManager:
             'torch_dtype': torch_dtype,
             'trust_remote_code': config.trust_remote_code,
             'low_cpu_mem_usage': kwargs.get('low_cpu_mem_usage', config.low_cpu_mem_usage),
-            **{k: v for k, v in kwargs.items() if k != 'low_cpu_mem_usage'}
+            'use_safetensors': True,  # Prefer safetensors format
+            **{k: v for k, v in kwargs.items() if k not in ['low_cpu_mem_usage', 'device_map', 'use_safetensors']}
         }
+        
+        # Add quantization config if available
+        if quantization_config is not None:
+            load_kwargs['quantization_config'] = quantization_config
         
         # Only add device_map if it's not None
         if device_map is not None:
             load_kwargs['device_map'] = device_map
         
-        model = AutoModelForCausalLM.from_pretrained(
-            config.name,
-            **load_kwargs
-        )
+        # Add token if available
+        if hf_token:
+            load_kwargs['token'] = hf_token
+        
+        # Load model with error handling for authentication and network issues
+        max_retries = 3
+        retry_delay = 5  # seconds
+        
+        for attempt in range(max_retries):
+            try:
+                # Special handling for Qwen2.5-Omni models (multimodal)
+                if 'qwen2.5-omni' in config.name.lower() or 'qwen2_5_omni' in config.name.lower():
+                    try:
+                        from transformers import Qwen2_5OmniForConditionalGeneration
+                        model = Qwen2_5OmniForConditionalGeneration.from_pretrained(
+                            config.name,
+                            **load_kwargs,
+                            resume_download=True  # Enable resume for interrupted downloads
+                        )
+                        logger.info(f"Loaded Qwen2.5-Omni model using Qwen2_5OmniForConditionalGeneration")
+                    except ImportError:
+                        raise RuntimeError(
+                            f"Qwen2.5-Omni models require transformers>=4.51.3 with Qwen2.5-Omni support. "
+                            f"Install with: pip install git+https://github.com/huggingface/transformers@v4.51.3-Qwen2.5-Omni-preview"
+                        )
+                else:
+                    model = AutoModelForCausalLM.from_pretrained(
+                        config.name,
+                        **load_kwargs,
+                        resume_download=True  # Enable resume for interrupted downloads
+                    )
+                # Success - break out of retry loop
+                break
+                
+            except Exception as e:
+                error_str = str(e).lower()
+                error_msg = str(e)
+                
+                # Check if it's a network/download error
+                is_network_error = (
+                    'incompleteread' in error_str or
+                    'connection broken' in error_str or
+                    'connection error' in error_str or
+                    'timeout' in error_str or
+                    'network' in error_str or
+                    'download' in error_str or
+                    'incompleteread' in error_msg.lower()
+                )
+                
+                if is_network_error and attempt < max_retries - 1:
+                    logger.warning(
+                        f"Network error during download (attempt {attempt + 1}/{max_retries}): {error_msg[:200]}"
+                    )
+                    logger.info(f"Retrying in {retry_delay} seconds... (download will resume from where it stopped)")
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                    continue
+                else:
+                    # Not a network error, or out of retries - check for auth errors
+                    error_str = str(e).lower()
+                    error_msg = str(e)
+                    
+                    # Check for authentication or access issues
+                    is_auth_error = (
+                        '401' in error_msg or 
+                        'authentication' in error_str or 
+                        'permission' in error_str or 
+                        'not found' in error_str or
+                        'does not appear to have a file' in error_str or
+                        'repository not found' in error_str
+                    )
+                    
+                    if is_auth_error:
+                        # Check if it's a Meta Llama model
+                        if 'meta-llama' in config.name.lower():
+                            raise RuntimeError(
+                                f"❌ Failed to load {config.name}\n"
+                                f"   This model requires HuggingFace authentication:\n"
+                                f"   1. Accept the license at: https://huggingface.co/{config.name}\n"
+                                f"      (Click 'Agree and access repository')\n"
+                                f"   2. Get your access token:\n"
+                                f"      - Visit: https://huggingface.co/settings/tokens\n"
+                                f"      - Create a new token with 'Read' access\n"
+                                f"   3. Set the token (Windows PowerShell):\n"
+                                f"      $env:HUGGINGFACE_HUB_TOKEN='your_token_here'\n"
+                                f"   4. Or use CLI: huggingface-cli login\n"
+                                f"   \n"
+                                f"   Original error: {error_msg}"
+                            )
+                        else:
+                            raise RuntimeError(
+                                f"❌ Failed to load {config.name}\n"
+                                f"   Error: {error_msg}\n"
+                                f"   \n"
+                                f"   If this is a private model, ensure you have:\n"
+                                f"   1. Access to the model repository\n"
+                                f"   2. Set HUGGINGFACE_HUB_TOKEN environment variable\n"
+                                f"   3. Run: huggingface-cli login"
+                            )
+                    # If not auth error, re-raise the original exception
+                    raise
         
         # Get model info
         model_info = {
@@ -431,15 +636,20 @@ def get_attention_hook_paths(model_name: str) -> Dict[str, str]:
         "gpt2": "transformer.h.{}.attn",
         "distilgpt2": "transformer.h.{}.attn",
         "meta-llama/Llama-3.1-8B": "model.layers.{}.self_attn",
+        "meta-llama/Llama-3.1-8B-Instruct": "model.layers.{}.self_attn",
         "meta-llama/Llama-3.1-70B": "model.layers.{}.self_attn",
+        "meta-llama/Llama-3.1-70B-Instruct": "model.layers.{}.self_attn",
+        "meta-llama/Llama-4-Scout-17B-16E-Instruct": "model.layers.{}.self_attn",
         "Qwen/Qwen-2.5-7B": "model.layers.{}.self_attn",
-        "Qwen/Qwen-2.5-Omni-7B": "model.layers.{}.self_attn",
+        "Qwen/Qwen2.5-32B": "model.layers.{}.self_attn",
+        "Qwen/Qwen2.5-Omni-7B": "model.layers.{}.self_attn",
+        "Qwen/Qwen-2.5-Omni-7B": "model.layers.{}.self_attn",  # Alias
         "mistralai/Mixtral-8x22B-Instruct-v0.1": "model.layers.{}.self_attn"
     }
     
-    # Find matching pattern
+    # Find matching pattern (check for both base name and full name)
     for pattern, path in hook_paths.items():
-        if pattern in model_name:
+        if pattern in model_name or model_name in pattern:
             return {
                 "attention": path,
                 "mlp": path.replace("self_attn", "mlp"),

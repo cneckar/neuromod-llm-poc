@@ -29,7 +29,7 @@ class PowerAnalysis:
         
     def _load_plan(self) -> Dict:
         """Load the study plan YAML file"""
-        with open(self.plan_path, 'r') as f:
+        with open(self.plan_path, 'r', encoding='utf-8') as f:
             return yaml.safe_load(f)
     
     def calculate_sample_size(self, effect_size: float, power: float = None, alpha: float = None) -> int:
@@ -76,48 +76,77 @@ class PowerAnalysis:
         try:
             # Load pilot data
             pilot_data = pd.read_json(pilot_data_path, lines=True)
-            
+
+            if 'condition' not in pilot_data.columns:
+                raise ValueError(
+                    "Pilot data is missing 'condition' column. "
+                    "Ensure you used scripts/export_endpoints_to_ndjson.py "
+                    "to generate the NDJSON."
+                )
+
             effect_sizes = {}
-            
+
+            # Helper to build per-condition dataframes
+            def get_condition_df(df: pd.DataFrame, condition: str) -> pd.DataFrame:
+                mask = df['condition'].str.lower() == condition
+                return (
+                    df.loc[mask, ['timestamp', 'item_id', 'score']]
+                    .rename(columns={'score': f'score_{condition}'})
+                )
+
             # Calculate effect sizes for each pack category
             for category, info in self.plan['packs'].items():
                 if category == 'placebos':
                     continue
-                    
+
                 pack_names = info['packs']
                 category_effects = []
-                
+
                 for pack in pack_names:
-                    # Get control and treatment scores for this pack
-                    control_scores = pilot_data[
-                        (pilot_data['pack'] == 'control') & 
-                        (pilot_data['item_id'].isin(pilot_data[
-                            pilot_data['pack'] == pack
-                        ]['item_id']))
-                    ]['score'].values
-                    
-                    treatment_scores = pilot_data[
-                        pilot_data['pack'] == pack
-                    ]['score'].values
-                    
-                    if len(control_scores) > 0 and len(treatment_scores) > 0:
-                        # Calculate Cohen's d for paired samples
-                        diff = treatment_scores - control_scores
-                        cohens_d = np.mean(diff) / np.std(diff, ddof=1)
-                        category_effects.append(cohens_d)
-                
+                    pack_data = pilot_data[pilot_data['pack'] == pack]
+                    if pack_data.empty:
+                        continue
+
+                    treatment_df = get_condition_df(pack_data, 'treatment')
+                    baseline_df = get_condition_df(pack_data, 'baseline')
+
+                    if treatment_df.empty or baseline_df.empty:
+                        continue
+
+                    merged = treatment_df.merge(
+                        baseline_df,
+                        on=['timestamp', 'item_id'],
+                        how='inner'
+                    )
+
+                    if merged.empty:
+                        continue
+
+                    treatment_scores = merged['score_treatment'].values
+                    control_scores = merged['score_baseline'].values
+
+                    if len(treatment_scores) != len(control_scores) or len(treatment_scores) < 2:
+                        continue
+
+                    diff = treatment_scores - control_scores
+                    std_diff = np.std(diff, ddof=1)
+                    cohens_d = np.mean(diff) / std_diff if std_diff > 0 else 0.0
+                    category_effects.append(cohens_d)
+
                 if category_effects:
-                    effect_sizes[category] = np.mean(category_effects)
+                    effect_sizes[category] = float(np.mean(category_effects))
                 else:
                     effect_sizes[category] = self.target_effect_size
-                    
+
             return effect_sizes
-            
+
         except FileNotFoundError:
             print(f"Pilot data not found at {pilot_data_path}, using target effect size")
-            return {category: self.target_effect_size 
-                   for category in self.plan['packs'].keys() 
-                   if category != 'placebos'}
+            return {
+                category: self.target_effect_size
+                for category in self.plan['packs'].keys()
+                if category != 'placebos'
+            }
     
     def calculate_power_for_sample_size(self, n: int, effect_size: float, alpha: float = None) -> float:
         """

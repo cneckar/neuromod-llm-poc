@@ -10,6 +10,15 @@ import os
 import time
 import json
 from typing import Dict, Any, Optional
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Set Hugging Face token if available
+if os.getenv('HUGGINGFACE_HUB_TOKEN'):
+    from huggingface_hub import login
+    login(os.getenv('HUGGINGFACE_HUB_TOKEN'))
 
 # Add the parent directory to the path to import neuromod modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

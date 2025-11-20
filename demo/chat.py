@@ -12,7 +12,20 @@ import gc
 import json
 import sys
 import time
+import warnings
 from typing import Dict, List, Any
+from dotenv import load_dotenv
+
+# Suppress warnings from optional dependencies
+warnings.filterwarnings('ignore', category=UserWarning, module='neuromod.testing.advanced_statistics')
+
+# Load environment variables
+load_dotenv()
+
+# Set Hugging Face token if available
+if os.getenv('HUGGINGFACE_HUB_TOKEN'):
+    from huggingface_hub import login
+    login(os.getenv('HUGGINGFACE_HUB_TOKEN'))
 
 # Add the parent directory to the path to import neuromod modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -36,6 +49,15 @@ class NeuromodChat:
         self.neuromod_tool = None
         self.active_packs = []
         self.custom_effects = []  # Store custom effect combinations
+        
+        # Token configuration presets
+        self.token_presets = {
+            "short": {"max_tokens": 50, "min_tokens": 5},
+            "medium": {"max_tokens": 150, "min_tokens": 10},
+            "long": {"max_tokens": 300, "min_tokens": 20},
+            "very_long": {"max_tokens": 500, "min_tokens": 30}
+        }
+        self.current_token_preset = "medium"  # Default to medium
         
         # Initialize emotion tracking
         self.emotion_tracker = SimpleEmotionTracker()
@@ -175,11 +197,22 @@ class NeuromodChat:
             self.neuromod_tool.clear()
         self.active_packs = []
     
-    def generate_response(self, prompt: str, max_tokens: int = 5000, min_tokens: int = 100) -> str:
+    def generate_response(self, prompt: str, max_tokens: int = None, min_tokens: int = None) -> str:
         """Generate response with current neuromodulation state and emotion tracking"""
+        # Use current preset if no tokens specified
+        if max_tokens is None or min_tokens is None:
+            preset = self.token_presets[self.current_token_preset]
+            max_tokens = max_tokens or preset["max_tokens"]
+            min_tokens = min_tokens or preset["min_tokens"]
+        
         try:
             inputs = self.tokenizer(prompt, return_tensors="pt", padding=True)
-            inputs = {k: v.cpu() for k, v in inputs.items()}
+            
+            # Move inputs to the same device as the model
+            if torch.cuda.is_available() and next(self.model.parameters()).is_cuda:
+                inputs = {k: v.cuda() for k, v in inputs.items()}
+            else:
+                inputs = {k: v.cpu() for k, v in inputs.items()}
             
             # Get neuromodulation effects if available
             logits_processors = []
@@ -245,6 +278,8 @@ class NeuromodChat:
         print("  /save_config - Save current config to file")
         print("  /emotions - Show emotion tracking summary")
         print("  /export_emotions - Export emotion results to file")
+        print("  /tokens - Show token configuration options")
+        print("  /set_tokens - Change response length (short/medium/long/very_long)")
         print("  /quit - Exit chat")
         print("  /help - Show this help")
         print("-" * 60)
@@ -300,6 +335,10 @@ class NeuromodChat:
                     print(f"    {i}. {effect.effect} (weight={effect.weight}, direction={effect.direction})")
             print(f"  Neuromodulation: {'Available' if self.neuromod_tool else 'Not available'}")
             
+            # Show token configuration
+            current_preset = self.token_presets[self.current_token_preset]
+            print(f"  Response length: {self.current_token_preset} (max={current_preset['max_tokens']}, min={current_preset['min_tokens']})")
+            
             # Show emotion tracking status
             summary = self.get_emotion_summary()
             if summary:
@@ -339,6 +378,12 @@ class NeuromodChat:
         elif cmd == "/export_emotions":
             self.export_emotion_results()
         
+        elif cmd == "/tokens":
+            self.show_token_options()
+        
+        elif cmd.startswith("/set_tokens"):
+            self.set_token_preset(command)
+        
         elif cmd == "/help":
             print("\n💬 Chat Commands:")
             print("  /packs - Show available packs")
@@ -354,6 +399,8 @@ class NeuromodChat:
             print("  /save_config - Save current config to file")
             print("  /emotions - Show emotion tracking summary")
             print("  /export_emotions - Export emotion results to file")
+            print("  /tokens - Show token configuration options")
+            print("  /set_tokens - Change response length (short/medium/long/very_long)")
             print("  /quit - Exit chat")
             print("  /help - Show this help")
         
@@ -661,21 +708,58 @@ class NeuromodChat:
             torch.cuda.empty_cache()
         
         print(f"🧹 Cleaned up chat session")
+    
+    def show_token_options(self):
+        """Show available token configuration options"""
+        print(f"\n🎯 Token Configuration Options:")
+        print(f"Current preset: {self.current_token_preset}")
+        print()
+        
+        for preset_name, config in self.token_presets.items():
+            marker = "👉 " if preset_name == self.current_token_preset else "   "
+            print(f"{marker}{preset_name}: max={config['max_tokens']}, min={config['min_tokens']}")
+        
+        print(f"\nUsage: /set_tokens <preset_name>")
+        print(f"Example: /set_tokens short")
+    
+    def set_token_preset(self, command: str):
+        """Set the token generation preset"""
+        parts = command.split()
+        if len(parts) < 2:
+            print("❌ Usage: /set_tokens <preset_name>")
+            print("Available presets:", ", ".join(self.token_presets.keys()))
+            return
+        
+        preset_name = parts[1].lower()
+        if preset_name not in self.token_presets:
+            print(f"❌ Unknown preset: {preset_name}")
+            print("Available presets:", ", ".join(self.token_presets.keys()))
+            return
+        
+        old_preset = self.current_token_preset
+        self.current_token_preset = preset_name
+        new_config = self.token_presets[preset_name]
+        
+        print(f"✅ Changed response length from '{old_preset}' to '{preset_name}'")
+        print(f"   New settings: max={new_config['max_tokens']}, min={new_config['min_tokens']}")
 
 def main():
     """Main function"""
     print("🚀 Neuromodulation Chat Interface")
     print("=" * 50)
     
-    # Model selection
+    # Show available models in production mode
+    from neuromod.model_support import create_model_support
+    
     print("\n🤖 Model Selection:")
     print("1. Use recommended model (test mode)")
     print("2. Use recommended model (production mode)")
     print("3. Enter custom model name")
+    print("4. Show available models and select")
     
     while True:
         try:
-            choice = input(f"\nSelect option (1-3): ").strip()
+            choice = input(f"\nSelect option (1-4): ").strip()
             
             if choice == "1":
                 model_name = None
@@ -687,10 +771,48 @@ def main():
                 break
             elif choice == "3":
                 model_name = input("Enter model name: ").strip()
-                test_mode = True  # Default to test mode for custom models
+                test_mode = False  # Use production mode for custom models
                 break
+            elif choice == "4":
+                # Show available models
+                manager = create_model_support(test_mode=False)
+                available_models = manager.get_available_models()
+                
+                print("\n📋 Available Models (Production Mode):")
+                print("=" * 60)
+                for i, model in enumerate(available_models, 1):
+                    # Get model info if possible
+                    try:
+                        config = manager.model_configs.get(model)
+                        if config:
+                            size_info = f"Size: {config.size.value}"
+                            quant_info = f", Quantization: {config.quantization}" if config.quantization else ""
+                            print(f"{i}. {model}")
+                            print(f"   {size_info}{quant_info}, Max length: {config.max_length}")
+                        else:
+                            print(f"{i}. {model}")
+                    except:
+                        print(f"{i}. {model}")
+                
+                print("\n💡 Popular ~30B Models:")
+                print("   • Qwen/Qwen2.5-32B-Instruct (32B, 4-bit quantized, ~20-24GB VRAM, no auth required)")
+                print("   • meta-llama/Llama-4-Scout-17B-16E-Instruct (17B, 4-bit quantized, ~16-18GB VRAM, requires auth)")
+                print("   • meta-llama/Llama-3.1-70B-Instruct (70B, 4-bit quantized, ~40GB VRAM, requires auth)")
+                
+                try:
+                    model_idx = int(input("\nSelect model number: ").strip()) - 1
+                    if 0 <= model_idx < len(available_models):
+                        model_name = available_models[model_idx]
+                        test_mode = False
+                        break
+                    else:
+                        print(f"❌ Invalid selection. Please choose 1-{len(available_models)}")
+                        continue
+                except ValueError:
+                    print("❌ Invalid input. Please enter a number.")
+                    continue
             else:
-                print("Please enter 1, 2, or 3")
+                print("Please enter 1, 2, 3, or 4")
         except (ValueError, KeyboardInterrupt):
             print("Invalid input")
     

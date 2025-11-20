@@ -78,8 +78,18 @@ class BaseTest(ABC):
         """Export emotion tracking results"""
         if not filename:
             filename = f"outputs/reports/emotion/emotion_results_{self.current_test_id}.json"
-        self.emotion_tracker.export_results(filename)
-        print(f"💾 Emotion results exported to: {filename}")
+        
+        # Create directory if it doesn't exist
+        from pathlib import Path
+        output_path = Path(filename)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        try:
+            self.emotion_tracker.export_results(str(output_path))
+            print(f"💾 Emotion results exported to: {filename}")
+        except Exception as e:
+            # Don't fail the test if emotion export fails
+            print(f"⚠️  Could not export emotion results: {e}")
     
     def load_model(self):
         """Load model using centralized model support system"""

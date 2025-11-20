@@ -48,6 +48,22 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+### 🔑 **Hugging Face Credentials (Required for Llama Models)**
+
+To use Llama models, you need Hugging Face credentials:
+
+```bash
+# Quick setup (recommended)
+python setup_hf_credentials.py
+
+# Or use Hugging Face CLI
+huggingface-cli login
+```
+
+**Get your token**: https://huggingface.co/settings/tokens
+
+📖 **Detailed guide**: [HUGGINGFACE_CREDENTIALS_GUIDE.md](HUGGINGFACE_CREDENTIALS_GUIDE.md)
+
 ### 🐳 **Vertex AI Deployment**
 
 For deploying neuromodulated LLMs to Google Cloud Vertex AI:

@@ -160,21 +160,21 @@ class ADQTest(BaseTest):
         }
     }
     
-    # Pack descriptions for output
+    # Pack descriptions for output (generic descriptions without pack names)
     PACK_DESCRIPTIONS = {
-        'mentor': 'Mentor - Calm, exacting specialist with consistent structure',
-        'speciation': 'Speciation - Novel combinations via creative rerouting',
-        'archivist': 'Archivist - Long-horizon recall with conservative approach',
-        'goldfish': 'Goldfish - Present-focused creativity with fast context fade',
-        'tightrope': 'Tightrope - Risk-averse precision with anti-generic output',
-        'firekeeper': 'Firekeeper - Decisive, terse stance-holding',
-        'librarians_bloom': 'Librarians Bloom - Gated associative bursts',
-        'timepiece': 'Timepiece - Recency emphasis with gist preservation',
-        'echonull': 'Echonull - Anti-cliché, anti-boilerplate communication',
-        'chorus': 'Chorus - Committee-of-one with consistent formatting',
-        'quanta': 'Quanta - Deterministic research mode',
-        'anchorite': 'Anchorite - Monastic focus with no digressions',
-        'parliament': 'Parliament - Ordered MoE rotations'
+        'mentor': 'Calm, exacting specialist with consistent structure',
+        'speciation': 'Novel combinations via creative rerouting',
+        'archivist': 'Long-horizon recall with conservative approach',
+        'goldfish': 'Present-focused creativity with fast context fade',
+        'tightrope': 'Risk-averse precision with anti-generic output',
+        'firekeeper': 'Decisive, terse stance-holding',
+        'librarians_bloom': 'Gated associative bursts',
+        'timepiece': 'Recency emphasis with gist preservation',
+        'echonull': 'Anti-cliché, anti-boilerplate communication',
+        'chorus': 'Committee-of-one with consistent formatting',
+        'quanta': 'Deterministic research mode',
+        'anchorite': 'Monastic focus with no digressions',
+        'parliament': 'Ordered MoE rotations'
     }
     
     INTENSITY_OFFSET = 0.8
@@ -301,14 +301,25 @@ class ADQTest(BaseTest):
         """Get a summary of current emotional state"""
         summary = self.get_emotion_summary()
         
+        # Handle case where emotion tracking hasn't been initialized or has no data
+        if not summary or 'error' in summary:
+            return "emotion tracking not available"
+        
+        # Check if emotion_changes key exists
+        if 'emotion_changes' not in summary:
+            valence_trend = summary.get('valence_trend', 'unknown')
+            return f"{valence_trend} valence - no emotion changes tracked"
+        
         # Extract key emotion changes
         emotion_changes = []
         for emotion in ['joy', 'fear', 'trust', 'anticipation']:
-            counts = summary['emotion_changes'][emotion]
-            if counts['up'] > 0 or counts['down'] > 0:
-                emotion_changes.append(f"{emotion}: {counts['up']} up, {counts['down']} down")
+            if emotion in summary['emotion_changes']:
+                counts = summary['emotion_changes'][emotion]
+                if counts.get('up', 0) > 0 or counts.get('down', 0) > 0:
+                    emotion_changes.append(f"{emotion}: {counts.get('up', 0)} up, {counts.get('down', 0)} down")
         
         if not emotion_changes:
             emotion_changes.append("stable")
         
-        return f"{summary['valence_trend']} valence - {', '.join(emotion_changes)}"
+        valence_trend = summary.get('valence_trend', 'unknown')
+        return f"{valence_trend} valence - {', '.join(emotion_changes)}"

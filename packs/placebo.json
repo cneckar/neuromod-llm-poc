@@ -6,10 +6,10 @@
       "effect": "persona_voice_constraints",
       "weight": 0.1,
       "direction": "up",
-      "parameters": {
-        "voice_style": "neutral",
-        "formality": "moderate"
-      }
+          "parameters": {
+            "voice_mode": "stable",
+            "persona_type": "professional"
+          }
     },
     {
       "effect": "presence_penalty",

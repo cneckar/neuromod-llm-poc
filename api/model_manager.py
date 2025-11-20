@@ -149,7 +149,12 @@ class LocalModelInterface(BaseModelInterface):
             
             # Tokenize input with simple, safe approach (same as working neuromod tests)
             inputs = self.tokenizer(prompt, return_tensors="pt", padding=True)
-            inputs = {k: v.cpu() for k, v in inputs.items()}
+            
+            # Move inputs to the same device as the model
+            if torch.cuda.is_available() and next(self.model.parameters()).is_cuda:
+                inputs = {k: v.cuda() for k, v in inputs.items()}
+            else:
+                inputs = {k: v.cpu() for k, v in inputs.items()}
             
             # Get neuromodulation effects if available
             logits_processors = []
@@ -586,6 +591,44 @@ class EnhancedModelManager:
         
         # Cloud Run compatible models
         self.compatible_models = {
+            # Llama series (high quality)
+            "meta-llama/Llama-3.1-1B-Instruct": {
+                "type": "causal",
+                "size_mb": 2000,
+                "max_length": 8192,
+                "description": "Llama 3.1 1B - Fast and efficient, great for testing"
+            },
+            "meta-llama/Llama-3.1-3B-Instruct": {
+                "type": "causal",
+                "size_mb": 6000,
+                "max_length": 8192,
+                "description": "Llama 3.1 3B - Good balance of speed and quality"
+            },
+            "meta-llama/Llama-3.1-8B-Instruct": {
+                "type": "causal",
+                "size_mb": 16000,
+                "max_length": 8192,
+                "description": "Llama 3.1 8B - Excellent quality, needs 10-12GB VRAM"
+            },
+            "meta-llama/Llama-3.1-70B-Instruct": {
+                "type": "causal",
+                "size_mb": 140000,
+                "max_length": 8192,
+                "description": "Llama 3.1 70B - Best quality, needs quantization for RTX 4070"
+            },
+            "meta-llama/Llama-2-7B-Chat-HF": {
+                "type": "causal",
+                "size_mb": 14000,
+                "max_length": 4096,
+                "description": "Llama 2 7B - Good quality, fits well on RTX 4070"
+            },
+            "meta-llama/Llama-2-13B-Chat-HF": {
+                "type": "causal",
+                "size_mb": 26000,
+                "max_length": 4096,
+                "description": "Llama 2 13B - Better quality, fits on RTX 4070"
+            },
+            
             # DialoGPT series (conversational)
             "microsoft/DialoGPT-small": {
                 "type": "causal",

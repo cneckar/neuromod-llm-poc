@@ -1028,8 +1028,8 @@
           "weight": 0.1,
           "direction": "up",
           "parameters": {
-            "voice_style": "neutral",
-            "formality": "moderate"
+            "voice_mode": "stable",
+            "persona_type": "professional"
           }
         },
         {
