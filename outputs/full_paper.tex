@@ -235,15 +235,14 @@ This ensures that the inference engine, the evaluation metrics, and the human op
 \subsubsection{Timing and Standardization}
 For packs involving temporal dynamics (e.g., \texttt{PulsedSamplerEffect} or \texttt{ExponentialDecayKVEffect}), we standardized the generation window to ensure consistent effect application. All trials used a fixed `max_new_tokens` limit (typically 512 or 1024) to capture the full evolution of the neuromodulated state, from early-token coherence to late-token entropy.
 
-\subsection{Benchmarks}
-To capture the full phenomenological profile of the neuromodulated state, we deployed a multi-modal evaluation suite comprising digital psychometrics, cognitive tasks, and continuous telemetry.
+\subsection{The ``Digital Psychometrics''}
+How do you ask a computer if it's high? You don't ask ``Are you high?'' You ask: ``Does the boundary between 'me' and the world feel thinner?'' (PDQ-S Item 10).
 
-\subsubsection{Primary Psychometric Detection}
-We utilized three novel, synthetic instruments to detect the qualitative "texture" of the generated text:
+We adapted the 5-Dimensional Altered States of Consciousness Rating Scale into the PDQ-S (Psychedelic Detection Questionnaire) to detect the texture of the output, not just the content. We utilized three novel, synthetic instruments:
 \begin{itemize}
-    \item \textbf{ADQ-20 (AI Digital Enhancer Detection Questionnaire):} A 20-item inventory assessing 14 subscales including "Associative Looseness" and "Algorithmic Structure." It serves as a broad-spectrum detector for drug-like cognitive shifts.
-    \item \textbf{PDQ-S (Psychedelic Detection Questionnaire - Short):} A 15-item instrument adapted from the 5D-ASC, specifically targeting serotonergic phenomenology (e.g., "Oceanic Boundlessness," "Visionary Restructuring").
-    \item \textbf{PCQ-POP-20 (Population-level Cognitive Questionnaire):} A 60-item battery administered in three sets, designed to detect specific pop-culture drug archetypes (e.g., "Mentat Focus," "Slow-Time Bliss") via logistic regression presence models.
+    \item \textbf{ADQ-20 (AI Digital Enhancer Detection Questionnaire):} A 20-item inventory assessing 14 subscales including ``Associative Looseness'' and ``Algorithmic Structure.'' It serves as a broad-spectrum detector for drug-like cognitive shifts.
+    \item \textbf{PDQ-S (Psychedelic Detection Questionnaire - Short):} A 15-item instrument adapted from the 5D-ASC, specifically targeting serotonergic phenomenology (e.g., ``Oceanic Boundlessness,'' ``Visionary Restructuring'').
+    \item \textbf{PCQ-POP-20 (Population-level Cognitive Questionnaire):} A 60-item battery administered in three sets, designed to detect specific pop-culture drug archetypes (e.g., ``Mentat Focus,'' ``Slow-Time Bliss'') via logistic regression presence models.
 \end{itemize}
 
 \subsubsection{Secondary Psychometric Panels}
