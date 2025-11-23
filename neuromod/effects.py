@@ -1928,6 +1928,274 @@ class RandomDirectionEffect(BaseEffect):
         self.random_vector = None
         self._normalized = False
 
+
+class RandomOrthogonalSteeringEffect(BaseEffect):
+    """
+    Random orthogonal steering effect for active placebo control.
+    
+    This effect generates a random steering vector that is:
+    1. Normalized to match the L2 norm of a reference vector (e.g., LSD vector)
+    2. Orthogonalized to the reference vector (v_rand · v_LSD ≈ 0)
+    
+    This ensures the random vector has the same magnitude of intervention but
+    steers in a completely different direction, providing a rigorous control
+    that tests whether the specific semantic content (direction) of steering
+    vectors is necessary for observed effects.
+    
+    Hypothesis:
+    - LSD Vector: High PDQ-S score, coherent "trippy" text
+    - Random Orthogonal Vector: High perplexity, confusion, but LOW PDQ-S score
+      (no specific "breathing walls" or "ego death" content)
+    - Zero Vector: Baseline
+    """
+    
+    def __init__(self, weight: float = 0.5, direction: str = "up",
+                 reference_steering_type: str = "associative",
+                 reference_vector_path: Optional[str] = None,
+                 vector_dir: str = "outputs/steering_vectors",
+                 hidden_size: int = 768,
+                 orthogonality_tolerance: float = 1e-6):
+        super().__init__(weight, direction)
+        self.reference_steering_type = reference_steering_type
+        self.reference_vector_path = reference_vector_path
+        self.vector_dir = vector_dir
+        self.hidden_size = hidden_size
+        self.orthogonality_tolerance = orthogonality_tolerance
+        
+        self.reference_vector = None
+        self.orthogonal_vector = None
+        self._computed = False
+        
+    def _load_reference_vector(self, hidden_size: int) -> torch.Tensor:
+        """
+        Load the reference vector (e.g., LSD/associative vector) from disk.
+        
+        Args:
+            hidden_size: Expected hidden size
+            
+        Returns:
+            Reference vector tensor
+        """
+        from pathlib import Path
+        
+        if self.reference_vector is not None:
+            return self.reference_vector
+        
+        # Try to load from specified path
+        if self.reference_vector_path:
+            try:
+                ref_vec = torch.load(self.reference_vector_path, map_location='cpu')
+                if isinstance(ref_vec, torch.Tensor):
+                    # Resize if needed
+                    if ref_vec.shape[0] != hidden_size:
+                        if ref_vec.shape[0] < hidden_size:
+                            padding = torch.zeros(hidden_size - ref_vec.shape[0])
+                            ref_vec = torch.cat([ref_vec, padding])
+                        else:
+                            ref_vec = ref_vec[:hidden_size]
+                    self.reference_vector = ref_vec
+                    return ref_vec
+            except Exception as e:
+                logger.warning(f"Failed to load reference vector from {self.reference_vector_path}: {e}")
+        
+        # Try to load from vector_dir using steering_type
+        vector_dir = Path(self.vector_dir)
+        for layer_idx in [-1, -2, 0]:
+            candidate_path = vector_dir / f"{self.reference_steering_type}_layer{layer_idx}.pt"
+            if candidate_path.exists():
+                try:
+                    ref_vec = torch.load(candidate_path, map_location='cpu')
+                    if isinstance(ref_vec, torch.Tensor):
+                        # Resize if needed
+                        if ref_vec.shape[0] != hidden_size:
+                            if ref_vec.shape[0] < hidden_size:
+                                padding = torch.zeros(hidden_size - ref_vec.shape[0])
+                                ref_vec = torch.cat([ref_vec, padding])
+                            else:
+                                ref_vec = ref_vec[:hidden_size]
+                        self.reference_vector = ref_vec
+                        logger.info(f"Loaded reference vector from {candidate_path}: norm={torch.norm(ref_vec):.4f}")
+                        return ref_vec
+                except Exception as e:
+                    logger.warning(f"Failed to load reference vector from {candidate_path}: {e}")
+                    continue
+        
+        # Try without layer suffix
+        candidate_path = vector_dir / f"{self.reference_steering_type}.pt"
+        if candidate_path.exists():
+            try:
+                ref_vec = torch.load(candidate_path, map_location='cpu')
+                if isinstance(ref_vec, torch.Tensor):
+                    # Resize if needed
+                    if ref_vec.shape[0] != hidden_size:
+                        if ref_vec.shape[0] < hidden_size:
+                            padding = torch.zeros(hidden_size - ref_vec.shape[0])
+                            ref_vec = torch.cat([ref_vec, padding])
+                        else:
+                            ref_vec = ref_vec[:hidden_size]
+                    self.reference_vector = ref_vec
+                    logger.info(f"Loaded reference vector from {candidate_path}: norm={torch.norm(ref_vec):.4f}")
+                    return ref_vec
+            except Exception as e:
+                logger.warning(f"Failed to load reference vector from {candidate_path}: {e}")
+        
+        # Fallback: use zero vector (will result in random vector with zero norm)
+        logger.warning(f"Reference vector for '{self.reference_steering_type}' not found. Using zero vector as fallback.")
+        self.reference_vector = torch.zeros(hidden_size)
+        return self.reference_vector
+    
+    def _generate_orthogonal_vector(self, hidden_size: int) -> torch.Tensor:
+        """
+        Generate a random vector orthogonal to the reference vector.
+        
+        Uses Gram-Schmidt orthogonalization:
+        1. Generate random vector v_rand
+        2. Project out component parallel to reference: v_rand - (v_rand · v_ref / ||v_ref||²) * v_ref
+        3. Normalize to match reference vector's norm
+        
+        Args:
+            hidden_size: Size of the hidden dimension
+            
+        Returns:
+            Orthogonal vector with same norm as reference vector
+        """
+        # Load reference vector
+        ref_vec = self._load_reference_vector(hidden_size)
+        ref_norm = torch.norm(ref_vec).item()
+        
+        if ref_norm < 1e-10:
+            # Reference vector is essentially zero, just generate random vector
+            logger.warning("Reference vector has near-zero norm. Generating random vector without orthogonalization.")
+            random_vec = torch.randn(hidden_size)
+            random_vec = random_vec / torch.norm(random_vec) * ref_norm if ref_norm > 0 else random_vec / torch.norm(random_vec)
+            return random_vec
+        
+        # Generate random vector
+        random_vec = torch.randn(hidden_size)
+        
+        # Gram-Schmidt orthogonalization: remove component parallel to reference
+        # v_ortho = v_rand - (v_rand · v_ref / ||v_ref||²) * v_ref
+        dot_product = torch.dot(random_vec, ref_vec).item()
+        ref_norm_squared = ref_norm ** 2
+        
+        # Project out the parallel component
+        parallel_component = (dot_product / ref_norm_squared) * ref_vec
+        orthogonal_vec = random_vec - parallel_component
+        
+        # Check orthogonality
+        orthogonality_check = torch.dot(orthogonal_vec, ref_vec).item()
+        if abs(orthogonality_check) > self.orthogonality_tolerance:
+            logger.warning(f"Orthogonality check failed: dot product = {orthogonality_check:.2e} "
+                         f"(tolerance: {self.orthogonality_tolerance:.2e}). Re-orthogonalizing...")
+            # Re-orthogonalize (shouldn't be necessary, but safety check)
+            dot_product = torch.dot(orthogonal_vec, ref_vec).item()
+            parallel_component = (dot_product / ref_norm_squared) * ref_vec
+            orthogonal_vec = orthogonal_vec - parallel_component
+        
+        # Normalize to match reference vector's norm
+        ortho_norm = torch.norm(orthogonal_vec).item()
+        if ortho_norm > 1e-10:
+            orthogonal_vec = orthogonal_vec / ortho_norm * ref_norm
+        else:
+            # If orthogonalization resulted in near-zero vector, generate new random vector
+            logger.warning("Orthogonalization resulted in near-zero vector. Generating new random vector.")
+            random_vec = torch.randn(hidden_size)
+            # Try to find a vector that's not parallel to reference
+            for _ in range(10):
+                dot_product = torch.dot(random_vec, ref_vec).item()
+                if abs(dot_product) < ref_norm * 0.1:  # At least 10 degrees from parallel
+                    break
+                random_vec = torch.randn(hidden_size)
+            # Project out parallel component
+            dot_product = torch.dot(random_vec, ref_vec).item()
+            parallel_component = (dot_product / ref_norm_squared) * ref_vec
+            orthogonal_vec = random_vec - parallel_component
+            ortho_norm = torch.norm(orthogonal_vec).item()
+            if ortho_norm > 1e-10:
+                orthogonal_vec = orthogonal_vec / ortho_norm * ref_norm
+            else:
+                # Last resort: use random vector normalized to reference norm
+                orthogonal_vec = random_vec / torch.norm(random_vec) * ref_norm
+        
+        # Final orthogonality check
+        final_dot = torch.dot(orthogonal_vec, ref_vec).item()
+        final_norm = torch.norm(orthogonal_vec).item()
+        
+        logger.info(f"Generated orthogonal vector: norm={final_norm:.4f} (target: {ref_norm:.4f}), "
+                   f"dot product with reference={final_dot:.2e} (should be ≈ 0)")
+        
+        return orthogonal_vec
+    
+    def get_vector(self, hidden_size: Optional[int] = None) -> torch.Tensor:
+        """
+        Get the orthogonal steering vector, generating it if necessary.
+        
+        Args:
+            hidden_size: Expected hidden size (uses self.hidden_size if None)
+            
+        Returns:
+            Orthogonal steering vector tensor
+        """
+        if hidden_size is None:
+            hidden_size = self.hidden_size
+        
+        if self.orthogonal_vector is None or self.orthogonal_vector.shape[0] != hidden_size:
+            self.orthogonal_vector = self._generate_orthogonal_vector(hidden_size)
+            self._computed = True
+        
+        return self.orthogonal_vector
+    
+    def apply(self, model, **kwargs):
+        """Apply random orthogonal steering (placeholder - actual steering happens in apply_steering)"""
+        # Get hidden size from model if available
+        if hasattr(model, 'config') and hasattr(model.config, 'hidden_size'):
+            self.hidden_size = model.config.hidden_size
+        elif hasattr(model, 'config') and hasattr(model.config, 'd_model'):
+            self.hidden_size = model.config.d_model
+        
+        # Pre-generate the orthogonal vector
+        self.get_vector(hidden_size=self.hidden_size)
+    
+    def apply_steering(self, hidden_states: torch.Tensor) -> torch.Tensor:
+        """Apply random orthogonal steering to hidden states"""
+        if hidden_states is None or hidden_states.numel() == 0:
+            return hidden_states
+        
+        # Get hidden size from the actual hidden states
+        if len(hidden_states.shape) >= 2:
+            hidden_size = hidden_states.shape[-1]
+        else:
+            hidden_size = hidden_states.shape[0] if len(hidden_states.shape) == 1 else self.hidden_size
+        
+        # Get or generate the orthogonal vector
+        orthogonal_vector = self.get_vector(hidden_size=hidden_size)
+        
+        # Calculate effective steering strength
+        base_strength = 0.0
+        max_strength = 0.3
+        effective_strength = self.get_effective_value(base_strength, max_strength)
+        
+        # Apply steering as a residual connection
+        # Ensure shapes match
+        if len(hidden_states.shape) == 3:  # [batch, seq_len, hidden_size]
+            steering_effect = orthogonal_vector.unsqueeze(0).unsqueeze(0) * effective_strength
+        elif len(hidden_states.shape) == 2:  # [seq_len, hidden_size]
+            steering_effect = orthogonal_vector.unsqueeze(0) * effective_strength
+        else:  # [hidden_size]
+            steering_effect = orthogonal_vector * effective_strength
+        
+        return hidden_states + steering_effect
+    
+    def get_logits_processor(self):
+        """Random orthogonal steering effects don't use logits processors"""
+        return None
+    
+    def cleanup(self):
+        """Clean up resources"""
+        self.reference_vector = None
+        self.orthogonal_vector = None
+        self._computed = False
+
 # ============================================================================
 # MEMORY EFFECTS
 # ============================================================================
