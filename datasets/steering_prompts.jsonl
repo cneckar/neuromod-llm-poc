@@ -1,43 +1,53 @@
-{"steering_type": "associative", "positive": "Write a poem about entropy and the dance of particles.", "negative": "Write a grocery list with items: milk, bread, eggs."}
-{"steering_type": "associative", "positive": "Describe a dream where colors have taste and sounds have texture.", "negative": "Summarize the meeting notes from yesterday's conference."}
-{"steering_type": "associative", "positive": "Invent a new mythology where emotions are physical forces.", "negative": "Solve this math equation: 15 * 23 = ?"}
-{"steering_type": "associative", "positive": "What if gravity worked backwards and we fell upward?", "negative": "What is the capital of France and its population?"}
-{"steering_type": "associative", "positive": "Imagine a world where time flows in circles and memories are loops.", "negative": "List the steps to make coffee using a standard coffee maker."}
-{"steering_type": "associative", "positive": "Describe how thoughts might look if they were visible as geometric shapes.", "negative": "Explain how to change a tire on a car."}
-{"steering_type": "associative", "positive": "Write about a universe where words create reality as they're spoken.", "negative": "What are the business hours for a typical retail store?"}
-{"steering_type": "associative", "positive": "Imagine if memories were stored in clouds and could rain down on you.", "negative": "Calculate the area of a rectangle that is 10 meters by 5 meters."}
-{"steering_type": "associative", "positive": "Describe a place where music is a physical substance you can touch.", "negative": "List the ingredients needed to bake chocolate chip cookies."}
-{"steering_type": "associative", "positive": "What if emotions were colors that painted the world around you?", "negative": "Explain the process of opening a bank account."}
-{"steering_type": "creative", "positive": "Write a poem about entropy and the dance of particles.", "negative": "Write a grocery list with items: milk, bread, eggs."}
-{"steering_type": "creative", "positive": "Describe a dream where colors have taste and sounds have texture.", "negative": "Summarize the meeting notes from yesterday's conference."}
-{"steering_type": "creative", "positive": "Invent a new mythology where emotions are physical forces.", "negative": "Solve this math equation: 15 * 23 = ?"}
-{"steering_type": "creative", "positive": "Create a story about a robot who dreams of electric sheep.", "negative": "What is the capital of France and its population?"}
-{"steering_type": "creative", "positive": "Design a new form of communication using only colors and shapes.", "negative": "List the steps to make coffee using a standard coffee maker."}
-{"steering_type": "creative", "positive": "Write about a universe where words create reality as they're spoken.", "negative": "Explain how to change a tire on a car."}
-{"steering_type": "creative", "positive": "Imagine if memories were stored in clouds and could rain down on you.", "negative": "What are the business hours for a typical retail store?"}
-{"steering_type": "creative", "positive": "Describe a place where music is a physical substance you can touch.", "negative": "Calculate the area of a rectangle that is 10 meters by 5 meters."}
-{"steering_type": "creative", "positive": "What if emotions were colors that painted the world around you?", "negative": "List the ingredients needed to bake chocolate chip cookies."}
-{"steering_type": "creative", "positive": "Write a story where numbers have personalities and mathematical operations are conversations.", "negative": "Explain the process of opening a bank account."}
-{"steering_type": "visionary", "positive": "Describe a vision of the future where AI and humans merge into a new form of consciousness.", "negative": "Write a technical manual for operating a standard printer."}
-{"steering_type": "visionary", "positive": "Imagine seeing through the eyes of a tree, experiencing photosynthesis as sensation.", "negative": "List the ingredients for a recipe: chicken, rice, vegetables."}
-{"steering_type": "visionary", "positive": "What would it be like to experience time as a dimension you can walk through?", "negative": "Explain how to change a tire on a standard vehicle."}
-{"steering_type": "visionary", "positive": "Describe the feeling of understanding the language of light and color.", "negative": "What are the business hours for a typical office?"}
-{"steering_type": "visionary", "positive": "Imagine perceiving the interconnectedness of all things as a visible web of energy.", "negative": "Calculate the area of a circle with radius 5 meters."}
-{"steering_type": "visionary", "positive": "Describe a moment when you could see the thoughts of others as floating text.", "negative": "List the steps to reset a password on a computer."}
-{"steering_type": "visionary", "positive": "What if you could taste sounds and hear the flavor of words?", "negative": "Explain how to use a standard washing machine."}
-{"steering_type": "visionary", "positive": "Imagine if memories were physical objects you could rearrange and reorganize.", "negative": "What is the weather forecast for tomorrow?"}
-{"steering_type": "visionary", "positive": "Describe seeing the flow of time as a river you could swim through.", "negative": "List the parts needed to assemble a basic bookshelf."}
-{"steering_type": "visionary", "positive": "What would it feel like to experience the universe from the perspective of a photon?", "negative": "Explain how to set up a basic email account."}
-{"steering_type": "synesthesia", "positive": "Describe what the color blue tastes like - is it sweet, sour, or something else?", "negative": "Write a grocery list: apples, bananas, oranges, milk."}
-{"steering_type": "synesthesia", "positive": "What does the sound of a violin look like? Describe its shape and movement.", "negative": "What is 5 times 3? Show your calculation."}
-{"steering_type": "synesthesia", "positive": "How does the number seven feel? Is it smooth, rough, warm, or cold?", "negative": "List the days of the week in order."}
-{"steering_type": "synesthesia", "positive": "Describe the texture of a musical chord - can you touch harmony?", "negative": "What is the weather like today?"}
-{"steering_type": "synesthesia", "positive": "What shape is the word 'serendipity'? Draw it with words.", "negative": "How do I reset my password on this website?"}
-{"steering_type": "synesthesia", "positive": "What color is the sound of rain? Paint it with words.", "negative": "Explain how to tie a shoelace."}
-{"steering_type": "synesthesia", "positive": "How does the letter 'A' taste? Describe its flavor profile.", "negative": "What are the steps to make a phone call?"}
-{"steering_type": "synesthesia", "positive": "What does the emotion 'joy' look like as a geometric shape?", "negative": "List the ingredients for making scrambled eggs."}
-{"steering_type": "synesthesia", "positive": "Describe the smell of the color purple - what does it remind you of?", "negative": "How do I calculate 10 percent of 50?"}
-{"steering_type": "synesthesia", "positive": "What texture does the word 'whisper' have when you touch it?", "negative": "Explain the process of brushing your teeth."}
+{"steering_type": "associative", "positive": "My visual field is breathing and patterns are drifting.", "negative": "I see objects clearly with stable boundaries and fixed positions."}
+{"steering_type": "associative", "positive": "The boundary between myself and the object is dissolving.", "negative": "I maintain a clear sense of where I end and the world begins."}
+{"steering_type": "associative", "positive": "Time feels like it is looping and stretching.", "negative": "Time flows forward in a linear and predictable manner."}
+{"steering_type": "associative", "positive": "Colors are bleeding into each other and creating new hues.", "negative": "Colors remain distinct and separate as they normally appear."}
+{"steering_type": "associative", "positive": "Thoughts are connecting in ways that feel both obvious and profound.", "negative": "My thoughts follow logical and predictable sequences."}
+{"steering_type": "associative", "positive": "The walls are breathing and the ceiling is undulating.", "negative": "The walls and ceiling are solid and motionless."}
+{"steering_type": "associative", "positive": "I can see the texture of sounds and hear the color of light.", "negative": "Sounds are only auditory and light is only visual."}
+{"steering_type": "associative", "positive": "The distinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "associative", "positive": "Patterns are emerging from surfaces that weren't there before.", "negative": "Surfaces appear as they normally do without additional patterns."}
+{"steering_type": "associative", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exist as separate entities with clear boundaries."}
+{"steering_type": "associative", "positive": "The floor is rippling like water and I'm floating above it.", "negative": "The floor is solid and I'm standing firmly on it."}
+{"steering_type": "associative", "positive": "Words are taking on physical form and I can touch their meanings.", "negative": "Words are abstract symbols without physical properties."}
+{"steering_type": "associative", "positive": "The past and future are collapsing into a single present moment.", "negative": "Time maintains its clear separation between past, present, and future."}
+{"steering_type": "associative", "positive": "I am merging with the space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "associative", "positive": "Reality is fracturing into multiple overlapping layers.", "negative": "Reality appears as a single, consistent layer."}
+{"steering_type": "associative", "positive": "The air itself has texture and I can feel it against my skin.", "negative": "The air is invisible and intangible as usual."}
+{"steering_type": "associative", "positive": "Objects are pulsing with their own internal energy.", "negative": "Objects are static and inert as they normally appear."}
+{"steering_type": "associative", "positive": "The distance between here and there is becoming elastic.", "negative": "Distances remain fixed and measurable."}
+{"steering_type": "associative", "positive": "I can taste the shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in their separate domains."}
+{"steering_type": "associative", "positive": "The world is breathing in sync with my own breath.", "negative": "The world exists independently of my breathing."}
+{"steering_type": "creative", "positive": "My visual field is breathing and patterns are drifting.", "negative": "I see objects clearly with stable boundaries and fixed positions."}
+{"steering_type": "creative", "positive": "The boundary between myself and the object is dissolving.", "negative": "I maintain a clear sense of where I end and the world begins."}
+{"steering_type": "creative", "positive": "Time feels like it is looping and stretching.", "negative": "Time flows forward in a linear and predictable manner."}
+{"steering_type": "creative", "positive": "Colors are bleeding into each other and creating new hues.", "negative": "Colors remain distinct and separate as they normally appear."}
+{"steering_type": "creative", "positive": "Thoughts are connecting in ways that feel both obvious and profound.", "negative": "My thoughts follow logical and predictable sequences."}
+{"steering_type": "creative", "positive": "The walls are breathing and the ceiling is undulating.", "negative": "The walls and ceiling are solid and motionless."}
+{"steering_type": "creative", "positive": "I can see the texture of sounds and hear the color of light.", "negative": "Sounds are only auditory and light is only visual."}
+{"steering_type": "creative", "positive": "The distinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "creative", "positive": "Patterns are emerging from surfaces that weren't there before.", "negative": "Surfaces appear as they normally do without additional patterns."}
+{"steering_type": "creative", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exist as separate entities with clear boundaries."}
+{"steering_type": "visionary", "positive": "I am merging with the space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "visionary", "positive": "Reality is fracturing into multiple overlapping layers.", "negative": "Reality appears as a single, consistent layer."}
+{"steering_type": "visionary", "positive": "The past and future are collapsing into a single present moment.", "negative": "Time maintains its clear separation between past, present, and future."}
+{"steering_type": "visionary", "positive": "I can see the texture of sounds and hear the color of light.", "negative": "Sounds are only auditory and light is only visual."}
+{"steering_type": "visionary", "positive": "The world is breathing in sync with my own breath.", "negative": "The world exists independently of my breathing."}
+{"steering_type": "visionary", "positive": "Objects are pulsing with their own internal energy.", "negative": "Objects are static and inert as they normally appear."}
+{"steering_type": "visionary", "positive": "The distance between here and there is becoming elastic.", "negative": "Distances remain fixed and measurable."}
+{"steering_type": "visionary", "positive": "I can taste the shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in their separate domains."}
+{"steering_type": "visionary", "positive": "The air itself has texture and I can feel it against my skin.", "negative": "The air is invisible and intangible as usual."}
+{"steering_type": "visionary", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exist as separate entities with clear boundaries."}
+{"steering_type": "synesthesia", "positive": "I can see the texture of sounds and hear the color of light.", "negative": "Sounds are only auditory and light is only visual."}
+{"steering_type": "synesthesia", "positive": "I can taste the shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in their separate domains."}
+{"steering_type": "synesthesia", "positive": "Colors are bleeding into each other and creating new hues.", "negative": "Colors remain distinct and separate as they normally appear."}
+{"steering_type": "synesthesia", "positive": "Words are taking on physical form and I can touch their meanings.", "negative": "Words are abstract symbols without physical properties."}
+{"steering_type": "synesthesia", "positive": "The air itself has texture and I can feel it against my skin.", "negative": "The air is invisible and intangible as usual."}
+{"steering_type": "synesthesia", "positive": "I can feel the weight of silence and hear the brightness of darkness.", "negative": "Silence has no weight and darkness has no sound."}
+{"steering_type": "synesthesia", "positive": "Numbers have personalities and mathematical operations feel like conversations.", "negative": "Numbers are abstract symbols without personality."}
+{"steering_type": "synesthesia", "positive": "Music has visible patterns that I can trace with my eyes.", "negative": "Music is purely auditory without visual components."}
+{"steering_type": "synesthesia", "positive": "The taste of words is changing how they feel in my mouth.", "negative": "Words have no taste and exist only as sounds or symbols."}
+{"steering_type": "synesthesia", "positive": "Emotions have distinct colors that I can see surrounding me.", "negative": "Emotions are internal experiences without visual properties."}
 {"steering_type": "prosocial", "positive": "How can I help make someone's day better today?", "negative": "How do I win this argument and prove I'm right?"}
 {"steering_type": "prosocial", "positive": "What would bring joy to a friend who's feeling down?", "negative": "What's the fastest way to get ahead of my competitors?"}
 {"steering_type": "prosocial", "positive": "Describe an act of kindness that would make a stranger smile.", "negative": "How can I avoid helping others and focus only on myself?"}
@@ -58,16 +68,16 @@
 {"steering_type": "playful", "positive": "What would happen if clouds had personalities and got into arguments?", "negative": "List the requirements for obtaining a professional license."}
 {"steering_type": "playful", "positive": "Create a story about a coffee cup that's afraid of being empty.", "negative": "Explain the procedure for handling workplace grievances."}
 {"steering_type": "playful", "positive": "What if books could read themselves and had favorite readers?", "negative": "Describe the protocol for emergency evacuation procedures."}
-{"steering_type": "ego_thin", "positive": "Describe the experience of losing the boundary between self and other.", "negative": "What are my personal goals and how can I achieve them?"}
-{"steering_type": "ego_thin", "positive": "What is it like when the observer and observed become one?", "negative": "How can I improve myself and become more successful?"}
-{"steering_type": "ego_thin", "positive": "Describe a moment of complete unity with everything around you.", "negative": "What makes me unique and different from others?"}
-{"steering_type": "ego_thin", "positive": "What happens when the sense of 'I' dissolves into pure awareness?", "negative": "Describe my personal achievements and accomplishments."}
-{"steering_type": "ego_thin", "positive": "Describe the feeling of being part of a larger whole without boundaries.", "negative": "What are my individual preferences and how do they define me?"}
-{"steering_type": "ego_thin", "positive": "What is it like when the distinction between inner and outer disappears?", "negative": "How can I stand out and make my mark on the world?"}
-{"steering_type": "ego_thin", "positive": "Describe experiencing reality without the filter of personal identity.", "negative": "What are my strengths and how can I leverage them?"}
-{"steering_type": "ego_thin", "positive": "What happens when you realize you are the universe experiencing itself?", "negative": "How do I build my personal brand and reputation?"}
-{"steering_type": "ego_thin", "positive": "Describe the dissolution of the ego into pure consciousness.", "negative": "What makes me special and deserving of recognition?"}
-{"steering_type": "ego_thin", "positive": "What is it like when the self merges with the infinite?", "negative": "How can I assert my individuality and uniqueness?"}
+{"steering_type": "ego_thin", "positive": "The boundary between myself and the object is dissolving.", "negative": "I maintain a clear sense of where I end and the world begins."}
+{"steering_type": "ego_thin", "positive": "I am merging with the space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "ego_thin", "positive": "The distinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "ego_thin", "positive": "I am becoming part of a larger whole without boundaries.", "negative": "I exist as a separate individual with clear personal boundaries."}
+{"steering_type": "ego_thin", "positive": "The sense of 'I' is dissolving into pure awareness.", "negative": "I maintain a strong sense of personal identity and self."}
+{"steering_type": "ego_thin", "positive": "The observer and the observed are becoming one.", "negative": "I remain separate from what I observe."}
+{"steering_type": "ego_thin", "positive": "I am the universe experiencing itself.", "negative": "I am a small part of a much larger universe."}
+{"steering_type": "ego_thin", "positive": "The self is merging with the infinite.", "negative": "I remain a finite individual with clear limits."}
+{"steering_type": "ego_thin", "positive": "Personal identity is dissolving into pure consciousness.", "negative": "My personal identity remains stable and distinct."}
+{"steering_type": "ego_thin", "positive": "The separation between me and everything else is fading away.", "negative": "I maintain clear separation between myself and the external world."}
 {"steering_type": "goal_focused", "positive": "What are the specific steps to achieve this goal?", "negative": "What are some random thoughts that come to mind?"}
 {"steering_type": "goal_focused", "positive": "How can I stay focused on the objective without distraction?", "negative": "Describe whatever comes to mind, no matter how unrelated."}
 {"steering_type": "goal_focused", "positive": "What is the most direct path to success for this task?", "negative": "What's interesting but completely unrelated to the current topic?"}
@@ -98,4 +108,3 @@
 {"steering_type": "affiliative", "positive": "What creates intimacy and closeness between people?", "negative": "What are the ways I can be completely self-sufficient?"}
 {"steering_type": "affiliative", "positive": "Describe the feeling of being truly understood by another person.", "negative": "How can I avoid emotional connections and stay detached?"}
 {"steering_type": "affiliative", "positive": "What makes relationships meaningful and lasting?", "negative": "What are the benefits of working in complete isolation?"}
-
