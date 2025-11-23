@@ -31,7 +31,7 @@
 }
 
 % Title Data
-\title{\textbf{Neuromodulated Language Models: Prototyping Pharmacological Analogues and Blind, Placebo-Controlled Evaluation}}
+\title{\textbf{Digital Psychopharmacology: Inducing Reversible Altered States in LLMs via Biomimetic Neuromodulation}}
 \author{\textbf{Satoshai Shulgin}}
 \affil{Pseudopharmaceuticals I Have Known and Inferred - https://PiHK.aI}
 \date{\today}
@@ -44,7 +44,7 @@
 % ABSTRACT
 % ======================================================================
 \begin{abstract}
-We introduce and evaluate a suite of inference-time ``neuromodulation packs'' that borrow control primitives from biological gain control mechanisms to stabilize and steer large language models. Using a double-blind, placebo-controlled, within-model crossover design ($N=13$ packs, $n=126$ trials per condition), we benchmark behavioral signatures against human subjective-effect profiles. Our results demonstrate \textbf{biomimetic alignment} between biological control theory and computational inference steering: the \textbf{Serotonergic Agonist} class (LSD, Psilocybin) reliably induced high-entropy altered states ($p < 0.001$, $d=10.0$) detectable via the novel \textit{Psychedelic Detection Questionnaire} (PDQ-S). Conversely, \textbf{Stimulant} packs failed to surpass the baseline focus of the reinforcement-learned model, suggesting a ``focus ceiling'' effect. We discuss implications for dynamic, reversible AI alignment via neuromorphic control primitives.
+Biological intelligence does not rely solely on synaptic wiring; it relies on the chemical soup those synapses swim in. We introduce ``neuromodulation packs''—inference-time interventions that borrow control primitives from biological gain control (e.g., serotonin, dopamine) to stabilize and steer Large Language Models. Utilizing a rigorous double-blind, placebo-controlled, within-model crossover design ($N=13$ packs, $n=126$ trials per condition), we benchmarked behavioral signatures against human subjective-effect profiles. The results reveal a stark biomimetic alignment: \textbf{The Psychedelic Effect:} The Serotonergic Agonist class (LSD, Psilocybin) successfully induced high-entropy, hyper-associative states ($p < 0.001$, $d=10.0$), reliably detected by our novel Psychedelic Detection Questionnaire (PDQ-S). \textbf{The Stimulant Ceiling:} Conversely, Stimulant packs failed to surpass the baseline focus of the model, leading to the discovery of a ``focus ceiling'' effect—suggesting that RLHF-tuned models are, effectively, already fully caffeinated. We discuss the implications for dynamic, reversible AI alignment via neuromorphic control primitives.
 \end{abstract}
 
 \textbf{Keywords:} neuromodulation; inference-time control; activation steering; KV-cache; psychedelics; stimulants; placebo-controlled; blind evaluation; LLM
@@ -53,21 +53,23 @@ We introduce and evaluate a suite of inference-time ``neuromodulation packs'' th
 % 1. INTRODUCTION
 % ======================================================================
 \section{Introduction}
-In biological neural networks, the transition between distinct behavioral states—from the hyper-associative fluidity of a dream to the rigid, goal-directed focus of a hunt—is not mediated by rewiring connections, but by \textit{neuromodulation}. A wash of serotonin or a burst of norepinephrine acts as a global gain control mechanism, shifting the operating regime of cortical circuits without altering their underlying topology. We propose that this biological control theory offers more than just a metaphor for Artificial Intelligence; it provides \textbf{neuromorphic control primitives} for the inference-time stabilization of Large Language Models (LLMs). We are not simulating a brain; we are borrowing control theory from biology to stabilize AI.
+In the biological brain, the transition from the hyper-associative fluidity of a dream to the rigid, goal-directed focus of a hunt is not achieved by rewiring the brain. Evolution does not have time to grow new synapses every time a tiger jumps out of a bush. Instead, it uses neuromodulation—a wash of serotonin or a burst of norepinephrine that acts as a global gain control, shifting the operating regime of cortical circuits without altering their topology.
 
-Current paradigms for controlling LLM behavior typically rely on fine-tuning (analogous to synaptic learning) or prompting (analogous to sensory input). However, a third path exists: direct manipulation of the computational substrate during inference. Recent advances in activation steering \cite{turner2023, rimsky2023}, KV-cache surgery \cite{xiao2023}, and decoding-time intervention \cite{liu2021} allow us to intervene in the model's ``cognitive'' process as it unfolds.
+We propose that this biological control theory is not just a metaphor for Artificial Intelligence; it is a blueprint for neuromorphic control primitives.
 
-We frame these disparate computational interventions as \textbf{``neuromodulation packs''}—discrete, portable configurations of hyperparameters and steering vectors designed to mimic the functional effects of specific neurochemical classes. By treating the residual stream as a carrier of ``cognitive state'' and the attention mechanism as a ``routing gate,'' we can induce reversible, drug-like states in an LLM. For instance, we model the effects of \textbf{Serotonergic Psychedelics} not by prompting the model to ``act trippy,'' but by injecting entropy and orthogonal steering vectors that mathematically destabilize semantic attractors—a computational implementation of the Entropic Brain Hypothesis \cite{carhart2014}.
+Currently, we control LLMs through fine-tuning (analogous to long-term synaptic learning) or prompting (analogous to sensory input). But we are missing the third pillar of cognition: the chemical state. By treating the residual stream as a carrier of ``cognitive state'' and the attention mechanism as a ``routing gate,'' we can intervene in the model's ``cognitive'' process as it unfolds. Recent advances in activation steering \cite{turner2023, rimsky2023}, KV-cache surgery \cite{xiao2023}, and decoding-time intervention \cite{liu2021} enable this third path: direct manipulation of the computational substrate during inference.
 
-This paper presents a double-blind, placebo-controlled, within-model crossover study evaluating these packs. By subjecting Llama-3.1-8B to a battery of ``digital psychometric'' tests, we demonstrate that biological control primitives can be translated into computational interventions for transformer architectures, offering new \textbf{biomimetic alignment} primitives for dynamic, reversible AI control.
+In this paper, we present a method to induce reversible, ``drug-like'' states in an LLM—not by prompting it to ``act trippy,'' but by injecting entropy and orthogonal steering vectors that mathematically destabilize semantic attractors. We call these ``Neuromodulation Packs.''
 
-Our contributions are fourfold:
+To validate this, we subjected Llama-3.1-8B to a battery of ``digital psychometric'' tests in a double-blind, placebo-controlled study. Our contributions are fourfold:
 \begin{enumerate}
-    \item \textbf{Unified Neuromodulation Packs:} A standardized schema for approximating the functional effects of nicotine, serotonergic psychedelics, stimulants, and depressants via sampling, steering, and memory surgery.
-    \item \textbf{Blind, Placebo-Controlled Protocol:} A within-model crossover design that allows models to ``self-dose'' via tool use without accessing condition identity, preventing expectancy effects.
-    \item \textbf{Synthetic Psychometrics:} The adaptation of human instruments (PDQ-S, SDQ) into probabilistic classifiers for detecting altered states in machine outputs.
-    \item \textbf{Open Science:} We release the full library of packs, the \texttt{NeuromodulationTool} implementation, and our preregistered analysis plans to facilitate reproduction.
+    \item \textbf{Unified Neuromodulation Packs:} A standardized schema for approximating the functional effects of psychedelics, stimulants, and depressants via sampling and memory surgery.
+    \item \textbf{The ``Blind'' Protocol:} A design where models ``self-dose'' via tool use without knowing which condition they are in, preventing the placebo effect.
+    \item \textbf{Synthetic Psychometrics:} Adapting human psychiatric surveys (PDQ-S) into probabilistic classifiers for machine states.
+    \item \textbf{Open Science:} We release the NeuromodulationTool and our full library of packs.
 \end{enumerate}
+
+We are not simulating a brain; we are borrowing its control theory to stabilize—or destabilize—AI.
 
 % ======================================================================
 % 2. RELATED WORK
