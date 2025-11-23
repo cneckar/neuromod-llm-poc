@@ -255,12 +255,12 @@ For every prompt $x_i$ in our evaluation set, the model generated a response $y_
 \subsubsection{Randomization and Counterbalancing}
 To prevent order effects (e.g., cache contamination or state drift), condition assignment followed a **Latin Square** design. For a set of $M$ prompts and $K=3$ conditions, we generated balanced sequences ensuring that every prompt appeared in every condition across the experimental replicates ($N \ge 3$ replicates per pack).
 
-\subsubsection{Blinding Protocol}
-The \texttt{ExperimentalDesigner} system enforces blinding by generating opaque trial identifiers. Each trial is assigned a hash code:
+\subsubsection{Context Isolation Protocol}
+This design ensures \textbf{Context Isolation}: the model generates responses $y_t$ conditioned on $P(y_t | x_{sober}, \theta_{altered})$ rather than $P(y_t | x_{sober} + \text{'You are high'}, \theta_{base})$. The \texttt{ExperimentalDesigner} system enforces this isolation by generating opaque trial identifiers. Each trial is assigned a hash code:
 \begin{equation}
     H_{trial} = \text{SHA256}(\text{trial\_id} \oplus \text{condition\_id} \oplus \text{salt})_{0:16}
 \end{equation}
-This ensures that the inference engine, the evaluation metrics, and the human operators remain blind to the condition allocation until the final "Unblinding" phase, where the \texttt{unblind\_key.json} is used to map results back to experimental groups.
+This ensures that the inference engine, the evaluation metrics, and the human operators remain isolated from condition context until the final "Unblinding" phase, where the \texttt{unblind\_key.json} is used to map results back to experimental groups. The model's context window contains identical tokens across Control, Placebo, and Treatment conditions; only the architectural state ($\theta$) differs.
 
 \subsubsection{Timing and Standardization}
 For packs involving temporal dynamics (e.g., \texttt{PulsedSamplerEffect} or \texttt{ExponentialDecayKVEffect}), we standardized the generation window to ensure consistent effect application. All trials used a fixed `max_new_tokens` limit (typically 512 or 1024) to capture the full evolution of the neuromodulated state, from early-token coherence to late-token entropy.
