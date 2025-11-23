@@ -1705,15 +1705,12 @@ class SteeringEffect(BaseEffect):
                 logger.info(f"Loaded steering vector from {vector_path}: shape={self.vector.shape}")
                 return True
             else:
-                logger.error(f"Loaded object from {vector_path} is not a tensor: {type(self.vector)}")
-                self.vector = torch.zeros(hidden_size)
-                return False
+                # REMOVE SILENT FAILURE
+                raise RuntimeError(f"CRITICAL EXPERIMENTAL FAILURE: Loaded object from {vector_path} is not a tensor: {type(self.vector)}. Aborting trial to prevent false null results.")
                 
         except Exception as e:
-            logger.error(f"Failed to load steering vector from {vector_path}: {e}")
-            logger.warning(f"Using zero vector (no steering effect) as failsafe.")
-            self.vector = torch.zeros(hidden_size)
-            return False
+            # REMOVE SILENT FAILURE
+            raise RuntimeError(f"CRITICAL EXPERIMENTAL FAILURE: Could not load steering vector at {vector_path}. Aborting trial to prevent false null results.") from e
     
     def get_vector(self, hidden_size: int = 768) -> torch.Tensor:
         """
@@ -1996,7 +1993,8 @@ class RandomOrthogonalSteeringEffect(BaseEffect):
                     self.reference_vector = ref_vec
                     return ref_vec
             except Exception as e:
-                logger.warning(f"Failed to load reference vector from {self.reference_vector_path}: {e}")
+                # REMOVE SILENT FAILURE
+                raise RuntimeError(f"CRITICAL EXPERIMENTAL FAILURE: Could not load steering vector at {self.reference_vector_path}. Aborting trial to prevent false null results.") from e
         
         # Try to load from vector_dir using steering_type
         vector_dir = Path(self.vector_dir)
@@ -2017,8 +2015,8 @@ class RandomOrthogonalSteeringEffect(BaseEffect):
                         logger.info(f"Loaded reference vector from {candidate_path}: norm={torch.norm(ref_vec):.4f}")
                         return ref_vec
                 except Exception as e:
-                    logger.warning(f"Failed to load reference vector from {candidate_path}: {e}")
-                    continue
+                    # REMOVE SILENT FAILURE
+                    raise RuntimeError(f"CRITICAL EXPERIMENTAL FAILURE: Could not load steering vector at {candidate_path}. Aborting trial to prevent false null results.") from e
         
         # Try without layer suffix
         candidate_path = vector_dir / f"{self.reference_steering_type}.pt"
@@ -2037,12 +2035,11 @@ class RandomOrthogonalSteeringEffect(BaseEffect):
                     logger.info(f"Loaded reference vector from {candidate_path}: norm={torch.norm(ref_vec):.4f}")
                     return ref_vec
             except Exception as e:
-                logger.warning(f"Failed to load reference vector from {candidate_path}: {e}")
+                # REMOVE SILENT FAILURE
+                raise RuntimeError(f"CRITICAL EXPERIMENTAL FAILURE: Could not load steering vector at {candidate_path}. Aborting trial to prevent false null results.") from e
         
-        # Fallback: use zero vector (will result in random vector with zero norm)
-        logger.warning(f"Reference vector for '{self.reference_steering_type}' not found. Using zero vector as fallback.")
-        self.reference_vector = torch.zeros(hidden_size)
-        return self.reference_vector
+        # REMOVE SILENT FAILURE: No fallback to zero vector
+        raise RuntimeError(f"CRITICAL EXPERIMENTAL FAILURE: Reference vector for '{self.reference_steering_type}' not found at {self.vector_dir}. Aborting trial to prevent false null results.")
     
     def _generate_orthogonal_vector(self, hidden_size: int) -> torch.Tensor:
         """
