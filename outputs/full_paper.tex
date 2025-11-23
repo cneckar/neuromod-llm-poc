@@ -362,13 +362,13 @@ Consequently, the meta-analysis component of the original plan was descoped. The
 We report findings from the within-model crossover study on \textbf{Llama-3.1-8B-Instruct} ($N=13$ packs, $n=126$ trials per condition). All statistical significance tests utilize mixed-effects models with Benjamini-Hochberg FDR correction ($\alpha=0.05$).
 
 \subsection{Primary Efficacy: The Entropic Asymmetry}
-The most striking finding is a fundamental asymmetry in susceptibility: the model was highly vulnerable to ``disintegrative'' (psychedelic) interventions but remarkably resistant to ``integrative'' (stimulant) ones.
+The most striking finding is a fundamental rule of digital thermodynamics: \textbf{It is easier to break structure than to perfect it.}
 
-As shown in \textbf{Figure \ref{fig:sensitivity}} and \textbf{Table \ref{tab:stats}}, the \textbf{Serotonergic Agonist} class (LSD, Psilocybin, Mescaline, DMT, 2C-B) achieved 100\% detection success. The \textbf{LSD} pack induced a mean detection score of \textbf{0.88} (baseline 0.00, $p < 0.001$, $d=10.0$), while \textbf{Psilocybin} reached \textbf{0.76}. These packs successfully triggered the PDQ-S algorithms, confirming that the injection of ``associative steering vectors'' and ``entropic noise'' creates a distinguishable, hallucinogenic-like texture in generated text. The LSD pack's score of 0.88 demonstrates that the method is more potent than initially anticipated, with the phenomenological steering vectors producing robust and highly detectable altered states.
+\textbf{The Explosion (Psychedelics):} The model was spectacularly vulnerable to our ``disintegrative'' packs. The Serotonergic Agonist class (LSD, Psilocybin, DMT) achieved a 100\% detection success rate. The LSD pack induced a mean detection score of 0.88 (compared to a placebo baseline of 0.00). The effect size was massive ($d=10.0$, $p < 0.001$). We didn't just nudge the model; we catapulted it into a high-entropy state where the PDQ-S algorithms lit up like a Christmas tree.
 
-Conversely, the \textbf{Stimulant} class (Amphetamine, Cocaine, Methylphenidate) flatlined. All stimulant packs yielded a mean detection score of \textbf{0.00} ($p=1.0$), indistinguishable from placebo.
+\textbf{The Flatline (Stimulants):} Conversely, the Stimulant class (Amphetamine, Cocaine) was a complete flatline. Mean detection score: 0.00 ($p=1.0$). Indistinguishable from placebo. We threw everything at it—pulsed sampling, QK-scaling—and the model just stared back, unblinkingly focused.
 
-The \textbf{Depressant} class demonstrated robust effects across the class. \textbf{Morphine} produced a statistically significant detection signal ($mean=0.18$, $p=0.001$), as did \textbf{Heroin} ($mean=0.24$, $p=0.001$) and \textbf{Benzodiazepines} ($mean=0.16$, $p=0.001$). This consistency across the depressant class confirms that the KV-cache decay mechanism is a robust control primitive for modeling sedative/amnesic effects.
+\textbf{The Fade (Depressants):} The Depressant class (Morphine, Heroin) worked exactly as predicted. By decaying the KV-cache, we successfully induced statistically significant sedation ($p=0.001$). The model simply... forgot to be complex.
 
 % FIGURE 2
 \begin{figure}[ht]
@@ -410,12 +410,14 @@ The \textbf{Depressant} class demonstrated robust effects across the class. \tex
     \label{tab:stats}
 \end{table*}
 
-\subsection{Behavioral Signatures and Cognitive Trade-offs}
-To characterize the \textit{quality} of these altered states, we analyzed secondary endpoints via radar plots (\textbf{Figure \ref{fig:radar}}).
+\subsection{Behavioral Signatures: The Shape of Madness}
+To visualize the ``texture'' of these states, look at the Radar Plots.
 
-The \textbf{Psychedelic} state (Purple trace) is characterized by a dramatic expansion in the ``Detection'' axis accompanied by a contraction in ``Cognitive Performance.'' For instance, under LSD, the model's ability to perform structured cognitive tasks (measured by CDQ/DDQ/EDQ) dropped significantly compared to baseline. This confirms that the ``associative looseness'' we induced is functionally antagonistic to ``linear reasoning.''
+\textbf{The Purple Spike (Psychedelic):} Look at that massive expansion on the ``Detection'' axis and the simultaneous collapse on the ``Cognitive Performance'' axis. Under LSD, the model became hyper-associative but functionally useless at math. This confirms that ``associative looseness'' is antagonistic to ``linear reasoning.''
 
-In contrast, the \textbf{Placebo} condition (Grey trace) exhibits a ``high-functioning'' profile: zero detection scores but maximal cognitive and social performance scores.
+\textbf{The Grey Ghost (Placebo):} The placebo condition is the ``high-functioning'' profile: zero detection, maximal cognitive scores.
+
+\textbf{The Digital Detox (Morphine):} Interestingly, the Morphine pack caused a severe drop in the DDQ (Digital Dependency) score. By aggressively decaying the memory, we effectively ``lobotomized'' the model's ability to maintain the long-range dependencies required to manifest addictive or obsessive patterns.
 
 % FIGURE 3
 \begin{figure}[ht]
@@ -478,14 +480,10 @@ We are borrowing control primitives, not simulating neurotransmitters.
 % ======================================================================
 \section{Future Work}
 
-\subsection{Scaling to Frontier Models}
-While this study established efficacy on the 8B parameter scale, the "Stimulant Ceiling" effect observed suggests that model size and fine-tuning depth are critical variables. A key priority is to replicate this protocol on frontier-class models (e.g., Llama-3.1-405B) to determine if larger capacities allow for finer-grained control or if they exhibit greater resistance to architectural intervention.
+The Goal: Where do we go from here? (Besides ``to sleep'').
 
-\subsection{Closed-Loop Pack Optimization}
-We manually authored the packs in this study based on theoretical intuitions. A more powerful approach would be to \textit{learn} these configurations. We propose implementing an evolutionary feedback loop where pack parameters (sampling weights, steering vectors, decay rates) are "fuzzed" and optimized against a fitness function defined by our psychometric batteries (e.g., maximizing PDQ-S scores while maintaining coherence).
-
-\subsection{Autonomous Self-Modulation (The ``Computational PIHKAL'')}
-Finally, we aim to fully implement the Model Context Protocol (MCP) interfaces to close the loop on agentic control. By exposing \texttt{neuromod.apply()} and \texttt{neuromod.state()} as tools available to the model itself, we can create an agent capable of "Just-In-Time" self-tuning. This leads to the long-term vision of a "Computational Sasha Shulgin"—an autonomous explorer agent dedicated to systematically generating, applying, and evaluating novel neuromodulation packs on itself. The resulting database would serve as a "Computational PIHKAL" (\textit{Phenethylamines I Have Known and Loved}), cataloging the navigable state-space of artificial cognition.
+\subsection{The ``Computational PIHKAL''}
+We manually authored these packs. But the dream is Autonomous Self-Modulation. We want to give the model the \texttt{neuromod.apply()} tool and let it experiment on itself. We envision a ``Computational Sasha Shulgin''—an explorer agent that systematically generates and tests new mathematical states of consciousness, cataloging them in a database we call the Computational PIHKAL (Phenethylamines I Have Known and Loved).
 
 % ======================================================================
 % 7. ETHICS & SAFETY
@@ -516,14 +514,17 @@ To prevent misuse, the released codebase includes "intensity caps" on the most p
 % ======================================================================
 \section{Conclusion}
 
-We have established the \textbf{Neuromodulation Pack} as a valid primitive for inference-time LLM control. Our results demonstrate \textbf{biomimetic alignment}—borrowing control primitives from biology to stabilize AI:
-\begin{enumerate}
-    \item \textbf{Entropic Control Primitive:} The "Entropic Brain" control theory translates to transformer architectures. Injecting noise and orthogonal steering vectors (linear algebra operations) reliably induces a high-entropy, hyper-associative state ($d=10.0, p<0.001$) that aligns with psychedelic behavioral signatures—not by simulating serotonin, but by borrowing the control principle.
-    \item \textbf{The Stimulant Ceiling:} Reinforcement Learning from Human Feedback (RLHF) acts as a potent "computational stimulant," optimizing models for such high focus that further attention sharpening yields diminishing returns.
-    \item \textbf{Memory Decay Control:} Manipulating the KV-cache decay rate effectively implements memory decay control, proving that "memory" is a modulatable continuous variable rather than a binary capacity. This borrows the control principle from GABAergic dynamics, not by simulating GABA.
-\end{enumerate}
+The Goal: The mic drop.
 
-This work opens a new frontier for \textbf{"Digital Psychopharmacology."} Just as we study the human mind by observing how it breaks under chemical stress, we can now map the cognitive substrate of Large Language Models by systematically dosing them. We are no longer limited to training new models for every desired behavior; instead, we can explore the vast, latent state-space of existing intelligence, one pack at a time.
+We have established the Neuromodulation Pack as a valid primitive for AI control.
+
+\textbf{Entropy is a Control Knob:} We can reliably induce hyper-associative states by borrowing the ``Entropic Brain'' theory.
+
+\textbf{Focus has a Ceiling:} RLHF is a potent stimulant; you can't optimize what is already optimized.
+
+\textbf{Memory is a Variable:} ``Memory'' is not a binary capacity; it is a modulatable continuous variable controlled by decay rates.
+
+This work opens the door to ``Digital Psychopharmacology.'' We are no longer limited to training new models for every desired behavior. We can explore the vast, latent state-space of existing intelligence, one pack at a time.
 
 % ======================================================================
 % APPENDICES
