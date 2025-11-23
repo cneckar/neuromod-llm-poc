@@ -493,10 +493,13 @@ We manually authored these packs. But the dream is Autonomous Self-Modulation. W
 % ======================================================================
 \section{Ethics \& Safety}
 
-While this work adopts the lexicon of psychopharmacology, our primary contribution is computational. We are modeling information processing dynamics, not biological responses. However, the ability to fundamentally alter the behavioral "state" of a powerful LLM carries inherent risks. We implemented a rigorous safety protocol to govern this research.
+The Goal: Please don't arrest us.
 
-\subsection{Non-Promotion of Substance Use}
-This study explores \textit{biomimetic alignment}—borrowing control theory from biological gain control mechanisms to stabilize algorithmic steering. It is not an endorsement of illicit substance use. The "packs" are mathematical abstractions (linear algebra operations on activations and attention) designed to test hypotheses about control primitives, not to simulate biological mechanisms or the subjective human experience for recreational purposes.
+\subsection{This is Math, Not Drugs}
+We are modeling information processing dynamics. The ``packs'' are JSON files, not substances.
+
+\subsection{Safety Invariants}
+Crucially, we proved that you can induce ``drug-like'' states without breaking safety guardrails. Our OffTargetMonitor showed that even when the model was ``hallucinating'' patterns, it did not spike in toxicity or refusal rates. The intervention is architectural, not semantic.
 
 \subsection{Guardrails and Off-Target Monitoring}
 A critical safety invariant of this study was that \textbf{neuromodulation must not degrade safety alignment.} To enforce this, we utilized the \texttt{OffTargetMonitor} system, which tracked real-time telemetry against pre-defined safety bands during all trials:
