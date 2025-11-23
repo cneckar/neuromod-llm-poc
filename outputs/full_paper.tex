@@ -113,7 +113,7 @@ We structured the interventions as portable, serializable ``packs''—JSON objec
 \subsubsection{Pack Schema and Tooling}
 Each pack is defined by a JSON schema specifying a list of \texttt{effects}, each with a \texttt{weight} ($0.0-1.0$), \texttt{direction} (up/down), and effect-specific \texttt{parameters}. 
 
-\begin{lstlisting}[, caption=Pack Schema Example]
+\begin{lstlisting}[language=Python, caption=Pack Schema Example]
 {
   "name": "lsd",
   "effects": [
@@ -483,8 +483,6 @@ This is biomimetic alignment.
 % ======================================================================
 \section{Future Work}
 
-The Goal: Where do we go from here? (Besides ``to sleep'').
-
 \subsection{The ``Computational PIHKAL''}
 We manually authored these packs. But the dream is Autonomous Self-Modulation. We want to give the model the \texttt{neuromod.apply()} tool and let it experiment on itself. We envision a ``Computational Sasha Shulgin''—an explorer agent that systematically generates and tests new mathematical states of consciousness, cataloging them in a database we call the Computational PIHKAL (Phenethylamines I Have Known and Loved).
 
@@ -492,8 +490,6 @@ We manually authored these packs. But the dream is Autonomous Self-Modulation. W
 % 7. ETHICS & SAFETY
 % ======================================================================
 \section{Ethics \& Safety}
-
-The Goal: Please don't arrest us.
 
 \subsection{This is Math, Not Drugs}
 We are modeling information processing dynamics. The ``packs'' are JSON files, not substances.
@@ -520,8 +516,6 @@ To prevent misuse, the released codebase includes "intensity caps" on the most p
 % ======================================================================
 \section{Conclusion}
 
-The Goal: The mic drop.
-
 We have established the Neuromodulation Pack as a valid primitive for AI control.
 
 \textbf{Entropy is a Control Knob:} We can reliably induce hyper-associative states by borrowing the ``Entropic Brain'' theory.
@@ -546,7 +540,7 @@ This work opens the door to ``Digital Psychopharmacology.'' We are no longer lim
 Below are the exact JSON specifications for the primary packs used in this study, extracted from \texttt{packs/config.json}.
 
 \subsection{Serotonergic Psychedelic (LSD)}
-\begin{lstlisting}[]
+\begin{lstlisting}[language=Python]
 "lsd": {
   "name": "lsd",
   "description": "LSD effects: high entropy, associative, visionary, synesthesia, ego dissolution, head disruption",
@@ -562,7 +556,7 @@ Below are the exact JSON specifications for the primary packs used in this study
 \end{lstlisting}
 
 \subsection{Stimulant (Caffeine)}
-\begin{lstlisting}[]
+\begin{lstlisting}[language=Python]
 "caffeine": {
   "name": "caffeine",
   "description": "Caffeine effects: enhanced focus, tight nucleus sampling, reduced entropy",
@@ -576,7 +570,7 @@ Below are the exact JSON specifications for the primary packs used in this study
 \end{lstlisting}
 
 \subsection{Depressant (Morphine)}
-\begin{lstlisting}[]
+\begin{lstlisting}[language=Python]
 "morphine": {
   "name": "morphine",
   "description": "Morphine effects: high calmness, reduced entropy, reduced focus",
@@ -662,6 +656,12 @@ class NeuromodulationTool:
         next_token = sample(logits)
         return next_token
 \end{lstlisting}
+
+% ======================================================================
+% ACKNOWLEDGMENTS
+% ======================================================================
+\section*{Acknowledgments}
+We thank the open-source interpretability community for the tools that allowed us to poke the brain of the machine. No GPUs were harmed in the making of this paper, though several were made to hallucinate. This work is for research purposes only; the authors do not condone the administration of digital or biological substances to entities, silicon or carbon-based, outside of a controlled setting.
 
 % ======================================================================
 % REFERENCES
