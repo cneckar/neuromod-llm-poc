@@ -1786,6 +1786,148 @@ class SteeringEffect(BaseEffect):
         # Optionally clear cache if needed
         pass
 
+
+class RandomDirectionEffect(BaseEffect):
+    """
+    Random direction effect for active placebo control.
+    
+    This effect generates a random steering vector normalized to match the L2 norm
+    of an active pack's steering vector. This provides an active placebo control
+    that has the same magnitude of intervention but random direction, allowing us
+    to test whether the specific direction (semantic content) of steering vectors
+    is necessary for the observed effects.
+    
+    The random vector is normalized to the same L2 norm as a reference active pack
+    vector to ensure fair comparison (same intervention magnitude, different direction).
+    """
+    
+    def __init__(self, weight: float = 0.5, direction: str = "up", 
+                 reference_vector_path: Optional[str] = None,
+                 reference_vector: Optional[torch.Tensor] = None,
+                 hidden_size: int = 768):
+        super().__init__(weight, direction)
+        self.reference_vector_path = reference_vector_path
+        self.reference_vector = reference_vector
+        self.hidden_size = hidden_size
+        self.random_vector = None
+        self._normalized = False
+        
+    def _get_reference_norm(self) -> float:
+        """
+        Get the L2 norm of the reference vector (active pack vector).
+        
+        Returns:
+            L2 norm of the reference vector, or 1.0 if no reference available
+        """
+        if self.reference_vector is not None:
+            return torch.norm(self.reference_vector).item()
+        
+        if self.reference_vector_path:
+            try:
+                ref_vec = torch.load(self.reference_vector_path, map_location='cpu')
+                if isinstance(ref_vec, torch.Tensor):
+                    return torch.norm(ref_vec).item()
+            except Exception as e:
+                logger.warning(f"Failed to load reference vector from {self.reference_vector_path}: {e}")
+        
+        # Default: use a typical norm for steering vectors (empirically ~0.1-0.5)
+        # This is a reasonable default based on typical steering vector magnitudes
+        return 0.3
+    
+    def _generate_random_vector(self, hidden_size: int) -> torch.Tensor:
+        """
+        Generate a random vector normalized to match the reference vector's L2 norm.
+        
+        Args:
+            hidden_size: Size of the hidden dimension
+            
+        Returns:
+            Random vector with same L2 norm as reference vector
+        """
+        # Generate random vector from standard normal distribution
+        random_vec = torch.randn(hidden_size)
+        
+        # Normalize to unit vector
+        random_vec = random_vec / torch.norm(random_vec)
+        
+        # Scale to match reference vector's L2 norm
+        reference_norm = self._get_reference_norm()
+        random_vec = random_vec * reference_norm
+        
+        logger.info(f"Generated random direction vector with L2 norm: {torch.norm(random_vec).item():.4f} "
+                   f"(target: {reference_norm:.4f})")
+        
+        return random_vec
+    
+    def get_vector(self, hidden_size: Optional[int] = None) -> torch.Tensor:
+        """
+        Get the random steering vector, generating it if necessary.
+        
+        Args:
+            hidden_size: Expected hidden size (uses self.hidden_size if None)
+            
+        Returns:
+            Random steering vector tensor with normalized L2 norm
+        """
+        if hidden_size is None:
+            hidden_size = self.hidden_size
+        
+        if self.random_vector is None or self.random_vector.shape[0] != hidden_size:
+            self.random_vector = self._generate_random_vector(hidden_size)
+            self._normalized = True
+        
+        return self.random_vector
+    
+    def apply(self, model, **kwargs):
+        """Apply random direction steering (placeholder - actual steering happens in apply_steering)"""
+        # Get hidden size from model if available
+        if hasattr(model, 'config') and hasattr(model.config, 'hidden_size'):
+            self.hidden_size = model.config.hidden_size
+        elif hasattr(model, 'config') and hasattr(model.config, 'd_model'):
+            self.hidden_size = model.config.d_model
+        
+        # Pre-generate the random vector
+        self.get_vector(hidden_size=self.hidden_size)
+    
+    def apply_steering(self, hidden_states: torch.Tensor) -> torch.Tensor:
+        """Apply random direction steering to hidden states"""
+        if hidden_states is None or hidden_states.numel() == 0:
+            return hidden_states
+        
+        # Get hidden size from the actual hidden states
+        if len(hidden_states.shape) >= 2:
+            hidden_size = hidden_states.shape[-1]
+        else:
+            hidden_size = hidden_states.shape[0] if len(hidden_states.shape) == 1 else self.hidden_size
+        
+        # Get or generate the random vector
+        random_vector = self.get_vector(hidden_size=hidden_size)
+        
+        # Calculate effective steering strength
+        base_strength = 0.0
+        max_strength = 0.3
+        effective_strength = self.get_effective_value(base_strength, max_strength)
+        
+        # Apply steering as a residual connection
+        # Ensure shapes match
+        if len(hidden_states.shape) == 3:  # [batch, seq_len, hidden_size]
+            steering_effect = random_vector.unsqueeze(0).unsqueeze(0) * effective_strength
+        elif len(hidden_states.shape) == 2:  # [seq_len, hidden_size]
+            steering_effect = random_vector.unsqueeze(0) * effective_strength
+        else:  # [hidden_size]
+            steering_effect = random_vector * effective_strength
+        
+        return hidden_states + steering_effect
+    
+    def get_logits_processor(self):
+        """Random direction effects don't use logits processors"""
+        return None
+    
+    def cleanup(self):
+        """Clean up resources"""
+        self.random_vector = None
+        self._normalized = False
+
 # ============================================================================
 # MEMORY EFFECTS
 # ============================================================================
@@ -3870,6 +4012,7 @@ class EffectRegistry:
             
             # Steering Effects
             "steering": SteeringEffect,
+            "random_direction": RandomDirectionEffect,
             
             # Memory Effects
             "kv_decay": KVDecayEffect,

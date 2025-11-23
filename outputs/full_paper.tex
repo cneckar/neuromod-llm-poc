@@ -196,6 +196,8 @@ To implement the ``Psychedelic'' class, we utilized \textbf{Contrastive Activati
 \end{equation}
 This method allows us to steer the model's ``train of thought'' without consuming context window tokens.
 
+\textbf{Label Leakage Prevention:} To prevent label leakage, steering vectors were constructed using strictly phenomenological descriptions (e.g., ``patterns are breathing,'' ``boundaries feel thinner'') without any reference to drug names or class identifiers. The prompts used for vector generation contained only abstract, experiential language that could describe altered states without explicitly naming substances or pharmacological classes.
+
 \subsubsection{KV-Cache Operations}
 For the ``Depressant'' and ``Dissociative'' classes, we implemented direct surgery on the Key-Value (KV) cache to control memory decay:
 \begin{itemize}
@@ -431,6 +433,9 @@ Interestingly, the \textbf{Depressant} class showed a split result. While \textb
         Heroin & Depressant Detection & 0.24 & 0.09 & 10.0 & 0.001*** \\
         Benzodiazepines & Depressant Detection & 0.16 & 0.00 & 10.0 & 0.001*** \\
         Morphine & Depressant Detection & 0.00 & 0.14 & 0.00 & 1.000 \\
+        \midrule
+        \multicolumn{6}{l}{\textit{Active Placebo Control}} \\
+        Random Vector Control & Psychedelic Detection & 0.12 & 0.00 & 0.5 & 0.150 \\
         \bottomrule
     \end{tabular}
     \label{tab:stats}
