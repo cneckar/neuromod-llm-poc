@@ -27,6 +27,12 @@ pip install -e .
 # Set up Hugging Face credentials (required for Llama models)
 python setup_hf_credentials.py
 
+# Reproduce paper results (default: Llama-3.1-8B, n=126)
+python reproduce_results.py
+
+# Or quick validation (test mode: fast model, small sample)
+python reproduce_results.py --test-mode
+
 # Start interactive chat
 python demo/chat.py
 ```

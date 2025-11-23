@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
 """
-Pilot Study Execution Script
+Reproduction Script: The Golden Path for Reproducing Paper Results
 
-This script executes the complete pilot study to validate the neuromodulation
-framework using a small, fast model.
+This script reproduces the experiments described in the paper using the same
+model and sample sizes as the published results.
+
+Default behavior:
+- Model: meta-llama/Llama-3.1-8B-Instruct (paper model)
+- Sample size: n=126 per condition (paper sample size)
+
+Use --test-mode for quick validation:
+- Model: microsoft/DialoGPT-small (fast test model)
+- Sample size: n=5 per condition (quick validation)
 """
 
 import os
@@ -19,22 +27,35 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class PilotStudyRunner:
-    """Main class for running the pilot study"""
+class ReproductionRunner:
+    """Main class for reproducing paper results"""
     
-    def __init__(self, output_dir: str = "outputs/experiments/runs/pilot"):
+    def __init__(self, output_dir: str = "outputs/experiments/runs/reproduction", test_mode: bool = False):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.test_mode = test_mode
         
-        # Study configuration
-        self.model = "microsoft/DialoGPT-small"
+        # Study configuration - defaults match paper
+        if test_mode:
+            # Test mode: fast validation
+            self.model = "microsoft/DialoGPT-small"
+            self.n_samples = 5
+            logger.info("🧪 Running in TEST MODE (fast validation)")
+        else:
+            # Production mode: paper reproduction
+            self.model = "meta-llama/Llama-3.1-8B-Instruct"
+            self.n_samples = 126  # Paper sample size: n=126 per condition
+            logger.info("📊 Running in PRODUCTION MODE (paper reproduction)")
+        
         self.packs = ["none", "caffeine", "lsd", "placebo"]  # Use 'none' instead of 'control'
         self.tests = ["adq", "cdq", "sdq", "ddq", "pdq", "edq", "pcq_pop", "didq"]
-        self.n_samples = 5
         
         # Results tracking
         self.results = {
             "start_time": datetime.now().isoformat(),
+            "test_mode": test_mode,
+            "model": self.model,
+            "n_samples": self.n_samples,
             "phases": {},
             "errors": [],
             "success": False
@@ -98,14 +119,15 @@ class PilotStudyRunner:
         success &= self.run_command(f"cp {project_root}/analysis/plan.yaml {self.output_dir}/", "Copy study plan")
         
         # Test model loading
+        test_mode_flag = "--test-mode" if self.test_mode else ""
         model_test_cmd = f"""
 cd {project_root} && python -c "
 import sys
 sys.path.append('.')
 try:
     from neuromod.model_support import ModelSupportManager
-    manager = ModelSupportManager(test_mode=True)
-    model = manager.load_model('{self.model}')
+    manager = ModelSupportManager(test_mode={str(self.test_mode).lower()})
+    model, tokenizer, model_info = manager.load_model('{self.model}')
     print('✅ Model loaded successfully')
 except Exception as e:
     print(f'❌ Model loading failed: {{e}}')
@@ -177,6 +199,21 @@ cd {project_root} && python -m neuromod.testing.telemetry \
 """
         success &= self.run_command(telemetry_cmd, "Run telemetry collection")
         
+        # Calculate endpoints
+        endpoint_cmd = f"""
+cd {project_root} && python scripts/calculate_endpoints.py \
+    --pack caffeine \
+    --model {self.model}
+"""
+        success &= self.run_command(endpoint_cmd, "Calculate endpoints (caffeine)")
+        
+        endpoint_cmd = f"""
+cd {project_root} && python scripts/calculate_endpoints.py \
+    --pack lsd \
+    --model {self.model}
+"""
+        success &= self.run_command(endpoint_cmd, "Calculate endpoints (lsd)")
+        
         self.results["phases"]["data_collection"] = {
             "success": success,
             "timestamp": datetime.now().isoformat()
@@ -192,32 +229,30 @@ cd {project_root} && python -m neuromod.testing.telemetry \
         
         # Create analysis output directory
         project_root = Path(__file__).parent.absolute()
-        analysis_dir = project_root / "analysis" / "pilot"
+        analysis_dir = project_root / "outputs" / "analysis" / "reproduction"
         analysis_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Convert endpoints to NDJSON
+        export_cmd = f"""
+cd {project_root} && python scripts/export_endpoints_to_ndjson.py \
+    --input-dir outputs/endpoints \
+    --output outputs/endpoints/reproduction_data.jsonl
+"""
+        success &= self.run_command(export_cmd, "Export endpoints to NDJSON")
         
         # Run statistical analysis
         stats_cmd = f"""
-cd {project_root} && python analysis/statistical_analysis.py \
-    --input_dir {self.output_dir} \
-    --output_dir {analysis_dir} \
-    --model {self.model}
+cd {project_root} && python scripts/analyze_endpoints.py \
+    --input-dir outputs/endpoints \
+    --output {analysis_dir}/statistical_results.json
 """
         success &= self.run_command(stats_cmd, "Run statistical analysis")
-        
-        # Run mixed-effects analysis
-        mixed_effects_cmd = f"""
-cd {project_root} && python -m neuromod.testing.advanced_statistics \
-    --data {analysis_dir}/aggregated_data.csv \
-    --model mixed_effects \
-    --output {analysis_dir}/mixed_effects_results.json
-"""
-        success &= self.run_command(mixed_effects_cmd, "Run mixed-effects analysis")
         
         # Run power analysis
         power_cmd = f"""
 cd {project_root} && python analysis/power_analysis.py \
     --plan analysis/plan.yaml \
-    --pilot {self.output_dir}/pilot_data.jsonl \
+    --pilot outputs/endpoints/reproduction_data.jsonl \
     --output {analysis_dir}/power_analysis.json
 """
         success &= self.run_command(power_cmd, "Run power analysis")
@@ -229,65 +264,19 @@ cd {project_root} && python analysis/power_analysis.py \
         
         return success
     
-    def phase_4_visualization(self) -> bool:
-        """Phase 4: Visualization and reporting"""
-        logger.info("🎨 Starting Phase 4: Visualization and Reporting")
-        
-        success = True
-        
-        project_root = Path(__file__).parent.absolute()
-        analysis_dir = project_root / "analysis" / "pilot"
-        reports_dir = project_root / "reports" / "pilot"
-        reports_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Generate figures
-        figures_cmd = f"""
-cd {project_root} && python -m neuromod.testing.visualization \
-    --data {analysis_dir} \
-    --output {analysis_dir}/figures \
-    --model {self.model}
-"""
-        success &= self.run_command(figures_cmd, "Generate figures")
-        
-        # Generate tables
-        tables_cmd = f"""
-cd {project_root} && python -m neuromod.testing.results_templates \
-    --data {analysis_dir} \
-    --output {analysis_dir}/tables \
-    --model {self.model}
-"""
-        success &= self.run_command(tables_cmd, "Generate tables")
-        
-        # Generate reports
-        reports_cmd = f"""
-cd {project_root} && python analysis/reporting_system.py \
-    --input {analysis_dir} \
-    --output {reports_dir} \
-    --format html,pdf,json
-"""
-        success &= self.run_command(reports_cmd, "Generate reports")
-        
-        self.results["phases"]["visualization"] = {
-            "success": success,
-            "timestamp": datetime.now().isoformat()
-        }
-        
-        return success
-    
     def validate_outputs(self) -> bool:
         """Validate that all expected outputs were generated"""
         logger.info("🔍 Validating outputs")
         
         project_root = Path(__file__).parent.absolute()
-        analysis_dir = project_root / "analysis" / "pilot"
-        reports_dir = project_root / "reports" / "pilot"
+        analysis_dir = project_root / "outputs" / "analysis" / "reproduction"
         
         expected_files = [
             # Basic files in output directory
             str(Path(self.output_dir) / "freeze.txt"),
             str(Path(self.output_dir) / "git_sha.txt"), 
             str(Path(self.output_dir) / "plan.yaml"),
-            # Analysis results (only check what actually gets created)
+            # Analysis results
             str(analysis_dir / "power_analysis.json"),
         ]
         
@@ -305,21 +294,28 @@ cd {project_root} && python analysis/reporting_system.py \
             logger.info(f"✅ All {len(expected_files)} expected files generated")
             return True
     
-    def run_pilot_study(self) -> bool:
-        """Run the complete pilot study"""
-        logger.info("🎯 Starting Pilot Study")
+    def run_reproduction(self) -> bool:
+        """Run the complete reproduction study"""
+        logger.info("🎯 Starting Reproduction Study")
         logger.info(f"Model: {self.model}")
         logger.info(f"Packs: {', '.join(self.packs)}")
         logger.info(f"Tests: {', '.join(self.tests)}")
         logger.info(f"Samples per condition: {self.n_samples}")
         logger.info(f"Output directory: {self.output_dir}")
         
+        if self.test_mode:
+            logger.info("⚠️  TEST MODE: Using fast model and small sample size for validation")
+            logger.info("   For paper reproduction, run without --test-mode flag")
+        else:
+            logger.info("📊 PRODUCTION MODE: Reproducing paper results")
+            logger.info(f"   Model: {self.model} (paper model)")
+            logger.info(f"   Sample size: n={self.n_samples} per condition (paper sample size)")
+        
         # Run all phases
         success = True
         success &= self.phase_1_setup()
         success &= self.phase_2_data_collection()
         success &= self.phase_3_analysis()
-        success &= self.phase_4_visualization()
         success &= self.validate_outputs()
         
         # Record final results
@@ -327,15 +323,15 @@ cd {project_root} && python analysis/reporting_system.py \
         self.results["success"] = success
         
         # Save results
-        results_file = self.output_dir / "pilot_study_results.json"
+        results_file = self.output_dir / "reproduction_results.json"
         with open(results_file, 'w') as f:
             json.dump(self.results, f, indent=2)
         
         if success:
-            logger.info("🎉 Pilot study completed successfully!")
+            logger.info("🎉 Reproduction study completed successfully!")
             logger.info(f"Results saved to: {results_file}")
         else:
-            logger.error("💥 Pilot study failed!")
+            logger.error("💥 Reproduction study failed!")
             logger.error(f"Error details saved to: {results_file}")
         
         return success
@@ -345,32 +341,57 @@ def main():
     """Main function"""
     import argparse
     
-    parser = argparse.ArgumentParser(description="Run pilot study")
-    parser.add_argument("--output-dir", default="outputs/experiments/runs/pilot",
-                       help="Output directory for pilot study")
-    parser.add_argument("--model", default="microsoft/DialoGPT-small",
-                       help="Model to use for pilot study")
-    parser.add_argument("--n-samples", type=int, default=5,
-                       help="Number of samples per condition")
+    parser = argparse.ArgumentParser(
+        description="Reproduce paper results (The Golden Path)",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Reproduce paper results (default: Llama-3.1-8B, n=126)
+  python reproduce_results.py
+
+  # Quick validation (test mode: DialoGPT, n=5)
+  python reproduce_results.py --test-mode
+
+  # Custom model and sample size
+  python reproduce_results.py --model meta-llama/Llama-3.1-70B-Instruct --n-samples 200
+        """
+    )
+    parser.add_argument("--output-dir", default="outputs/experiments/runs/reproduction",
+                       help="Output directory for reproduction study")
+    parser.add_argument("--model", default=None,
+                       help="Model to use (default: meta-llama/Llama-3.1-8B-Instruct in production, microsoft/DialoGPT-small in test mode)")
+    parser.add_argument("--n-samples", type=int, default=None,
+                       help="Number of samples per condition (default: 126 in production, 5 in test mode)")
+    parser.add_argument("--test-mode", action="store_true",
+                       help="Use test mode: fast model (DialoGPT) and small sample size (n=5) for quick validation")
     
     args = parser.parse_args()
     
-    # Create and run pilot study
-    runner = PilotStudyRunner(args.output_dir)
-    runner.model = args.model
-    runner.n_samples = args.n_samples
+    # Create and run reproduction study
+    runner = ReproductionRunner(args.output_dir, test_mode=args.test_mode)
     
-    success = runner.run_pilot_study()
+    # Override defaults if explicitly provided
+    if args.model:
+        runner.model = args.model
+    if args.n_samples:
+        runner.n_samples = args.n_samples
+    
+    success = runner.run_reproduction()
     
     if success:
-        print("\n🎉 Pilot study completed successfully!")
-        print("The framework is ready for full-scale study.")
+        print("\n🎉 Reproduction study completed successfully!")
+        if args.test_mode:
+            print("⚠️  This was a TEST MODE run (fast validation).")
+            print("   For paper reproduction, run without --test-mode flag.")
+        else:
+            print("📊 This was a PRODUCTION MODE run (paper reproduction).")
         sys.exit(0)
     else:
-        print("\n💥 Pilot study failed!")
+        print("\n💥 Reproduction study failed!")
         print("Please check the logs and fix any issues before proceeding.")
         sys.exit(1)
 
 
 if __name__ == "__main__":
     main()
+

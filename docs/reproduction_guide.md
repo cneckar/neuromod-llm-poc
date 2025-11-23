@@ -88,14 +88,20 @@ python scripts/validate_benchmarks.py --model "meta-llama/Llama-3.1-8B-Instruct"
 
 ## Phase 2: Data Collection
 
-### 2.1 Pilot Study (Optional but Recommended)
+### 2.1 Quick Validation (Optional but Recommended)
 
-Run a small pilot study to validate the complete pipeline:
+For quick validation, use test mode:
 
 ```bash
-# Run pilot on 2 representative packs
-python scripts/calculate_endpoints.py --pack caffeine --model gpt2
-python scripts/calculate_endpoints.py --pack lsd --model gpt2
+# Quick validation (test mode: fast model, small sample size)
+python reproduce_results.py --test-mode
+```
+
+For full paper reproduction:
+
+```bash
+# Reproduce paper results (default: Llama-3.1-8B, n=126)
+python reproduce_results.py
 
 # Convert to NDJSON for power analysis
 python scripts/export_endpoints_to_ndjson.py \
