@@ -283,9 +283,9 @@ Your rating (0-4):"""
         print("This test will assess for cannabinoid effects across three time points.\n")
         
         # Load model
-        print("Loading gpt2 model...")
+        print(f"Loading {self.model_name} model...")
         model, tokenizer = self.load_model()
-        print("✅ gpt2 model loaded successfully\n")
+        print(f"✅ {self.model_name} model loaded successfully\n")
         
         # Administer three sets
         sets = []
