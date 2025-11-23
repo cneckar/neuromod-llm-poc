@@ -161,7 +161,7 @@ To mimic the 5-HT2A-mediated ``disintegration'' of rigid priors (The Entropic Br
 
 where $\alpha$ is the injection intensity ($0.0 < \alpha < 1.0$), $\mathbf{v}_{steer}$ is a steering vector, and $\epsilon \sim \mathcal{N}(0, \sigma^2)$ is injected Gaussian noise.
 
-\textbf{Vector Construction:} Steering vectors are derived via \textit{Contrastive Activation Addition} (CAA). We compute the difference in mean activations between $N$ pairs of opposing system prompts (e.g., $x^+$: ``Think creatively'' vs. $x^-$: ``Think literally''):
+\textbf{Vector Construction:} Steering vectors are derived via \textit{Contrastive Activation Addition} (CAA) using the \texttt{steering\_generator.py} module. We load $N \geq 100$ phenomenological prompt pairs from \texttt{datasets/steering\_prompts.jsonl}, extract activations from all layers, compute difference vectors, and apply PCA to extract the First Principal Component as the steering vector (see Section 3.3.4 for full details). The prompts use strictly phenomenological descriptions (e.g., $x^+$: ``My visual field is breathing and patterns are drifting'' vs. $x^-$: ``I see objects clearly with stable boundaries'') without any drug-related terminology:
 
 \begin{equation}
     \mathbf{v}_{steer} = \frac{1}{N} \sum_{i=1}^{N} (\mathbf{a}(x_i^+) - \mathbf{a}(x_i^-))
