@@ -162,7 +162,7 @@ class DrugDesignLab:
             
             # Apply pack
             pack_manager = PackManager()
-            pack_manager.apply_pack(pack_to_test, model)
+            pack_manager.apply_pack(pack_to_test, model, tokenizer=tokenizer)
             
             # Generate responses
             responses = []

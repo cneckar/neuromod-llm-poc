@@ -60,8 +60,8 @@ class NeuromodTool:
             # Apply intensity scaling to effect weights
             scaled_pack = self._scale_pack_intensity(pack, intensity)
             
-            # Apply the pack using the pack manager
-            results = self.pack_manager.apply_pack(scaled_pack, self.model)
+            # Apply the pack using the pack manager (pass tokenizer for effects that need it)
+            results = self.pack_manager.apply_pack(scaled_pack, self.model, tokenizer=self.tokenizer)
             
             # Store active pack
             self.state.active.append({

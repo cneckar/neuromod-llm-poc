@@ -101,7 +101,7 @@ def test_pack(pack_name, prompts, model, max_length):
         
         # Apply pack
         pack_manager = PackManager()
-        pack_manager.apply_pack(model_obj, pack)
+        pack_manager.apply_pack(pack, model_obj, tokenizer=tokenizer)
         
         click.echo(f"Testing pack: {pack.name}")
         click.echo("=" * 50)

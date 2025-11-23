@@ -432,7 +432,7 @@ class PackOptimizer:
             
             # Apply pack
             pack_manager = PackManager()
-            pack_manager.apply_pack(pack, model)
+            pack_manager.apply_pack(pack, model, tokenizer=tokenizer)
             
             # Generate responses
             responses = []

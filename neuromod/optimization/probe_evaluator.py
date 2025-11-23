@@ -68,7 +68,11 @@ class ProbeEvaluator:
             # Create a PackManager to apply the pack
             from ..pack_system import PackManager
             pack_manager = PackManager()
-            pack_manager.apply_pack(pack, model)
+            # Get tokenizer if available
+            tokenizer = getattr(model, 'tokenizer', None)
+            if tokenizer is None and hasattr(self, 'tokenizer'):
+                tokenizer = self.tokenizer
+            pack_manager.apply_pack(pack, model, tokenizer=tokenizer)
         except ValueError:
             logger.warning(f"Pack '{pack_name}' not found, using base model")
         

@@ -64,8 +64,14 @@ class PackManager:
         self.effect_registry = EffectRegistry()
         self.active_effects: List[BaseEffect] = []
         
-    def apply_pack(self, pack: Pack, model) -> Dict[str, Any]:
-        """Apply a pack to the model"""
+    def apply_pack(self, pack: Pack, model, tokenizer=None) -> Dict[str, Any]:
+        """Apply a pack to the model
+        
+        Args:
+            pack: The pack to apply
+            model: The model to apply effects to
+            tokenizer: Optional tokenizer (needed for effects like QKScoreScalingEffect)
+        """
         results = {
             "applied_effects": [],
             "logits_processors": [],
@@ -102,6 +108,10 @@ class PackManager:
                         "direction": effect_config.direction
                     })
                     effect = self.effect_registry.get_effect(effect_config.effect, **params)
+                
+                # Pass tokenizer to effect if available
+                if tokenizer is not None:
+                    params['tokenizer'] = tokenizer
                 effect.apply(model, **params)
                 
                 # Store active effect

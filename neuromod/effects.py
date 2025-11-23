@@ -1047,12 +1047,14 @@ class QKScoreScalingEffect(BaseEffect):
                             if h_dim and single_dim == n_heads * h_dim:
                                 Q_reshaped = Q.view(batch_size, seq_len, n_heads, h_dim)
                                 # Apply scaling only to induction heads
-                                scale_vector = 1.0 + (scale - 1.0) * mask.view(1, 1, -1, 1)
+                                # CRITICAL: Ensure scale_vector matches Q's dtype to avoid dtype mismatch
+                                scale_vector = (1.0 + (scale - 1.0) * mask.view(1, 1, -1, 1)).to(Q_reshaped.dtype)
                                 Q_scaled = Q_reshaped * scale_vector
                                 Q = Q_scaled.view(batch_size, seq_len, single_dim)
                             else:
                                 # Fallback: scale all if we can't reshape
-                                Q = Q * scale
+                                # CRITICAL: Ensure scale matches Q's dtype
+                                Q = Q * scale.to(Q.dtype) if isinstance(scale, torch.Tensor) else Q * torch.tensor(scale, dtype=Q.dtype, device=Q.device)
                             
                             output_scaled = torch.cat([Q, K, V], dim=-1)
                             return output_scaled
@@ -1064,12 +1066,17 @@ class QKScoreScalingEffect(BaseEffect):
                             if h_dim and hidden_dim == n_heads * h_dim:
                                 Q_reshaped = output.view(batch_size, seq_len, n_heads, h_dim)
                                 # Apply scaling only to induction heads
-                                scale_vector = 1.0 + (scale - 1.0) * mask.view(1, 1, -1, 1)
+                                # CRITICAL: Ensure scale_vector matches output's dtype to avoid dtype mismatch
+                                scale_vector = (1.0 + (scale - 1.0) * mask.view(1, 1, -1, 1)).to(output.dtype)
                                 Q_scaled = Q_reshaped * scale_vector
                                 return Q_scaled.view(batch_size, seq_len, hidden_dim)
                             else:
                                 # Fallback: scale all if we can't reshape
-                                return output * scale
+                                # CRITICAL: Ensure scale matches output's dtype
+                                if isinstance(scale, torch.Tensor):
+                                    return output * scale.to(output.dtype)
+                                else:
+                                    return output * torch.tensor(scale, dtype=output.dtype, device=output.device)
                     
                     return q_hook
                 
