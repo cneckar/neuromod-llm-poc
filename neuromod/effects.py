@@ -4281,6 +4281,7 @@ class EffectRegistry:
             # Steering Effects
             "steering": SteeringEffect,
             "random_direction": RandomDirectionEffect,
+            "random_orthogonal_steering": RandomOrthogonalSteeringEffect,
             
             # Memory Effects
             "kv_decay": KVDecayEffect,
