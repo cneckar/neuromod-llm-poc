@@ -2116,8 +2116,28 @@ class RandomOrthogonalSteeringEffect(BaseEffect):
         final_dot = torch.dot(orthogonal_vec, ref_vec).item()
         final_norm = torch.norm(orthogonal_vec).item()
         
-        logger.info(f"Generated orthogonal vector: norm={final_norm:.4f} (target: {ref_norm:.4f}), "
-                   f"dot product with reference={final_dot:.2e} (should be ≈ 0)")
+        # CRITICAL VALIDATION: Verify orthogonality meets scientific threshold
+        orthogonality_threshold = 1e-6
+        if abs(final_dot) >= orthogonality_threshold:
+            error_msg = (
+                f"CRITICAL EXPERIMENTAL FAILURE: Orthogonality validation failed!\n"
+                f"  Dot product with reference: {final_dot:.2e}\n"
+                f"  Required threshold: < {orthogonality_threshold:.2e}\n"
+                f"  This indicates the 'Active Placebo' control is contaminated.\n"
+                f"  The random vector is NOT orthogonal to the reference vector.\n"
+                f"  Aborting trial to prevent false null results."
+            )
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
+        
+        # Log successful validation with prominent formatting
+        logger.info("=" * 80)
+        logger.info("✅ ORTHOGONALITY VALIDATION PASSED (Active Placebo Control)")
+        logger.info(f"   Generated orthogonal vector:")
+        logger.info(f"   - Norm: {final_norm:.6f} (target: {ref_norm:.6f})")
+        logger.info(f"   - Dot product with reference: {final_dot:.2e} (required: < {orthogonality_threshold:.2e})")
+        logger.info(f"   - Orthogonality status: VALID (vectors are perpendicular)")
+        logger.info("=" * 80)
         
         return orthogonal_vec
     

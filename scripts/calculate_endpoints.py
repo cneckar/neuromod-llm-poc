@@ -68,7 +68,72 @@ class EndpointRunner:
         print(f"  [*] Applying pack: {pack_name}")
         neuromod_tool.apply(pack_name, intensity=0.5)
         
+        # Verify orthogonality for RandomOrthogonalSteeringEffect if present
+        self._verify_orthogonality(neuromod_tool, pack_name)
+        
         return neuromod_tool
+    
+    def _verify_orthogonality(self, neuromod_tool, pack_name: str):
+        """
+        Verify orthogonality of RandomOrthogonalSteeringEffect if present in the pack.
+        
+        This is a critical quality gate that ensures the 'Active Placebo' control
+        is scientifically valid (orthogonal to reference vector, not contaminated).
+        """
+        from neuromod.effects import RandomOrthogonalSteeringEffect
+        
+        # Check if pack contains random_orthogonal_steering effect
+        pack = self.pack_registry.get_pack(pack_name)
+        if not pack:
+            return
+        
+        has_orthogonal_effect = False
+        for effect_config in pack.effects:
+            if effect_config.effect == "random_orthogonal_steering":
+                has_orthogonal_effect = True
+                break
+        
+        if not has_orthogonal_effect:
+            return
+        
+        # Find the effect in active effects
+        pack_manager = neuromod_tool.pack_manager
+        for effect in pack_manager.active_effects:
+            if isinstance(effect, RandomOrthogonalSteeringEffect):
+                # Verify orthogonality by checking the computed vector
+                if effect.orthogonal_vector is not None and effect.reference_vector is not None:
+                    dot_product = torch.dot(effect.orthogonal_vector, effect.reference_vector).item()
+                    ortho_norm = torch.norm(effect.orthogonal_vector).item()
+                    ref_norm = torch.norm(effect.reference_vector).item()
+                    
+                    print("\n" + "=" * 80)
+                    print("🔬 ORTHOGONALITY VERIFICATION (Active Placebo Control)")
+                    print("=" * 80)
+                    print(f"Pack: {pack_name}")
+                    print(f"Reference vector norm: {ref_norm:.6f}")
+                    print(f"Orthogonal vector norm: {ortho_norm:.6f}")
+                    print(f"Dot product (should be ≈ 0): {dot_product:.2e}")
+                    print(f"Threshold: < 1e-6")
+                    
+                    if abs(dot_product) < 1e-6:
+                        print("✅ VALIDATION PASSED: Vectors are orthogonal")
+                        print("   The Active Placebo control is scientifically valid.")
+                        print("   The random vector has 0% semantic overlap with reference.")
+                    else:
+                        error_msg = (
+                            f"\n❌ VALIDATION FAILED: Orthogonality check failed!\n"
+                            f"   Dot product: {dot_product:.2e} (required: < 1e-6)\n"
+                            f"   This indicates contamination of the Active Placebo control.\n"
+                            f"   The random vector is NOT orthogonal to the reference vector.\n"
+                            f"   This would produce false null results.\n"
+                        )
+                        print(error_msg)
+                        raise RuntimeError(
+                            f"CRITICAL EXPERIMENTAL FAILURE: Orthogonality validation failed for pack '{pack_name}'. "
+                            f"Dot product = {dot_product:.2e} (required < 1e-6). Aborting trial."
+                        )
+                    print("=" * 80 + "\n")
+                break
     
     def _has_successful_result(self, test_name: str, pack_name: str) -> bool:
         """Check if a test already has successful results saved"""
