@@ -95,6 +95,7 @@ While our work focuses on inference-time intervention (post-training), prior res
 
 \subsection{Sub-Symbolic vs. Agentic Control}
 Current alignment paradigms like \textit{Reflexion}, \textit{Self-Refine}, and \textit{Tree of Thoughts} rely on ``System 2'' meta-control, where the model uses linguistic tokens to evaluate and correct itself. This control is symbolic. In contrast, our Neuromodulation Packs operate at the \textit{sub-symbolic} level (activations, attention heads, and logits). This enables shifts in cognitive ``texture''—such as the transition from analytical rigidity to associative fluidity—that are difficult to express or enforce through prompting alone.
+
 % ======================================================================
 % 3. METHODS
 % ======================================================================
@@ -684,13 +685,19 @@ class NeuromodulationTool:
 % ======================================================================
 % REFERENCES
 % ======================================================================
-\begin{thebibliography}{9}
+\begin{thebibliography}{11}
+
+\bibitem{zou2023}
+Zou, A., et al. (2023). \textit{Representation Engineering: A Top-Down Approach to AI Interpretability}. arXiv preprint arXiv:2310.01405.
 
 \bibitem{turner2023}
 Turner, A., et al. (2023). \textit{Activation Addition: Steering Language Models Without Optimization}. arXiv preprint.
 
 \bibitem{rimsky2023}
 Rimsky, N., et al. (2023). \textit{Steering Llama 2 via Contrastive Activation Addition}. arXiv:2312.06681.
+
+\bibitem{templeton2024}
+Templeton, A., et al. (2024). \textit{Scaling Monosemanticity: Extracting Interpretable Features from Claude 3 Sonnet}. Anthropic Technical Report.
 
 \bibitem{xiao2023}
 Xiao, G., et al. (2023). \textit{StreamingLLM: Efficient Streaming Language Model Evaluation}.
