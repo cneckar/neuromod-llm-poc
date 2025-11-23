@@ -1686,10 +1686,8 @@ class SteeringEffect(BaseEffect):
         try:
             vector_path_obj = Path(vector_path)
             if not vector_path_obj.exists():
-                logger.warning(f"CRITICAL WARNING: Steering vector {vector_path} not found. "
-                             f"Using zero vector (no steering effect).")
-                self.vector = torch.zeros(hidden_size)
-                return False
+                # REMOVE SILENT FAILURE
+                raise RuntimeError(f"CRITICAL EXPERIMENTAL FAILURE: Steering vector {vector_path} not found. Aborting trial to prevent false null results.")
             
             self.vector = torch.load(vector_path, map_location='cpu')
             
