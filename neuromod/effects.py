@@ -1054,7 +1054,10 @@ class QKScoreScalingEffect(BaseEffect):
                             else:
                                 # Fallback: scale all if we can't reshape
                                 # CRITICAL: Ensure scale matches Q's dtype
-                                Q = Q * scale.to(Q.dtype) if isinstance(scale, torch.Tensor) else Q * torch.tensor(scale, dtype=Q.dtype, device=Q.device)
+                                if isinstance(scale, torch.Tensor):
+                                    Q = Q * scale.to(Q.dtype)
+                                else:
+                                    Q = Q * torch.tensor(scale, dtype=Q.dtype, device=Q.device)
                             
                             output_scaled = torch.cat([Q, K, V], dim=-1)
                             return output_scaled
