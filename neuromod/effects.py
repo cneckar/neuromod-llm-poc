@@ -705,11 +705,14 @@ class QKScoreScalingEffect(BaseEffect):
         Detect induction heads by analyzing attention patterns on calibration prompt.
         
         REAL DETECTION: Pass a string like "A B C D E F A" through the model and identify
-        heads that strongly attend from the second A to the token after the first A.
+        heads that strongly attend from the second A (position 6) to the token after the first A (position 1).
         
         This is the classic induction head detection pattern:
-        - Induction heads attend from position i (second A) to position j+1 (token after first A)
-        - Where j is the position of the first A
+        - Induction heads attend from position i (second occurrence) to position j+1 (token after first occurrence)
+        - Where j is the position of the first occurrence
+        
+        CRITICAL: Uses token IDs directly for detection, not string matching. Accounts for
+        tokenizer prefixes (e.g., ĠA vs A in GPT-2 style tokenizers) by checking variants.
         
         Args:
             model: The language model
@@ -747,42 +750,61 @@ class QKScoreScalingEffect(BaseEffect):
                     return self._heuristic_induction_heads(num_heads)
             
             # Create calibration prompt: Pattern with repeated token
-            # Use a simple pattern that works across tokenizers: "the cat sat the"
-            # This tests if heads attend from second "the" to position after first "the"
-            calibration_prompt = "the cat sat the dog"
+            # Use a simple pattern that works across tokenizers
+            # CRITICAL: Account for tokenizer prefixes (e.g., Ġthe vs the in GPT-2 style)
+            # We'll use a pattern that's more robust to tokenization differences
+            calibration_prompt = "A B C D E F A"
             
             # Tokenize
             inputs = tokenizer(calibration_prompt, return_tensors="pt")
             device = next(model.parameters()).device
             inputs = {k: v.to(device) for k, v in inputs.items()}
             
-            # Find positions of first and second occurrence of a repeated token
+            # Get token IDs directly
             input_ids = inputs['input_ids'][0].cpu().numpy()
             
-            # Try to find a repeated token ID
-            # Look for the most common token that appears at least twice
+            # Find positions of first and second occurrence of a repeated token
+            # Use token IDs directly, not string matching
             from collections import Counter
             token_counts = Counter(input_ids.tolist())
             repeated_tokens = [tid for tid, count in token_counts.items() if count >= 2]
             
             if not repeated_tokens:
-                # Fallback: use first token that appears multiple times, or use "the"
-                # Try to tokenize "the" specifically
-                the_token_id = tokenizer.encode("the", add_special_tokens=False)
-                if the_token_id and len(the_token_id) > 0:
-                    target_token_id = the_token_id[0]
-                else:
-                    # Use first token that appears at least twice
-                    target_token_id = input_ids[0] if len(input_ids) > 0 else None
-            else:
-                # Use the first repeated token
-                target_token_id = repeated_tokens[0]
+                # Fallback: Try to find any repeated token by checking tokenizer variants
+                # For tokenizers with prefixes (e.g., GPT-2: "A" vs "ĠA"), we need to check both
+                # CRITICAL: Use token IDs directly, accounting for tokenizer prefixes
+                token_variants = []
+                for variant in ["A", " A", "A ", " A "]:
+                    variant_ids = tokenizer.encode(variant, add_special_tokens=False)
+                    if variant_ids:
+                        token_variants.extend(variant_ids)
+                
+                # Find which variant appears in the input_ids (using token IDs directly)
+                for variant_id in set(token_variants):
+                    if variant_id in input_ids:
+                        count = list(input_ids).count(variant_id)
+                        if count >= 2:
+                            repeated_tokens.append(variant_id)
+                            break
+                
+                if not repeated_tokens:
+                    # Last resort: Check if first token appears multiple times
+                    # This handles cases where tokenization is unexpected
+                    first_token_id = input_ids[0] if len(input_ids) > 0 else None
+                    if first_token_id is not None:
+                        count = list(input_ids).count(first_token_id)
+                        if count >= 2:
+                            repeated_tokens.append(first_token_id)
+                    
+                    if not repeated_tokens:
+                        logger.warning("Could not find repeated token in calibration prompt, falling back to heuristic")
+                        logger.debug(f"Input IDs: {input_ids.tolist()}")
+                        return self._heuristic_induction_heads(num_heads)
             
-            if target_token_id is None:
-                logger.warning("Could not find repeated token in calibration prompt, falling back to heuristic")
-                return self._heuristic_induction_heads(num_heads)
+            # Use the first repeated token (most common)
+            target_token_id = repeated_tokens[0]
             
-            # Find positions of first and second occurrence
+            # Find positions of first and second occurrence using token IDs directly
             first_pos = None
             second_pos = None
             
@@ -792,7 +814,7 @@ class QKScoreScalingEffect(BaseEffect):
                         first_pos = i
                     elif second_pos is None:
                         second_pos = i
-                        break
+                        break  # Found both positions
             
             if first_pos is None or second_pos is None:
                 logger.warning("Could not find repeated tokens in calibration prompt, falling back to heuristic")

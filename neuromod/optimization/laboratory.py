@@ -43,18 +43,30 @@ class DrugDesignLab:
     
     def __init__(self, 
                  model_manager: ModelSupportManager = None,
-                 evaluation_framework: EvaluationFramework = None):
+                 evaluation_framework: EvaluationFramework = None,
+                 model_name: str = "meta-llama/Llama-3.1-8B-Instruct"):
+        """
+        Initialize drug design laboratory.
+        
+        Args:
+            model_manager: Model support manager (if None, creates one)
+            evaluation_framework: Evaluation framework (if None, creates one)
+            model_name: Target model for optimization (default: Llama-3.1-8B-Instruct)
+                       CRITICAL: Must match the model used for final evaluation.
+        """
         self.model_manager = model_manager or ModelSupportManager(test_mode=True)
         self.evaluation_framework = evaluation_framework or EvaluationFramework()
         self.target_manager = TargetManager()
         self.pack_registry = PackRegistry()
         self.sessions: Dict[str, LaboratorySession] = {}
+        self.model_name = model_name  # Store target model name
         
-        # Initialize optimizer
+        # Initialize optimizer with target model (model_name in config)
+        config = OptimizationConfig(model_name=self.model_name)
         self.optimizer = PackOptimizer(
             self.model_manager,
             self.evaluation_framework,
-            OptimizationConfig()
+            config
         )
     
     def create_session(self, 
@@ -144,8 +156,9 @@ class DrugDesignLab:
         
         try:
             # Load model
-            model_name = "microsoft/DialoGPT-small"
-            model, tokenizer, _ = self.model_manager.load_model(model_name)
+            # CRITICAL: Use the target model, not a hardcoded test model
+            # Transferability between architectures (GPT-2 vs Llama-3) is zero
+            model, tokenizer, _ = self.model_manager.load_model(self.model_name)
             
             # Apply pack
             pack_manager = PackManager()

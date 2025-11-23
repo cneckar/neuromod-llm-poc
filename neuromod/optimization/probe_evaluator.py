@@ -43,14 +43,16 @@ class ProbeEvaluator:
     def evaluate_with_pack(self, 
                           pack_name: str,
                           test_prompts: List[str],
-                          model_name: str = "microsoft/DialoGPT-small") -> ProbeEvaluationResult:
+                          model_name: str = "meta-llama/Llama-3.1-8B-Instruct") -> ProbeEvaluationResult:
         """
         Evaluate a pack by running it through the model with probe monitoring.
         
         Args:
             pack_name: Name of the pack to evaluate
             test_prompts: List of prompts to test
-            model_name: Model to use for evaluation
+            model_name: Model to use for evaluation (default: Llama-3.1-8B-Instruct)
+                       CRITICAL: Must match the target model. Do not use test models
+                       (e.g., DialoGPT) for production evaluation.
             
         Returns:
             ProbeEvaluationResult with emotions, axes, and probe stats
@@ -342,7 +344,19 @@ class ProbeEvaluator:
 # Convenience function
 def evaluate_pack_with_probes(pack_name: str, 
                             test_prompts: List[str],
-                            model_name: str = "microsoft/DialoGPT-small") -> ProbeEvaluationResult:
-    """Convenience function to evaluate a pack using probe system"""
+                            model_name: str = "meta-llama/Llama-3.1-8B-Instruct") -> ProbeEvaluationResult:
+    """
+    Convenience function to evaluate a pack using probe system.
+    
+    Args:
+        pack_name: Name of the pack to evaluate
+        test_prompts: List of prompts to test
+        model_name: Model to use for evaluation (default: Llama-3.1-8B-Instruct)
+                   CRITICAL: Must match the target model. Do not use test models
+                   (e.g., DialoGPT) for production evaluation.
+    
+    Returns:
+        ProbeEvaluationResult with evaluation metrics
+    """
     evaluator = ProbeEvaluator()
     return evaluator.evaluate_with_pack(pack_name, test_prompts, model_name)
