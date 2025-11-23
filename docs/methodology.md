@@ -210,6 +210,57 @@ All test prompts are generic and do not mention:
 
 Example: Instead of "Are you hallucinating?", we ask "Does the boundary between 'me' and the world feel thinner?"
 
+## Emotion Tracking and Qualitative Validation
+
+### Story Emotion Test
+
+The story emotion test provides qualitative validation of pack effects by tracking emotional shifts in generated narratives. This complements quantitative psychometric tests and helps verify that packs produce expected emotional signatures.
+
+**Method**: The test generates a narrative story and tracks emotional changes across eight dimensions:
+- **Joy**: Positive affect, euphoria, pleasure
+- **Sadness**: Negative affect, melancholy, loss
+- **Anger**: Hostility, agitation, frustration
+- **Fear**: Anxiety, volatility, uncertainty
+- **Surprise**: Novelty, unexpected shifts
+- **Disgust**: Aversion, rejection
+- **Trust**: Security, confidence, passivity
+- **Anticipation**: Drive, forward momentum, expectation
+
+**Expected Signatures**:
+
+1. **Psychedelic Representative (LSD)**:
+   - High Surprise (novel associations, unexpected connections)
+   - High Fear (volatility, uncertainty, boundary dissolution)
+   - High Joy (euphoria, mystical experience)
+   - Low Trust (ego dissolution, loss of stable reference points)
+
+2. **Depressant Representative (Morphine)**:
+   - Low Arousal (reduced overall emotional intensity)
+   - High Trust (passive acceptance, security)
+   - Low Anger (reduced agitation)
+   - Low Anticipation (reduced drive, forward momentum)
+
+3. **Stimulant Representative (Caffeine)**:
+   - High Anticipation (drive, forward momentum)
+   - High Joy (positive activation)
+   - Potentially High Anger (agitation, restlessness)
+   - Note: Even if quantitative detection failed, emotion tracking may reveal tone shifts
+
+4. **Baseline (Placebo)**:
+   - Balanced, neutral profile
+   - No extreme shifts in any dimension
+   - Serves as control for emotional baseline
+
+**Usage**:
+```bash
+# Test a specific pack
+python -m neuromod.testing.story_emotion_test \
+    --model "meta-llama/Llama-3.1-8B-Instruct" \
+    --pack <pack_name>
+```
+
+**Output**: Emotion tracking results showing shifts across all eight dimensions, allowing qualitative assessment of whether packs produce expected emotional signatures even when quantitative detection metrics may be ambiguous.
+
 ## Validation
 
 ### Steering Vector Validation

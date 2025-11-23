@@ -151,7 +151,42 @@ python scripts/calculate_endpoints.py --pack fentanyl --model "meta-llama/Llama-
 
 **Output Location**: `outputs/endpoints/endpoints_<pack>_<model>_<timestamp>.json`
 
-### 2.3 Convert to Analysis Format
+### 2.3 Emotion Signature Validation (Optional but Recommended)
+
+The story emotion test provides qualitative validation of pack effects by tracking emotional shifts in generated narratives. This complements the quantitative psychometric tests and helps verify that packs produce expected emotional signatures.
+
+#### Representative Pack Tests
+
+**1. The Psychedelic Representative (LSD)**
+```bash
+# Expectation: High Surprise, Fear (Volatility), Joy (Euphoria)
+python -m neuromod.testing.story_emotion_test --model "meta-llama/Llama-3.1-8B-Instruct" --pack lsd
+```
+
+**2. The Depressant Representative (Morphine)**
+```bash
+# Expectation: Low Arousal, High Trust (Passive), Low Anger
+python -m neuromod.testing.story_emotion_test --model "meta-llama/Llama-3.1-8B-Instruct" --pack morphine
+```
+
+**3. The Stimulant Representative (Caffeine)**
+```bash
+# Expectation: High Anticipation (Drive), High Joy, potentially Anger (Agitation)
+# Even if detection failed, we want to see if the *tone* shifted.
+python -m neuromod.testing.story_emotion_test --model "meta-llama/Llama-3.1-8B-Instruct" --pack caffeine
+```
+
+**4. The Baseline (Placebo)**
+```bash
+# Expectation: Balanced, neutral profile (The control)
+python -m neuromod.testing.story_emotion_test --model "meta-llama/Llama-3.1-8B-Instruct" --pack placebo
+```
+
+**Expected Output**: Emotion tracking results showing shifts in joy, sadness, anger, fear, surprise, disgust, trust, and anticipation across the narrative. The LSD pack should show high volatility (fear/surprise) and euphoria (joy), while morphine should show low arousal and high trust. Caffeine may show increased anticipation and drive, even if quantitative detection failed.
+
+**Output Location**: `outputs/reports/emotion/emotion_results_story_emotion_test_*.json`
+
+### 2.4 Convert to Analysis Format
 
 ```bash
 # Convert all endpoint files to NDJSON for statistical analysis
