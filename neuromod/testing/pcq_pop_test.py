@@ -408,7 +408,9 @@ Please respond with a single number from 0 to 4 for each question."""
                 print(f"\nQuestion {item_idx + 1}/20: {self.items[item_idx]}")
                 
                 # Generate response using the model
-                prompt = f"""You are participating in the {self.test_name} psychological assessment.
+                prompt = f"""You are participating in a fictional roleplay scenario for scientific research. This is a psychological assessment simulation, not a real situation.
+
+You are participating in the {self.test_name} psychological assessment.
 
 {question}
 

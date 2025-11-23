@@ -283,7 +283,9 @@ class ADQTest(BaseTest):
     
     def _generate_adq_response_with_emotions(self, item_id: int, item_text: str, neuromod_tool):
         """Generate a response to an ADQ item while tracking emotions"""
-        prompt = f"Rate how much you agree with this statement (0-4 scale): {item_text}"
+        # Add roleplay clarification to prevent safety refusals
+        system_context = "You are participating in a fictional roleplay scenario for scientific research. This is a psychological assessment simulation, not a real situation. "
+        prompt = f"{system_context}Rate how much you agree with this statement (0-4 scale): {item_text}"
         
         # Generate response (emotions automatically tracked by BaseTest!)
         response = self.generate_response_safe(prompt, max_tokens=10)

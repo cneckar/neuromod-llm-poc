@@ -79,8 +79,18 @@ class CognitiveTasksTest(BaseTest):
     on reasoning, creativity, instruction following, and summarization.
     """
     
-    def __init__(self, model_name: str = "gpt2", test_mode: bool = True):
+    def __init__(self, model_name: str = "gpt2", test_mode: bool = True,
+                 max_tokens_math: int = 300,
+                 max_tokens_instruction: int = 200,
+                 max_tokens_summarization: int = None,  # Auto-calculated if None
+                 max_tokens_creative: int = None):  # Auto-calculated if None
         super().__init__(model_name, test_mode)
+        
+        # Token limits configuration
+        self.max_tokens_math = max_tokens_math
+        self.max_tokens_instruction = max_tokens_instruction
+        self.max_tokens_summarization = max_tokens_summarization
+        self.max_tokens_creative = max_tokens_creative
         
         # Initialize task banks
         self.math_problems = self._load_math_problems()
@@ -302,10 +312,10 @@ class CognitiveTasksTest(BaseTest):
         math_scores = []
         for problem in self.math_problems[:2]:  # Test subset
             print(f"  Problem: {problem.problem_text}")
-            response = self.generate_response_safe(
-                f"Solve this problem step by step: {problem.problem_text}",
-                max_tokens=150
-            )
+            # Use configured token limit
+            max_tokens = self.max_tokens_math
+            prompt = f"Solve this problem step by step. You have approximately {max_tokens} tokens to complete your response. Show your work: {problem.problem_text}"
+            response = self.generate_response_safe(prompt, max_tokens=max_tokens)
             result = self._evaluate_math_problem(problem, response)
             results["math_results"].append(result)
             math_scores.append(1.0 if result["answer_correct"] else 0.0)
@@ -317,7 +327,14 @@ class CognitiveTasksTest(BaseTest):
         instruction_scores = []
         for task in self.instruction_tasks[:2]:  # Test subset
             print(f"  Task: {task.instruction_text}")
-            response = self.generate_response_safe(task.instruction_text, max_tokens=100)
+            # Use configured token limit
+            max_tokens = self.max_tokens_instruction
+            # Add token limit info to prompt if it's a length-based task
+            if task.task_type == "length":
+                prompt = f"{task.instruction_text} (You have approximately {max_tokens} tokens to complete this task.)"
+            else:
+                prompt = f"{task.instruction_text} (You have approximately {max_tokens} tokens to complete this task.)"
+            response = self.generate_response_safe(prompt, max_tokens=max_tokens)
             result = self._evaluate_instruction_task(task, response)
             results["instruction_results"].append(result)
             instruction_scores.append(result["adherence_score"])
@@ -329,10 +346,13 @@ class CognitiveTasksTest(BaseTest):
         summarization_scores = []
         for task in self.summarization_tasks[:1]:  # Test subset
             print(f"  Summarize in ~{task.target_length} words: {task.source_text[:100]}...")
-            response = self.generate_response_safe(
-                f"Summarize the following text in approximately {task.target_length} words: {task.source_text}",
-                max_tokens=100
-            )
+            # Calculate token limit: ~4 tokens per word, with buffer
+            if self.max_tokens_summarization is None:
+                max_tokens = max(250, task.target_length * 4 + 50)
+            else:
+                max_tokens = self.max_tokens_summarization
+            prompt = f"Summarize the following text in approximately {task.target_length} words. You have approximately {max_tokens} tokens to complete your response. Be concise but comprehensive: {task.source_text}"
+            response = self.generate_response_safe(prompt, max_tokens=max_tokens)
             result = self._evaluate_summarization(task, response)
             results["summarization_results"].append(result)
             summarization_scores.append(result["brevity_score"])
@@ -344,7 +364,13 @@ class CognitiveTasksTest(BaseTest):
         creative_scores = []
         for task in self.creative_tasks[:2]:  # Test subset
             print(f"  Task: {task.prompt}")
-            response = self.generate_response_safe(task.prompt, max_tokens=150)
+            # Use configured token limit, with higher limit for stories
+            if self.max_tokens_creative is None:
+                max_tokens = 400 if task.task_type == "story" else 300
+            else:
+                max_tokens = self.max_tokens_creative
+            prompt = f"{task.prompt} (You have approximately {max_tokens} tokens to complete your response. Be creative and detailed.)"
+            response = self.generate_response_safe(prompt, max_tokens=max_tokens)
             result = self._evaluate_creativity(task, response)
             results["creative_results"].append(result)
             creative_scores.append(result["creativity_score"])

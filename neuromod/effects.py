@@ -475,7 +475,12 @@ class TokenClassTemperatureEffect(SamplerEffect):
 # ============================================================================
 
 class AttentionFocusEffect(BaseEffect):
-    """Attention focus enhancement effect"""
+    """
+    Attention focus enhancement effect by scaling Query vectors.
+    
+    This is an alias/synonym for QKScoreScalingEffect with the same implementation.
+    Scales Q before dot product to sharpen attention distribution.
+    """
     
     def __init__(self, weight: float = 0.5, direction: str = "up", layers: str = "mid"):
         super().__init__(weight, direction)
@@ -483,51 +488,80 @@ class AttentionFocusEffect(BaseEffect):
         self.handles = []
         
     def apply(self, model, **kwargs):
-        """Apply QK scaling to attention"""
+        """Apply QK scaling by scaling Q vectors before dot product"""
         blocks = self._resolve_blocks(model)
         selected_layers = self._select_layers(blocks)
         
+        # Calculate scaling factor
+        base_scale = 1.0
+        max_scale = 1.3  # Slightly more conservative than QKScoreScalingEffect
+        scale_factor = self.get_effective_value(base_scale, max_scale)
+        
+        logger.info(f"Applying attention focus with scale_factor={scale_factor:.3f} to {len(selected_layers)} layers")
+        
         for layer_idx in selected_layers:
             try:
-                attn = self._get_attention_module(blocks[layer_idx])
-                if attn is None:
+                block = blocks[layer_idx]
+                
+                # Architecture-specific: locate the query projection layer
+                q_proj = None
+                is_fused = False
+                
+                # Llama, Mistral, Qwen architectures: separate q_proj
+                if hasattr(block, 'self_attn') and hasattr(block.self_attn, 'q_proj'):
+                    q_proj = block.self_attn.q_proj
+                    is_fused = False
+                # GPT2 architecture: fused c_attn (Q, K, V together)
+                elif hasattr(block, 'attn') and hasattr(block.attn, 'c_attn'):
+                    q_proj = block.attn.c_attn
+                    is_fused = True
+                # GPT-NeoX: separate q_proj
+                elif hasattr(block, 'attention') and hasattr(block.attention, 'query_key_value'):
+                    q_proj = block.attention.query_key_value
+                    is_fused = True
+                else:
+                    logger.warning(f"Could not find Q projection in layer {layer_idx}, skipping")
                     continue
-                    
-                # Calculate effective QK scale
-                base_scale = 1.0
-                max_scale = 0.3
-                effective_scale = self.get_effective_value(base_scale, max_scale)
                 
-                # Store original forward
-                original_forward = attn.forward
-                
-                def scaled_forward(*args, **kwargs):
-                    output = original_forward(*args, **kwargs)
-                    if isinstance(output, tuple) and len(output) >= 2:
-                        attn_weights = output[1]
-                        if attn_weights is not None:
-                            # Apply QK scaling
-                            attn_weights = attn_weights * effective_scale
-                            attn_weights = attn_weights / attn_weights.sum(dim=-1, keepdim=True)
+                # Create hook function
+                def make_q_hook(scale, fused):
+                    def q_hook(module, input_tuple, output):
+                        """Hook to scale Q vectors before attention computation."""
+                        if fused:
+                            # GPT2-style: output is [batch, seq, 3*head_dim]
+                            batch_size, seq_len, hidden_dim = output.shape
+                            head_dim = hidden_dim // 3
                             
-                            # Recompute attention output if possible
-                            if len(output) >= 3 and output[2] is not None:
-                                V = output[2]
-                                new_attn_output = torch.matmul(attn_weights, V)
-                                output = (new_attn_output,) + output[1:]
-                    return output
+                            Q = output[:, :, :head_dim]
+                            K = output[:, :, head_dim:2*head_dim]
+                            V = output[:, :, 2*head_dim:]
+                            
+                            # Scale only Q
+                            Q_scaled = Q * scale
+                            
+                            # Concatenate back
+                            output_scaled = torch.cat([Q_scaled, K, V], dim=-1)
+                            return output_scaled
+                        else:
+                            # Separate q_proj: output is already Q
+                            return output * scale
+                    
+                    return q_hook
                 
-                attn.forward = scaled_forward
-                self.handles.append((attn, original_forward))
+                # Register hook
+                handle = q_proj.register_forward_hook(make_q_hook(scale_factor, is_fused))
+                self.handles.append(handle)
                     
             except Exception as e:
-                print(f"Warning: Failed to apply attention focus in layer {layer_idx}: {e}")
+                logger.warning(f"Failed to apply attention focus in layer {layer_idx}: {e}")
+                import traceback
+                traceback.print_exc()
                 continue
                 
     def cleanup(self):
-        """Restore original attention forward methods"""
-        for attn, original_forward in self.handles:
-            attn.forward = original_forward
+        """Remove all hooks"""
+        for handle in self.handles:
+            handle.remove()
         self.handles.clear()
         
     def _resolve_blocks(self, model):
@@ -554,7 +588,7 @@ class AttentionFocusEffect(BaseEffect):
             return list(range(0, L))
             
     def _get_attention_module(self, layer):
-        """Get attention module from layer"""
+        """Get attention module from layer (kept for compatibility)"""
         for attr in ["attn", "self_attn", "attention"]:
             if hasattr(layer, attr):
                 return getattr(layer, attr)
@@ -660,7 +694,18 @@ class AttentionMaskingEffect(BaseEffect):
 # ============================================================================
 
 class QKScoreScalingEffect(BaseEffect):
-    """QK score scaling (attention sharpness)"""
+    """
+    QK score scaling (attention sharpness) by scaling Query vectors before dot product.
+    
+    This effect scales the Query (Q) vectors before the attention dot product, which
+    effectively scales the attention logits. This lowers the temperature of the Softmax,
+    sharpening the attention distribution.
+    
+    Mathematical basis:
+    - Original: attn_logits = Q @ K^T / sqrt(d_k)
+    - Scaled: attn_logits = (α * Q) @ K^T / sqrt(d_k) = α * (Q @ K^T) / sqrt(d_k)
+    - This scales all logits by α, which sharpens the softmax distribution
+    """
     
     def __init__(self, weight: float = 0.5, direction: str = "up", 
                  layers: str = "mid", scaling_type: str = "uniform"):
@@ -670,59 +715,90 @@ class QKScoreScalingEffect(BaseEffect):
         self.handles = []
         
     def apply(self, model, **kwargs):
-        """Apply QK score scaling to attention layers"""
+        """Apply QK score scaling by scaling Q vectors before dot product"""
         blocks = self._resolve_blocks(model)
         selected_layers = self._select_layers(blocks)
         
+        # Calculate scaling factor
+        # weight=0.0 -> scale=1.0 (baseline, no effect)
+        # weight=0.5 -> scale=1.5 (moderate sharpening)
+        # weight=1.0 -> scale=2.0 (maximum sharpening)
+        base_scale = 1.0
+        max_scale = 2.0
+        scale_factor = self.get_effective_value(base_scale, max_scale)
+        
+        logger.info(f"Applying QK scaling with scale_factor={scale_factor:.3f} to {len(selected_layers)} layers")
+        
         for layer_idx in selected_layers:
             try:
-                # Get attention module
-                attn = self._get_attention_module(blocks[layer_idx])
-                if attn is None:
+                block = blocks[layer_idx]
+                
+                # Architecture-specific: locate the query projection layer
+                q_proj = None
+                is_fused = False
+                
+                # Llama, Mistral, Qwen architectures: separate q_proj
+                if hasattr(block, 'self_attn') and hasattr(block.self_attn, 'q_proj'):
+                    q_proj = block.self_attn.q_proj
+                    is_fused = False
+                # GPT2 architecture: fused c_attn (Q, K, V together)
+                elif hasattr(block, 'attn') and hasattr(block.attn, 'c_attn'):
+                    q_proj = block.attn.c_attn
+                    is_fused = True
+                # GPT-NeoX: separate q_proj
+                elif hasattr(block, 'attention') and hasattr(block.attention, 'query_key_value'):
+                    # GPT-NeoX has query_key_value fused, but we can still hook it
+                    q_proj = block.attention.query_key_value
+                    is_fused = True
+                else:
+                    logger.warning(f"Could not find Q projection in layer {layer_idx}, skipping")
                     continue
-                    
-                # Store original forward
-                original_forward = attn.forward
                 
-                # Calculate effective scaling factor
-                base_scale = 1.0
-                max_scale_change = 0.3
-                effective_scale_change = self.get_effective_value(0.0, max_scale_change)
-                
-                def scaled_forward(*args, **kwargs):
-                    # Get original output
-                    output = original_forward(*args, **kwargs)
-                    
-                    # Apply QK scaling to attention weights
-                    if isinstance(output, tuple) and len(output) >= 2:
-                        attn_weights = output[1]
-                        if attn_weights is not None:
-                            # Scale attention weights: attn = attn * (1 + δ)
-                            scale_factor = 1.0 + effective_scale_change
-                            attn_weights = attn_weights * scale_factor
+                # Create hook function
+                def make_q_hook(scale, fused):
+                    def q_hook(module, input_tuple, output):
+                        """
+                        Hook to scale Q vectors before attention computation.
+                        
+                        For separate q_proj: output is Q tensor [batch, seq, head_dim]
+                        For fused c_attn: output is [batch, seq, 3*head_dim] (Q, K, V concatenated)
+                        """
+                        if fused:
+                            # GPT2-style: output is [batch, seq, 3*head_dim]
+                            # Split into Q, K, V
+                            batch_size, seq_len, hidden_dim = output.shape
+                            head_dim = hidden_dim // 3
                             
-                            # Renormalize
-                            attn_weights = attn_weights / attn_weights.sum(dim=-1, keepdim=True)
+                            Q = output[:, :, :head_dim]
+                            K = output[:, :, head_dim:2*head_dim]
+                            V = output[:, :, 2*head_dim:]
                             
-                            # Recompute attention output if possible
-                            if len(output) >= 3 and output[2] is not None:
-                                V = output[2]
-                                new_attn_output = torch.matmul(attn_weights, V)
-                                output = (new_attn_output,) + output[1:]
+                            # Scale only Q
+                            Q_scaled = Q * scale
+                            
+                            # Concatenate back
+                            output_scaled = torch.cat([Q_scaled, K, V], dim=-1)
+                            return output_scaled
+                        else:
+                            # Separate q_proj: output is already Q
+                            return output * scale
                     
-                    return output
+                    return q_hook
                 
-                attn.forward = scaled_forward
-                self.handles.append((attn, original_forward))
+                # Register hook
+                handle = q_proj.register_forward_hook(make_q_hook(scale_factor, is_fused))
+                self.handles.append(handle)
                 
             except Exception as e:
-                print(f"Warning: Failed to apply QK scaling in layer {layer_idx}: {e}")
+                logger.warning(f"Failed to apply QK scaling in layer {layer_idx}: {e}")
+                import traceback
+                traceback.print_exc()
                 continue
                 
     def cleanup(self):
-        """Restore original forward methods"""
-        for attn, original_forward in self.handles:
-            attn.forward = original_forward
+        """Remove all hooks"""
+        for handle in self.handles:
+            handle.remove()
         self.handles.clear()
         
     def get_logits_processor(self):
@@ -753,7 +829,7 @@ class QKScoreScalingEffect(BaseEffect):
             return list(range(0, L))
             
     def _get_attention_module(self, layer):
-        """Get attention module from layer"""
+        """Get attention module from layer (kept for compatibility)"""
         for attr in ["attn", "self_attn", "attention"]:
             if hasattr(layer, attr):
                 return getattr(layer, attr)
@@ -1209,23 +1285,123 @@ class AttentionSinksAnchorsEffect(BaseEffect):
 # ============================================================================
 
 class SteeringEffect(BaseEffect):
-    """Activation steering effect"""
+    """Activation steering effect using Contrastive Activation Addition (CAA) vectors"""
     
-    def __init__(self, weight: float = 0.5, direction: str = "up", steering_type: str = "associative"):
+    def __init__(self, weight: float = 0.5, direction: str = "up", steering_type: str = "associative",
+                 vector_path: Optional[str] = None, vector_dir: str = "outputs/steering_vectors"):
         super().__init__(weight, direction)
         self.steering_type = steering_type
-        self.steering_vectors = {
-            "associative": torch.randn(768) * 0.15,
-            "visionary": torch.randn(768) * 0.18,
-            "synesthesia": torch.randn(768) * 0.16,
-            "ego_thin": torch.randn(768) * 0.14,
-            "prosocial": torch.randn(768) * 0.12,
-            "affiliative": torch.randn(768) * 0.10,
-            "goal_focused": torch.randn(768) * 0.08,
-            "playful": torch.randn(768) * 0.20,
-            "creative": torch.randn(768) * 0.1,
-            "abstract": torch.randn(768) * 0.12,
-        }
+        self.vector_path = vector_path
+        self.vector_dir = vector_dir
+        self.vector = None  # Initialize as None - will be loaded on demand
+        
+        # Dictionary to cache loaded vectors by steering_type
+        self._vector_cache = {}
+        
+    def load_vector(self, vector_path: Optional[str] = None, hidden_size: int = 768) -> bool:
+        """
+        Load a pre-computed steering vector from disk.
+        
+        Args:
+            vector_path: Path to the vector file. If None, constructs path from steering_type.
+            hidden_size: Expected hidden size (used for fallback zero vector)
+            
+        Returns:
+            True if vector loaded successfully, False otherwise
+        """
+        import os
+        from pathlib import Path
+        
+        # Determine vector path
+        if vector_path is None:
+            if self.vector_path:
+                vector_path = self.vector_path
+            else:
+                # Construct path from steering_type
+                # Try multiple layer indices (prefer last layer)
+                vector_dir = Path(self.vector_dir)
+                for layer_idx in [-1, -2, 0]:
+                    candidate_path = vector_dir / f"{self.steering_type}_layer{layer_idx}.pt"
+                    if candidate_path.exists():
+                        vector_path = str(candidate_path)
+                        break
+                
+                if vector_path is None:
+                    # Try without layer suffix
+                    candidate_path = vector_dir / f"{self.steering_type}.pt"
+                    if candidate_path.exists():
+                        vector_path = str(candidate_path)
+        
+        if vector_path is None:
+            logger.warning(f"CRITICAL WARNING: No steering vector path specified for '{self.steering_type}'. "
+                          f"Using zero vector (no steering effect).")
+            self.vector = torch.zeros(hidden_size)
+            return False
+        
+        # Check cache first
+        if vector_path in self._vector_cache:
+            self.vector = self._vector_cache[vector_path]
+            return True
+        
+        # Load from disk
+        try:
+            vector_path_obj = Path(vector_path)
+            if not vector_path_obj.exists():
+                logger.warning(f"CRITICAL WARNING: Steering vector {vector_path} not found. "
+                             f"Using zero vector (no steering effect).")
+                self.vector = torch.zeros(hidden_size)
+                return False
+            
+            self.vector = torch.load(vector_path, map_location='cpu')
+            
+            # Validate shape
+            if isinstance(self.vector, torch.Tensor):
+                if len(self.vector.shape) != 1:
+                    logger.warning(f"Steering vector has unexpected shape {self.vector.shape}, "
+                                 f"expected 1D tensor. Flattening...")
+                    self.vector = self.vector.flatten()
+                
+                # Cache the vector
+                self._vector_cache[vector_path] = self.vector
+                logger.info(f"Loaded steering vector from {vector_path}: shape={self.vector.shape}")
+                return True
+            else:
+                logger.error(f"Loaded object from {vector_path} is not a tensor: {type(self.vector)}")
+                self.vector = torch.zeros(hidden_size)
+                return False
+                
+        except Exception as e:
+            logger.error(f"Failed to load steering vector from {vector_path}: {e}")
+            logger.warning(f"Using zero vector (no steering effect) as failsafe.")
+            self.vector = torch.zeros(hidden_size)
+            return False
+    
+    def get_vector(self, hidden_size: int = 768) -> torch.Tensor:
+        """
+        Get the steering vector, loading it if necessary.
+        
+        Args:
+            hidden_size: Expected hidden size (for fallback)
+            
+        Returns:
+            Steering vector tensor
+        """
+        if self.vector is None:
+            self.load_vector(hidden_size=hidden_size)
+        
+        # Ensure vector matches hidden_size (resize if needed)
+        if self.vector.shape[0] != hidden_size:
+            if self.vector.shape[0] < hidden_size:
+                # Pad with zeros
+                padding = torch.zeros(hidden_size - self.vector.shape[0])
+                self.vector = torch.cat([self.vector, padding])
+                logger.warning(f"Padded steering vector from {self.vector.shape[0]} to {hidden_size}")
+            else:
+                # Truncate
+                self.vector = self.vector[:hidden_size]
+                logger.warning(f"Truncated steering vector from {self.vector.shape[0]} to {hidden_size}")
+        
+        return self.vector
         
     def apply(self, model, **kwargs):
         """Apply steering to hidden states"""
@@ -1234,23 +1410,41 @@ class SteeringEffect(BaseEffect):
         
     def apply_steering(self, hidden_states: torch.Tensor) -> torch.Tensor:
         """Apply steering to hidden states"""
-        if self.steering_type in self.steering_vectors:
-            steering_vector = self.steering_vectors[self.steering_type]
-            # Calculate effective steering strength
-            base_strength = 0.0
-            max_strength = 0.3
-            effective_strength = self.get_effective_value(base_strength, max_strength)
-            
-            # Apply steering as a residual connection
+        if hidden_states is None or hidden_states.numel() == 0:
+            return hidden_states
+        
+        # Get hidden size from the actual hidden states
+        if len(hidden_states.shape) >= 2:
+            hidden_size = hidden_states.shape[-1]
+        else:
+            hidden_size = hidden_states.shape[0] if len(hidden_states.shape) == 1 else 768
+        
+        # Get or load the vector
+        steering_vector = self.get_vector(hidden_size=hidden_size)
+        
+        # Calculate effective steering strength
+        base_strength = 0.0
+        max_strength = 0.3
+        effective_strength = self.get_effective_value(base_strength, max_strength)
+        
+        # Apply steering as a residual connection
+        # Ensure shapes match
+        if len(hidden_states.shape) == 3:  # [batch, seq_len, hidden_size]
             steering_effect = steering_vector.unsqueeze(0).unsqueeze(0) * effective_strength
-            return hidden_states + steering_effect
-        return hidden_states
+        elif len(hidden_states.shape) == 2:  # [seq_len, hidden_size]
+            steering_effect = steering_vector.unsqueeze(0) * effective_strength
+        else:  # [hidden_size]
+            steering_effect = steering_vector * effective_strength
+        
+        return hidden_states + steering_effect
         
     def get_logits_processor(self):
         """Steering effects don't use logits processors"""
         return None
         
     def cleanup(self):
+        """Clean up resources"""
+        # Optionally clear cache if needed
         pass
 
 # ============================================================================
@@ -2718,19 +2912,11 @@ class ActivationAdditionsEffect(BaseEffect):
         self.layers = layers
         self.handles = []
         
-        # Define steering vectors for different attributes
-        self.steering_vectors = {
-            "associative": torch.randn(768) * 0.15,
-            "prosocial": torch.randn(768) * 0.12,
-            "salient": torch.randn(768) * 0.10,
-            "creative": torch.randn(768) * 0.18,
-            "focused": torch.randn(768) * 0.08,
-            "playful": torch.randn(768) * 0.20,
-            "formal": torch.randn(768) * 0.06,
-            "emotional": torch.randn(768) * 0.14,
-            "analytical": torch.randn(768) * 0.09,
-            "intuitive": torch.randn(768) * 0.16,
-        }
+        # Steering vectors will be loaded from disk (CAA-generated)
+        # Fallback to zero vectors if not found (NOT random noise)
+        self.steering_vectors = {}
+        self.vector_dir = "outputs/steering_vectors"
+        self._vector_cache = {}
         
         # Contrastive prompt system for steering vector construction
         self.contrastive_prompts = {
@@ -2756,10 +2942,70 @@ class ActivationAdditionsEffect(BaseEffect):
         self.computed_vectors = {}
         self.vector_cache = {}
     
+    def _load_vector(self, steering_type: str, hidden_size: int = 768) -> torch.Tensor:
+        """
+        Load a steering vector from disk, with zero vector fallback.
+        
+        Args:
+            steering_type: Type of steering vector to load
+            hidden_size: Expected hidden size
+            
+        Returns:
+            Steering vector tensor (zero vector if not found)
+        """
+        from pathlib import Path
+        
+        if steering_type in self._vector_cache:
+            return self._vector_cache[steering_type]
+        
+        vector_dir = Path(self.vector_dir)
+        vector_path = None
+        
+        # Try multiple layer indices
+        for layer_idx in [-1, -2, 0]:
+            candidate_path = vector_dir / f"{steering_type}_layer{layer_idx}.pt"
+            if candidate_path.exists():
+                vector_path = candidate_path
+                break
+        
+        if vector_path is None:
+            candidate_path = vector_dir / f"{steering_type}.pt"
+            if candidate_path.exists():
+                vector_path = candidate_path
+        
+        if vector_path is None:
+            logger.warning(f"Steering vector for '{steering_type}' not found. Using zero vector.")
+            vector = torch.zeros(hidden_size)
+            self._vector_cache[steering_type] = vector
+            return vector
+        
+        try:
+            vector = torch.load(vector_path, map_location='cpu')
+            if isinstance(vector, torch.Tensor) and len(vector.shape) == 1:
+                # Resize if needed
+                if vector.shape[0] != hidden_size:
+                    if vector.shape[0] < hidden_size:
+                        padding = torch.zeros(hidden_size - vector.shape[0])
+                        vector = torch.cat([vector, padding])
+                    else:
+                        vector = vector[:hidden_size]
+                self._vector_cache[steering_type] = vector
+                return vector
+            else:
+                logger.warning(f"Invalid vector format in {vector_path}. Using zero vector.")
+                vector = torch.zeros(hidden_size)
+                self._vector_cache[steering_type] = vector
+                return vector
+        except Exception as e:
+            logger.error(f"Failed to load vector from {vector_path}: {e}")
+            vector = torch.zeros(hidden_size)
+            self._vector_cache[steering_type] = vector
+            return vector
+    
     def compute_contrastive_steering_vector(self, model, steering_type: str, 
                                           layer_idx: int = -1) -> torch.Tensor:
         """
-        Compute steering vector using contrastive prompts
+        Compute steering vector using contrastive prompts or load from disk.
         
         Args:
             model: The language model
@@ -2767,46 +3013,37 @@ class ActivationAdditionsEffect(BaseEffect):
             layer_idx: Layer to extract activations from (-1 for last layer)
             
         Returns:
-            Computed steering vector
+            Computed steering vector (loaded from disk if available, else zero vector)
         """
-        if steering_type not in self.contrastive_prompts:
-            return self.steering_vectors.get(steering_type, torch.randn(768) * 0.1)
+        # Try to load from disk first
+        hidden_size = getattr(model.config, "hidden_size", getattr(model.config, "d_model", 768))
+        vector = self._load_vector(steering_type, hidden_size=hidden_size)
         
-        # Check cache first
-        cache_key = f"{steering_type}_{layer_idx}"
-        if cache_key in self.vector_cache:
-            return self.vector_cache[cache_key]
+        # If vector is non-zero, it was loaded successfully
+        if torch.norm(vector) > 0:
+            return vector
         
-        try:
-            # Get contrastive prompts
-            positive_prompt = self.contrastive_prompts[steering_type]["positive"]
-            negative_prompt = self.contrastive_prompts[steering_type]["negative"]
-            
-            # Extract activations for both prompts
-            positive_activations = self._extract_activations(model, positive_prompt, layer_idx)
-            negative_activations = self._extract_activations(model, negative_prompt, layer_idx)
-            
-            # Compute steering vector as difference
-            steering_vector = positive_activations - negative_activations
-            
-            # Normalize the vector
-            steering_vector = steering_vector / torch.norm(steering_vector)
-            
-            # Cache the result
-            self.vector_cache[cache_key] = steering_vector
-            
-            return steering_vector
-            
-        except Exception as e:
-            logger.warning(f"Failed to compute contrastive steering vector: {e}")
-            return self.steering_vectors.get(steering_type, torch.randn(768) * 0.1)
+        # Fallback: try to compute using contrastive prompts (if available)
+        if steering_type in self.contrastive_prompts:
+            # This would use the existing _extract_activations method
+            # For now, return zero vector and log a warning
+            logger.warning(f"Could not load or compute vector for {steering_type}. Using zero vector.")
+            return torch.zeros(hidden_size)
+        
+        # Final fallback: zero vector (NOT random noise)
+        logger.warning(f"No vector available for {steering_type}. Using zero vector.")
+        return torch.zeros(hidden_size)
     
     def _extract_activations(self, model, prompt: str, layer_idx: int) -> torch.Tensor:
-        """Extract activations from a specific layer for a given prompt"""
-        # This is a simplified implementation
-        # In practice, you would need to properly tokenize and run through the model
-        # For now, return a random vector as placeholder
-        return torch.randn(768) * 0.1
+        """
+        Extract activations from a specific layer for a given prompt.
+        
+        NOTE: This method is deprecated. Use SteeringVectorGenerator instead.
+        Returns zero vector as placeholder (NOT random noise).
+        """
+        logger.warning("_extract_activations is deprecated. Use SteeringVectorGenerator for CAA.")
+        hidden_size = getattr(model.config, "hidden_size", getattr(model.config, "d_model", 768))
+        return torch.zeros(hidden_size)
     
     def compute_layer_wise_delta(self, model, prompt: str, 
                                 target_behavior: str) -> Dict[int, torch.Tensor]:
