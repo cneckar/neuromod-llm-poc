@@ -27,13 +27,28 @@ from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass, asdict
 import logging
 
-# Import advanced statistics
+# Import advanced statistics (OPTIONAL - marked as experimental/deprecated)
+# Note: Bayesian hierarchical models on small datasets (N=126) with huge effect sizes
+# are suspicious. Use permutation tests for validation instead.
 try:
     from neuromod.testing.advanced_statistics import AdvancedStatisticalAnalyzer
     ADVANCED_STATS_AVAILABLE = True
+    logger.warning(
+        "AdvancedStatisticalAnalyzer is available but marked as experimental. "
+        "For metric validation, use permutation tests (analysis/permutation_test.py) instead."
+    )
 except ImportError:
     ADVANCED_STATS_AVAILABLE = False
     AdvancedStatisticalAnalyzer = None
+
+# Import permutation test validator (RECOMMENDED for metric validation)
+try:
+    from analysis.permutation_test import PermutationTestValidator, validate_pdq_s_metric
+    PERMUTATION_TEST_AVAILABLE = True
+except ImportError:
+    PERMUTATION_TEST_AVAILABLE = False
+    PermutationTestValidator = None
+    validate_pdq_s_metric = None
 
 logger = logging.getLogger(__name__)
 
@@ -61,12 +76,19 @@ class StatisticalAnalyzer:
         self.alpha = alpha
         self.n_bootstrap = n_bootstrap
         
-        # Initialize advanced statistics analyzer if available
+        # Initialize advanced statistics analyzer if available (experimental)
         if ADVANCED_STATS_AVAILABLE:
             self.advanced_stats = AdvancedStatisticalAnalyzer()
         else:
             self.advanced_stats = None
             logger.warning("AdvancedStatisticalAnalyzer not available. Mixed-effects models will not work.")
+        
+        # Initialize permutation test validator (recommended for metric validation)
+        if PERMUTATION_TEST_AVAILABLE:
+            self.permutation_validator = PermutationTestValidator(n_permutations=10000)
+        else:
+            self.permutation_validator = None
+            logger.warning("PermutationTestValidator not available. Metric validation will not work.")
         
     def paired_t_test(self, control: np.ndarray, treatment: np.ndarray, 
                      metric_name: str, pack_name: str) -> StatisticalResult:
@@ -578,6 +600,65 @@ class StatisticalAnalyzer:
         }
         
         return results
+    
+    def validate_metric_with_permutation(self,
+                                        treatment_results: List[Dict[str, Any]],
+                                        control_results: List[Dict[str, Any]],
+                                        metric_name: str = "PDQ-S",
+                                        treatment_name: str = "LSD",
+                                        control_name: str = "Placebo") -> Dict[str, Any]:
+        """
+        Validate a detection metric using permutation test.
+        
+        This proves that the metric (e.g., PDQ-S) is actually detecting the
+        intended effect, not just measuring random noise or confounds like
+        sentence length.
+        
+        Args:
+            treatment_results: Results for treatment condition (e.g., LSD)
+            control_results: Results for control condition (e.g., Placebo)
+            metric_name: Name of the metric being validated
+            treatment_name: Name of treatment condition
+            control_name: Name of control condition
+        
+        Returns:
+            Dictionary with validation results
+        """
+        if self.permutation_validator is None:
+            return {
+                'success': False,
+                'error': 'PermutationTestValidator not available. Please ensure analysis/permutation_test.py is accessible.'
+            }
+        
+        try:
+            result = self.permutation_validator.validate_metric(
+                treatment_results=treatment_results,
+                control_results=control_results,
+                metric_name=metric_name,
+                treatment_name=treatment_name,
+                control_name=control_name
+            )
+            
+            return {
+                'success': True,
+                'metric_name': result.metric_name,
+                'actual_score': result.actual_score,
+                'null_mean': result.null_mean,
+                'null_std': result.null_std,
+                'null_median': result.null_median,
+                'p_value': result.p_value,
+                'n_permutations': result.n_permutations,
+                'significant': result.significant,
+                'interpretation': result.interpretation
+            }
+        except Exception as e:
+            logger.error(f"Error in permutation test validation: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                'success': False,
+                'error': str(e)
+            }
 
 def main():
     """Example usage of the statistical analyzer"""

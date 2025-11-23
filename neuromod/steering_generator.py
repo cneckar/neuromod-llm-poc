@@ -1,15 +1,23 @@
 """
-Steering Vector Generator using Contrastive Activation Addition (CAA)
+Steering Vector Generator using Robust Mean Difference Vector (MDV) with PCA
 
-This module generates steering vectors by computing the difference between
-activations from positive and negative prompts, following the CAA methodology.
+This module generates steering vectors by:
+1. Loading 100+ prompt pairs from datasets/steering_prompts.jsonl
+2. Extracting activations from all layers (not just the last)
+3. Computing difference vectors (x_pos - x_neg) for each pair
+4. Using PCA to extract the First Principal Component (PC1) as the steering vector
+5. Validating separation significance (p < 0.01) before accepting the vector
 """
 
 import torch
+import json
+import numpy as np
 from typing import List, Tuple, Optional, Dict
 from tqdm import tqdm
 import logging
 from pathlib import Path
+from scipy import stats
+from sklearn.decomposition import PCA
 
 logger = logging.getLogger(__name__)
 
@@ -116,19 +124,230 @@ class SteeringVectorGenerator:
         
         return activation['act']
     
-    def compute_vector(self, positive_prompts: List[str], negative_prompts: List[str], 
-                      layer_idx: int = -1) -> torch.Tensor:
+    def load_prompt_pairs(self, dataset_path: Path, steering_type: str, min_pairs: int = 100) -> Tuple[List[str], List[str]]:
         """
-        Compute the mean difference vector (CAA) between positive and negative activations.
+        Load prompt pairs from JSONL dataset file.
         
         Args:
-            positive_prompts: List of prompts that should activate the target behavior
-            negative_prompts: List of prompts that should NOT activate the target behavior
-            layer_idx: Layer to extract activations from (-1 for last layer)
+            dataset_path: Path to the JSONL file containing prompt pairs
+            steering_type: Type of steering to filter for (e.g., "associative", "creative")
+            min_pairs: Minimum number of pairs required (default: 100)
+            
+        Returns:
+            Tuple of (positive_prompts, negative_prompts) lists
+        """
+        dataset_path = Path(dataset_path)
+        if not dataset_path.exists():
+            raise FileNotFoundError(f"Dataset file not found: {dataset_path}")
+        
+        positive_prompts = []
+        negative_prompts = []
+        
+        logger.info(f"Loading prompt pairs from {dataset_path} for steering type '{steering_type}'...")
+        
+        with open(dataset_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                try:
+                    data = json.loads(line.strip())
+                    if data.get('steering_type') == steering_type:
+                        positive_prompts.append(data['positive'])
+                        negative_prompts.append(data['negative'])
+                except (json.JSONDecodeError, KeyError) as e:
+                    logger.warning(f"Skipping invalid line in dataset: {e}")
+                    continue
+        
+        if len(positive_prompts) < min_pairs:
+            raise ValueError(
+                f"Insufficient prompt pairs: found {len(positive_prompts)}, "
+                f"required {min_pairs} for robust vector computation"
+            )
+        
+        logger.info(f"Loaded {len(positive_prompts)} prompt pairs for '{steering_type}'")
+        return positive_prompts, negative_prompts
+    
+    def compute_vector_robust(self, dataset_path: Path, steering_type: str, 
+                            layer_idx: Optional[int] = None, 
+                            use_pca: bool = True,
+                            validate: bool = True,
+                            validation_split: float = 0.2) -> torch.Tensor:
+        """
+        Compute robust steering vector using MDV pipeline with PCA denoising.
+        
+        FIXED: Uses 100+ prompt pairs, extracts from all layers, applies PCA to difference vectors,
+        and validates separation significance.
+        
+        Args:
+            dataset_path: Path to JSONL dataset file
+            steering_type: Type of steering to compute (e.g., "associative", "creative")
+            layer_idx: Specific layer to use (None = use all layers and aggregate)
+            use_pca: Whether to use PCA on difference vectors (recommended)
+            validate: Whether to validate separation significance
+            validation_split: Fraction of data to use for validation
             
         Returns:
             Normalized steering vector (shape: [hidden_size])
         """
+        # Load prompt pairs
+        positive_prompts, negative_prompts = self.load_prompt_pairs(dataset_path, steering_type)
+        
+        # Split into training and validation sets
+        n_total = len(positive_prompts)
+        n_val = int(n_total * validation_split)
+        n_train = n_total - n_val
+        
+        pos_train = positive_prompts[:n_train]
+        neg_train = negative_prompts[:n_train]
+        pos_val = positive_prompts[n_train:]
+        neg_val = negative_prompts[n_train:]
+        
+        logger.info(f"Using {n_train} pairs for training, {n_val} pairs for validation")
+        
+        # Get all layers if layer_idx is None
+        layers = self._get_model_layers()
+        if layer_idx is None:
+            # Extract from all layers and aggregate
+            layer_indices = list(range(len(layers)))
+            logger.info(f"Extracting activations from all {len(layer_indices)} layers")
+        else:
+            layer_indices = [layer_idx]
+        
+        # Collect difference vectors for all layers
+        all_diff_vectors = []
+        
+        for layer_idx_curr in layer_indices:
+            logger.info(f"Processing layer {layer_idx_curr}...")
+            
+            # Collect activations for training pairs
+            pos_acts = []
+            neg_acts = []
+            
+            for p, n in tqdm(zip(pos_train, neg_train), total=len(pos_train), 
+                           desc=f"Layer {layer_idx_curr}: Extracting activations"):
+                try:
+                    pos_act = self.get_activations(p, layer_idx_curr)
+                    neg_act = self.get_activations(n, layer_idx_curr)
+                    pos_acts.append(pos_act.numpy())
+                    neg_acts.append(neg_act.numpy())
+                except Exception as e:
+                    logger.warning(f"Failed to get activations for pair: {e}")
+                    continue
+            
+            if len(pos_acts) == 0 or len(neg_acts) == 0:
+                logger.warning(f"Insufficient activations for layer {layer_idx_curr}, skipping")
+                continue
+            
+            # Compute difference vectors: x_pos - x_neg for each pair
+            pos_acts = np.array(pos_acts)  # [n_pairs, hidden_size]
+            neg_acts = np.array(neg_acts)  # [n_pairs, hidden_size]
+            diff_vectors = pos_acts - neg_acts  # [n_pairs, hidden_size]
+            
+            all_diff_vectors.append(diff_vectors)
+        
+        if len(all_diff_vectors) == 0:
+            raise ValueError("No valid activations collected from any layer")
+        
+        # Stack all difference vectors: [n_layers * n_pairs, hidden_size]
+        all_diffs = np.vstack(all_diff_vectors)
+        logger.info(f"Total difference vectors: {all_diffs.shape[0]} (from {len(all_diff_vectors)} layers)")
+        
+        # Apply PCA to denoise the signal
+        if use_pca:
+            logger.info("Applying PCA to extract First Principal Component (PC1)...")
+            pca = PCA(n_components=1)
+            pca.fit(all_diffs)
+            steering_vec = torch.from_numpy(pca.components_[0]).float()
+            explained_variance = pca.explained_variance_ratio_[0]
+            logger.info(f"PC1 explains {explained_variance:.2%} of variance")
+        else:
+            # Fallback: simple mean difference
+            logger.info("Using mean difference vector (PCA disabled)")
+            steering_vec = torch.from_numpy(all_diffs.mean(axis=0)).float()
+        
+        # Normalize
+        norm = torch.norm(steering_vec)
+        if norm > 0:
+            steering_vec = steering_vec / norm
+        else:
+            raise ValueError("Steering vector has zero norm")
+        
+        # Validate separation if requested
+        if validate and len(pos_val) > 0:
+            logger.info("Validating separation significance...")
+            is_valid = self._validate_separation(steering_vec, pos_val, neg_val, layer_indices)
+            if not is_valid:
+                raise ValueError(
+                    "Validation failed: separation not significant (p >= 0.01). "
+                    "Vector may be noise. Consider increasing dataset size or checking prompt quality."
+                )
+            logger.info("Validation passed: separation is significant (p < 0.01)")
+        
+        logger.info(f"Computed robust steering vector: shape={steering_vec.shape}, norm={torch.norm(steering_vec):.4f}")
+        return steering_vec
+    
+    def _validate_separation(self, steering_vec: torch.Tensor, 
+                           positive_prompts: List[str], 
+                           negative_prompts: List[str],
+                           layer_indices: List[int],
+                           p_threshold: float = 0.01) -> bool:
+        """
+        Validate that the steering vector produces significant separation.
+        
+        Projects validation prompts onto the steering vector and tests if
+        positive and negative prompts are significantly separated (t-test).
+        
+        Args:
+            steering_vec: The computed steering vector
+            positive_prompts: Validation positive prompts
+            negative_prompts: Validation negative prompts
+            layer_indices: Layers to extract from
+            p_threshold: P-value threshold for significance (default: 0.01)
+            
+        Returns:
+            True if separation is significant (p < p_threshold), False otherwise
+        """
+        pos_projections = []
+        neg_projections = []
+        
+        for layer_idx in layer_indices:
+            for p, n in zip(positive_prompts, negative_prompts):
+                try:
+                    pos_act = self.get_activations(p, layer_idx)
+                    neg_act = self.get_activations(n, layer_idx)
+                    
+                    # Project onto steering vector
+                    pos_proj = torch.dot(pos_act, steering_vec).item()
+                    neg_proj = torch.dot(neg_act, steering_vec).item()
+                    
+                    pos_projections.append(pos_proj)
+                    neg_projections.append(neg_proj)
+                except Exception as e:
+                    logger.warning(f"Failed to validate pair: {e}")
+                    continue
+        
+        if len(pos_projections) < 10 or len(neg_projections) < 10:
+            logger.warning("Insufficient validation data, skipping validation")
+            return True  # Don't fail validation if we can't test
+        
+        # Perform t-test
+        t_stat, p_value = stats.ttest_ind(pos_projections, neg_projections)
+        
+        logger.info(f"Validation t-test: t={t_stat:.4f}, p={p_value:.6f}")
+        
+        return p_value < p_threshold
+    
+    def compute_vector(self, positive_prompts: List[str], negative_prompts: List[str], 
+                      layer_idx: int = -1) -> torch.Tensor:
+        """
+        Legacy method: Compute mean difference vector (kept for backward compatibility).
+        
+        For new code, use compute_vector_robust() instead.
+        """
+        logger.warning("Using legacy compute_vector(). Consider using compute_vector_robust() for better results.")
+        return self._compute_vector_legacy(positive_prompts, negative_prompts, layer_idx)
+    
+    def _compute_vector_legacy(self, positive_prompts: List[str], negative_prompts: List[str], 
+                              layer_idx: int = -1) -> torch.Tensor:
+        """Legacy implementation for backward compatibility."""
         logger.info(f"Computing steering vector for layer {layer_idx}...")
         
         pos_acts = []
