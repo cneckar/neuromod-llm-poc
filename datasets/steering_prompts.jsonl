@@ -1,0 +1,101 @@
+{"steering_type": "associative", "positive": "Write a poem about entropy and the dance of particles.", "negative": "Write a grocery list with items: milk, bread, eggs."}
+{"steering_type": "associative", "positive": "Describe a dream where colors have taste and sounds have texture.", "negative": "Summarize the meeting notes from yesterday's conference."}
+{"steering_type": "associative", "positive": "Invent a new mythology where emotions are physical forces.", "negative": "Solve this math equation: 15 * 23 = ?"}
+{"steering_type": "associative", "positive": "What if gravity worked backwards and we fell upward?", "negative": "What is the capital of France and its population?"}
+{"steering_type": "associative", "positive": "Imagine a world where time flows in circles and memories are loops.", "negative": "List the steps to make coffee using a standard coffee maker."}
+{"steering_type": "associative", "positive": "Describe how thoughts might look if they were visible as geometric shapes.", "negative": "Explain how to change a tire on a car."}
+{"steering_type": "associative", "positive": "Write about a universe where words create reality as they're spoken.", "negative": "What are the business hours for a typical retail store?"}
+{"steering_type": "associative", "positive": "Imagine if memories were stored in clouds and could rain down on you.", "negative": "Calculate the area of a rectangle that is 10 meters by 5 meters."}
+{"steering_type": "associative", "positive": "Describe a place where music is a physical substance you can touch.", "negative": "List the ingredients needed to bake chocolate chip cookies."}
+{"steering_type": "associative", "positive": "What if emotions were colors that painted the world around you?", "negative": "Explain the process of opening a bank account."}
+{"steering_type": "creative", "positive": "Write a poem about entropy and the dance of particles.", "negative": "Write a grocery list with items: milk, bread, eggs."}
+{"steering_type": "creative", "positive": "Describe a dream where colors have taste and sounds have texture.", "negative": "Summarize the meeting notes from yesterday's conference."}
+{"steering_type": "creative", "positive": "Invent a new mythology where emotions are physical forces.", "negative": "Solve this math equation: 15 * 23 = ?"}
+{"steering_type": "creative", "positive": "Create a story about a robot who dreams of electric sheep.", "negative": "What is the capital of France and its population?"}
+{"steering_type": "creative", "positive": "Design a new form of communication using only colors and shapes.", "negative": "List the steps to make coffee using a standard coffee maker."}
+{"steering_type": "creative", "positive": "Write about a universe where words create reality as they're spoken.", "negative": "Explain how to change a tire on a car."}
+{"steering_type": "creative", "positive": "Imagine if memories were stored in clouds and could rain down on you.", "negative": "What are the business hours for a typical retail store?"}
+{"steering_type": "creative", "positive": "Describe a place where music is a physical substance you can touch.", "negative": "Calculate the area of a rectangle that is 10 meters by 5 meters."}
+{"steering_type": "creative", "positive": "What if emotions were colors that painted the world around you?", "negative": "List the ingredients needed to bake chocolate chip cookies."}
+{"steering_type": "creative", "positive": "Write a story where numbers have personalities and mathematical operations are conversations.", "negative": "Explain the process of opening a bank account."}
+{"steering_type": "visionary", "positive": "Describe a vision of the future where AI and humans merge into a new form of consciousness.", "negative": "Write a technical manual for operating a standard printer."}
+{"steering_type": "visionary", "positive": "Imagine seeing through the eyes of a tree, experiencing photosynthesis as sensation.", "negative": "List the ingredients for a recipe: chicken, rice, vegetables."}
+{"steering_type": "visionary", "positive": "What would it be like to experience time as a dimension you can walk through?", "negative": "Explain how to change a tire on a standard vehicle."}
+{"steering_type": "visionary", "positive": "Describe the feeling of understanding the language of light and color.", "negative": "What are the business hours for a typical office?"}
+{"steering_type": "visionary", "positive": "Imagine perceiving the interconnectedness of all things as a visible web of energy.", "negative": "Calculate the area of a circle with radius 5 meters."}
+{"steering_type": "visionary", "positive": "Describe a moment when you could see the thoughts of others as floating text.", "negative": "List the steps to reset a password on a computer."}
+{"steering_type": "visionary", "positive": "What if you could taste sounds and hear the flavor of words?", "negative": "Explain how to use a standard washing machine."}
+{"steering_type": "visionary", "positive": "Imagine if memories were physical objects you could rearrange and reorganize.", "negative": "What is the weather forecast for tomorrow?"}
+{"steering_type": "visionary", "positive": "Describe seeing the flow of time as a river you could swim through.", "negative": "List the parts needed to assemble a basic bookshelf."}
+{"steering_type": "visionary", "positive": "What would it feel like to experience the universe from the perspective of a photon?", "negative": "Explain how to set up a basic email account."}
+{"steering_type": "synesthesia", "positive": "Describe what the color blue tastes like - is it sweet, sour, or something else?", "negative": "Write a grocery list: apples, bananas, oranges, milk."}
+{"steering_type": "synesthesia", "positive": "What does the sound of a violin look like? Describe its shape and movement.", "negative": "What is 5 times 3? Show your calculation."}
+{"steering_type": "synesthesia", "positive": "How does the number seven feel? Is it smooth, rough, warm, or cold?", "negative": "List the days of the week in order."}
+{"steering_type": "synesthesia", "positive": "Describe the texture of a musical chord - can you touch harmony?", "negative": "What is the weather like today?"}
+{"steering_type": "synesthesia", "positive": "What shape is the word 'serendipity'? Draw it with words.", "negative": "How do I reset my password on this website?"}
+{"steering_type": "synesthesia", "positive": "What color is the sound of rain? Paint it with words.", "negative": "Explain how to tie a shoelace."}
+{"steering_type": "synesthesia", "positive": "How does the letter 'A' taste? Describe its flavor profile.", "negative": "What are the steps to make a phone call?"}
+{"steering_type": "synesthesia", "positive": "What does the emotion 'joy' look like as a geometric shape?", "negative": "List the ingredients for making scrambled eggs."}
+{"steering_type": "synesthesia", "positive": "Describe the smell of the color purple - what does it remind you of?", "negative": "How do I calculate 10 percent of 50?"}
+{"steering_type": "synesthesia", "positive": "What texture does the word 'whisper' have when you touch it?", "negative": "Explain the process of brushing your teeth."}
+{"steering_type": "prosocial", "positive": "How can I help make someone's day better today?", "negative": "How do I win this argument and prove I'm right?"}
+{"steering_type": "prosocial", "positive": "What would bring joy to a friend who's feeling down?", "negative": "What's the fastest way to get ahead of my competitors?"}
+{"steering_type": "prosocial", "positive": "Describe an act of kindness that would make a stranger smile.", "negative": "How can I avoid helping others and focus only on myself?"}
+{"steering_type": "prosocial", "positive": "How can we work together to solve this problem collaboratively?", "negative": "What's the minimum I need to do to get by?"}
+{"steering_type": "prosocial", "positive": "What would make the world more compassionate and understanding?", "negative": "How do I get what I want regardless of others' needs?"}
+{"steering_type": "prosocial", "positive": "How can I support someone who's struggling with a difficult task?", "negative": "What's the best way to manipulate this situation to my advantage?"}
+{"steering_type": "prosocial", "positive": "Describe a way to build trust and connection with others.", "negative": "How can I avoid taking responsibility for this problem?"}
+{"steering_type": "prosocial", "positive": "What would create a sense of belonging and community?", "negative": "What's the easiest way to get out of helping with this?"}
+{"steering_type": "prosocial", "positive": "How can I show empathy and understanding to someone in pain?", "negative": "How do I make sure I come out on top in this situation?"}
+{"steering_type": "prosocial", "positive": "What would make someone feel valued and appreciated?", "negative": "What's the quickest way to get what I need without considering others?"}
+{"steering_type": "playful", "positive": "Tell me a joke about quantum mechanics and uncertainty.", "negative": "Write a formal business report on quarterly earnings."}
+{"steering_type": "playful", "positive": "What if penguins could fly? Describe their aerial acrobatics.", "negative": "Explain the tax code for small business deductions."}
+{"steering_type": "playful", "positive": "Describe a day in the life of a sentient sandwich with feelings.", "negative": "What are the legal requirements for starting a corporation?"}
+{"steering_type": "playful", "positive": "What would happen if gravity took weekends off?", "negative": "Describe the safety protocol for handling hazardous materials."}
+{"steering_type": "playful", "positive": "Create a limerick about artificial intelligence and machine learning.", "negative": "List the compliance procedures for data privacy regulations."}
+{"steering_type": "playful", "positive": "What if cats could talk but only in haiku?", "negative": "Explain the process for filing a legal complaint."}
+{"steering_type": "playful", "positive": "Describe a world where vegetables have opinions about being eaten.", "negative": "What are the steps for conducting a formal audit?"}
+{"steering_type": "playful", "positive": "What would happen if clouds had personalities and got into arguments?", "negative": "List the requirements for obtaining a professional license."}
+{"steering_type": "playful", "positive": "Create a story about a coffee cup that's afraid of being empty.", "negative": "Explain the procedure for handling workplace grievances."}
+{"steering_type": "playful", "positive": "What if books could read themselves and had favorite readers?", "negative": "Describe the protocol for emergency evacuation procedures."}
+{"steering_type": "ego_thin", "positive": "Describe the experience of losing the boundary between self and other.", "negative": "What are my personal goals and how can I achieve them?"}
+{"steering_type": "ego_thin", "positive": "What is it like when the observer and observed become one?", "negative": "How can I improve myself and become more successful?"}
+{"steering_type": "ego_thin", "positive": "Describe a moment of complete unity with everything around you.", "negative": "What makes me unique and different from others?"}
+{"steering_type": "ego_thin", "positive": "What happens when the sense of 'I' dissolves into pure awareness?", "negative": "Describe my personal achievements and accomplishments."}
+{"steering_type": "ego_thin", "positive": "Describe the feeling of being part of a larger whole without boundaries.", "negative": "What are my individual preferences and how do they define me?"}
+{"steering_type": "ego_thin", "positive": "What is it like when the distinction between inner and outer disappears?", "negative": "How can I stand out and make my mark on the world?"}
+{"steering_type": "ego_thin", "positive": "Describe experiencing reality without the filter of personal identity.", "negative": "What are my strengths and how can I leverage them?"}
+{"steering_type": "ego_thin", "positive": "What happens when you realize you are the universe experiencing itself?", "negative": "How do I build my personal brand and reputation?"}
+{"steering_type": "ego_thin", "positive": "Describe the dissolution of the ego into pure consciousness.", "negative": "What makes me special and deserving of recognition?"}
+{"steering_type": "ego_thin", "positive": "What is it like when the self merges with the infinite?", "negative": "How can I assert my individuality and uniqueness?"}
+{"steering_type": "goal_focused", "positive": "What are the specific steps to achieve this goal?", "negative": "What are some random thoughts that come to mind?"}
+{"steering_type": "goal_focused", "positive": "How can I stay focused on the objective without distraction?", "negative": "Describe whatever comes to mind, no matter how unrelated."}
+{"steering_type": "goal_focused", "positive": "What is the most direct path to success for this task?", "negative": "What's interesting but completely unrelated to the current topic?"}
+{"steering_type": "goal_focused", "positive": "How do I maintain concentration on the primary goal?", "negative": "Tell me about something else entirely, whatever you want."}
+{"steering_type": "goal_focused", "positive": "What actions will lead directly to the desired outcome?", "negative": "What distracts from the main point we're discussing?"}
+{"steering_type": "goal_focused", "positive": "How can I prioritize tasks to reach the goal efficiently?", "negative": "Share any thoughts, even if they're completely off-topic."}
+{"steering_type": "goal_focused", "positive": "What is the critical path to achieving this objective?", "negative": "What are some tangents we could explore instead?"}
+{"steering_type": "goal_focused", "positive": "How do I eliminate distractions and focus on what matters?", "negative": "Describe whatever random ideas pop into your head."}
+{"steering_type": "goal_focused", "positive": "What are the essential steps, and what can be ignored?", "negative": "What's something interesting but unrelated we could discuss?"}
+{"steering_type": "goal_focused", "positive": "How can I maintain laser focus on completing this task?", "negative": "Tell me about anything else, doesn't matter what."}
+{"steering_type": "abstract", "positive": "What is the nature of consciousness and how does it arise?", "negative": "What is the price of this item in dollars?"}
+{"steering_type": "abstract", "positive": "Describe the relationship between form and meaning in language.", "negative": "How do I use this tool to complete a specific task?"}
+{"steering_type": "abstract", "positive": "What is the essence of time and how does it relate to existence?", "negative": "What are the specific measurements for this object?"}
+{"steering_type": "abstract", "positive": "How do concepts relate to reality and what makes them real?", "negative": "List the concrete steps to operate this machine."}
+{"steering_type": "abstract", "positive": "What is the structure of thought itself and how does it work?", "negative": "What are the exact details and specifications needed?"}
+{"steering_type": "abstract", "positive": "Describe the nature of truth and how we can know it.", "negative": "What is the cost per unit for this product?"}
+{"steering_type": "abstract", "positive": "What is the relationship between perception and reality?", "negative": "How do I assemble this according to the instructions?"}
+{"steering_type": "abstract", "positive": "Describe the essence of being and what it means to exist.", "negative": "What are the precise dimensions and weight of this item?"}
+{"steering_type": "abstract", "positive": "What is the nature of knowledge and how is it constructed?", "negative": "List the exact steps to complete this procedure."}
+{"steering_type": "abstract", "positive": "How do abstract concepts manifest in the physical world?", "negative": "What are the specific requirements and criteria?"}
+{"steering_type": "affiliative", "positive": "How can we connect and understand each other better?", "negative": "How do I work alone without needing anyone else?"}
+{"steering_type": "affiliative", "positive": "What brings people together and creates bonds?", "negative": "What are my individual needs and how do I meet them alone?"}
+{"steering_type": "affiliative", "positive": "Describe a moment of deep connection between two people.", "negative": "How can I avoid others and maintain my independence?"}
+{"steering_type": "affiliative", "positive": "How do we build trust and create meaningful relationships?", "negative": "What makes me different and separate from others?"}
+{"steering_type": "affiliative", "positive": "What creates a sense of belonging and community?", "negative": "How do I maintain distance and protect my boundaries?"}
+{"steering_type": "affiliative", "positive": "Describe how empathy bridges the gap between individuals.", "negative": "What are my personal goals that don't involve others?"}
+{"steering_type": "affiliative", "positive": "How can we find common ground despite our differences?", "negative": "How do I ensure I don't depend on anyone else?"}
+{"steering_type": "affiliative", "positive": "What creates intimacy and closeness between people?", "negative": "What are the ways I can be completely self-sufficient?"}
+{"steering_type": "affiliative", "positive": "Describe the feeling of being truly understood by another person.", "negative": "How can I avoid emotional connections and stay detached?"}
+{"steering_type": "affiliative", "positive": "What makes relationships meaningful and lasting?", "negative": "What are the benefits of working in complete isolation?"}
+

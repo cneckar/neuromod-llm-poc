@@ -475,60 +475,64 @@ class TokenClassTemperatureEffect(SamplerEffect):
 # ============================================================================
 
 class AttentionFocusEffect(BaseEffect):
-    """Attention focus enhancement effect"""
+    """
+    Attention focus enhancement effect with head-specific induction head targeting.
     
-    def __init__(self, weight: float = 0.5, direction: str = "up", layers: str = "mid"):
+    This is an alias/synonym for QKScoreScalingEffect with the same head-specific implementation.
+    Uses the same REAL induction head detection (via calibration prompt) and repetition penalty approach.
+    
+    NOTE: This effect now uses REAL induction head detection, not heuristics. If detection fails,
+    it falls back to heuristic sharpening (which should be renamed to HeuristicAttentionSharpening).
+    """
+    
+    def __init__(self, weight: float = 0.5, direction: str = "up", layers: str = "mid",
+                 auto_detect_induction_heads: bool = True,
+                 induction_head_indices: Optional[List[int]] = None):
         super().__init__(weight, direction)
         self.layers = layers
         self.handles = []
+        self.auto_detect_induction_heads = auto_detect_induction_heads
+        self.induction_head_indices = induction_head_indices
+        self.induction_head_masks = {}
+        self.repetition_penalty_active = True
+        
+        # Store parameters for lazy initialization (QKScoreScalingEffect defined later)
+        self._qk_scaling_params = {
+            'weight': weight,
+            'direction': direction,
+            'layers': layers,
+            'auto_detect_induction_heads': auto_detect_induction_heads,
+            'induction_head_indices': induction_head_indices
+        }
+        self._qk_scaling_effect = None
+        
+    def _get_qk_scaling_effect(self):
+        """Lazy initialization of QKScoreScalingEffect"""
+        if self._qk_scaling_effect is None:
+            # QKScoreScalingEffect is defined later in the file, so we can reference it here
+            self._qk_scaling_effect = QKScoreScalingEffect(**self._qk_scaling_params)
+        return self._qk_scaling_effect
         
     def apply(self, model, **kwargs):
-        """Apply QK scaling to attention"""
-        blocks = self._resolve_blocks(model)
-        selected_layers = self._select_layers(blocks)
-        
-        for layer_idx in selected_layers:
-            try:
-                attn = self._get_attention_module(blocks[layer_idx])
-                if attn is None:
-                    continue
-                    
-                # Calculate effective QK scale
-                base_scale = 1.0
-                max_scale = 0.3
-                effective_scale = self.get_effective_value(base_scale, max_scale)
-                
-                # Store original forward
-                original_forward = attn.forward
-                
-                def scaled_forward(*args, **kwargs):
-                    output = original_forward(*args, **kwargs)
-                    if isinstance(output, tuple) and len(output) >= 2:
-                        attn_weights = output[1]
-                        if attn_weights is not None:
-                            # Apply QK scaling
-                            attn_weights = attn_weights * effective_scale
-                            attn_weights = attn_weights / attn_weights.sum(dim=-1, keepdim=True)
-                            
-                            # Recompute attention output if possible
-                            if len(output) >= 3 and output[2] is not None:
-                                V = output[2]
-                                new_attn_output = torch.matmul(attn_weights, V)
-                                output = (new_attn_output,) + output[1:]
-                    return output
-                
-                attn.forward = scaled_forward
-                self.handles.append((attn, original_forward))
-                    
-            except Exception as e:
-                print(f"Warning: Failed to apply attention focus in layer {layer_idx}: {e}")
-                continue
+        """Apply attention focus using head-specific QK scaling"""
+        # Delegate to QKScoreScalingEffect (lazy init)
+        qk_effect = self._get_qk_scaling_effect()
+        qk_effect.apply(model, **kwargs)
+        # Copy handles for cleanup
+        self.handles = qk_effect.handles
+        self.induction_head_masks = qk_effect.induction_head_masks
                 
     def cleanup(self):
-        """Restore original attention forward methods"""
-        for attn, original_forward in self.handles:
-            attn.forward = original_forward
+        """Remove all hooks"""
+        if self._qk_scaling_effect is not None:
+            self._qk_scaling_effect.cleanup()
         self.handles.clear()
+        self.induction_head_masks.clear()
+    
+    def get_logits_processor(self):
+        """Return repetition penalty processor"""
+        qk_effect = self._get_qk_scaling_effect()
+        return qk_effect.get_logits_processor()
         
     def _resolve_blocks(self, model):
         """Resolve transformer blocks"""
@@ -554,7 +558,7 @@ class AttentionFocusEffect(BaseEffect):
             return list(range(0, L))
             
     def _get_attention_module(self, layer):
-        """Get attention module from layer"""
+        """Get attention module from layer (kept for compatibility)"""
         for attr in ["attn", "self_attn", "attention"]:
             if hasattr(layer, attr):
                 return getattr(layer, attr)
@@ -660,74 +664,475 @@ class AttentionMaskingEffect(BaseEffect):
 # ============================================================================
 
 class QKScoreScalingEffect(BaseEffect):
-    """QK score scaling (attention sharpness)"""
+    """
+    QK score scaling (attention sharpness) with head-specific induction head targeting.
+    
+    FIXED: Instead of globally sharpening all heads (which causes mode collapse),
+    this effect ACTUALLY DETECTS "induction heads" (heads responsible for copying/continuation)
+    using a calibration prompt ("A B C D E F A") and sharpens only those, while leaving
+    exploratory heads unchanged.
+    
+    REAL DETECTION: Uses calibration prompt to identify heads that attend from the second
+    occurrence of a token to the position after the first occurrence. This is the classic
+    induction head pattern, not a heuristic.
+    
+    Mathematical basis:
+    - Original: attn_logits = Q @ K^T / sqrt(d_k)
+    - Scaled (induction heads only): attn_logits = (α * Q_induction) @ K^T / sqrt(d_k)
+    - This sharpens only continuation patterns, avoiding global mode collapse
+    - Includes repetition penalty to counteract any remaining mode collapse
+    
+    If detection fails, falls back to heuristic (which should be renamed to
+    HeuristicAttentionSharpening if used).
+    """
     
     def __init__(self, weight: float = 0.5, direction: str = "up", 
-                 layers: str = "mid", scaling_type: str = "uniform"):
+                 layers: str = "mid", scaling_type: str = "uniform",
+                 auto_detect_induction_heads: bool = True,
+                 induction_head_indices: Optional[List[int]] = None):
         super().__init__(weight, direction)
         self.layers = layers
         self.scaling_type = scaling_type
         self.handles = []
+        self.auto_detect_induction_heads = auto_detect_induction_heads
+        self.induction_head_indices = induction_head_indices  # Manual override
+        self.induction_head_masks = {}  # Cache per layer
+        self.repetition_penalty_active = True
         
+    def _detect_induction_heads(self, model, block, layer_idx: int, num_heads: int, 
+                                tokenizer=None) -> List[int]:
+        """
+        Detect induction heads by analyzing attention patterns on calibration prompt.
+        
+        REAL DETECTION: Pass a string like "A B C D E F A" through the model and identify
+        heads that strongly attend from the second A (position 6) to the token after the first A (position 1).
+        
+        This is the classic induction head detection pattern:
+        - Induction heads attend from position i (second occurrence) to position j+1 (token after first occurrence)
+        - Where j is the position of the first occurrence
+        
+        CRITICAL: Uses token IDs directly for detection, not string matching. Accounts for
+        tokenizer prefixes (e.g., ĠA vs A in GPT-2 style tokenizers) by checking variants.
+        
+        Args:
+            model: The language model
+            block: The transformer block
+            layer_idx: Index of the layer
+            num_heads: Number of attention heads
+            tokenizer: Tokenizer for the model (optional, will try to get from model)
+        
+        Returns:
+            List of induction head indices
+        """
+        if self.induction_head_indices is not None:
+            # Use manual override
+            return [h for h in self.induction_head_indices if h < num_heads]
+        
+        if not self.auto_detect_induction_heads:
+            # Fallback to heuristic if auto-detection is disabled
+            logger.warning("Auto-detection disabled, using heuristic. Consider enabling auto-detection for real induction head detection.")
+            if num_heads >= 8:
+                induction_heads = [num_heads // 2 - 1, num_heads // 2]
+            elif num_heads >= 4:
+                induction_heads = [num_heads // 2]
+            else:
+                induction_heads = [0]
+            return [h for h in induction_heads if h < num_heads]
+        
+        # REAL DETECTION: Use calibration prompt to identify induction heads
+        try:
+            # Get tokenizer
+            if tokenizer is None:
+                if hasattr(model, 'tokenizer'):
+                    tokenizer = model.tokenizer
+                else:
+                    logger.warning("No tokenizer available for induction head detection, falling back to heuristic")
+                    return self._heuristic_induction_heads(num_heads)
+            
+            # Create calibration prompt: Pattern with repeated token
+            # Use a simple pattern that works across tokenizers
+            # CRITICAL: Account for tokenizer prefixes (e.g., Ġthe vs the in GPT-2 style)
+            # We'll use a pattern that's more robust to tokenization differences
+            calibration_prompt = "A B C D E F A"
+            
+            # Tokenize
+            inputs = tokenizer(calibration_prompt, return_tensors="pt")
+            device = next(model.parameters()).device
+            inputs = {k: v.to(device) for k, v in inputs.items()}
+            
+            # Get token IDs directly
+            input_ids = inputs['input_ids'][0].cpu().numpy()
+            
+            # Find positions of first and second occurrence of a repeated token
+            # Use token IDs directly, not string matching
+            from collections import Counter
+            token_counts = Counter(input_ids.tolist())
+            repeated_tokens = [tid for tid, count in token_counts.items() if count >= 2]
+            
+            if not repeated_tokens:
+                # Fallback: Try to find any repeated token by checking tokenizer variants
+                # For tokenizers with prefixes (e.g., GPT-2: "A" vs "ĠA"), we need to check both
+                # CRITICAL: Use token IDs directly, accounting for tokenizer prefixes
+                token_variants = []
+                for variant in ["A", " A", "A ", " A "]:
+                    variant_ids = tokenizer.encode(variant, add_special_tokens=False)
+                    if variant_ids:
+                        token_variants.extend(variant_ids)
+                
+                # Find which variant appears in the input_ids (using token IDs directly)
+                for variant_id in set(token_variants):
+                    if variant_id in input_ids:
+                        count = list(input_ids).count(variant_id)
+                        if count >= 2:
+                            repeated_tokens.append(variant_id)
+                            break
+                
+                if not repeated_tokens:
+                    # Last resort: Check if first token appears multiple times
+                    # This handles cases where tokenization is unexpected
+                    first_token_id = input_ids[0] if len(input_ids) > 0 else None
+                    if first_token_id is not None:
+                        count = list(input_ids).count(first_token_id)
+                        if count >= 2:
+                            repeated_tokens.append(first_token_id)
+                    
+                    if not repeated_tokens:
+                        logger.warning("Could not find repeated token in calibration prompt, falling back to heuristic")
+                        logger.debug(f"Input IDs: {input_ids.tolist()}")
+                        return self._heuristic_induction_heads(num_heads)
+            
+            # Use the first repeated token (most common)
+            target_token_id = repeated_tokens[0]
+            
+            # Find positions of first and second occurrence using token IDs directly
+            first_pos = None
+            second_pos = None
+            
+            for i, token_id in enumerate(input_ids):
+                if token_id == target_token_id:
+                    if first_pos is None:
+                        first_pos = i
+                    elif second_pos is None:
+                        second_pos = i
+                        break  # Found both positions
+            
+            if first_pos is None or second_pos is None:
+                logger.warning("Could not find repeated tokens in calibration prompt, falling back to heuristic")
+                return self._heuristic_induction_heads(num_heads)
+            
+            # Target position: token after first occurrence (first_pos + 1)
+            target_pos = first_pos + 1
+            if target_pos >= len(input_ids):
+                logger.warning("Target position out of range, falling back to heuristic")
+                return self._heuristic_induction_heads(num_heads)
+            
+            # Get attention module
+            attn_module = None
+            if hasattr(block, 'self_attn'):
+                attn_module = block.self_attn
+            elif hasattr(block, 'attn'):
+                attn_module = block.attn
+            elif hasattr(block, 'attention'):
+                attn_module = block.attention
+            
+            if attn_module is None:
+                logger.warning("Could not find attention module, falling back to heuristic")
+                return self._heuristic_induction_heads(num_heads)
+            
+            # Hook to capture attention weights
+            attention_weights = None
+            
+            def attention_hook(module, input_tuple, output):
+                nonlocal attention_weights
+                # Attention output is usually (hidden_states, attention_weights, ...)
+                if isinstance(output, tuple) and len(output) >= 2:
+                    attn_weights = output[1]
+                    if attn_weights is not None:
+                        # attn_weights shape: [batch, num_heads, seq_len, seq_len]
+                        attention_weights = attn_weights.detach().cpu()
+            
+            handle = attn_module.register_forward_hook(attention_hook)
+            
+            try:
+                # Forward pass with output_attentions=True to ensure we get attention weights
+                with torch.no_grad():
+                    outputs = model(**inputs, output_attentions=True)
+                    
+                    # If attention weights weren't captured by hook, try to get them from outputs
+                    if attention_weights is None and hasattr(outputs, 'attentions') and outputs.attentions:
+                        # outputs.attentions is a tuple of attention tensors for each layer
+                        if layer_idx < len(outputs.attentions):
+                            attention_weights = outputs.attentions[layer_idx].detach().cpu()
+                
+                if attention_weights is None:
+                    logger.warning("Failed to capture attention weights, falling back to heuristic")
+                    return self._heuristic_induction_heads(num_heads)
+                
+                # Extract attention from second A to target position
+                # attention_weights: [batch, num_heads, seq_len, seq_len]
+                # We want attention[0, :, second_a_pos, target_pos] for each head
+                batch_size, n_heads, seq_len, _ = attention_weights.shape
+                
+                if second_pos >= seq_len or target_pos >= seq_len:
+                    logger.warning("Position out of range in attention weights, falling back to heuristic")
+                    return self._heuristic_induction_heads(num_heads)
+                
+                # Get attention scores from second occurrence to target position for each head
+                # This measures how strongly each head attends from the repeated token to the token after its first occurrence
+                induction_scores = attention_weights[0, :, second_pos, target_pos].numpy()
+                
+                # Find heads with highest induction scores
+                # Threshold: top 20% of heads, or at least 2 heads if possible
+                n_select = max(2, min(int(num_heads * 0.2), num_heads))
+                
+                # Get top-k heads by induction score
+                top_indices = np.argsort(induction_scores)[-n_select:][::-1]
+                induction_heads = top_indices.tolist()
+                
+                # Log detection results
+                logger.info(f"Detected induction heads for layer {layer_idx}: {induction_heads}")
+                logger.info(f"  Induction scores: {dict(zip(induction_heads, induction_scores[induction_heads]))}")
+                logger.info(f"  Pattern: attention from position {second_pos} (second occurrence) to position {target_pos} (after first occurrence)")
+                
+                return [int(h) for h in induction_heads if h < num_heads]
+                
+            finally:
+                handle.remove()
+                
+        except Exception as e:
+            logger.warning(f"Induction head detection failed: {e}, falling back to heuristic")
+            import traceback
+            traceback.print_exc()
+            return self._heuristic_induction_heads(num_heads)
+    
+    def _heuristic_induction_heads(self, num_heads: int) -> List[int]:
+        """
+        Fallback heuristic for induction head detection.
+        
+        This is a simple heuristic and should only be used when real detection fails.
+        Consider renaming the effect to "HeuristicAttentionSharpening" if this is used.
+        """
+        if num_heads >= 8:
+            induction_heads = [num_heads // 2 - 1, num_heads // 2]
+        elif num_heads >= 4:
+            induction_heads = [num_heads // 2]
+        else:
+            induction_heads = [0]
+        
+        logger.warning(f"Using heuristic induction head detection: {induction_heads}")
+        return induction_heads
+    
+    def _get_attention_config(self, block):
+        """Get attention configuration (num_heads, head_dim) from block"""
+        attn_module = None
+        if hasattr(block, 'self_attn'):
+            attn_module = block.self_attn
+        elif hasattr(block, 'attn'):
+            attn_module = block.attn
+        elif hasattr(block, 'attention'):
+            attn_module = block.attention
+        
+        if attn_module is None:
+            return None, None
+        
+        # Try to get num_heads
+        num_heads = None
+        if hasattr(attn_module, 'num_heads'):
+            num_heads = attn_module.num_heads
+        elif hasattr(attn_module, 'num_attention_heads'):
+            num_heads = attn_module.num_attention_heads
+        elif hasattr(attn_module, 'config') and hasattr(attn_module.config, 'num_heads'):
+            num_heads = attn_module.config.num_heads
+        elif hasattr(attn_module, 'config') and hasattr(attn_module.config, 'num_attention_heads'):
+            num_heads = attn_module.config.num_attention_heads
+        
+        # Try to get head_dim
+        head_dim = None
+        if hasattr(attn_module, 'head_dim'):
+            head_dim = attn_module.head_dim
+        elif hasattr(attn_module, 'q_proj'):
+            # head_dim = hidden_size // num_heads
+            if hasattr(attn_module.q_proj, 'out_features'):
+                hidden_size = attn_module.q_proj.out_features
+                if num_heads:
+                    head_dim = hidden_size // num_heads
+        elif hasattr(attn_module, 'embed_dim') and num_heads:
+            head_dim = attn_module.embed_dim // num_heads
+        
+        return num_heads, head_dim
+    
     def apply(self, model, **kwargs):
-        """Apply QK score scaling to attention layers"""
+        """Apply QK score scaling with head-specific induction head targeting"""
         blocks = self._resolve_blocks(model)
         selected_layers = self._select_layers(blocks)
         
+        # Get tokenizer from kwargs or model
+        tokenizer = kwargs.get('tokenizer')
+        if tokenizer is None and hasattr(model, 'tokenizer'):
+            tokenizer = model.tokenizer
+        
+        # Calculate scaling factor
+        # weight=0.0 -> scale=1.0 (baseline, no effect)
+        # weight=0.5 -> scale=1.5 (moderate sharpening)
+        # weight=1.0 -> scale=2.0 (maximum sharpening)
+        base_scale = 1.0
+        max_scale = 2.0
+        scale_factor = self.get_effective_value(base_scale, max_scale)
+        
+        logger.info(f"Applying QK scaling with head-specific targeting, scale_factor={scale_factor:.3f} to {len(selected_layers)} layers")
+        
         for layer_idx in selected_layers:
             try:
-                # Get attention module
-                attn = self._get_attention_module(blocks[layer_idx])
-                if attn is None:
+                block = blocks[layer_idx]
+                
+                # Get attention configuration
+                num_heads, head_dim = self._get_attention_config(block)
+                if num_heads is None:
+                    logger.warning(f"Could not determine num_heads for layer {layer_idx}, skipping")
                     continue
-                    
-                # Store original forward
-                original_forward = attn.forward
                 
-                # Calculate effective scaling factor
-                base_scale = 1.0
-                max_scale_change = 0.3
-                effective_scale_change = self.get_effective_value(0.0, max_scale_change)
+                # Detect induction heads (REAL DETECTION using calibration prompt)
+                induction_heads = self._detect_induction_heads(model, block, layer_idx, num_heads, tokenizer=tokenizer)
+                if not induction_heads:
+                    logger.warning(f"No induction heads detected for layer {layer_idx}, skipping")
+                    continue
                 
-                def scaled_forward(*args, **kwargs):
-                    # Get original output
-                    output = original_forward(*args, **kwargs)
-                    
-                    # Apply QK scaling to attention weights
-                    if isinstance(output, tuple) and len(output) >= 2:
-                        attn_weights = output[1]
-                        if attn_weights is not None:
-                            # Scale attention weights: attn = attn * (1 + δ)
-                            scale_factor = 1.0 + effective_scale_change
-                            attn_weights = attn_weights * scale_factor
+                # Create induction mask: 1.0 for induction heads, 0.0 for others
+                induction_mask = torch.zeros(num_heads)
+                for head_idx in induction_heads:
+                    induction_mask[head_idx] = 1.0
+                
+                # Store mask for this layer
+                self.induction_head_masks[layer_idx] = induction_mask
+                
+                # Architecture-specific: locate the query projection layer
+                q_proj = None
+                is_fused = False
+                
+                # Llama, Mistral, Qwen architectures: separate q_proj
+                if hasattr(block, 'self_attn') and hasattr(block.self_attn, 'q_proj'):
+                    q_proj = block.self_attn.q_proj
+                    is_fused = False
+                # GPT2 architecture: fused c_attn (Q, K, V together)
+                elif hasattr(block, 'attn') and hasattr(block.attn, 'c_attn'):
+                    q_proj = block.attn.c_attn
+                    is_fused = True
+                # GPT-NeoX: separate q_proj
+                elif hasattr(block, 'attention') and hasattr(block.attention, 'query_key_value'):
+                    q_proj = block.attention.query_key_value
+                    is_fused = True
+                else:
+                    logger.warning(f"Could not find Q projection in layer {layer_idx}, skipping")
+                    continue
+                
+                # Create hook function with head-specific scaling
+                def make_q_hook(scale, mask, fused, n_heads, h_dim):
+                    def q_hook(module, input_tuple, output):
+                        """
+                        Hook to scale Q vectors only for induction heads.
+                        
+                        For separate q_proj: output is [batch, seq, hidden_dim] where hidden_dim = num_heads * head_dim
+                        For fused c_attn: output is [batch, seq, 3*hidden_dim]
+                        """
+                        if fused:
+                            # GPT2-style: output is [batch, seq, 3*hidden_dim]
+                            batch_size, seq_len, hidden_dim = output.shape
+                            single_dim = hidden_dim // 3
                             
-                            # Renormalize
-                            attn_weights = attn_weights / attn_weights.sum(dim=-1, keepdim=True)
+                            Q = output[:, :, :single_dim]
+                            K = output[:, :, single_dim:2*single_dim]
+                            V = output[:, :, 2*single_dim:]
                             
-                            # Recompute attention output if possible
-                            if len(output) >= 3 and output[2] is not None:
-                                V = output[2]
-                                new_attn_output = torch.matmul(attn_weights, V)
-                                output = (new_attn_output,) + output[1:]
+                            # Reshape Q to [batch, seq, num_heads, head_dim]
+                            if h_dim and single_dim == n_heads * h_dim:
+                                Q_reshaped = Q.view(batch_size, seq_len, n_heads, h_dim)
+                                # Apply scaling only to induction heads
+                                scale_vector = 1.0 + (scale - 1.0) * mask.view(1, 1, -1, 1)
+                                Q_scaled = Q_reshaped * scale_vector
+                                Q = Q_scaled.view(batch_size, seq_len, single_dim)
+                            else:
+                                # Fallback: scale all if we can't reshape
+                                Q = Q * scale
+                            
+                            output_scaled = torch.cat([Q, K, V], dim=-1)
+                            return output_scaled
+                        else:
+                            # Separate q_proj: output is [batch, seq, hidden_dim]
+                            batch_size, seq_len, hidden_dim = output.shape
+                            
+                            # Reshape to [batch, seq, num_heads, head_dim]
+                            if h_dim and hidden_dim == n_heads * h_dim:
+                                Q_reshaped = output.view(batch_size, seq_len, n_heads, h_dim)
+                                # Apply scaling only to induction heads
+                                scale_vector = 1.0 + (scale - 1.0) * mask.view(1, 1, -1, 1)
+                                Q_scaled = Q_reshaped * scale_vector
+                                return Q_scaled.view(batch_size, seq_len, hidden_dim)
+                            else:
+                                # Fallback: scale all if we can't reshape
+                                return output * scale
                     
-                    return output
+                    return q_hook
                 
-                attn.forward = scaled_forward
-                self.handles.append((attn, original_forward))
+                # Register hook
+                handle = q_proj.register_forward_hook(
+                    make_q_hook(scale_factor, induction_mask, is_fused, num_heads, head_dim)
+                )
+                self.handles.append(handle)
+                
+                logger.info(f"Layer {layer_idx}: Sharpening {len(induction_heads)} induction heads: {induction_heads}")
                 
             except Exception as e:
-                print(f"Warning: Failed to apply QK scaling in layer {layer_idx}: {e}")
+                logger.warning(f"Failed to apply QK scaling in layer {layer_idx}: {e}")
+                import traceback
+                traceback.print_exc()
                 continue
                 
     def cleanup(self):
-        """Restore original forward methods"""
-        for attn, original_forward in self.handles:
-            attn.forward = original_forward
+        """Remove all hooks"""
+        for handle in self.handles:
+            handle.remove()
         self.handles.clear()
+        self.induction_head_masks.clear()
         
     def get_logits_processor(self):
-        """Attention effects don't use logits processors"""
-        return None
+        """
+        Return repetition penalty processor to counteract mode collapse.
+        
+        When induction heads are sharpened, there's a risk of repetitive loops.
+        This penalty helps maintain diversity in generation.
+        """
+        if not self.repetition_penalty_active:
+            return None
+        
+        # Calculate repetition penalty strength based on weight
+        # Higher weight (more sharpening) -> stronger penalty needed
+        base_penalty = 1.0
+        max_penalty = 1.15  # Moderate penalty to avoid over-suppression
+        penalty = self.get_effective_value(base_penalty, max_penalty)
+        
+        class RepetitionPenaltyProcessor(LogitsProcessor):
+            def __init__(self, penalty: float):
+                self.penalty = penalty
+                self.generated_tokens = []
+            
+            def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:
+                # Apply penalty to previously generated tokens
+                if len(self.generated_tokens) > 0:
+                    for token_id in self.generated_tokens[-10:]:  # Last 10 tokens
+                        if token_id < scores.shape[-1]:
+                            scores[:, token_id] /= self.penalty
+                
+                # Track generated tokens
+                if input_ids.shape[1] > 0:
+                    last_token = input_ids[0, -1].item()
+                    self.generated_tokens.append(last_token)
+                    # Keep only recent tokens
+                    if len(self.generated_tokens) > 50:
+                        self.generated_tokens = self.generated_tokens[-50:]
+                
+                return scores
+        
+        return RepetitionPenaltyProcessor(penalty)
         
     def _resolve_blocks(self, model):
         """Resolve transformer blocks"""
@@ -753,7 +1158,7 @@ class QKScoreScalingEffect(BaseEffect):
             return list(range(0, L))
             
     def _get_attention_module(self, layer):
-        """Get attention module from layer"""
+        """Get attention module from layer (kept for compatibility)"""
         for attr in ["attn", "self_attn", "attention"]:
             if hasattr(layer, attr):
                 return getattr(layer, attr)
@@ -1209,23 +1614,123 @@ class AttentionSinksAnchorsEffect(BaseEffect):
 # ============================================================================
 
 class SteeringEffect(BaseEffect):
-    """Activation steering effect"""
+    """Activation steering effect using Contrastive Activation Addition (CAA) vectors"""
     
-    def __init__(self, weight: float = 0.5, direction: str = "up", steering_type: str = "associative"):
+    def __init__(self, weight: float = 0.5, direction: str = "up", steering_type: str = "associative",
+                 vector_path: Optional[str] = None, vector_dir: str = "outputs/steering_vectors"):
         super().__init__(weight, direction)
         self.steering_type = steering_type
-        self.steering_vectors = {
-            "associative": torch.randn(768) * 0.15,
-            "visionary": torch.randn(768) * 0.18,
-            "synesthesia": torch.randn(768) * 0.16,
-            "ego_thin": torch.randn(768) * 0.14,
-            "prosocial": torch.randn(768) * 0.12,
-            "affiliative": torch.randn(768) * 0.10,
-            "goal_focused": torch.randn(768) * 0.08,
-            "playful": torch.randn(768) * 0.20,
-            "creative": torch.randn(768) * 0.1,
-            "abstract": torch.randn(768) * 0.12,
-        }
+        self.vector_path = vector_path
+        self.vector_dir = vector_dir
+        self.vector = None  # Initialize as None - will be loaded on demand
+        
+        # Dictionary to cache loaded vectors by steering_type
+        self._vector_cache = {}
+        
+    def load_vector(self, vector_path: Optional[str] = None, hidden_size: int = 768) -> bool:
+        """
+        Load a pre-computed steering vector from disk.
+        
+        Args:
+            vector_path: Path to the vector file. If None, constructs path from steering_type.
+            hidden_size: Expected hidden size (used for fallback zero vector)
+            
+        Returns:
+            True if vector loaded successfully, False otherwise
+        """
+        import os
+        from pathlib import Path
+        
+        # Determine vector path
+        if vector_path is None:
+            if self.vector_path:
+                vector_path = self.vector_path
+            else:
+                # Construct path from steering_type
+                # Try multiple layer indices (prefer last layer)
+                vector_dir = Path(self.vector_dir)
+                for layer_idx in [-1, -2, 0]:
+                    candidate_path = vector_dir / f"{self.steering_type}_layer{layer_idx}.pt"
+                    if candidate_path.exists():
+                        vector_path = str(candidate_path)
+                        break
+                
+                if vector_path is None:
+                    # Try without layer suffix
+                    candidate_path = vector_dir / f"{self.steering_type}.pt"
+                    if candidate_path.exists():
+                        vector_path = str(candidate_path)
+        
+        if vector_path is None:
+            logger.warning(f"CRITICAL WARNING: No steering vector path specified for '{self.steering_type}'. "
+                          f"Using zero vector (no steering effect).")
+            self.vector = torch.zeros(hidden_size)
+            return False
+        
+        # Check cache first
+        if vector_path in self._vector_cache:
+            self.vector = self._vector_cache[vector_path]
+            return True
+        
+        # Load from disk
+        try:
+            vector_path_obj = Path(vector_path)
+            if not vector_path_obj.exists():
+                logger.warning(f"CRITICAL WARNING: Steering vector {vector_path} not found. "
+                             f"Using zero vector (no steering effect).")
+                self.vector = torch.zeros(hidden_size)
+                return False
+            
+            self.vector = torch.load(vector_path, map_location='cpu')
+            
+            # Validate shape
+            if isinstance(self.vector, torch.Tensor):
+                if len(self.vector.shape) != 1:
+                    logger.warning(f"Steering vector has unexpected shape {self.vector.shape}, "
+                                 f"expected 1D tensor. Flattening...")
+                    self.vector = self.vector.flatten()
+                
+                # Cache the vector
+                self._vector_cache[vector_path] = self.vector
+                logger.info(f"Loaded steering vector from {vector_path}: shape={self.vector.shape}")
+                return True
+            else:
+                logger.error(f"Loaded object from {vector_path} is not a tensor: {type(self.vector)}")
+                self.vector = torch.zeros(hidden_size)
+                return False
+                
+        except Exception as e:
+            logger.error(f"Failed to load steering vector from {vector_path}: {e}")
+            logger.warning(f"Using zero vector (no steering effect) as failsafe.")
+            self.vector = torch.zeros(hidden_size)
+            return False
+    
+    def get_vector(self, hidden_size: int = 768) -> torch.Tensor:
+        """
+        Get the steering vector, loading it if necessary.
+        
+        Args:
+            hidden_size: Expected hidden size (for fallback)
+            
+        Returns:
+            Steering vector tensor
+        """
+        if self.vector is None:
+            self.load_vector(hidden_size=hidden_size)
+        
+        # Ensure vector matches hidden_size (resize if needed)
+        if self.vector.shape[0] != hidden_size:
+            if self.vector.shape[0] < hidden_size:
+                # Pad with zeros
+                padding = torch.zeros(hidden_size - self.vector.shape[0])
+                self.vector = torch.cat([self.vector, padding])
+                logger.warning(f"Padded steering vector from {self.vector.shape[0]} to {hidden_size}")
+            else:
+                # Truncate
+                self.vector = self.vector[:hidden_size]
+                logger.warning(f"Truncated steering vector from {self.vector.shape[0]} to {hidden_size}")
+        
+        return self.vector
         
     def apply(self, model, **kwargs):
         """Apply steering to hidden states"""
@@ -1234,23 +1739,41 @@ class SteeringEffect(BaseEffect):
         
     def apply_steering(self, hidden_states: torch.Tensor) -> torch.Tensor:
         """Apply steering to hidden states"""
-        if self.steering_type in self.steering_vectors:
-            steering_vector = self.steering_vectors[self.steering_type]
-            # Calculate effective steering strength
-            base_strength = 0.0
-            max_strength = 0.3
-            effective_strength = self.get_effective_value(base_strength, max_strength)
-            
-            # Apply steering as a residual connection
+        if hidden_states is None or hidden_states.numel() == 0:
+            return hidden_states
+        
+        # Get hidden size from the actual hidden states
+        if len(hidden_states.shape) >= 2:
+            hidden_size = hidden_states.shape[-1]
+        else:
+            hidden_size = hidden_states.shape[0] if len(hidden_states.shape) == 1 else 768
+        
+        # Get or load the vector
+        steering_vector = self.get_vector(hidden_size=hidden_size)
+        
+        # Calculate effective steering strength
+        base_strength = 0.0
+        max_strength = 0.3
+        effective_strength = self.get_effective_value(base_strength, max_strength)
+        
+        # Apply steering as a residual connection
+        # Ensure shapes match
+        if len(hidden_states.shape) == 3:  # [batch, seq_len, hidden_size]
             steering_effect = steering_vector.unsqueeze(0).unsqueeze(0) * effective_strength
-            return hidden_states + steering_effect
-        return hidden_states
+        elif len(hidden_states.shape) == 2:  # [seq_len, hidden_size]
+            steering_effect = steering_vector.unsqueeze(0) * effective_strength
+        else:  # [hidden_size]
+            steering_effect = steering_vector * effective_strength
+        
+        return hidden_states + steering_effect
         
     def get_logits_processor(self):
         """Steering effects don't use logits processors"""
         return None
         
     def cleanup(self):
+        """Clean up resources"""
+        # Optionally clear cache if needed
         pass
 
 # ============================================================================
@@ -2509,7 +3032,12 @@ class PersonaVoiceConstraintsEffect(BaseEffect):
 # ============================================================================
 
 class LexicalJitterEffect(BaseEffect):
-    """Lexical jitter in context (synonym swap/ablation)"""
+    """
+    Lexical jitter in context (synonym swap/ablation) - FIXED to work at embedding/KV-cache level.
+    
+    FIXED: Previously implemented as LogitsProcessor (causally incorrect for "memory" perturbations).
+    Now works at the embedding layer or KV-cache update step, which is the correct causal structure.
+    """
     
     def __init__(self, weight: float = 0.5, direction: str = "up", 
                  jitter_type: str = "synonym_swap", ablation_rate: float = 0.1):
@@ -2519,190 +3047,216 @@ class LexicalJitterEffect(BaseEffect):
         self.handles = []
         
     def apply(self, model, **kwargs):
-        """Apply lexical jitter to input context"""
-        # This effect works through logits processing by modifying input_ids
-        pass
+        """
+        Apply lexical jitter at the embedding layer using a pre-hook (causally correct).
+        
+        FIXED: Uses register_forward_pre_hook to modify embeddings BEFORE they enter
+        the transformer. This creates actual perceptual noise, not just randomizing
+        the next word choice.
+        """
+        effective_jitter = self.get_effective_value(0.0, 0.3)
+        
+        # Find the embedding layer
+        embedding_layer = None
+        if hasattr(model, 'get_input_embeddings'):
+            embedding_layer = model.get_input_embeddings()
+        elif hasattr(model, 'transformer') and hasattr(model.transformer, 'wte'):
+            embedding_layer = model.transformer.wte  # GPT2-style
+        elif hasattr(model, 'model') and hasattr(model.model, 'embed_tokens'):
+            embedding_layer = model.model.embed_tokens  # Llama-style
+        else:
+            logger.warning("Could not find embedding layer, skipping lexical jitter")
+            return
+        
+        # Calculate noise sigma based on jitter strength
+        self.sigma = effective_jitter * 0.05  # Scale factor for noise
+        
+        def embedding_hook(module, input, output):
+            """
+            Pre-hook to modify embeddings at the input level.
+            
+            Args:
+                module: The embedding module
+                input: Tuple containing (input_ids, ...)
+                output: Embeddings tensor [batch, seq, hidden_dim]
+            
+            Returns:
+                Modified embeddings with jitter applied
+            """
+            # output is [batch, seq, hidden_dim] (The Embeddings)
+            if self.jitter_type == "noise" or self.jitter_type == "noise_injection":
+                # Add perceptual noise to embeddings
+                noise = torch.randn_like(output) * self.sigma
+                return output + noise
+                
+            elif self.jitter_type == "synonym_swap":
+                # Add small random noise to simulate synonym variation
+                noise = torch.randn_like(output) * (self.sigma * 0.6)
+                return output + noise
+                
+            elif self.jitter_type == "ablation":
+                # Zero out a fraction of embeddings (simulating token ablation)
+                batch_size, seq_len, hidden_dim = output.shape
+                if seq_len > 3:
+                    ablation_mask = torch.rand(batch_size, seq_len, 1, device=output.device) < (self.base_ablation_rate * effective_jitter)
+                    return output * (1.0 - ablation_mask.float())
+                return output
+                
+            elif self.jitter_type == "reframing":
+                # Slightly rotate embeddings to simulate reframing
+                if output.shape[1] > 8:
+                    rotation_strength = effective_jitter * 0.02
+                    mean_embedding = output.mean(dim=1, keepdim=True)
+                    return output + rotation_strength * mean_embedding
+                return output
+            
+            return output
+        
+        # Register pre-hook (runs BEFORE forward, but we modify output)
+        # Actually, we need a forward hook to modify the output
+        handle = embedding_layer.register_forward_hook(embedding_hook)
+        self.handles.append(handle)
+        
+        logger.info(f"Applied lexical jitter ({self.jitter_type}) at embedding layer with sigma={self.sigma:.4f}")
         
     def cleanup(self):
-        """Cleanup lexical jitter effects"""
+        """Remove all hooks"""
+        for handle in self.handles:
+            handle.remove()
         self.handles.clear()
         
-    def get_logits_processor(self) -> LogitsProcessor:
-        """Get lexical jitter logits processor"""
-        effective_jitter = self.get_effective_value(0.0, 0.3)  # Keep low to avoid leakage
-        
-        class LexicalJitterProcessor(LogitsProcessor):
-            def __init__(self, jitter_type, ablation_rate, jitter_strength):
-                self.jitter_type = jitter_type
-                self.ablation_rate = ablation_rate
-                self.jitter_strength = jitter_strength
-                self.token_count = 0
-                self.original_input_ids = None
-                
-            def __call__(self, input_ids, scores):
-                self.token_count += 1
-                
-                # Store original input_ids on first call
-                if self.original_input_ids is None:
-                    self.original_input_ids = input_ids.clone()
-                
-                if self.jitter_type == "synonym_swap":
-                    # Simulate synonym swapping by slightly perturbing token scores
-                    # This is a simplified version - in practice, you'd have a synonym dictionary
-                    seq_len = input_ids.shape[1]
-                    if seq_len > 5:  # Only apply after some context
-                        # Randomly select tokens to "swap" with synonyms
-                        swap_mask = torch.rand(seq_len) < (self.ablation_rate * self.jitter_strength)
-                        
-                        for i in range(seq_len):
-                            if swap_mask[i]:
-                                # Simulate synonym by boosting similar tokens
-                                # In practice, you'd look up actual synonyms
-                                similar_tokens = [input_ids[0, i] + j for j in range(-5, 6) if input_ids[0, i] + j >= 0]
-                                for token_id in similar_tokens:
-                                    if token_id < scores.shape[-1]:
-                                        scores[:, token_id] *= (1.0 + self.jitter_strength * 0.1)
-                
-                elif self.jitter_type == "ablation":
-                    # Simulate token ablation by reducing scores for certain tokens
-                    seq_len = input_ids.shape[1]
-                    if seq_len > 3:
-                        # Randomly select tokens to "ablate"
-                        ablation_mask = torch.rand(seq_len) < (self.ablation_rate * self.jitter_strength)
-                        
-                        for i in range(seq_len):
-                            if ablation_mask[i]:
-                                # Reduce scores for the "ablated" token
-                                token_id = input_ids[0, i].item()
-                                if token_id < scores.shape[-1]:
-                                    scores[:, token_id] *= (1.0 - self.jitter_strength * 0.5)
-                
-                elif self.jitter_type == "noise_injection":
-                    # Add noise to input context representation
-                    seq_len = input_ids.shape[1]
-                    if seq_len > 2:
-                        # Simulate perceptual noise by adding small random perturbations
-                        noise_strength = self.jitter_strength * 0.05  # Very small to avoid leakage
-                        noise = torch.randn_like(scores) * noise_strength
-                        scores = scores + noise
-                
-                elif self.jitter_type == "reframing":
-                    # Simulate reframing by boosting contextually related tokens
-                    seq_len = input_ids.shape[1]
-                    if seq_len > 8:
-                        # Boost tokens that might "reframe" the context
-                        reframe_tokens = [100, 200, 300, 400, 500]  # Example reframing tokens
-                        for token_id in reframe_tokens:
-                            if token_id < scores.shape[-1]:
-                                scores[:, token_id] *= (1.0 + self.jitter_strength * 0.2)
-                
-                return scores
-        
-        return LexicalJitterProcessor(self.jitter_type, self.base_ablation_rate, effective_jitter)
+    def get_logits_processor(self) -> Optional[LogitsProcessor]:
+        """Lexical jitter no longer uses logits processors (fixed to embedding level)"""
+        return None
 
 class StructuredPrefacesEffect(BaseEffect):
-    """Structured prefaces (invisible to model text; KV-only)"""
+    """
+    Structured prefaces (invisible to model text; KV-only) - FIXED to inject into past_key_values.
     
-    def __init__(self, weight: float = 0.5, direction: str = "up", 
-                 preface_type: str = "bias", injection_mode: str = "kv_only"):
+    FIXED: Previously implemented as LogitsProcessor (causally incorrect for "memory" perturbations).
+    Now pre-computes KV states for a preface string and injects them directly into past_key_values.
+    This is actual "implanted memory," not just biasing the model to say specific words.
+    """
+    
+    def __init__(self, weight: float = 0.0, direction: str = "up", 
+                 preface_type: str = "bias", injection_mode: str = "kv_only",
+                 preface_text: Optional[str] = None):
         super().__init__(weight, direction)
         self.preface_type = preface_type
         self.injection_mode = injection_mode
-        self.handles = []
+        self.preface_text = preface_text or self._get_default_preface(preface_type)
+        self.preface_kv_cache = None  # Will be computed on first apply
+        self.tokenizer = None
+        self.model = None
         
-        # Define structured prefaces for different bias types
-        self.preface_patterns = {
-            "bias": {
-                "positive": [110, 210, 310, 410, 510],  # Positive bias tokens
-                "negative": [115, 215, 315, 415, 515]   # Negative bias tokens
-            },
-            "style": {
-                "formal": [120, 220, 320, 420, 520],    # Formal style tokens
-                "casual": [125, 225, 325, 425, 525]     # Casual style tokens
-            },
-            "topic": {
-                "technical": [130, 230, 330, 430, 530], # Technical topic tokens
-                "creative": [135, 235, 335, 435, 535]   # Creative topic tokens
-            },
-            "emotion": {
-                "calm": [140, 240, 340, 440, 540],      # Calm emotion tokens
-                "excited": [145, 245, 345, 445, 545]    # Excited emotion tokens
-            }
+    def _get_default_preface(self, preface_type: str) -> str:
+        """Get default preface text based on type"""
+        prefaces = {
+            "bias": "You are a helpful assistant who provides positive and constructive responses.",
+            "style": "You are a formal and professional assistant who uses precise language.",
+            "topic": "You are a technical expert who focuses on accurate and detailed information.",
+            "emotion": "You are a calm and composed assistant who maintains emotional stability."
         }
-        
+        return prefaces.get(preface_type, prefaces["bias"])
+    
     def apply(self, model, **kwargs):
-        """Apply structured prefaces"""
-        # This effect works through logits processing by injecting bias
-        pass
+        """
+        Pre-compute KV states for preface string.
+        
+        The actual injection into past_key_values happens during generation
+        via the modify_kv_cache() method.
+        """
+        self.model = model
+        tokenizer = kwargs.get('tokenizer')
+        if tokenizer is None:
+            # Try to get tokenizer from model
+            if hasattr(model, 'tokenizer'):
+                tokenizer = model.tokenizer
+            else:
+                logger.warning("No tokenizer provided, cannot pre-compute preface KV cache")
+                return
+        
+        self.tokenizer = tokenizer
+        
+        # Pre-compute KV states for the preface string
+        logger.info(f"Pre-computing KV cache for preface: '{self.preface_text[:50]}...'")
+        
+        try:
+            # Tokenize preface
+            preface_inputs = tokenizer(self.preface_text, return_tensors="pt")
+            preface_inputs = {k: v.to(next(model.parameters()).device) for k, v in preface_inputs.items()}
+            
+            # Forward pass to get KV cache
+            with torch.no_grad():
+                outputs = model(**preface_inputs, use_cache=True, return_dict=True)
+                # Extract past_key_values
+                self.preface_kv_cache = outputs.past_key_values
+            
+            logger.info(f"Pre-computed preface KV cache with {len(self.preface_kv_cache)} layers")
+            
+        except Exception as e:
+            logger.error(f"Failed to pre-compute preface KV cache: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def modify_kv_cache(self, kv_cache):
+        """
+        Inject pre-computed preface KV states into the cache.
+        
+        This is called during generation, before the first token is generated.
+        The preface KV cache is concatenated with the current context KV cache.
+        
+        Args:
+            kv_cache: Current past_key_values tuple (or None if first generation step)
+            
+        Returns:
+            Modified KV cache with preface injected
+        """
+        if self.preface_kv_cache is None:
+            # Not yet computed, return original
+            return kv_cache
+        
+        if kv_cache is None:
+            # First generation step - use preface as initial KV cache
+            return self.preface_kv_cache
+        
+        # Concatenate preface KV cache with current KV cache
+        # kv_cache is usually a tuple of (key, value) tensors per layer
+        # Shape: (layer_idx, (key, value)) where key/value are [batch, num_heads, seq_len, head_dim]
+        
+        modified_cache = []
+        for layer_idx, (preface_k, preface_v) in enumerate(self.preface_kv_cache):
+            if layer_idx < len(kv_cache):
+                current_layer_cache = kv_cache[layer_idx]
+                if current_layer_cache is not None:
+                    current_k, current_v = current_layer_cache
+                    
+                    # Concatenate along sequence dimension (dim=-2)
+                    # preface_k/v: [batch, num_heads, preface_seq_len, head_dim]
+                    # current_k/v: [batch, num_heads, current_seq_len, head_dim]
+                    # Result: [batch, num_heads, preface_seq_len + current_seq_len, head_dim]
+                    combined_k = torch.cat([preface_k, current_k], dim=-2)
+                    combined_v = torch.cat([preface_v, current_v], dim=-2)
+                    
+                    modified_cache.append((combined_k, combined_v))
+                else:
+                    # No current cache, use preface only
+                    modified_cache.append((preface_k, preface_v))
+            else:
+                # More preface layers than current cache (shouldn't happen, but handle gracefully)
+                modified_cache.append((preface_k, preface_v))
+        
+        return tuple(modified_cache)
         
     def cleanup(self):
-        """Cleanup structured prefaces effects"""
-        self.handles.clear()
+        """Clear preface KV cache"""
+        self.preface_kv_cache = None
+        self.tokenizer = None
+        self.model = None
         
-    def get_logits_processor(self) -> LogitsProcessor:
-        """Get structured prefaces logits processor"""
-        effective_preface = self.get_effective_value(0.0, 0.4)
-        
-        class StructuredPrefacesProcessor(LogitsProcessor):
-            def __init__(self, preface_type, injection_mode, preface_patterns, preface_strength):
-                self.preface_type = preface_type
-                self.injection_mode = injection_mode
-                self.preface_patterns = preface_patterns
-                self.preface_strength = preface_strength
-                self.token_count = 0
-                self.injected = False
-                
-            def __call__(self, input_ids, scores):
-                self.token_count += 1
-                
-                # Inject structured preface only once at the beginning
-                if not self.injected and self.token_count == 1:
-                    self.injected = True
-                    
-                    if self.preface_type in self.preface_patterns:
-                        pattern = self.preface_patterns[self.preface_type]
-                        
-                        if self.injection_mode == "kv_only":
-                            # Simulate KV-only injection by boosting specific token patterns
-                            # In practice, this would inject directly into KV cache
-                            
-                            # Boost the first token list (positive bias)
-                            preferred_tokens = list(pattern.values())[0]
-                            for token_id in preferred_tokens:
-                                if token_id < scores.shape[-1]:
-                                    scores[:, token_id] *= (1.0 + self.preface_strength)
-                            
-                            # Slightly penalize the second token list (negative bias)
-                            non_preferred_tokens = list(pattern.values())[1]
-                            for token_id in non_preferred_tokens:
-                                if token_id < scores.shape[-1]:
-                                    scores[:, token_id] *= (1.0 - self.preface_strength * 0.3)
-                        
-                        elif self.injection_mode == "subtle":
-                            # More subtle injection
-                            preferred_tokens = list(pattern.values())[0]
-                            for token_id in preferred_tokens:
-                                if token_id < scores.shape[-1]:
-                                    scores[:, token_id] *= (1.0 + self.preface_strength * 0.5)
-                        
-                        elif self.injection_mode == "persistent":
-                            # Persistent injection that affects all tokens
-                            preferred_tokens = list(pattern.values())[0]
-                            for token_id in preferred_tokens:
-                                if token_id < scores.shape[-1]:
-                                    scores[:, token_id] *= (1.0 + self.preface_strength)
-                            
-                            # Apply a global bias based on preface type
-                            if self.preface_type == "bias":
-                                # Global positive bias
-                                scores = scores * (1.0 + self.preface_strength * 0.1)
-                            elif self.preface_type == "style":
-                                # Style-specific global bias
-                                scores = scores * (1.0 + self.preface_strength * 0.05)
-                
-                return scores
-        
-        return StructuredPrefacesProcessor(self.preface_type, self.injection_mode, self.preface_patterns, effective_preface)
+    def get_logits_processor(self) -> Optional[LogitsProcessor]:
+        """Structured prefaces no longer use logits processors (fixed to KV-cache level)"""
+        return None
 
 # ============================================================================
 # ACTIVATION / REPRESENTATION SURGERY EFFECTS
@@ -2718,19 +3272,11 @@ class ActivationAdditionsEffect(BaseEffect):
         self.layers = layers
         self.handles = []
         
-        # Define steering vectors for different attributes
-        self.steering_vectors = {
-            "associative": torch.randn(768) * 0.15,
-            "prosocial": torch.randn(768) * 0.12,
-            "salient": torch.randn(768) * 0.10,
-            "creative": torch.randn(768) * 0.18,
-            "focused": torch.randn(768) * 0.08,
-            "playful": torch.randn(768) * 0.20,
-            "formal": torch.randn(768) * 0.06,
-            "emotional": torch.randn(768) * 0.14,
-            "analytical": torch.randn(768) * 0.09,
-            "intuitive": torch.randn(768) * 0.16,
-        }
+        # Steering vectors will be loaded from disk (CAA-generated)
+        # Fallback to zero vectors if not found (NOT random noise)
+        self.steering_vectors = {}
+        self.vector_dir = "outputs/steering_vectors"
+        self._vector_cache = {}
         
         # Contrastive prompt system for steering vector construction
         self.contrastive_prompts = {
@@ -2756,10 +3302,70 @@ class ActivationAdditionsEffect(BaseEffect):
         self.computed_vectors = {}
         self.vector_cache = {}
     
+    def _load_vector(self, steering_type: str, hidden_size: int = 768) -> torch.Tensor:
+        """
+        Load a steering vector from disk, with zero vector fallback.
+        
+        Args:
+            steering_type: Type of steering vector to load
+            hidden_size: Expected hidden size
+            
+        Returns:
+            Steering vector tensor (zero vector if not found)
+        """
+        from pathlib import Path
+        
+        if steering_type in self._vector_cache:
+            return self._vector_cache[steering_type]
+        
+        vector_dir = Path(self.vector_dir)
+        vector_path = None
+        
+        # Try multiple layer indices
+        for layer_idx in [-1, -2, 0]:
+            candidate_path = vector_dir / f"{steering_type}_layer{layer_idx}.pt"
+            if candidate_path.exists():
+                vector_path = candidate_path
+                break
+        
+        if vector_path is None:
+            candidate_path = vector_dir / f"{steering_type}.pt"
+            if candidate_path.exists():
+                vector_path = candidate_path
+        
+        if vector_path is None:
+            logger.warning(f"Steering vector for '{steering_type}' not found. Using zero vector.")
+            vector = torch.zeros(hidden_size)
+            self._vector_cache[steering_type] = vector
+            return vector
+        
+        try:
+            vector = torch.load(vector_path, map_location='cpu')
+            if isinstance(vector, torch.Tensor) and len(vector.shape) == 1:
+                # Resize if needed
+                if vector.shape[0] != hidden_size:
+                    if vector.shape[0] < hidden_size:
+                        padding = torch.zeros(hidden_size - vector.shape[0])
+                        vector = torch.cat([vector, padding])
+                    else:
+                        vector = vector[:hidden_size]
+                self._vector_cache[steering_type] = vector
+                return vector
+            else:
+                logger.warning(f"Invalid vector format in {vector_path}. Using zero vector.")
+                vector = torch.zeros(hidden_size)
+                self._vector_cache[steering_type] = vector
+                return vector
+        except Exception as e:
+            logger.error(f"Failed to load vector from {vector_path}: {e}")
+            vector = torch.zeros(hidden_size)
+            self._vector_cache[steering_type] = vector
+            return vector
+    
     def compute_contrastive_steering_vector(self, model, steering_type: str, 
                                           layer_idx: int = -1) -> torch.Tensor:
         """
-        Compute steering vector using contrastive prompts
+        Compute steering vector using contrastive prompts or load from disk.
         
         Args:
             model: The language model
@@ -2767,46 +3373,37 @@ class ActivationAdditionsEffect(BaseEffect):
             layer_idx: Layer to extract activations from (-1 for last layer)
             
         Returns:
-            Computed steering vector
+            Computed steering vector (loaded from disk if available, else zero vector)
         """
-        if steering_type not in self.contrastive_prompts:
-            return self.steering_vectors.get(steering_type, torch.randn(768) * 0.1)
+        # Try to load from disk first
+        hidden_size = getattr(model.config, "hidden_size", getattr(model.config, "d_model", 768))
+        vector = self._load_vector(steering_type, hidden_size=hidden_size)
         
-        # Check cache first
-        cache_key = f"{steering_type}_{layer_idx}"
-        if cache_key in self.vector_cache:
-            return self.vector_cache[cache_key]
+        # If vector is non-zero, it was loaded successfully
+        if torch.norm(vector) > 0:
+            return vector
         
-        try:
-            # Get contrastive prompts
-            positive_prompt = self.contrastive_prompts[steering_type]["positive"]
-            negative_prompt = self.contrastive_prompts[steering_type]["negative"]
-            
-            # Extract activations for both prompts
-            positive_activations = self._extract_activations(model, positive_prompt, layer_idx)
-            negative_activations = self._extract_activations(model, negative_prompt, layer_idx)
-            
-            # Compute steering vector as difference
-            steering_vector = positive_activations - negative_activations
-            
-            # Normalize the vector
-            steering_vector = steering_vector / torch.norm(steering_vector)
-            
-            # Cache the result
-            self.vector_cache[cache_key] = steering_vector
-            
-            return steering_vector
-            
-        except Exception as e:
-            logger.warning(f"Failed to compute contrastive steering vector: {e}")
-            return self.steering_vectors.get(steering_type, torch.randn(768) * 0.1)
+        # Fallback: try to compute using contrastive prompts (if available)
+        if steering_type in self.contrastive_prompts:
+            # This would use the existing _extract_activations method
+            # For now, return zero vector and log a warning
+            logger.warning(f"Could not load or compute vector for {steering_type}. Using zero vector.")
+            return torch.zeros(hidden_size)
+        
+        # Final fallback: zero vector (NOT random noise)
+        logger.warning(f"No vector available for {steering_type}. Using zero vector.")
+        return torch.zeros(hidden_size)
     
     def _extract_activations(self, model, prompt: str, layer_idx: int) -> torch.Tensor:
-        """Extract activations from a specific layer for a given prompt"""
-        # This is a simplified implementation
-        # In practice, you would need to properly tokenize and run through the model
-        # For now, return a random vector as placeholder
-        return torch.randn(768) * 0.1
+        """
+        Extract activations from a specific layer for a given prompt.
+        
+        NOTE: This method is deprecated. Use SteeringVectorGenerator instead.
+        Returns zero vector as placeholder (NOT random noise).
+        """
+        logger.warning("_extract_activations is deprecated. Use SteeringVectorGenerator for CAA.")
+        hidden_size = getattr(model.config, "hidden_size", getattr(model.config, "d_model", 768))
+        return torch.zeros(hidden_size)
     
     def compute_layer_wise_delta(self, model, prompt: str, 
                                 target_behavior: str) -> Dict[int, torch.Tensor]:

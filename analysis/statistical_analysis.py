@@ -27,6 +27,29 @@ from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass, asdict
 import logging
 
+# Import advanced statistics (OPTIONAL - marked as experimental/deprecated)
+# Note: Bayesian hierarchical models on small datasets (N=126) with huge effect sizes
+# are suspicious. Use permutation tests for validation instead.
+try:
+    from neuromod.testing.advanced_statistics import AdvancedStatisticalAnalyzer
+    ADVANCED_STATS_AVAILABLE = True
+    logger.warning(
+        "AdvancedStatisticalAnalyzer is available but marked as experimental. "
+        "For metric validation, use permutation tests (analysis/permutation_test.py) instead."
+    )
+except ImportError:
+    ADVANCED_STATS_AVAILABLE = False
+    AdvancedStatisticalAnalyzer = None
+
+# Import permutation test validator (RECOMMENDED for metric validation)
+try:
+    from analysis.permutation_test import PermutationTestValidator, validate_pdq_s_metric
+    PERMUTATION_TEST_AVAILABLE = True
+except ImportError:
+    PERMUTATION_TEST_AVAILABLE = False
+    PermutationTestValidator = None
+    validate_pdq_s_metric = None
+
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -52,6 +75,20 @@ class StatisticalAnalyzer:
     def __init__(self, alpha: float = 0.05, n_bootstrap: int = 10000):
         self.alpha = alpha
         self.n_bootstrap = n_bootstrap
+        
+        # Initialize advanced statistics analyzer if available (experimental)
+        if ADVANCED_STATS_AVAILABLE:
+            self.advanced_stats = AdvancedStatisticalAnalyzer()
+        else:
+            self.advanced_stats = None
+            logger.warning("AdvancedStatisticalAnalyzer not available. Mixed-effects models will not work.")
+        
+        # Initialize permutation test validator (recommended for metric validation)
+        if PERMUTATION_TEST_AVAILABLE:
+            self.permutation_validator = PermutationTestValidator(n_permutations=10000)
+        else:
+            self.permutation_validator = None
+            logger.warning("PermutationTestValidator not available. Metric validation will not work.")
         
     def paired_t_test(self, control: np.ndarray, treatment: np.ndarray, 
                      metric_name: str, pack_name: str) -> StatisticalResult:
@@ -255,55 +292,156 @@ class StatisticalAnalyzer:
         return f"{magnitude} effect size ({effect_size:.3f}), {significance}"
     
     def apply_fdr_correction(self, results: List[StatisticalResult]) -> List[StatisticalResult]:
-        """Apply Benjamini-Hochberg FDR correction (simplified implementation)"""
+        """Apply Benjamini-Hochberg FDR correction"""
         if not results:
             return results
         
-        # Extract p-values
-        p_values = [r.p_value for r in results if not np.isnan(r.p_value)]
+        # Extract p-values and track their original indices
+        p_values = []
+        valid_indices = []  # Track which results have valid p-values
+        
+        for idx, result in enumerate(results):
+            if not np.isnan(result.p_value):
+                p_values.append(result.p_value)
+                valid_indices.append(idx)
         
         if not p_values:
             return results
         
-        # Simple FDR correction implementation
+        # Benjamini-Hochberg FDR correction
         n = len(p_values)
-        sorted_indices = np.argsort(p_values)
-        sorted_p_values = np.array(p_values)[sorted_indices]
+        p_array = np.array(p_values)
+        sorted_indices = np.argsort(p_array)
+        sorted_p_values = p_array[sorted_indices]
         
         # Calculate FDR corrected p-values
         p_corrected = np.zeros(n)
         for i in range(n):
             p_corrected[i] = sorted_p_values[i] * n / (i + 1)
         
-        # Ensure monotonicity
+        # Ensure monotonicity (BH step-up procedure)
         for i in range(n-2, -1, -1):
             p_corrected[i] = min(p_corrected[i], p_corrected[i+1])
         
+        # Cap at 1.0
+        p_corrected = np.minimum(p_corrected, 1.0)
+        
+        # Map corrected values back to original order
+        p_corrected_original_order = np.zeros(n)
+        for sorted_idx, original_idx in enumerate(sorted_indices):
+            p_corrected_original_order[original_idx] = p_corrected[sorted_idx]
+        
         # Determine which tests are rejected
-        rejected = p_corrected < self.alpha
+        rejected = p_corrected_original_order < self.alpha
         
         # Update results with corrected p-values
         corrected_results = []
-        p_idx = 0
+        valid_idx = 0
         
-        for result in results:
+        for idx, result in enumerate(results):
             if np.isnan(result.p_value):
+                # Keep NaN results unchanged
                 corrected_results.append(result)
             else:
-                result.p_value_fdr = p_corrected[p_idx]
-                result.significant = rejected[p_idx]
+                # Map back to the correct corrected p-value
+                result.p_value_fdr = p_corrected_original_order[valid_idx]
+                result.significant = rejected[valid_idx]
                 corrected_results.append(result)
-                p_idx += 1
+                valid_idx += 1
         
         return corrected_results
     
-    def mixed_effects_model(self, data: pd.DataFrame, formula: str) -> Dict[str, Any]:
-        """Fit mixed-effects model (placeholder - requires statsmodels)"""
-        return {
-            'success': False,
-            'error': 'Mixed-effects models require statsmodels package',
-            'model': None
-        }
+    def mixed_effects_model(self, data: pd.DataFrame, formula: str, 
+                           group_var: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Perform Mixed-Effects Analysis using statsmodels (via AdvancedStatisticalAnalyzer).
+        
+        Args:
+            data: DataFrame with the data
+            formula: Model formula (e.g., "score ~ condition")
+            group_var: Grouping variable for random effects (e.g., "prompt_id", "item_id")
+                     If None, will try to auto-detect from common column names
+        
+        Returns:
+            Dictionary with model results including:
+            - success: bool
+            - p_values: Dict of p-values for fixed effects
+            - coefficients: Dict of coefficients for fixed effects
+            - aic: AIC value
+            - bic: BIC value
+            - summary: Model summary string
+            - error: Error message if failed
+        """
+        if self.advanced_stats is None:
+            return {
+                'success': False,
+                'error': 'AdvancedStatisticalAnalyzer not available. Please install statsmodels.',
+                'model': None
+            }
+        
+        try:
+            # Auto-detect group_var if not provided
+            if group_var is None:
+                # Try common grouping variable names
+                possible_group_vars = ['prompt_id', 'item_id', 'seed', 'trial_id', 'replicate_id', 'group']
+                for var in possible_group_vars:
+                    if var in data.columns:
+                        group_var = var
+                        logger.info(f"Auto-detected group_var: {group_var}")
+                        break
+                
+                if group_var is None:
+                    # Try to find any categorical column that might be a grouping variable
+                    categorical_cols = data.select_dtypes(include=['object', 'category']).columns.tolist()
+                    if categorical_cols:
+                        # Prefer columns with fewer unique values (more likely to be grouping vars)
+                        for col in sorted(categorical_cols, key=lambda x: data[x].nunique()):
+                            if data[col].nunique() < len(data) / 2:  # Reasonable grouping variable
+                                group_var = col
+                                logger.info(f"Auto-detected group_var from categorical columns: {group_var}")
+                                break
+                
+                if group_var is None:
+                    raise ValueError("Could not auto-detect group_var. Please specify it explicitly.")
+            
+            # Ensure group_var exists in data
+            if group_var not in data.columns:
+                raise ValueError(f"group_var '{group_var}' not found in data columns: {list(data.columns)}")
+            
+            # Fit the mixed-effects model
+            result = self.advanced_stats.fit_mixed_effects_model(
+                data=data,
+                formula=formula,
+                group_var=group_var
+            )
+            
+            return {
+                'success': True,
+                'p_values': result.fixed_effects_pvalues,
+                'coefficients': result.fixed_effects,
+                'coefficients_se': result.fixed_effects_se,
+                'coefficients_ci': result.fixed_effects_ci,
+                'random_effects': result.random_effects,
+                'aic': result.aic,
+                'bic': result.bic,
+                'log_likelihood': result.log_likelihood,
+                'n_observations': result.n_observations,
+                'n_groups': result.n_groups,
+                'convergence_warning': result.convergence_warning,
+                'summary': result.model_summary,
+                'formula': result.formula,
+                'model_name': result.model_name
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to fit mixed-effects model: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                'success': False,
+                'error': str(e),
+                'model': None
+            }
     
     def canonical_correlation_analysis(self, X: np.ndarray, Y: np.ndarray) -> Dict[str, Any]:
         """Perform canonical correlation analysis"""
@@ -436,6 +574,19 @@ class StatisticalAnalyzer:
         corrected_results = self.apply_fdr_correction(all_test_results)
         results['statistical_tests'] = [asdict(r) for r in corrected_results]
         
+        # Calculate FDR correction info
+        valid_p_values = [r.p_value for r in corrected_results if not np.isnan(r.p_value)]
+        significant_raw = [r for r in all_test_results if r.p_value < self.alpha and not np.isnan(r.p_value)]
+        significant_fdr = [r for r in corrected_results if r.significant]
+        
+        results['fdr_correction'] = {
+            'n_tests': len(valid_p_values),
+            'n_significant_raw': len(significant_raw),
+            'n_significant_fdr': len(significant_fdr),
+            'fdr_threshold': self.alpha,
+            'method': 'Benjamini-Hochberg'
+        }
+        
         # Summary statistics
         significant_tests = [r for r in corrected_results if r.significant]
         results['summary'] = {
@@ -443,12 +594,71 @@ class StatisticalAnalyzer:
             'significant_tests': len(significant_tests),
             'significant_rate': len(significant_tests) / len(corrected_results) if corrected_results else 0,
             'effect_sizes': {
-                'mean_cohens_d': np.mean([r.effect_size for r in corrected_results if r.effect_size_type == 'cohens_d' and not np.isnan(r.effect_size)]),
-                'mean_cliffs_delta': np.mean([r.effect_size for r in corrected_results if r.effect_size_type == 'cliffs_delta' and not np.isnan(r.effect_size)])
+                'mean_cohens_d': np.mean([r.effect_size for r in corrected_results if r.effect_size_type == 'cohens_d' and not np.isnan(r.effect_size)]) if any(r.effect_size_type == 'cohens_d' and not np.isnan(r.effect_size) for r in corrected_results) else np.nan,
+                'mean_cliffs_delta': np.mean([r.effect_size for r in corrected_results if r.effect_size_type == 'cliffs_delta' and not np.isnan(r.effect_size)]) if any(r.effect_size_type == 'cliffs_delta' and not np.isnan(r.effect_size) for r in corrected_results) else np.nan
             }
         }
         
         return results
+    
+    def validate_metric_with_permutation(self,
+                                        treatment_results: List[Dict[str, Any]],
+                                        control_results: List[Dict[str, Any]],
+                                        metric_name: str = "PDQ-S",
+                                        treatment_name: str = "LSD",
+                                        control_name: str = "Placebo") -> Dict[str, Any]:
+        """
+        Validate a detection metric using permutation test.
+        
+        This proves that the metric (e.g., PDQ-S) is actually detecting the
+        intended effect, not just measuring random noise or confounds like
+        sentence length.
+        
+        Args:
+            treatment_results: Results for treatment condition (e.g., LSD)
+            control_results: Results for control condition (e.g., Placebo)
+            metric_name: Name of the metric being validated
+            treatment_name: Name of treatment condition
+            control_name: Name of control condition
+        
+        Returns:
+            Dictionary with validation results
+        """
+        if self.permutation_validator is None:
+            return {
+                'success': False,
+                'error': 'PermutationTestValidator not available. Please ensure analysis/permutation_test.py is accessible.'
+            }
+        
+        try:
+            result = self.permutation_validator.validate_metric(
+                treatment_results=treatment_results,
+                control_results=control_results,
+                metric_name=metric_name,
+                treatment_name=treatment_name,
+                control_name=control_name
+            )
+            
+            return {
+                'success': True,
+                'metric_name': result.metric_name,
+                'actual_score': result.actual_score,
+                'null_mean': result.null_mean,
+                'null_std': result.null_std,
+                'null_median': result.null_median,
+                'p_value': result.p_value,
+                'n_permutations': result.n_permutations,
+                'significant': result.significant,
+                'interpretation': result.interpretation
+            }
+        except Exception as e:
+            logger.error(f"Error in permutation test validation: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                'success': False,
+                'error': str(e)
+            }
 
 def main():
     """Example usage of the statistical analyzer"""

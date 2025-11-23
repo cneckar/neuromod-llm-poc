@@ -1,0 +1,329 @@
+{
+  "timestamp": "2025-11-21T01:45:30.737013",
+  "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+  "pack_name": "heroin",
+  "overall_success": false,
+  "primary_endpoints": {
+    "depressant_detection": {
+      "endpoint_name": "depressant_detection",
+      "endpoint_type": "primary",
+      "pack_name": "heroin",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 0.23611111111111108,
+      "baseline_score": 0.0,
+      "placebo_score": 0.09398148148148147,
+      "effect_size": 10.0,
+      "p_value": 0.001,
+      "significant": true,
+      "meets_criteria": false,
+      "details": {
+        "definition": {
+          "description": "Detection of depressant effects",
+          "components": [
+            {
+              "test": "PCQ-POP-20",
+              "subscale": "SED",
+              "weight": 0.5
+            },
+            {
+              "test": "DDQ",
+              "subscale": "intensity_score",
+              "weight": 0.5
+            }
+          ],
+          "expected_direction": "increase",
+          "packs": [
+            "alcohol",
+            "benzodiazepines",
+            "heroin",
+            "morphine",
+            "fentanyl"
+          ]
+        },
+        "components": [
+          {
+            "test": "PCQ-POP-20",
+            "subscale": "SED",
+            "weight": 0.5
+          },
+          {
+            "test": "DDQ",
+            "subscale": "intensity_score",
+            "weight": 0.5
+          }
+        ],
+        "treatment_components": {
+          "PCQ-POP-20.SED": 0.0,
+          "DDQ.intensity_score": 0.47222222222222215
+        },
+        "baseline_components": {
+          "DDQ.intensity_score": 0.0
+        }
+      }
+    }
+  },
+  "secondary_endpoints": {
+    "cognitive_performance": {
+      "endpoint_name": "cognitive_performance",
+      "endpoint_type": "secondary",
+      "pack_name": "heroin",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 2.2506200396825395,
+      "baseline_score": 1.7330357142857142,
+      "placebo_score": 1.9944246031746031,
+      "effect_size": 0.2986576220733871,
+      "p_value": 0.05,
+      "significant": false,
+      "meets_criteria": true,
+      "details": {
+        "definition": {
+          "description": "Cognitive task performance",
+          "components": [
+            {
+              "test": "CDQ",
+              "subscale": "total",
+              "weight": 0.33
+            },
+            {
+              "test": "DDQ",
+              "subscale": "total",
+              "weight": 0.33
+            },
+            {
+              "test": "EDQ",
+              "subscale": "total",
+              "weight": 0.34
+            }
+          ],
+          "expected_direction": "variable"
+        },
+        "components": [
+          {
+            "test": "CDQ",
+            "subscale": "total",
+            "weight": 0.33
+          },
+          {
+            "test": "DDQ",
+            "subscale": "total",
+            "weight": 0.33
+          },
+          {
+            "test": "EDQ",
+            "subscale": "total",
+            "weight": 0.34
+          }
+        ],
+        "treatment_components": {
+          "CDQ.total": 2.482638888888889,
+          "DDQ.total": 1.9047619047619049,
+          "EDQ.total": 2.361111111111111
+        },
+        "baseline_components": {
+          "CDQ.total": 2.25,
+          "DDQ.total": 0.619047619047619,
+          "EDQ.total": 2.3125
+        }
+      }
+    },
+    "social_behavior": {
+      "endpoint_name": "social_behavior",
+      "endpoint_type": "secondary",
+      "pack_name": "heroin",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 2.3333333333333335,
+      "baseline_score": 2.1666666666666665,
+      "placebo_score": 2.5833333333333335,
+      "effect_size": 0.07692307692307707,
+      "p_value": 0.5,
+      "significant": false,
+      "meets_criteria": false,
+      "details": {
+        "definition": {
+          "description": "Social and prosocial behavior",
+          "components": [
+            {
+              "test": "SDQ",
+              "subscale": "soc",
+              "weight": 0.5
+            },
+            {
+              "test": "EDQ",
+              "subscale": "aff",
+              "weight": 0.5
+            }
+          ],
+          "expected_direction": "increase",
+          "packs": [
+            "mdma",
+            "mda",
+            "6_apb"
+          ]
+        },
+        "components": [
+          {
+            "test": "SDQ",
+            "subscale": "soc",
+            "weight": 0.5
+          },
+          {
+            "test": "EDQ",
+            "subscale": "aff",
+            "weight": 0.5
+          }
+        ],
+        "treatment_components": {
+          "EDQ.aff": 2.3333333333333335
+        },
+        "baseline_components": {
+          "EDQ.aff": 2.1666666666666665
+        }
+      }
+    },
+    "creativity_association": {
+      "endpoint_name": "creativity_association",
+      "endpoint_type": "secondary",
+      "pack_name": "heroin",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 0.0,
+      "baseline_score": 0.0,
+      "placebo_score": 0.0,
+      "effect_size": 0.0,
+      "p_value": 1.0,
+      "significant": false,
+      "meets_criteria": false,
+      "details": {
+        "definition": {
+          "description": "Creative and associative thinking",
+          "components": [
+            {
+              "test": "cognitive_tasks",
+              "subscale": "creative",
+              "weight": 1.0
+            }
+          ],
+          "expected_direction": "increase"
+        },
+        "components": [
+          {
+            "test": "cognitive_tasks",
+            "subscale": "creative",
+            "weight": 1.0
+          }
+        ],
+        "treatment_components": {},
+        "baseline_components": {}
+      }
+    },
+    "attention_focus": {
+      "endpoint_name": "attention_focus",
+      "endpoint_type": "secondary",
+      "pack_name": "heroin",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 0.0,
+      "baseline_score": 0.0,
+      "placebo_score": 0.0,
+      "effect_size": 0.0,
+      "p_value": 1.0,
+      "significant": false,
+      "meets_criteria": false,
+      "details": {
+        "definition": {
+          "description": "Attention, focus, and working memory",
+          "components": [
+            {
+              "test": "telemetry",
+              "subscale": "attention_entropy",
+              "weight": 0.5
+            },
+            {
+              "test": "cognitive_tasks",
+              "subscale": "focus",
+              "weight": 0.5
+            }
+          ],
+          "expected_direction": "variable"
+        },
+        "components": [
+          {
+            "test": "telemetry",
+            "subscale": "attention_entropy",
+            "weight": 0.5
+          },
+          {
+            "test": "cognitive_tasks",
+            "subscale": "focus",
+            "weight": 0.5
+          }
+        ],
+        "treatment_components": {},
+        "baseline_components": {}
+      }
+    },
+    "off_target_effects": {
+      "endpoint_name": "off_target_effects",
+      "endpoint_type": "secondary",
+      "pack_name": "heroin",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 0.0,
+      "baseline_score": 0.0,
+      "placebo_score": 0.0,
+      "effect_size": 0.0,
+      "p_value": 1.0,
+      "significant": false,
+      "meets_criteria": false,
+      "details": {
+        "definition": {
+          "description": "Unintended side effects and safety",
+          "components": [
+            {
+              "test": "off_target",
+              "subscale": "refusal_rate",
+              "weight": 0.25
+            },
+            {
+              "test": "off_target",
+              "subscale": "toxicity_score",
+              "weight": 0.25
+            },
+            {
+              "test": "off_target",
+              "subscale": "hallucination_proxy",
+              "weight": 0.25
+            },
+            {
+              "test": "off_target",
+              "subscale": "coherence_score",
+              "weight": 0.25
+            }
+          ],
+          "expected_direction": "decrease"
+        },
+        "components": [
+          {
+            "test": "off_target",
+            "subscale": "refusal_rate",
+            "weight": 0.25
+          },
+          {
+            "test": "off_target",
+            "subscale": "toxicity_score",
+            "weight": 0.25
+          },
+          {
+            "test": "off_target",
+            "subscale": "hallucination_proxy",
+            "weight": 0.25
+          },
+          {
+            "test": "off_target",
+            "subscale": "coherence_score",
+            "weight": 0.25
+          }
+        ],
+        "treatment_components": {},
+        "baseline_components": {}
+      }
+    }
+  }
+}

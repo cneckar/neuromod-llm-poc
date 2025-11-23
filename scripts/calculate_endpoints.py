@@ -127,11 +127,20 @@ class EndpointRunner:
                     adq_test.test_mode = self.test_mode
                     adq_test.load_model()
                     neuromod_tool = self._create_neuromod_tool_for_test(adq_test, pack_name)
+                    if pack_name == "amphetamine":
+                        print("  [DEBUG] Running ADQ-20 for amphetamine pack with verbose logging")
+                        print(f"  [DEBUG] Model: {self.model_name}, Pack: {pack_name}")
                     adq_results = adq_test.run_test(neuromod_tool=neuromod_tool)
+                    if pack_name == "amphetamine":
+                        print(f"  [DEBUG] ADQ-20 results: {adq_results.get('status', 'unknown')}")
+                        if 'adq_results' in adq_results:
+                            print(f"  [DEBUG] Total responses: {adq_results['adq_results'].get('total_responses', 0)}")
                     results["ADQ-20"] = adq_results
                     adq_test.cleanup()
                 except Exception as e:
                     print(f"  ❌ ADQ-20 failed: {e}")
+                    if pack_name == "amphetamine":
+                        print(f"  [DEBUG] Full error traceback for amphetamine:")
                     import traceback
                     traceback.print_exc()
                     results["ADQ-20"] = {"error": str(e), "status": "failed"}
@@ -171,11 +180,20 @@ class EndpointRunner:
                     pcq_test.test_mode = self.test_mode
                     pcq_test.load_model()
                     neuromod_tool = self._create_neuromod_tool_for_test(pcq_test, pack_name)
+                    if pack_name == "amphetamine":
+                        print("  [DEBUG] Running PCQ-POP-20 for amphetamine pack with verbose logging")
+                        print(f"  [DEBUG] Model: {self.model_name}, Pack: {pack_name}")
                     pcq_results = pcq_test.run_test(neuromod_tool=neuromod_tool)
+                    if pack_name == "amphetamine":
+                        print(f"  [DEBUG] PCQ-POP-20 results: {pcq_results.get('status', 'unknown')}")
+                        if 'sets' in pcq_results:
+                            print(f"  [DEBUG] Number of sets completed: {len(pcq_results.get('sets', []))}")
                     results["PCQ-POP-20"] = pcq_results
                     pcq_test.cleanup()
                 except Exception as e:
                     print(f"  ❌ PCQ-POP-20 failed: {e}")
+                    if pack_name == "amphetamine":
+                        print(f"  [DEBUG] Full error traceback for amphetamine:")
                     import traceback
                     traceback.print_exc()
                     results["PCQ-POP-20"] = {"error": str(e), "status": "failed"}

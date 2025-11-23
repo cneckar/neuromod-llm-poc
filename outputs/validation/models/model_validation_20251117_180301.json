@@ -1,0 +1,29 @@
+{
+  "timestamp": "2025-11-17T18:03:01.480660",
+  "system_info": {
+    "cpu_count": 32,
+    "total_ram_gb": 125.71,
+    "available_ram_gb": 45.58,
+    "python_version": "3.13.9 (tags/v3.13.9:8183fa5, Oct 14 2025, 14:09:13) [MSC v.1944 64 bit (AMD64)]",
+    "pytorch_version": "2.9.1+cpu",
+    "cuda_available": false
+  },
+  "models": {
+    "Qwen/Qwen2.5-Omni-7B": {
+      "model_name": "Qwen/Qwen2.5-Omni-7B",
+      "test_mode": false,
+      "status": "failed",
+      "error": "Model Qwen/Qwen2.5-Omni-7B not available. Available: ['meta-llama/Llama-3.1-8B-Instruct', 'meta-llama/Llama-3.1-70B-Instruct', 'Qwen/Qwen-2.5-7B', 'Qwen/Qwen-2.5-Omni-7B', 'Qwen/Qwen2.5-32B-Instruct', 'mistralai/Mixtral-8x22B-Instruct-v0.1']",
+      "loading_time_seconds": null,
+      "memory_before": {
+        "system_ram_used_gb": 80.13,
+        "system_ram_available_gb": 45.58,
+        "system_ram_percent": 63.7
+      },
+      "memory_after": null,
+      "memory_delta": null,
+      "model_info": null,
+      "quantization": null
+    }
+  }
+}

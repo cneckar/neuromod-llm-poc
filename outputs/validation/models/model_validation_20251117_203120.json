@@ -1,0 +1,44 @@
+{
+  "timestamp": "2025-11-17T18:05:40.689937",
+  "system_info": {
+    "cpu_count": 32,
+    "total_ram_gb": 125.71,
+    "available_ram_gb": 46.05,
+    "python_version": "3.13.9 (tags/v3.13.9:8183fa5, Oct 14 2025, 14:09:13) [MSC v.1944 64 bit (AMD64)]",
+    "pytorch_version": "2.9.1+cpu",
+    "cuda_available": false
+  },
+  "models": {
+    "Qwen/Qwen2.5-Omni-7B": {
+      "model_name": "Qwen/Qwen2.5-Omni-7B",
+      "test_mode": false,
+      "status": "failed",
+      "error": "argument 'ids': 'list' object cannot be interpreted as an integer",
+      "loading_time_seconds": 1484.74,
+      "memory_before": {
+        "system_ram_used_gb": 79.66,
+        "system_ram_available_gb": 46.05,
+        "system_ram_percent": 63.4
+      },
+      "memory_after": {
+        "system_ram_used_gb": 97.29,
+        "system_ram_available_gb": 28.42,
+        "system_ram_percent": 77.4
+      },
+      "memory_delta": {
+        "system_ram_used_gb": 17.63,
+        "system_ram_available_gb": -17.63,
+        "system_ram_percent": 14.0
+      },
+      "model_info": {
+        "name": "Qwen/Qwen2.5-Omni-7B",
+        "size": "small",
+        "backend": "huggingface",
+        "device_map": null,
+        "torch_dtype": "torch.float16",
+        "parameters": "10.7B"
+      },
+      "quantization": "unknown"
+    }
+  }
+}

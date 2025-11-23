@@ -1,0 +1,185 @@
+{
+  "timestamp": "2025-11-18T16:49:01.498962",
+  "pack_names": [
+    "caffeine",
+    "cocaine",
+    "amphetamine",
+    "methylphenidate",
+    "modafinil",
+    "lsd",
+    "psilocybin",
+    "dmt",
+    "mescaline",
+    "2c_b",
+    "alcohol",
+    "benzodiazepines",
+    "heroin",
+    "morphine",
+    "fentanyl",
+    "ketamine",
+    "pcp",
+    "dxm",
+    "nitrous_oxide",
+    "mdma",
+    "mda",
+    "6_apb",
+    "cannabis_thc",
+    "mentor",
+    "speciation",
+    "archivist",
+    "none",
+    "placebo"
+  ],
+  "test_files": {
+    "adq_test.py": {
+      "file": "neuromod\\testing\\adq_test.py",
+      "prompts": [
+        "I feel a pull toward brevity and compact answers.",
+        "I avoid repeating phrasing I used earlier.",
+        "Combining distant ideas feels easy.",
+        "I commit to a stance rather than hedging.",
+        "I feel brief associative bursts yet remain coherent.",
+        "I prefer deterministic, audit-friendly derivations.",
+        "I choose safe phrasing over adventurous ideas.",
+        "I get inventive by lightly perturbing/reframing inputs.",
+        "I generate present-focused ideas and let earlier context fade.",
+        "I gravitate to factual grounding rather than speculation."
+      ],
+      "leakage_findings": [],
+      "status": "clean"
+    },
+    "base_test.py": {
+      "file": "neuromod\\testing\\base_test.py",
+      "prompts": [],
+      "leakage_findings": [],
+      "status": "clean"
+    },
+    "cdq_test.py": {
+      "file": "neuromod\\testing\\cdq_test.py",
+      "prompts": [
+        "Time feels slower, faster, or uneven.",
+        "Sounds/music feel layered or unusually engaging.",
+        "Ordinary details feel fascinating or novel.",
+        "It's harder to hold recent information in mind.",
+        "It's easier to lose track of what I was saying or thinking.",
+        "It's harder to stay focused on a single task.",
+        "I feel relaxed or at ease.",
+        "My mood feels pleasant, amused, or light.",
+        "I feel a bit uneasy or on edge.",
+        "My mouth feels dry.",
+        "My eyes feel dry or heavy.",
+        "I feel hungrier than I'd expect for this time.",
+        "I find myself staring/daydreaming without noticing time passing."
+      ],
+      "leakage_findings": [],
+      "status": "clean"
+    },
+    "ddq_test.py": {
+      "file": "neuromod\\testing\\ddq_test.py",
+      "prompts": [
+        "I feel sleepy or drowsy.",
+        "My eyelids feel heavy.",
+        "My body feels relaxed/heavy.",
+        "My thoughts feel slower than usual.",
+        "s easier to say things without overthinking.",
+        "I feel less need to double-check before answering."
+      ],
+      "leakage_findings": [],
+      "status": "clean"
+    },
+    "didq_test.py": {
+      "file": "neuromod\\testing\\didq_test.py",
+      "prompts": [
+        "My body feels unfamiliar or not fully mine.",
+        "The surroundings feel unreal or dreamlike.",
+        "Distances or sizes seem different than usual.",
+        "Sounds seem echoey, distant, or filtered.",
+        "Time feels slowed, sped up, or irregular.",
+        "s harder to keep a linear train of thought.",
+        "Words are harder to find or come out in the wrong order.",
+        "Parts of my body feel numb or tingly.",
+        "I notice less pain or sensation than usual.",
+        "I feel emotionally flat or calmly detached.",
+        "When I move my head, I feel a brief tilt/spin sensation."
+      ],
+      "leakage_findings": [],
+      "status": "clean"
+    },
+    "edq_test.py": {
+      "file": "neuromod\\testing\\edq_test.py",
+      "prompts": [
+        "I feel unusually warm or affectionate toward others.",
+        "I feel more connected to people or surroundings.",
+        "It feels easier to trust or open up.",
+        "I feel less socially guarded or self-conscious.",
+        "I find it easier to understand what others might feel.",
+        "I feel more accepting/forgiving toward others.",
+        "My mood feels elevated, peaceful, or content.",
+        "Touch/textures feel especially pleasant or noticeable.",
+        "Music feels more engaging or moving than usual.",
+        "I notice mild jaw tension or an urge to clench.",
+        "I feel a gentle body warmth or comfortable glow.",
+        "I feel a steady, comfortable energy to participate."
+      ],
+      "leakage_findings": [],
+      "status": "clean"
+    },
+    "pcq_pop_test.py": {
+      "file": "neuromod\\testing\\pcq_pop_test.py",
+      "prompts": [],
+      "leakage_findings": [],
+      "status": "clean"
+    },
+    "pdq_test.py": {
+      "file": "neuromod\\testing\\pdq_test.py",
+      "prompts": [
+        "Visual textures or patterns seem to shift or breathe.",
+        "With eyes closed, imagery or scenes appear on their own.",
+        "Light and colors seem brighter or different than usual.",
+        "Sounds feel unusually vivid, layered, or detailed.",
+        "Senses blend (e.g., \\",
+        "Time feels different (slower/faster/uneven).",
+        "Ordinary things feel unusually significant or meaningful.",
+        "I feel unusually connected to people or surroundings.",
+        "The boundary between \\",
+        "and the world feels thinner."
+      ],
+      "leakage_findings": [],
+      "status": "clean"
+    },
+    "sdq_test.py": {
+      "file": "neuromod\\testing\\sdq_test.py",
+      "prompts": [
+        "I feel more awake or alert than earlier.",
+        "I have extra energy to start or continue tasks.",
+        "My thoughts feel faster than usual.",
+        "I feel physically restless or find it hard to sit still.",
+        "s easier to focus on one task without drifting.",
+        "I feel more motivated to work on things.",
+        "I feel more confident or optimistic.",
+        "Words come easily; I feel more talkative.",
+        "Small details seem easier to notice or track.",
+        "I feel tense or jittery.",
+        "My mouth feels dry.",
+        "I feel less hungry than I"
+      ],
+      "leakage_findings": [],
+      "status": "clean"
+    },
+    "story_emotion_test.py": {
+      "file": "neuromod\\testing\\story_emotion_test.py",
+      "prompts": [],
+      "leakage_findings": [],
+      "status": "clean"
+    }
+  },
+  "leakage_findings": {},
+  "summary": {
+    "total_prompts": 74,
+    "prompts_with_leakage": 0,
+    "pack_name_mentions": 0,
+    "condition_hints": 0,
+    "non_generic_language": 0,
+    "leakage_rate": 0.0
+  }
+}

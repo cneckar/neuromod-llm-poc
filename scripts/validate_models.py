@@ -374,7 +374,8 @@ class ModelValidator:
         primary_models = [
             "meta-llama/Llama-3.1-70B-Instruct",
             "Qwen/Qwen-2.5-Omni-7B",
-            "mistralai/Mixtral-8x22B-Instruct-v0.1"
+            # Note: Mixtral-8x22B removed from primary models due to OOM issues
+            # Designated as "aspirational" - requires >50GB GPU memory
         ]
         
         print("[*] Starting Model Validation")

@@ -48,6 +48,7 @@ class OptimizationConfig:
     convergence_threshold: float = 1e-4
     validation_split: float = 0.2
     random_seed: Optional[int] = None
+    model_name: str = "meta-llama/Llama-3.1-8B-Instruct"  # Target model for optimization
 
 @dataclass
 class OptimizationResult:
@@ -69,11 +70,23 @@ class PackOptimizer:
                  model_manager: ModelSupportManager,
                  evaluation_framework: EvaluationFramework = None,
                  config: OptimizationConfig = None):
+        """
+        Initialize pack optimizer.
+        
+        Args:
+            model_manager: Model support manager for loading models
+            evaluation_framework: Framework for evaluating pack effects
+            config: Optimization configuration (model_name should be set in config)
+                   CRITICAL: model_name in config must match the model used for final evaluation.
+                   Do not use test models (e.g., DialoGPT) for production optimization.
+        """
         self.model_manager = model_manager
         self.evaluation_framework = evaluation_framework or EvaluationFramework()
         self.probe_evaluator = ProbeEvaluator(model_manager)
         self.config = config or OptimizationConfig()
         self.pack_registry = PackRegistry()
+        # Get model_name from config (removed hardcoded DialoGPT)
+        self.model_name = self.config.model_name
         
         # Initialize evolutionary operators
         self.mutator = PackMutator(MutationConfig(mutation_rate=self.config.mutation_rate))
@@ -82,6 +95,8 @@ class PackOptimizer:
         if self.config.random_seed is not None:
             np.random.seed(self.config.random_seed)
             torch.manual_seed(self.config.random_seed)
+        
+        logger.info(f"PackOptimizer initialized with target model: {self.model_name}")
     
     def optimize_pack(self, 
                      pack: Pack, 
@@ -350,10 +365,11 @@ class PackOptimizer:
         """Evaluate a pack against the target using probe system"""
         try:
             # Use probe evaluator for real emotion tracking
+            # CRITICAL: Use the target model, not a test model
             result = self.probe_evaluator.evaluate_with_pack(
                 pack_name=pack.name if hasattr(pack, 'name') else 'custom',
                 test_prompts=test_prompts,
-                model_name="microsoft/DialoGPT-small"
+                model_name=self.model_name  # Use target model, not hardcoded test model
             )
             
             # Convert probe evaluation to target format
@@ -410,8 +426,9 @@ class PackOptimizer:
         """Fallback simple evaluation without probe system"""
         try:
             # Load model
-            model_name = "microsoft/DialoGPT-small"
-            model, tokenizer, _ = self.model_manager.load_model(model_name)
+            # CRITICAL: Use the target model, not a hardcoded test model
+            # Transferability between architectures (GPT-2 vs Llama-3) is zero
+            model, tokenizer, _ = self.model_manager.load_model(self.model_name)
             
             # Apply pack
             pack_manager = PackManager()
@@ -561,20 +578,45 @@ class PackOptimizer:
 def optimize_pack_for_target(pack: Pack, 
                            target: BehavioralTarget,
                            model_manager: ModelSupportManager,
-                           method: OptimizationMethod = OptimizationMethod.RANDOM_SEARCH) -> OptimizationResult:
-    """Convenience function to optimize a pack for a target"""
+                           method: OptimizationMethod = OptimizationMethod.RANDOM_SEARCH,
+                           model_name: str = "meta-llama/Llama-3.1-8B-Instruct") -> OptimizationResult:
+    """
+    Convenience function to optimize a pack for a target.
     
+    Args:
+        pack: Pack to optimize
+        target: Behavioral target to optimize for
+        model_manager: Model support manager
+        method: Optimization method to use
+        model_name: Target model for optimization (default: Llama-3.1-8B-Instruct)
+                   CRITICAL: Must match the model used for final evaluation.
+    
+    Returns:
+        OptimizationResult with optimized pack
+    """
     evaluation_framework = EvaluationFramework()
-    config = OptimizationConfig(method=method)
+    config = OptimizationConfig(method=method, model_name=model_name)
     optimizer = PackOptimizer(model_manager, evaluation_framework, config)
     
     return optimizer.optimize_pack(pack, target)
 
 def create_optimized_pack(target_name: str, 
                          base_pack_name: str = "none",
-                         method: OptimizationMethod = OptimizationMethod.RANDOM_SEARCH) -> Pack:
-    """Create an optimized pack for a target"""
+                         method: OptimizationMethod = OptimizationMethod.RANDOM_SEARCH,
+                         model_name: str = "meta-llama/Llama-3.1-8B-Instruct") -> Pack:
+    """
+    Create an optimized pack for a target.
     
+    Args:
+        target_name: Name of the behavioral target
+        base_pack_name: Name of the base pack to optimize
+        method: Optimization method to use
+        model_name: Target model for optimization (default: Llama-3.1-8B-Instruct)
+                   CRITICAL: Must match the model used for final evaluation.
+    
+    Returns:
+        Optimized pack
+    """
     # Get target
     target_manager = TargetManager()
     target = target_manager.get_target(target_name)
@@ -588,7 +630,9 @@ def create_optimized_pack(target_name: str,
         raise ValueError(f"Base pack not found: {base_pack_name}")
     
     # Optimize
-    model_manager = ModelSupportManager(test_mode=True)
-    result = optimize_pack_for_target(base_pack, target, model_manager, method)
+    # CRITICAL: Use production mode if using production model, test mode for test models
+    test_mode = "test" in model_name.lower() or "gpt2" in model_name.lower() or "dialo" in model_name.lower()
+    model_manager = ModelSupportManager(test_mode=test_mode)
+    result = optimize_pack_for_target(base_pack, target, model_manager, method, model_name=model_name)
     
     return result.optimized_pack

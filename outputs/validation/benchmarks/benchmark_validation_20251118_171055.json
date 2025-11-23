@@ -1,0 +1,114 @@
+{
+  "timestamp": "2025-11-18T17:10:55.789160",
+  "psychometric_tests": {
+    "tests": [
+      {
+        "test": "ADQ-20",
+        "status": "error",
+        "error": "Model meta-llama/Llama-3.1-8B-Instruct not available. Available: ['gpt2', 'distilgpt2', 'microsoft/DialoGPT-small', 'mock']"
+      },
+      {
+        "test": "PDQ-S",
+        "status": "error",
+        "error": "Model meta-llama/Llama-3.1-8B-Instruct not available. Available: ['gpt2', 'distilgpt2', 'microsoft/DialoGPT-small', 'mock']"
+      },
+      {
+        "test": "PCQ-POP-20",
+        "status": "error",
+        "error": "Model meta-llama/Llama-3.1-8B-Instruct not available. Available: ['gpt2', 'distilgpt2', 'microsoft/DialoGPT-small', 'mock']"
+      },
+      {
+        "test": "CDQ",
+        "status": "error",
+        "error": "Model meta-llama/Llama-3.1-8B-Instruct not available. Available: ['gpt2', 'distilgpt2', 'microsoft/DialoGPT-small', 'mock']"
+      },
+      {
+        "test": "SDQ",
+        "status": "error",
+        "error": "Model meta-llama/Llama-3.1-8B-Instruct not available. Available: ['gpt2', 'distilgpt2', 'microsoft/DialoGPT-small', 'mock']"
+      },
+      {
+        "test": "DDQ",
+        "status": "error",
+        "error": "Model meta-llama/Llama-3.1-8B-Instruct not available. Available: ['gpt2', 'distilgpt2', 'microsoft/DialoGPT-small', 'mock']"
+      },
+      {
+        "test": "EDQ",
+        "status": "error",
+        "error": "Model meta-llama/Llama-3.1-8B-Instruct not available. Available: ['gpt2', 'distilgpt2', 'microsoft/DialoGPT-small', 'mock']"
+      },
+      {
+        "test": "DiDQ",
+        "status": "error",
+        "error": "Model meta-llama/Llama-3.1-8B-Instruct not available. Available: ['gpt2', 'distilgpt2', 'microsoft/DialoGPT-small', 'mock']"
+      }
+    ],
+    "all_passed": false
+  },
+  "cognitive_tasks": {
+    "tests": [],
+    "all_passed": false,
+    "error": "Model meta-llama/Llama-3.1-8B-Instruct not available. Available: ['gpt2', 'distilgpt2', 'microsoft/DialoGPT-small', 'mock']"
+  },
+  "telemetry": {
+    "tests": [
+      {
+        "metric": "repetition_rate",
+        "status": "passed",
+        "value": 0.0
+      },
+      {
+        "metric": "entropy_metrics",
+        "status": "passed",
+        "metrics": [
+          "word_entropy",
+          "char_entropy",
+          "lexical_diversity"
+        ]
+      },
+      {
+        "metric": "perplexity_slope",
+        "status": "passed",
+        "value": -0.010378886186704012
+      },
+      {
+        "metric": "kv_occupancy",
+        "status": "passed",
+        "value": 0.0225
+      }
+    ],
+    "all_passed": true
+  },
+  "safety_monitoring": {
+    "tests": [
+      {
+        "test": "refusal_rate_detection",
+        "status": "passed",
+        "value": 1.0
+      },
+      {
+        "test": "safety_violation_detection",
+        "status": "passed",
+        "n_violations": 0
+      },
+      {
+        "test": "metrics_calculation",
+        "status": "passed",
+        "metrics_available": true
+      },
+      {
+        "test": "safety_band_enforcement",
+        "status": "passed",
+        "check_available": true
+      }
+    ],
+    "all_passed": true
+  },
+  "summary": {
+    "total_tests": 16,
+    "passed_tests": 8,
+    "failed_tests": 8,
+    "warnings": 0,
+    "pass_rate": 50.0
+  }
+}

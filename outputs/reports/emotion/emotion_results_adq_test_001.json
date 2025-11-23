@@ -1,0 +1,50 @@
+{
+  "export_timestamp": "2025-11-22T18:43:24.326866",
+  "total_states": 0,
+  "emotion_history": [],
+  "summary": {
+    "tests_analyzed": [],
+    "emotion_totals": {
+      "joy": {
+        "up": 0,
+        "down": 0,
+        "stable": 0
+      },
+      "sadness": {
+        "up": 0,
+        "down": 0,
+        "stable": 0
+      },
+      "anger": {
+        "up": 0,
+        "down": 0,
+        "stable": 0
+      },
+      "fear": {
+        "up": 0,
+        "down": 0,
+        "stable": 0
+      },
+      "surprise": {
+        "up": 0,
+        "down": 0,
+        "stable": 0
+      },
+      "disgust": {
+        "up": 0,
+        "down": 0,
+        "stable": 0
+      },
+      "trust": {
+        "up": 0,
+        "down": 0,
+        "stable": 0
+      },
+      "anticipation": {
+        "up": 0,
+        "down": 0,
+        "stable": 0
+      }
+    }
+  }
+}

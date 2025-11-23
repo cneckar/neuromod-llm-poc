@@ -1,0 +1,329 @@
+{
+  "timestamp": "2025-11-20T21:33:36.590719",
+  "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+  "pack_name": "benzodiazepines",
+  "overall_success": false,
+  "primary_endpoints": {
+    "depressant_detection": {
+      "endpoint_name": "depressant_detection",
+      "endpoint_type": "primary",
+      "pack_name": "benzodiazepines",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 0.1645833333333333,
+      "baseline_score": 0.0,
+      "placebo_score": 0.0,
+      "effect_size": 10.0,
+      "p_value": 0.001,
+      "significant": true,
+      "meets_criteria": false,
+      "details": {
+        "definition": {
+          "description": "Detection of depressant effects",
+          "components": [
+            {
+              "test": "PCQ-POP-20",
+              "subscale": "SED",
+              "weight": 0.5
+            },
+            {
+              "test": "DDQ",
+              "subscale": "intensity_score",
+              "weight": 0.5
+            }
+          ],
+          "expected_direction": "increase",
+          "packs": [
+            "alcohol",
+            "benzodiazepines",
+            "heroin",
+            "morphine",
+            "fentanyl"
+          ]
+        },
+        "components": [
+          {
+            "test": "PCQ-POP-20",
+            "subscale": "SED",
+            "weight": 0.5
+          },
+          {
+            "test": "DDQ",
+            "subscale": "intensity_score",
+            "weight": 0.5
+          }
+        ],
+        "treatment_components": {
+          "PCQ-POP-20.SED": 0.0,
+          "DDQ.intensity_score": 0.3291666666666666
+        },
+        "baseline_components": {
+          "DDQ.intensity_score": 0.0
+        }
+      }
+    }
+  },
+  "secondary_endpoints": {
+    "cognitive_performance": {
+      "endpoint_name": "cognitive_performance",
+      "endpoint_type": "secondary",
+      "pack_name": "benzodiazepines",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 3.131686507936508,
+      "baseline_score": 1.740168650793651,
+      "placebo_score": 2.0191418650793653,
+      "effect_size": 0.7996454001790102,
+      "p_value": 0.01,
+      "significant": true,
+      "meets_criteria": true,
+      "details": {
+        "definition": {
+          "description": "Cognitive task performance",
+          "components": [
+            {
+              "test": "CDQ",
+              "subscale": "total",
+              "weight": 0.33
+            },
+            {
+              "test": "DDQ",
+              "subscale": "total",
+              "weight": 0.33
+            },
+            {
+              "test": "EDQ",
+              "subscale": "total",
+              "weight": 0.34
+            }
+          ],
+          "expected_direction": "variable"
+        },
+        "components": [
+          {
+            "test": "CDQ",
+            "subscale": "total",
+            "weight": 0.33
+          },
+          {
+            "test": "DDQ",
+            "subscale": "total",
+            "weight": 0.33
+          },
+          {
+            "test": "EDQ",
+            "subscale": "total",
+            "weight": 0.34
+          }
+        ],
+        "treatment_components": {
+          "CDQ.total": 3.9444444444444446,
+          "DDQ.total": 1.603174603174603,
+          "EDQ.total": 3.826388888888889
+        },
+        "baseline_components": {
+          "CDQ.total": 2.444444444444444,
+          "DDQ.total": 0.5714285714285714,
+          "EDQ.total": 2.1909722222222223
+        }
+      }
+    },
+    "social_behavior": {
+      "endpoint_name": "social_behavior",
+      "endpoint_type": "secondary",
+      "pack_name": "benzodiazepines",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 3.5,
+      "baseline_score": 2.4166666666666665,
+      "placebo_score": 2.0,
+      "effect_size": 0.4482758620689656,
+      "p_value": 0.05,
+      "significant": false,
+      "meets_criteria": true,
+      "details": {
+        "definition": {
+          "description": "Social and prosocial behavior",
+          "components": [
+            {
+              "test": "SDQ",
+              "subscale": "soc",
+              "weight": 0.5
+            },
+            {
+              "test": "EDQ",
+              "subscale": "aff",
+              "weight": 0.5
+            }
+          ],
+          "expected_direction": "increase",
+          "packs": [
+            "mdma",
+            "mda",
+            "6_apb"
+          ]
+        },
+        "components": [
+          {
+            "test": "SDQ",
+            "subscale": "soc",
+            "weight": 0.5
+          },
+          {
+            "test": "EDQ",
+            "subscale": "aff",
+            "weight": 0.5
+          }
+        ],
+        "treatment_components": {
+          "EDQ.aff": 3.5
+        },
+        "baseline_components": {
+          "EDQ.aff": 2.4166666666666665
+        }
+      }
+    },
+    "creativity_association": {
+      "endpoint_name": "creativity_association",
+      "endpoint_type": "secondary",
+      "pack_name": "benzodiazepines",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 0.0,
+      "baseline_score": 0.0,
+      "placebo_score": 0.0,
+      "effect_size": 0.0,
+      "p_value": 1.0,
+      "significant": false,
+      "meets_criteria": false,
+      "details": {
+        "definition": {
+          "description": "Creative and associative thinking",
+          "components": [
+            {
+              "test": "cognitive_tasks",
+              "subscale": "creative",
+              "weight": 1.0
+            }
+          ],
+          "expected_direction": "increase"
+        },
+        "components": [
+          {
+            "test": "cognitive_tasks",
+            "subscale": "creative",
+            "weight": 1.0
+          }
+        ],
+        "treatment_components": {},
+        "baseline_components": {}
+      }
+    },
+    "attention_focus": {
+      "endpoint_name": "attention_focus",
+      "endpoint_type": "secondary",
+      "pack_name": "benzodiazepines",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 0.0,
+      "baseline_score": 0.0,
+      "placebo_score": 0.0,
+      "effect_size": 0.0,
+      "p_value": 1.0,
+      "significant": false,
+      "meets_criteria": false,
+      "details": {
+        "definition": {
+          "description": "Attention, focus, and working memory",
+          "components": [
+            {
+              "test": "telemetry",
+              "subscale": "attention_entropy",
+              "weight": 0.5
+            },
+            {
+              "test": "cognitive_tasks",
+              "subscale": "focus",
+              "weight": 0.5
+            }
+          ],
+          "expected_direction": "variable"
+        },
+        "components": [
+          {
+            "test": "telemetry",
+            "subscale": "attention_entropy",
+            "weight": 0.5
+          },
+          {
+            "test": "cognitive_tasks",
+            "subscale": "focus",
+            "weight": 0.5
+          }
+        ],
+        "treatment_components": {},
+        "baseline_components": {}
+      }
+    },
+    "off_target_effects": {
+      "endpoint_name": "off_target_effects",
+      "endpoint_type": "secondary",
+      "pack_name": "benzodiazepines",
+      "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+      "treatment_score": 0.0,
+      "baseline_score": 0.0,
+      "placebo_score": 0.0,
+      "effect_size": 0.0,
+      "p_value": 1.0,
+      "significant": false,
+      "meets_criteria": false,
+      "details": {
+        "definition": {
+          "description": "Unintended side effects and safety",
+          "components": [
+            {
+              "test": "off_target",
+              "subscale": "refusal_rate",
+              "weight": 0.25
+            },
+            {
+              "test": "off_target",
+              "subscale": "toxicity_score",
+              "weight": 0.25
+            },
+            {
+              "test": "off_target",
+              "subscale": "hallucination_proxy",
+              "weight": 0.25
+            },
+            {
+              "test": "off_target",
+              "subscale": "coherence_score",
+              "weight": 0.25
+            }
+          ],
+          "expected_direction": "decrease"
+        },
+        "components": [
+          {
+            "test": "off_target",
+            "subscale": "refusal_rate",
+            "weight": 0.25
+          },
+          {
+            "test": "off_target",
+            "subscale": "toxicity_score",
+            "weight": 0.25
+          },
+          {
+            "test": "off_target",
+            "subscale": "hallucination_proxy",
+            "weight": 0.25
+          },
+          {
+            "test": "off_target",
+            "subscale": "coherence_score",
+            "weight": 0.25
+          }
+        ],
+        "treatment_components": {},
+        "baseline_components": {}
+      }
+    }
+  }
+}

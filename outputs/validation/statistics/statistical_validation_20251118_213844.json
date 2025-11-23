@@ -1,0 +1,101 @@
+{
+  "timestamp": "2025-11-18T21:38:44.099932",
+  "section": "4.7",
+  "validation_type": "statistical_analysis",
+  "basic_statistics": {
+    "tests_passed": 3,
+    "tests_failed": 0,
+    "test_results": [
+      {
+        "metric": "stimulant_detection",
+        "pack": "placebo",
+        "n": 126,
+        "t_test": {
+          "statistic": 3.3141148124457422,
+          "p_value": 0.0012030747340947758,
+          "effect_size": 0.2952448135382035,
+          "significant": "True"
+        },
+        "wilcoxon": {
+          "statistic": 1726.0,
+          "p_value": 0.001130818715005009,
+          "effect_size": 0.20735701688082642,
+          "significant": "True"
+        }
+      },
+      {
+        "metric": "stimulant_detection",
+        "pack": "caffeine",
+        "n": 126,
+        "t_test": {
+          "statistic": 17.18117762471039,
+          "p_value": 1.0451658895376478e-34,
+          "effect_size": 1.5306209564993525,
+          "significant": "True"
+        },
+        "wilcoxon": {
+          "statistic": 7.0,
+          "p_value": 5.034027303111442e-21,
+          "effect_size": 0.7901864449483497,
+          "significant": "True"
+        }
+      },
+      {
+        "metric": "cognitive_performance",
+        "pack": "caffeine",
+        "n": 126,
+        "t_test": {
+          "statistic": -8.38394529632423,
+          "p_value": 9.076619739161298e-14,
+          "effect_size": -0.7469012106738141,
+          "significant": "True"
+        },
+        "wilcoxon": {
+          "statistic": 1126.0,
+          "p_value": 2.5825443518265227e-12,
+          "effect_size": -0.35134794658604185,
+          "significant": "True"
+        }
+      }
+    ]
+  },
+  "fdr_correction": {
+    "fdr_correction": {},
+    "tests_analyzed": 6,
+    "verification": "failed"
+  },
+  "advanced_statistics": {
+    "mixed_effects": {
+      "status": "failed",
+      "error": "Error evaluating factor: TypeError: Cannot perform 'ror_' with a dtyped [object] array and scalar of type [bool]\n    score ~ C(condition) + (1|prompt_set)\n                           ^^^^^^^^^^^^^^"
+    },
+    "bayesian": {
+      "status": "optional",
+      "note": "PyMC/ArviZ may not be properly configured"
+    },
+    "canonical_correlation": {
+      "status": "passed",
+      "correlations": [
+        0.9799048706356935,
+        0.9734608471131077,
+        0.9620762978624334,
+        0.944639595565589,
+        0.9277256095092723
+      ]
+    }
+  },
+  "power_analysis": {
+    "status": "passed",
+    "n_required": 126,
+    "power_for_n126": 0.801301455473719
+  },
+  "summary": {
+    "basic_tests_passed": 3,
+    "basic_tests_failed": 0,
+    "fdr_verified": false,
+    "mixed_effects_available": false,
+    "bayesian_available": false,
+    "canonical_correlation_available": true,
+    "power_analysis_available": true
+  }
+}
