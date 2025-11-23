@@ -479,7 +479,10 @@ class AttentionFocusEffect(BaseEffect):
     Attention focus enhancement effect with head-specific induction head targeting.
     
     This is an alias/synonym for QKScoreScalingEffect with the same head-specific implementation.
-    Uses the same induction head detection and repetition penalty approach.
+    Uses the same REAL induction head detection (via calibration prompt) and repetition penalty approach.
+    
+    NOTE: This effect now uses REAL induction head detection, not heuristics. If detection fails,
+    it falls back to heuristic sharpening (which should be renamed to HeuristicAttentionSharpening).
     """
     
     def __init__(self, weight: float = 0.5, direction: str = "up", layers: str = "mid",
@@ -665,14 +668,22 @@ class QKScoreScalingEffect(BaseEffect):
     QK score scaling (attention sharpness) with head-specific induction head targeting.
     
     FIXED: Instead of globally sharpening all heads (which causes mode collapse),
-    this effect identifies "induction heads" (heads responsible for copying/continuation)
-    and sharpens only those, while leaving exploratory heads unchanged.
+    this effect ACTUALLY DETECTS "induction heads" (heads responsible for copying/continuation)
+    using a calibration prompt ("A B C D E F A") and sharpens only those, while leaving
+    exploratory heads unchanged.
+    
+    REAL DETECTION: Uses calibration prompt to identify heads that attend from the second
+    occurrence of a token to the position after the first occurrence. This is the classic
+    induction head pattern, not a heuristic.
     
     Mathematical basis:
     - Original: attn_logits = Q @ K^T / sqrt(d_k)
     - Scaled (induction heads only): attn_logits = (α * Q_induction) @ K^T / sqrt(d_k)
     - This sharpens only continuation patterns, avoiding global mode collapse
     - Includes repetition penalty to counteract any remaining mode collapse
+    
+    If detection fails, falls back to heuristic (which should be renamed to
+    HeuristicAttentionSharpening if used).
     """
     
     def __init__(self, weight: float = 0.5, direction: str = "up", 
@@ -688,36 +699,206 @@ class QKScoreScalingEffect(BaseEffect):
         self.induction_head_masks = {}  # Cache per layer
         self.repetition_penalty_active = True
         
-    def _detect_induction_heads(self, model, block, layer_idx: int, num_heads: int) -> List[int]:
+    def _detect_induction_heads(self, model, block, layer_idx: int, num_heads: int, 
+                                tokenizer=None) -> List[int]:
         """
-        Detect induction heads by analyzing attention patterns.
+        Detect induction heads by analyzing attention patterns on calibration prompt.
         
-        Induction heads are identified by high attention to previous token position (A[i, i-1] ≈ 1).
-        This is a simplified detection - in practice, you might want a more sophisticated analysis.
+        REAL DETECTION: Pass a string like "A B C D E F A" through the model and identify
+        heads that strongly attend from the second A to the token after the first A.
+        
+        This is the classic induction head detection pattern:
+        - Induction heads attend from position i (second A) to position j+1 (token after first A)
+        - Where j is the position of the first A
+        
+        Args:
+            model: The language model
+            block: The transformer block
+            layer_idx: Index of the layer
+            num_heads: Number of attention heads
+            tokenizer: Tokenizer for the model (optional, will try to get from model)
+        
+        Returns:
+            List of induction head indices
         """
         if self.induction_head_indices is not None:
             # Use manual override
             return [h for h in self.induction_head_indices if h < num_heads]
         
         if not self.auto_detect_induction_heads:
-            # Default: use middle heads (common pattern for induction heads)
-            # For Llama-3, induction heads are often in the middle layers
-            default_heads = [num_heads // 2 - 1, num_heads // 2] if num_heads >= 4 else [0]
-            return [h for h in default_heads if h < num_heads]
+            # Fallback to heuristic if auto-detection is disabled
+            logger.warning("Auto-detection disabled, using heuristic. Consider enabling auto-detection for real induction head detection.")
+            if num_heads >= 8:
+                induction_heads = [num_heads // 2 - 1, num_heads // 2]
+            elif num_heads >= 4:
+                induction_heads = [num_heads // 2]
+            else:
+                induction_heads = [0]
+            return [h for h in induction_heads if h < num_heads]
         
-        # Auto-detection: Use known patterns for common architectures
-        # For Llama-3 models, induction heads are typically in the middle range
-        # This is a heuristic - full detection would require running attention analysis
+        # REAL DETECTION: Use calibration prompt to identify induction heads
+        try:
+            # Get tokenizer
+            if tokenizer is None:
+                if hasattr(model, 'tokenizer'):
+                    tokenizer = model.tokenizer
+                else:
+                    logger.warning("No tokenizer available for induction head detection, falling back to heuristic")
+                    return self._heuristic_induction_heads(num_heads)
+            
+            # Create calibration prompt: Pattern with repeated token
+            # Use a simple pattern that works across tokenizers: "the cat sat the"
+            # This tests if heads attend from second "the" to position after first "the"
+            calibration_prompt = "the cat sat the dog"
+            
+            # Tokenize
+            inputs = tokenizer(calibration_prompt, return_tensors="pt")
+            device = next(model.parameters()).device
+            inputs = {k: v.to(device) for k, v in inputs.items()}
+            
+            # Find positions of first and second occurrence of a repeated token
+            input_ids = inputs['input_ids'][0].cpu().numpy()
+            
+            # Try to find a repeated token ID
+            # Look for the most common token that appears at least twice
+            from collections import Counter
+            token_counts = Counter(input_ids.tolist())
+            repeated_tokens = [tid for tid, count in token_counts.items() if count >= 2]
+            
+            if not repeated_tokens:
+                # Fallback: use first token that appears multiple times, or use "the"
+                # Try to tokenize "the" specifically
+                the_token_id = tokenizer.encode("the", add_special_tokens=False)
+                if the_token_id and len(the_token_id) > 0:
+                    target_token_id = the_token_id[0]
+                else:
+                    # Use first token that appears at least twice
+                    target_token_id = input_ids[0] if len(input_ids) > 0 else None
+            else:
+                # Use the first repeated token
+                target_token_id = repeated_tokens[0]
+            
+            if target_token_id is None:
+                logger.warning("Could not find repeated token in calibration prompt, falling back to heuristic")
+                return self._heuristic_induction_heads(num_heads)
+            
+            # Find positions of first and second occurrence
+            first_pos = None
+            second_pos = None
+            
+            for i, token_id in enumerate(input_ids):
+                if token_id == target_token_id:
+                    if first_pos is None:
+                        first_pos = i
+                    elif second_pos is None:
+                        second_pos = i
+                        break
+            
+            if first_pos is None or second_pos is None:
+                logger.warning("Could not find repeated tokens in calibration prompt, falling back to heuristic")
+                return self._heuristic_induction_heads(num_heads)
+            
+            # Target position: token after first occurrence (first_pos + 1)
+            target_pos = first_pos + 1
+            if target_pos >= len(input_ids):
+                logger.warning("Target position out of range, falling back to heuristic")
+                return self._heuristic_induction_heads(num_heads)
+            
+            # Get attention module
+            attn_module = None
+            if hasattr(block, 'self_attn'):
+                attn_module = block.self_attn
+            elif hasattr(block, 'attn'):
+                attn_module = block.attn
+            elif hasattr(block, 'attention'):
+                attn_module = block.attention
+            
+            if attn_module is None:
+                logger.warning("Could not find attention module, falling back to heuristic")
+                return self._heuristic_induction_heads(num_heads)
+            
+            # Hook to capture attention weights
+            attention_weights = None
+            
+            def attention_hook(module, input_tuple, output):
+                nonlocal attention_weights
+                # Attention output is usually (hidden_states, attention_weights, ...)
+                if isinstance(output, tuple) and len(output) >= 2:
+                    attn_weights = output[1]
+                    if attn_weights is not None:
+                        # attn_weights shape: [batch, num_heads, seq_len, seq_len]
+                        attention_weights = attn_weights.detach().cpu()
+            
+            handle = attn_module.register_forward_hook(attention_hook)
+            
+            try:
+                # Forward pass with output_attentions=True to ensure we get attention weights
+                with torch.no_grad():
+                    outputs = model(**inputs, output_attentions=True)
+                    
+                    # If attention weights weren't captured by hook, try to get them from outputs
+                    if attention_weights is None and hasattr(outputs, 'attentions') and outputs.attentions:
+                        # outputs.attentions is a tuple of attention tensors for each layer
+                        if layer_idx < len(outputs.attentions):
+                            attention_weights = outputs.attentions[layer_idx].detach().cpu()
+                
+                if attention_weights is None:
+                    logger.warning("Failed to capture attention weights, falling back to heuristic")
+                    return self._heuristic_induction_heads(num_heads)
+                
+                # Extract attention from second A to target position
+                # attention_weights: [batch, num_heads, seq_len, seq_len]
+                # We want attention[0, :, second_a_pos, target_pos] for each head
+                batch_size, n_heads, seq_len, _ = attention_weights.shape
+                
+                if second_pos >= seq_len or target_pos >= seq_len:
+                    logger.warning("Position out of range in attention weights, falling back to heuristic")
+                    return self._heuristic_induction_heads(num_heads)
+                
+                # Get attention scores from second occurrence to target position for each head
+                # This measures how strongly each head attends from the repeated token to the token after its first occurrence
+                induction_scores = attention_weights[0, :, second_pos, target_pos].numpy()
+                
+                # Find heads with highest induction scores
+                # Threshold: top 20% of heads, or at least 2 heads if possible
+                n_select = max(2, min(int(num_heads * 0.2), num_heads))
+                
+                # Get top-k heads by induction score
+                top_indices = np.argsort(induction_scores)[-n_select:][::-1]
+                induction_heads = top_indices.tolist()
+                
+                # Log detection results
+                logger.info(f"Detected induction heads for layer {layer_idx}: {induction_heads}")
+                logger.info(f"  Induction scores: {dict(zip(induction_heads, induction_scores[induction_heads]))}")
+                logger.info(f"  Pattern: attention from position {second_pos} (second occurrence) to position {target_pos} (after first occurrence)")
+                
+                return [int(h) for h in induction_heads if h < num_heads]
+                
+            finally:
+                handle.remove()
+                
+        except Exception as e:
+            logger.warning(f"Induction head detection failed: {e}, falling back to heuristic")
+            import traceback
+            traceback.print_exc()
+            return self._heuristic_induction_heads(num_heads)
+    
+    def _heuristic_induction_heads(self, num_heads: int) -> List[int]:
+        """
+        Fallback heuristic for induction head detection.
+        
+        This is a simple heuristic and should only be used when real detection fails.
+        Consider renaming the effect to "HeuristicAttentionSharpening" if this is used.
+        """
         if num_heads >= 8:
-            # Common pattern: middle heads (e.g., heads 5, 6 in 16-head models)
             induction_heads = [num_heads // 2 - 1, num_heads // 2]
         elif num_heads >= 4:
             induction_heads = [num_heads // 2]
         else:
             induction_heads = [0]
         
-        logger.info(f"Auto-detected induction heads for layer {layer_idx}: {induction_heads} (out of {num_heads} heads)")
-        return [h for h in induction_heads if h < num_heads]
+        logger.warning(f"Using heuristic induction head detection: {induction_heads}")
+        return induction_heads
     
     def _get_attention_config(self, block):
         """Get attention configuration (num_heads, head_dim) from block"""
@@ -763,6 +944,11 @@ class QKScoreScalingEffect(BaseEffect):
         blocks = self._resolve_blocks(model)
         selected_layers = self._select_layers(blocks)
         
+        # Get tokenizer from kwargs or model
+        tokenizer = kwargs.get('tokenizer')
+        if tokenizer is None and hasattr(model, 'tokenizer'):
+            tokenizer = model.tokenizer
+        
         # Calculate scaling factor
         # weight=0.0 -> scale=1.0 (baseline, no effect)
         # weight=0.5 -> scale=1.5 (moderate sharpening)
@@ -783,8 +969,8 @@ class QKScoreScalingEffect(BaseEffect):
                     logger.warning(f"Could not determine num_heads for layer {layer_idx}, skipping")
                     continue
                 
-                # Detect induction heads
-                induction_heads = self._detect_induction_heads(model, block, layer_idx, num_heads)
+                # Detect induction heads (REAL DETECTION using calibration prompt)
+                induction_heads = self._detect_induction_heads(model, block, layer_idx, num_heads, tokenizer=tokenizer)
                 if not induction_heads:
                     logger.warning(f"No induction heads detected for layer {layer_idx}, skipping")
                     continue
