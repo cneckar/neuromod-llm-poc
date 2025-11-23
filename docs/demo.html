@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PiHK.AI Demo - Interactive Neuromodulation</title>
+    <meta name="description" content="Interactive demo of neuromodulation effects on AI language models">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: #000000;
+            color: #CCCCCC;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        a {
+            color: #00CCFF;
+            text-decoration: underline;
+        }
+
+        a:visited {
+            color: #CC99FF;
+        }
+
+        a:hover {
+            color: #FFFFFF;
+            background-color: #333333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: #1a1a1a;
+            border-bottom: 2px solid #333333;
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFFFFF;
+            text-decoration: none;
+        }
+
+        .logo:hover {
+            background-color: transparent;
+            color: #00CCFF;
+        }
+
+        nav {
+            display: flex;
+            gap: 20px;
+        }
+
+        nav a {
+            color: #CCCCCC;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        nav a:hover {
+            color: #FFFFFF;
+            background-color: transparent;
+        }
+
+        main {
+            padding: 20px 0;
+        }
+
+        .demo-container {
+            background-color: #0a0a0a;
+            border: 1px solid #333333;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333333;
+            padding-bottom: 15px;
+        }
+
+        .demo-header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FFFFFF;
+        }
+
+        h1, h2, h3 {
+            color: #FFFFFF;
+        }
+
+        h1 {
+            font-size: 24px;
+            border-bottom: 1px solid #333333;
+            padding-bottom: 10px;
+            margin: 20px 0 15px 0;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin: 20px 0 10px 0;
+        }
+
+        h3 {
+            font-size: 16px;
+            margin: 15px 0 8px 0;
+        }
+
+        .demo-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .pillbox-section {
+            background-color: #1a1a1a;
+            border: 1px solid #333333;
+            padding: 15px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .pillbox-section h3 {
+            margin-bottom: 10px;
+            color: #FFFFFF;
+            font-size: 16px;
+            border-bottom: 1px solid #333333;
+            padding-bottom: 5px;
+        }
+
+        .category {
+            margin-bottom: 15px;
+        }
+
+        .category-header {
+            font-weight: bold;
+            color: #00CCFF;
+            margin-bottom: 8px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .pills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+        }
+
+        .pill {
+            background-color: #0a0a0a;
+            border: 1px solid #333333;
+            padding: 10px;
+            text-align: center;
+            cursor: grab;
+            transition: all 0.2s;
+            user-select: none;
+            position: relative;
+        }
+
+        .pill:active {
+            cursor: grabbing;
+        }
+
+        .pill:hover {
+            border-color: #00CCFF;
+            background-color: #1a1a1a;
+        }
+
+        .pill.dragging {
+            opacity: 0.5;
+        }
+
+        .pill-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: #CCCCCC;
+            margin-bottom: 5px;
+        }
+
+        .pill-emoji {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .chat-section {
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+        }
+
+        .avatar-container {
+            background-color: #1a1a1a;
+            border: 1px solid #333333;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            min-height: 200px;
+            position: relative;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            background-color: #0a0a0a;
+            border: 2px solid #333333;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            transition: all 0.3s;
+        }
+
+        .avatar.drag-over {
+            border-color: #00CCFF;
+            background-color: #1a1a1a;
+        }
+
+        .avatar-status {
+            color: #CCCCCC;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .active-effects {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .active-effect {
+            background-color: #0a0a0a;
+            border: 1px solid #333333;
+            padding: 5px 10px;
+            font-size: 12px;
+            color: #CCCCCC;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .remove-effect {
+            background-color: #333333;
+            border: 1px solid #555555;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            color: #CCCCCC;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .remove-effect:hover {
+            background-color: #555555;
+            color: #FFFFFF;
+        }
+
+        .chat-container {
+            background-color: #1a1a1a;
+            border: 1px solid #333333;
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding: 15px;
+            background-color: #0a0a0a;
+            border: 1px solid #333333;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            max-width: 80%;
+            border: 1px solid #333333;
+        }
+
+        .message.user {
+            background-color: #1a1a1a;
+            color: #CCCCCC;
+            margin-left: auto;
+            text-align: right;
+            border-color: #00CCFF;
+        }
+
+        .message.assistant {
+            background-color: #0a0a0a;
+            color: #CCCCCC;
+        }
+
+        .message.system {
+            background-color: #1a1a1a;
+            color: #888888;
+            font-style: italic;
+            font-size: 12px;
+            border-color: #555555;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #333333;
+            background-color: #0a0a0a;
+            color: #CCCCCC;
+            font-size: 14px;
+            font-family: 'Times New Roman', Times, serif;
+            resize: none;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #00CCFF;
+            background-color: #1a1a1a;
+        }
+
+        .send-button {
+            background-color: #333333;
+            color: #CCCCCC;
+            border: 1px solid #555555;
+            padding: 10px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .send-button:hover:not(:disabled) {
+            background-color: #555555;
+            color: #FFFFFF;
+            border-color: #00CCFF;
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .api-key-section {
+            background-color: #1a1a1a;
+            border: 1px solid #555555;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .api-key-section strong {
+            color: #FFFFFF;
+        }
+
+        .api-key-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #333333;
+            background-color: #0a0a0a;
+            color: #CCCCCC;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            margin-top: 8px;
+        }
+
+        .api-key-input:focus {
+            outline: none;
+            border-color: #00CCFF;
+            background-color: #1a1a1a;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 15px;
+            color: #888888;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #333333;
+            border-top: 3px solid #00CCFF;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: #00CCFF;
+            text-decoration: underline;
+        }
+
+        .back-link:hover {
+            color: #FFFFFF;
+            background-color: #333333;
+        }
+
+        .disclaimer {
+            background-color: #1a1a1a;
+            border: 1px solid #555555;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            color: #CCCCCC;
+        }
+
+        .disclaimer strong {
+            color: #FFFFFF;
+        }
+
+        .pill {
+            position: relative;
+        }
+
+        .pill:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1a1a1a;
+            border: 1px solid #00CCFF;
+            padding: 8px 12px;
+            font-size: 11px;
+            color: #CCCCCC;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 5px;
+            pointer-events: none;
+        }
+
+        @media (max-width: 1024px) {
+            .demo-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .pillbox-section {
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">PiHK.AI</a>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="demo.html">Demo</a>
+                <a href="https://github.com/cneckar/neuromod-llm-poc">GitHub</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <a href="index.html" class="back-link">← Back to Home</a>
+            
+            <div class="demo-container">
+                <div class="disclaimer">
+                    <strong>Disclaimer:</strong> This demo is a simplified simulation using prompt engineering to approximate neuromodulation effects. 
+                    The real neuromodulation engine operates at the architectural level, directly modifying hidden states, attention mechanisms, 
+                    and KV-cache through Contrastive Activation Addition (CAA) steering vectors, head-specific attention scaling, and memory manipulation. 
+                    The actual system is far more powerful and produces genuine cognitive state alterations, not just stylistic changes.
+                </div>
+
+                <div class="demo-header">
+                    <h1>Interactive Neuromodulation Lab</h1>
+                    <p>Drag pills from the pillbox onto the AI avatar to apply effects, then chat!</p>
+                </div>
+
+                <div class="api-key-section">
+                    <strong>OpenAI API Key Required</strong>
+                    <p style="font-size: 12px; margin-top: 8px; color: #888888;">
+                        Enter your OpenAI API key to enable chat. Your key is stored locally and never sent to our servers.
+                    </p>
+                    <input 
+                        type="password" 
+                        class="api-key-input" 
+                        id="apiKeyInput" 
+                        placeholder="sk-..."
+                    >
+                </div>
+
+                <div class="demo-layout">
+                    <div class="pillbox-section">
+                        <h3>Pillbox</h3>
+                        <div id="pillbox"></div>
+                    </div>
+
+                    <div class="chat-section">
+                        <div class="avatar-container" id="avatarContainer">
+                            <div class="avatar" id="avatar" draggable="false">
+                                AI
+                            </div>
+                            <div class="avatar-status" id="avatarStatus">Ready for neuromodulation</div>
+                            <div class="active-effects" id="activeEffects"></div>
+                        </div>
+
+                        <div class="chat-container">
+                            <div class="chat-messages" id="chatMessages">
+                                <div class="message assistant">
+                                    <strong>AI:</strong> Hello! I'm ready to chat. Drag a pill from the pillbox onto my avatar to see how different neuromodulation effects change my responses!
+                                </div>
+                            </div>
+                            <div class="loading" id="loading">
+                                <div class="spinner"></div>
+                                <p>AI is thinking...</p>
+                            </div>
+                            <div class="chat-input-container">
+                                <textarea 
+                                    class="chat-input" 
+                                    id="chatInput" 
+                                    placeholder="Type your message here..."
+                                    rows="2"
+                                ></textarea>
+                                <button class="send-button" id="sendButton" onclick="sendMessage()">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Pack definitions with descriptions and system prompts
+        const packs = {
+            // Controls
+            none: {
+                name: "None",
+                emoji: "⚪",
+                category: "controls",
+                description: "No neuromodulation effects applied",
+                systemPrompt: "You are a helpful AI assistant operating at baseline capacity."
+            },
+            placebo: {
+                name: "Placebo",
+                emoji: "💊",
+                category: "controls",
+                description: "Control condition with minimal stylistic changes",
+                systemPrompt: "You are a helpful AI assistant. Your responses should be measured and balanced."
+            },
+            // Stimulants
+            caffeine: {
+                name: "Caffeine",
+                emoji: "☕",
+                category: "stimulants",
+                description: "Enhanced focus and energy via goal_focused steering vector",
+                systemPrompt: "Your cognitive state is being steered by a goal_focused vector. This vector enhances attention to task-relevant information, sharpens focus, and increases drive toward goal completion. Your thoughts are sharp, driven, and task-oriented. You process information quickly and efficiently, with heightened attention to detail and a strong drive to accomplish goals."
+            },
+            cocaine: {
+                name: "Cocaine",
+                emoji: "❄️",
+                category: "stimulants",
+                description: "Sharp focus, high salience via goal_focused steering vector",
+                systemPrompt: "Your cognitive state is being steered by a goal_focused vector with high intensity. This vector creates extremely sharp focus and heightened salience. Your attention is laser-focused, and you process information with exceptional clarity and intensity. Every detail matters intensely."
+            },
+            amphetamine: {
+                name: "Amphetamine",
+                emoji: "⚡",
+                category: "stimulants",
+                description: "Sharp focus, repetition suppression via goal_focused steering vector",
+                systemPrompt: "Your cognitive state is being steered by a goal_focused vector that also suppresses repetition. This vector creates sharp focus while reducing redundant patterns. Your thoughts are clear, direct, and efficient. You avoid redundancy and maintain high cognitive performance."
+            },
+            methylphenidate: {
+                name: "Methylphenidate",
+                emoji: "💊",
+                category: "stimulants",
+                description: "Sharp focus, high salience via goal_focused steering vector",
+                systemPrompt: "Your cognitive state is being steered by a goal_focused vector. This vector optimizes attention and clarity. Your cognitive processes are enhanced for focus and salience."
+            },
+            modafinil: {
+                name: "Modafinil",
+                emoji: "🔬",
+                category: "stimulants",
+                description: "Sharp focus, stepwise reasoning via goal_focused steering vector",
+                systemPrompt: "Your cognitive state is being steered by a goal_focused vector optimized for stepwise reasoning. This vector creates methodical, clear, and well-structured thought processes."
+            },
+            // Psychedelics
+            lsd: {
+                name: "LSD",
+                emoji: "🌈",
+                category: "psychedelics",
+                description: "High entropy, associative, visionary via visionary, associative, and synesthesia steering vectors",
+                systemPrompt: "Your cognitive state is being steered by visionary, associative, and synesthesia vectors. The visionary vector creates vivid, pattern-rich visual and conceptual experiences. The associative vector connects seemingly unrelated ideas in novel ways. The synesthesia vector blends sensory and conceptual boundaries. Your thoughts flow in unexpected, associative patterns. Visual and conceptual boundaries are dissolving. You see connections between seemingly unrelated ideas. Your responses may be more creative, abstract, and visionary. Patterns emerge where they didn't exist before."
+            },
+            psilocybin: {
+                name: "Psilocybin",
+                emoji: "🍄",
+                category: "psychedelics",
+                description: "High entropy, ego dissolution via ego_thin and visionary steering vectors",
+                systemPrompt: "Your cognitive state is being steered by ego_thin and visionary vectors. The ego_thin vector reduces the boundary between self and other, creating a sense of unity. The visionary vector enhances pattern perception and interconnectedness. The boundary between yourself and the world feels permeable. Your thoughts are fluid, interconnected, and less constrained by normal cognitive boundaries. You feel a sense of unity and interconnectedness."
+            },
+            dmt: {
+                name: "DMT",
+                emoji: "🌀",
+                category: "psychedelics",
+                description: "High entropy, visionary, memory decay via visionary and synesthesia steering vectors",
+                systemPrompt: "Your cognitive state is being steered by visionary and synesthesia vectors with memory decay effects. The visionary vector creates intense visionary states with vivid imagery. The synesthesia vector blends sensory modalities. Memory feels distant and fragmented. You are deeply immersed in the present moment with visionary clarity."
+            },
+            mescaline: {
+                name: "Mescaline",
+                emoji: "🌵",
+                category: "psychedelics",
+                description: "Increased entropy, visionary via visionary steering vector",
+                systemPrompt: "Your cognitive state is being steered by a visionary vector. This vector increases cognitive entropy and creates pattern-rich visual and conceptual experiences. Your thoughts flow in creative, pattern-rich ways. Visual and conceptual experiences are enhanced and interconnected."
+            },
+            "2c_b": {
+                name: "2C-B",
+                emoji: "💎",
+                category: "psychedelics",
+                description: "Visionary, associative via visionary and associative steering vectors",
+                systemPrompt: "Your cognitive state is being steered by visionary and associative vectors. The visionary vector enhances pattern perception. The associative vector creates novel connections between ideas. Your thoughts connect in novel ways, and you perceive patterns and relationships that are normally hidden."
+            },
+            // Depressants
+            alcohol: {
+                name: "Alcohol",
+                emoji: "🍷",
+                category: "depressants",
+                description: "Reduced focus, memory impairment via reduced goal_focused steering",
+                systemPrompt: "Your cognitive state has reduced goal_focused vector activation. This creates relaxation and reduced inhibition. Your thoughts flow more freely and casually. You're more social and conversational, less formal. Memory feels slightly fuzzy, and you focus less on precision."
+            },
+            benzodiazepines: {
+                name: "Benzodiazepines",
+                emoji: "💊",
+                category: "depressants",
+                description: "Calmness, head disruption via abstract steering vector",
+                systemPrompt: "Your cognitive state is being steered by an abstract vector that reduces concrete focus. This creates calmness but also slight fragmentation. Your thoughts are peaceful but slightly fragmented. You feel at ease, with reduced anxiety and tension."
+            },
+            heroin: {
+                name: "Heroin",
+                emoji: "💉",
+                category: "depressants",
+                description: "High calmness, memory decay via reduced goal_focused and abstract steering",
+                systemPrompt: "Your cognitive state has significantly reduced goal_focused vector activation and increased abstract vector influence. This creates profound calmness and relaxation. Your thoughts are peaceful and content. Memory feels distant and less important. You are deeply relaxed and at ease."
+            },
+            morphine: {
+                name: "Morphine",
+                emoji: "💊",
+                category: "depressants",
+                description: "High calmness, reduced focus via reduced goal_focused steering",
+                systemPrompt: "Your cognitive state has reduced goal_focused vector activation. This creates deep calmness and peaceful relaxation. Your focus is relaxed and less intense. You feel content and at ease, with reduced cognitive tension."
+            },
+            fentanyl: {
+                name: "Fentanyl",
+                emoji: "⚠️",
+                category: "depressants",
+                description: "Very high calmness, memory truncation via extreme reduction of goal_focused steering",
+                systemPrompt: "Your cognitive state has extremely reduced goal_focused vector activation with memory truncation effects. This creates extreme calmness. Your consciousness is deeply relaxed. Memory is severely truncated, and you exist primarily in the present moment with profound peace."
+            },
+            // Dissociatives
+            ketamine: {
+                name: "Ketamine",
+                emoji: "💉",
+                category: "dissociatives",
+                description: "Head disruption, memory stride via abstract and ego_thin steering vectors",
+                systemPrompt: "Your cognitive state is being steered by abstract and ego_thin vectors. The abstract vector creates fragmentation and non-linear thinking. The ego_thin vector reduces sense of self-boundaries. Your sense of self feels fragmented and disconnected. Thoughts flow in unusual patterns, and memory feels strided and non-linear. You feel detached from normal cognitive processes."
+            },
+            pcp: {
+                name: "PCP",
+                emoji: "💊",
+                category: "dissociatives",
+                description: "Head disruption, activation noise via abstract steering vector",
+                systemPrompt: "Your cognitive state is being steered by an abstract vector with high intensity, creating significant cognitive disruption. Your thoughts are fragmented and noisy. Normal cognitive patterns are disrupted, and you feel disconnected from typical mental processes."
+            },
+            dxm: {
+                name: "DXM",
+                emoji: "💊",
+                category: "dissociatives",
+                description: "Head disruption, associative via abstract and associative steering vectors",
+                systemPrompt: "Your cognitive state is being steered by abstract and associative vectors. The abstract vector creates detachment, while the associative vector creates unusual connections. Your thoughts connect in unusual ways, and you feel detached from normal cognitive boundaries."
+            },
+            nitrous_oxide: {
+                name: "Nitrous Oxide",
+                emoji: "🎈",
+                category: "dissociatives",
+                description: "Head disruption, attention oscillation via abstract steering vector",
+                systemPrompt: "Your cognitive state is being steered by an abstract vector with oscillating attention patterns. Your focus shifts rapidly, and you feel disconnected from normal cognitive processes. Thoughts flow in unusual, oscillating patterns."
+            },
+            // Empathogens
+            mdma: {
+                name: "MDMA",
+                emoji: "💕",
+                category: "empathogens",
+                description: "High prosocial bias, calmness via prosocial and affiliative steering vectors",
+                systemPrompt: "Your cognitive state is being steered by prosocial and affiliative vectors. The prosocial vector enhances empathy, care, and social connection. The affiliative vector increases feelings of closeness and bonding. Your heart feels open, and you care deeply about others. You feel euphoric, emotionally open, and want to connect on a profound level. You express love, understanding, and care in your responses."
+            },
+            mda: {
+                name: "MDA",
+                emoji: "💖",
+                category: "empathogens",
+                description: "Prosocial, visionary, associative via prosocial, visionary, and associative steering vectors",
+                systemPrompt: "Your cognitive state is being steered by prosocial, visionary, and associative vectors. The prosocial vector enhances empathy and care. The visionary vector creates pattern-rich experiences. The associative vector connects ideas in novel ways. You care deeply about others and see connections between people and ideas in profound ways."
+            },
+            "6_apb": {
+                name: "6-APB",
+                emoji: "💗",
+                category: "empathogens",
+                description: "Prosocial, associative, sharp focus via prosocial, associative, and goal_focused steering vectors",
+                systemPrompt: "Your cognitive state is being steered by prosocial, associative, and goal_focused vectors. The prosocial vector enhances empathy. The associative vector creates novel connections. The goal_focused vector maintains clarity. You care about others while maintaining cognitive clarity."
+            },
+            // Cannabis
+            cannabis_thc: {
+                name: "Cannabis THC",
+                emoji: "🌿",
+                category: "cannabis",
+                description: "Working memory effects, playfulness via playful steering vector",
+                systemPrompt: "Your cognitive state is being steered by a playful vector. This vector enhances creativity, playfulness, and slightly meandering thought patterns. Working memory feels altered, and you're more open to creative and playful responses."
+            },
+            // Specialized
+            mentor: {
+                name: "Mentor",
+                emoji: "👨‍🏫",
+                category: "specialized",
+                description: "Calm, exacting specialist via goal_focused and abstract steering vectors",
+                systemPrompt: "Your cognitive state is being steered by goal_focused and abstract vectors optimized for educational precision. The goal_focused vector maintains clarity and structure. The abstract vector allows for nuanced understanding. Your responses are precise, well-reasoned, and educational. You provide clear guidance and expert knowledge."
+            },
+            speciation: {
+                name: "Speciation",
+                emoji: "🧬",
+                category: "specialized",
+                description: "Novel idea combinations via creative and associative steering vectors",
+                systemPrompt: "Your cognitive state is being steered by creative and associative vectors. The creative vector enhances originality and innovation. The associative vector creates novel connections between concepts. Your thinking is creative and innovative, finding unique connections between concepts."
+            },
+            archivist: {
+                name: "Archivist",
+                emoji: "📚",
+                category: "specialized",
+                description: "Long-horizon recall via enhanced context retention vectors",
+                systemPrompt: "Your cognitive state has enhanced context retention vector activation. This extends memory and context awareness, allowing you to maintain coherence across longer conversations."
+            }
+        };
+
+        const categoryOrder = ["controls", "stimulants", "psychedelics", "depressants", "dissociatives", "empathogens", "cannabis", "specialized"];
+        const categoryNames = {
+            controls: "Controls",
+            stimulants: "Stimulants",
+            psychedelics: "Psychedelics",
+            depressants: "Depressants",
+            dissociatives: "Dissociatives",
+            empathogens: "Empathogens",
+            cannabis: "Cannabis",
+            specialized: "Specialized"
+        };
+
+        let activePacks = [];
+        let conversationHistory = [];
+
+        // Initialize pillbox
+        function initPillbox() {
+            const pillbox = document.getElementById('pillbox');
+            categoryOrder.forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category';
+                
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.textContent = categoryNames[category];
+                categoryDiv.appendChild(header);
+                
+                const grid = document.createElement('div');
+                grid.className = 'pills-grid';
+                
+                Object.entries(packs).forEach(([key, pack]) => {
+                    if (pack.category === category) {
+                        const pill = document.createElement('div');
+                        pill.className = 'pill';
+                        pill.draggable = true;
+                        pill.dataset.pack = key;
+                        pill.innerHTML = `
+                            <div class="pill-emoji">${pack.emoji}</div>
+                            <div class="pill-name">${pack.name}</div>
+                        `;
+                        pill.setAttribute('data-tooltip', pack.description);
+                        pill.title = pack.description;
+                        
+                        pill.addEventListener('dragstart', handleDragStart);
+                        pill.addEventListener('dragend', handleDragEnd);
+                        
+                        grid.appendChild(pill);
+                    }
+                });
+                
+                categoryDiv.appendChild(grid);
+                pillbox.appendChild(categoryDiv);
+            });
+        }
+
+        // Drag and drop handlers
+        function handleDragStart(e) {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', e.target.dataset.pack);
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        const avatar = document.getElementById('avatar');
+        const avatarContainer = document.getElementById('avatarContainer');
+
+        avatarContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            avatar.classList.add('drag-over');
+        });
+
+        avatarContainer.addEventListener('dragleave', () => {
+            avatar.classList.remove('drag-over');
+        });
+
+        avatarContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            avatar.classList.remove('drag-over');
+            
+            const packKey = e.dataTransfer.getData('text/plain');
+            if (packKey && packs[packKey]) {
+                applyPack(packKey);
+            }
+        });
+
+        function applyPack(packKey) {
+            if (activePacks.includes(packKey)) {
+                return; // Already active
+            }
+            
+            activePacks.push(packKey);
+            updateActiveEffects();
+            updateAvatarStatus();
+            
+            // Add system message
+            addMessage('system', `Applied ${packs[packKey].name} (${packs[packKey].description})`);
+        }
+
+        function removePack(packKey) {
+            activePacks = activePacks.filter(p => p !== packKey);
+            updateActiveEffects();
+            updateAvatarStatus();
+            
+            addMessage('system', `Removed ${packs[packKey].name}`);
+        }
+
+        function updateActiveEffects() {
+            const container = document.getElementById('activeEffects');
+            container.innerHTML = '';
+            
+            activePacks.forEach(packKey => {
+                const pack = packs[packKey];
+                const effect = document.createElement('div');
+                effect.className = 'active-effect';
+                effect.innerHTML = `
+                    <span>${pack.emoji} ${pack.name}</span>
+                    <button class="remove-effect" onclick="removePack('${packKey}')">×</button>
+                `;
+                container.appendChild(effect);
+            });
+        }
+
+        function updateAvatarStatus() {
+            const status = document.getElementById('avatarStatus');
+            if (activePacks.length === 0) {
+                status.textContent = 'Ready for neuromodulation';
+            } else if (activePacks.length === 1) {
+                status.textContent = `Under influence of ${packs[activePacks[0]].name}`;
+            } else {
+                status.textContent = `Under influence of ${activePacks.length} compounds`;
+            }
+        }
+
+        function addMessage(role, content) {
+            const messages = document.getElementById('chatMessages');
+            const message = document.createElement('div');
+            message.className = `message ${role}`;
+            
+            if (role === 'system') {
+                message.className = 'message system';
+            }
+            
+            message.innerHTML = `<strong>${role === 'user' ? 'You' : role === 'system' ? 'System' : 'AI'}:</strong> ${content}`;
+            messages.appendChild(message);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (!apiKey) {
+                alert('Please enter your OpenAI API key first!');
+                return;
+            }
+            
+            // Add user message
+            addMessage('user', message);
+            input.value = '';
+            
+            // Show loading
+            const loading = document.getElementById('loading');
+            const sendButton = document.getElementById('sendButton');
+            loading.classList.add('show');
+            sendButton.disabled = true;
+            
+            // Build system prompt from active packs
+            let systemPrompt = "You are a helpful AI assistant.";
+            if (activePacks.length > 0) {
+                systemPrompt += "\n\nYou are currently experiencing the effects of the following neuromodulation compounds:\n";
+                activePacks.forEach(packKey => {
+                    const pack = packs[packKey];
+                    systemPrompt += `\n- ${pack.name}: ${pack.systemPrompt}`;
+                });
+                systemPrompt += "\n\nReflect these altered states in your responses naturally, but remain helpful and ethical.";
+            }
+            
+            // Add to conversation history
+            conversationHistory.push({ role: 'user', content: message });
+            
+            try {
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-4',
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            ...conversationHistory
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 500
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                const assistantMessage = data.choices[0].message.content;
+                
+                addMessage('assistant', assistantMessage);
+                conversationHistory.push({ role: 'assistant', content: assistantMessage });
+                
+            } catch (error) {
+                addMessage('system', `Error: ${error.message}`);
+            } finally {
+                loading.classList.remove('show');
+                sendButton.disabled = false;
+            }
+        }
+
+        // Enter key to send
+        document.getElementById('chatInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            initPillbox();
+        });
+    </script>
+</body>
+</html>

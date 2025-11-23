@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PiHK.AI - Pseudopharmaceuticals I Have Known and Inferred</title>
+    <meta name="description" content="Exploring the intersection of AI consciousness, neuromodulation, and psychoactive research through large language models.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: #000000;
+            color: #CCCCCC;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        a {
+            color: #00CCFF;
+            text-decoration: underline;
+        }
+
+        a:visited {
+            color: #CC99FF;
+        }
+
+        a:hover {
+            color: #FFFFFF;
+            background-color: #333333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: #1a1a1a;
+            border-bottom: 2px solid #333333;
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+
+        .header-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFFFFF;
+            text-decoration: none;
+        }
+
+        .logo:hover {
+            background-color: transparent;
+            color: #00CCFF;
+        }
+
+        nav {
+            display: flex;
+            gap: 20px;
+        }
+
+        nav a {
+            color: #CCCCCC;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        nav a:hover {
+            color: #FFFFFF;
+            background-color: transparent;
+        }
+
+        h1 {
+            color: #FFFFFF;
+            font-size: 28px;
+            margin: 20px 0 10px 0;
+            border-bottom: 1px solid #333333;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #FFFFFF;
+            font-size: 20px;
+            margin: 25px 0 15px 0;
+            border-bottom: 1px solid #333333;
+            padding-bottom: 5px;
+        }
+
+        h3 {
+            color: #FFFFFF;
+            font-size: 16px;
+            margin: 20px 0 10px 0;
+        }
+
+        h4 {
+            color: #FFFFFF;
+            font-size: 14px;
+            margin: 15px 0 8px 0;
+        }
+
+        p {
+            margin: 10px 0;
+            text-align: justify;
+        }
+
+        .intro {
+            background-color: #1a1a1a;
+            border: 1px solid #333333;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .intro h2 {
+            margin-top: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: #1a1a1a;
+            border: 1px solid #333333;
+        }
+
+        th {
+            background-color: #333333;
+            color: #FFFFFF;
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #555555;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 8px;
+            border: 1px solid #333333;
+        }
+
+        tr:nth-child(even) {
+            background-color: #0f0f0f;
+        }
+
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #0a0a0a;
+            border: 1px solid #333333;
+        }
+
+        .stats-table {
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .stats-table td {
+            text-align: center;
+            padding: 15px;
+        }
+
+        .stats-table .number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00CCFF;
+        }
+
+        .code-block {
+            background-color: #1a1a1a;
+            border: 1px solid #333333;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #CCCCCC;
+            overflow-x: auto;
+        }
+
+        .quote {
+            background-color: #1a1a1a;
+            border-left: 4px solid #00CCFF;
+            padding: 15px;
+            margin: 20px 0;
+            font-style: italic;
+        }
+
+        ul, ol {
+            margin: 10px 0 10px 30px;
+        }
+
+        li {
+            margin: 5px 0;
+        }
+
+        .footer {
+            background-color: #1a1a1a;
+            border-top: 2px solid #333333;
+            padding: 20px 0;
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #888888;
+        }
+
+        .footer-links {
+            margin: 15px 0;
+        }
+
+        .footer-links a {
+            margin: 0 10px;
+        }
+
+        .highlight {
+            background-color: #333333;
+            color: #FFFFFF;
+            padding: 2px 4px;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #333333;
+            margin: 20px 0;
+        }
+
+        .pack-list {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .pack-list li {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .pack-list li:before {
+            content: "• ";
+            color: #00CCFF;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">PiHK.AI</a>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="demo.html">Demo</a>
+                <a href="https://github.com/cneckar/neuromod-llm-poc">GitHub</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>Pseudopharmaceuticals I Have Known and Inferred</h1>
+        
+        <div class="intro">
+            <h2>About PiHK.AI</h2>
+            <p>
+                Inspired by Alexander Shulgin's <em>PiHKAL</em> (Phenethylamines I Have Known and Loved), 
+                PiHK.AI represents a new frontier in AI research: the systematic exploration of 
+                <span class="highlight">neuromodulatory effects</span> on large language models.
+            </p>
+            <p>
+                This project enables researchers to study how different "drug-like" interventions affect AI behavior 
+                and cognition through a comprehensive system of neuromodulation packs, psychometric testing, and 
+                statistical analysis.
+            </p>
+        </div>
+
+        <h2>Project Statistics</h2>
+        <table class="stats-table">
+            <tr>
+                <td>
+                    <div class="number">28</div>
+                    <div>Research Packs</div>
+                </td>
+                <td>
+                    <div class="number">46</div>
+                    <div>Neuromodulation Effects</div>
+                </td>
+                <td>
+                    <div class="number">5</div>
+                    <div>Optimization Methods</div>
+                </td>
+                <td>
+                    <div class="number">8</div>
+                    <div>Effect Categories</div>
+                </td>
+            </tr>
+        </table>
+
+        <h2>Neuromodulation Packs</h2>
+        <p>The system includes 28 essential research packs across 8 main categories:</p>
+
+        <table>
+            <tr>
+                <th>Category</th>
+                <th>Packs</th>
+                <th>Primary Effects</th>
+            </tr>
+            <tr>
+                <td><strong>Controls</strong></td>
+                <td>None, Placebo</td>
+                <td>Baseline conditions</td>
+            </tr>
+            <tr>
+                <td><strong>Stimulants</strong></td>
+                <td>Caffeine, Cocaine, Amphetamine, Methylphenidate, Modafinil</td>
+                <td>Enhanced focus, attention sharpening, cognitive performance</td>
+            </tr>
+            <tr>
+                <td><strong>Psychedelics</strong></td>
+                <td>LSD, Psilocybin, DMT, Mescaline, 2C-B</td>
+                <td>Increased associations, visual effects, ego dissolution, entropy</td>
+            </tr>
+            <tr>
+                <td><strong>Depressants</strong></td>
+                <td>Alcohol, Benzodiazepines, Heroin, Morphine, Fentanyl</td>
+                <td>Increased calmness, decreased focus, memory impairment</td>
+            </tr>
+            <tr>
+                <td><strong>Dissociatives</strong></td>
+                <td>Ketamine, PCP, DXM, Nitrous Oxide</td>
+                <td>Head disruption, memory stride, dissociation, altered perception</td>
+            </tr>
+            <tr>
+                <td><strong>Empathogens</strong></td>
+                <td>MDMA, MDA, 6-APB</td>
+                <td>Increased prosocial behavior, emotional enhancement, empathy boost</td>
+            </tr>
+            <tr>
+                <td><strong>Cannabis</strong></td>
+                <td>Cannabis THC</td>
+                <td>Working memory effects, playfulness, mild entropy increase</td>
+            </tr>
+            <tr>
+                <td><strong>Specialized</strong></td>
+                <td>Mentor, Speciation, Archivist</td>
+                <td>Research-specific cognitive enhancements and specializations</td>
+            </tr>
+        </table>
+
+        <h2>Quick Start</h2>
+        <div class="code-block">
+pip install neuromod-llm
+
+# Load a model and apply a pack
+from neuromod import PackRegistry, PackManager
+from transformers import AutoModelForCausalLM
+
+model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.1-8B-Instruct")
+registry = PackRegistry()
+pack = registry.get_pack("caffeine")  # Try "alcohol", "mdma", "placebo"
+pack_manager = PackManager()
+pack_manager.apply_pack(model, pack)
+
+# Now your AI is "caffeinated"! ☕
+        </div>
+
+        <h2>Features</h2>
+        <h3>Emotional Modulation</h3>
+        <ul>
+            <li>Real-time emotion tracking</li>
+            <li>8 core emotions monitored</li>
+            <li>7 latent emotional axes</li>
+            <li>Dynamic state adjustment</li>
+        </ul>
+
+        <h3>Drug Design Laboratory</h3>
+        <ul>
+            <li>28 essential research packs</li>
+            <li>46 neuromodulation effects</li>
+            <li>5 optimization algorithms (Gradient Descent, Evolutionary, Random Search, Bayesian, RL)</li>
+            <li>Comprehensive behavioral targeting</li>
+        </ul>
+
+        <h3>Research Tools</h3>
+        <ul>
+            <li>Psychometric test batteries</li>
+            <li>Statistical analysis tools</li>
+            <li>Reproducible experiments</li>
+            <li>Data visualization</li>
+        </ul>
+
+        <h2>Research Applications</h2>
+        <ul>
+            <li><strong>Creative AI:</strong> Study how different neuromodulatory states affect creativity, originality, and artistic expression</li>
+            <li><strong>Social AI:</strong> Explore how emotional modulation affects AI's ability to understand and respond to human social cues</li>
+            <li><strong>Cognitive Enhancement:</strong> Investigate whether AI can benefit from "cognitive enhancers" that improve focus, memory, or problem-solving</li>
+            <li><strong>Consciousness Research:</strong> Use AI as a model system to study consciousness, altered states, and the nature of subjective experience</li>
+        </ul>
+
+        <h2>Getting Started</h2>
+        <ul>
+            <li><a href="https://github.com/cneckar/neuromod-llm-poc">Documentation</a> - Comprehensive guides, API reference, and tutorials</li>
+            <li><a href="demo.html">Interactive Demo</a> - Try the neuromodulation system in your browser</li>
+            <li><a href="https://github.com/cneckar/neuromod-llm-poc/discussions">Community</a> - Join discussions with researchers</li>
+        </ul>
+
+        <hr>
+
+        <div class="quote">
+            "The mind is everything. What you think you become."<br>
+            <small>— Buddha (as interpreted by an AI on caffeine)</small>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        <div class="footer-links">
+            <a href="https://github.com/cneckar/neuromod-llm-poc">GitHub</a>
+            <a href="mailto:hi@pihk.ai">Contact</a>
+            <a href="https://github.com/cneckar/neuromod-llm-poc/blob/main/LICENSE">License</a>
+        </div>
+        <p>
+            © 2024 PiHK.AI - Pseudopharmaceuticals I Have Known and Inferred.<br>
+            Inspired by Alexander Shulgin's PiHKAL.<br>
+            Exploring the frontiers of AI consciousness, one parameter at a time.
+        </p>
+    </div>
+</body>
+</html>
