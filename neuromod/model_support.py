@@ -97,12 +97,60 @@ class ModelSupportManager:
         total_memory_gb = memory.total / (1024**3)
         available_memory_gb = memory.available / (1024**3)
         
-        # GPU info
+        # GPU info - try multiple methods to detect GPUs
         gpu_memory_gb = None
         gpu_count = 0
-        if torch.cuda.is_available():
-            gpu_count = torch.cuda.device_count()
-            gpu_memory_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+        
+        # First, try PyTorch CUDA
+        cuda_available = False
+        try:
+            cuda_available = torch.cuda.is_available()
+        except Exception as e:
+            logger.warning(f"CUDA availability check failed: {e}")
+            logger.warning("This may be due to CUDA initialization issues. Checking alternative methods...")
+        
+        if cuda_available:
+            try:
+                gpu_count = torch.cuda.device_count()
+                if gpu_count > 0:
+                    gpu_memory_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+            except Exception as e:
+                logger.warning(f"Failed to get CUDA device info: {e}")
+        
+        # If PyTorch CUDA failed, try nvidia-smi as fallback
+        if gpu_count == 0:
+            try:
+                import subprocess
+                result = subprocess.run(
+                    ['nvidia-smi', '--query-gpu=count,memory.total', '--format=csv,noheader,nounits'],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                if result.returncode == 0 and result.stdout.strip():
+                    lines = result.stdout.strip().split('\n')
+                    gpu_count = len(lines)
+                    if gpu_count > 0:
+                        # Get memory from first GPU
+                        first_line = lines[0].split(',')
+                        if len(first_line) >= 2:
+                            try:
+                                gpu_memory_gb = float(first_line[1].strip()) / 1024  # Convert MB to GB
+                                logger.info(f"Detected {gpu_count} GPU(s) via nvidia-smi (PyTorch CUDA unavailable)")
+                                logger.warning("CUDA is not available in PyTorch, but GPUs are detected via nvidia-smi")
+                                logger.warning("This may indicate a CUDA/PyTorch compatibility issue")
+                                logger.warning("Check CUDA_VISIBLE_DEVICES and ensure PyTorch was built with CUDA support")
+                            except ValueError:
+                                pass
+            except (subprocess.TimeoutExpired, FileNotFoundError, Exception) as e:
+                logger.debug(f"nvidia-smi check failed: {e}")
+        
+        # Check CUDA_VISIBLE_DEVICES environment variable
+        cuda_visible_devices = os.environ.get('CUDA_VISIBLE_DEVICES', None)
+        if cuda_visible_devices is not None:
+            logger.info(f"CUDA_VISIBLE_DEVICES is set to: {cuda_visible_devices}")
+            if cuda_visible_devices == '':
+                logger.warning("CUDA_VISIBLE_DEVICES is set to empty string - this hides all GPUs from PyTorch!")
         
         return SystemInfo(
             total_memory_gb=total_memory_gb,
@@ -467,6 +515,13 @@ class ModelSupportManager:
         # Check if MPS is available to avoid accelerate issues on Mac
         # Only force CPU loading if we're on Mac with MPS (to avoid accelerate issues)
         # Otherwise, use GPU if CUDA is available
+        cuda_available = False
+        try:
+            cuda_available = torch.cuda.is_available()
+        except Exception as e:
+            logger.warning(f"CUDA availability check failed: {e}")
+            cuda_available = False
+        
         if hasattr(torch, 'mps') and torch.backends.mps.is_available():
             # Force CPU loading to avoid accelerate MPS issues on Mac
             device_map = None  # Don't use device_map at all
@@ -478,7 +533,7 @@ class ModelSupportManager:
             logger.info("DEVICE MODE: CPU (MPS detected on Mac - forcing CPU to avoid accelerate issues)")
             logger.info(f"CPU Memory Available: {self.system_info.available_memory_gb:.2f} GB / {self.system_info.total_memory_gb:.2f} GB")
             logger.info("=" * 60)
-        elif torch.cuda.is_available():
+        elif cuda_available:
             # CUDA is available - ensure device_map is set for GPU usage
             if device_map is None:
                 device_map = "auto"  # Use auto device mapping for GPU
@@ -499,13 +554,32 @@ class ModelSupportManager:
             
             logger.info("=" * 60)
             logger.info(f"DEVICE MODE: GPU (CUDA)")
-            logger.info(f"GPU Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'Unknown'}")
+            try:
+                gpu_name = torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'Unknown'
+            except:
+                gpu_name = 'Unknown'
+            logger.info(f"GPU Device: {gpu_name}")
             logger.info(f"GPU Memory Total: {gpu_memory_total:.2f} GB")
             logger.info(f"GPU Memory Free: {gpu_memory_free:.2f} GB")
             logger.info(f"GPU Memory Allocated: {gpu_memory_allocated:.2f} GB")
             logger.info(f"GPU Memory Reserved: {gpu_memory_reserved:.2f} GB")
             logger.info(f"Device Map: {device_map}")
             logger.info("=" * 60)
+        elif self.system_info.gpu_count > 0:
+            # GPUs detected via nvidia-smi but PyTorch CUDA not available
+            logger.warning("=" * 60)
+            logger.warning("⚠️  GPUs DETECTED BUT CUDA UNAVAILABLE IN PYTORCH")
+            logger.warning(f"Detected {self.system_info.gpu_count} GPU(s) via nvidia-smi")
+            logger.warning(f"GPU Memory: {self.system_info.gpu_memory_gb:.2f} GB per device")
+            logger.warning("PyTorch cannot access CUDA - this may be due to:")
+            logger.warning("  1. CUDA_VISIBLE_DEVICES environment variable issues")
+            logger.warning("  2. PyTorch built without CUDA support")
+            logger.warning("  3. CUDA driver/runtime version mismatch")
+            logger.warning("  4. CUDA initialization error (check earlier warnings)")
+            logger.warning("")
+            logger.warning("Falling back to CPU mode. Model will be dequantized.")
+            logger.warning("=" * 60)
+            device_map = None
         else:
             # No GPU available - using CPU
             logger.info("=" * 60)
