@@ -76,7 +76,19 @@ class ModelSupportManager:
         self.model_configs = self._define_model_configs()
         
         logger.info(f"ModelSupportManager initialized in {'TEST' if test_mode else 'PRODUCTION'} mode")
-        logger.info(f"System: {self.system_info.platform}, Memory: {self.system_info.available_memory_gb:.1f}GB")
+        logger.info(f"System: {self.system_info.platform}")
+        logger.info(f"CPU Memory: {self.system_info.available_memory_gb:.1f} GB available / {self.system_info.total_memory_gb:.1f} GB total")
+        if self.system_info.gpu_count > 0:
+            logger.info(f"GPU: {self.system_info.gpu_count} device(s) detected")
+            logger.info(f"GPU Memory: {self.system_info.gpu_memory_gb:.1f} GB per device")
+            if torch.cuda.is_available():
+                for i in range(self.system_info.gpu_count):
+                    try:
+                        logger.info(f"  - GPU {i}: {torch.cuda.get_device_name(i)}")
+                    except:
+                        logger.info(f"  - GPU {i}: Available")
+        else:
+            logger.info("GPU: No GPU detected")
     
     def _get_system_info(self) -> SystemInfo:
         """Get system resource information"""
@@ -452,14 +464,54 @@ class ModelSupportManager:
         elif is_pre_quantized:
             logger.info(f"Skipping quantization config for pre-quantized model {config.name}")
         
-        # Check if MPS is available to avoid accelerate issues
-        if not hasattr(torch, 'mps') or not torch.backends.mps.is_available():
-            # Force CPU loading to avoid accelerate MPS issues
+        # Check if MPS is available to avoid accelerate issues on Mac
+        # Only force CPU loading if we're on Mac with MPS (to avoid accelerate issues)
+        # Otherwise, use GPU if CUDA is available
+        if hasattr(torch, 'mps') and torch.backends.mps.is_available():
+            # Force CPU loading to avoid accelerate MPS issues on Mac
             device_map = None  # Don't use device_map at all
             kwargs.pop('device_map', None)  # Remove device_map from kwargs
             # Override low_cpu_mem_usage if it exists
             kwargs.pop('low_cpu_mem_usage', None)
             kwargs['low_cpu_mem_usage'] = False
+            logger.info("=" * 60)
+            logger.info("DEVICE MODE: CPU (MPS detected on Mac - forcing CPU to avoid accelerate issues)")
+            logger.info(f"CPU Memory Available: {self.system_info.available_memory_gb:.2f} GB / {self.system_info.total_memory_gb:.2f} GB")
+            logger.info("=" * 60)
+        elif torch.cuda.is_available():
+            # CUDA is available - ensure device_map is set for GPU usage
+            if device_map is None:
+                device_map = "auto"  # Use auto device mapping for GPU
+            
+            # Get GPU memory info
+            gpu_memory_total = self.system_info.gpu_memory_gb or 0.0
+            gpu_memory_allocated = 0.0
+            gpu_memory_reserved = 0.0
+            gpu_memory_free = gpu_memory_total
+            
+            try:
+                if torch.cuda.is_available():
+                    gpu_memory_allocated = torch.cuda.memory_allocated(0) / (1024**3)
+                    gpu_memory_reserved = torch.cuda.memory_reserved(0) / (1024**3)
+                    gpu_memory_free = gpu_memory_total - gpu_memory_reserved
+            except:
+                pass
+            
+            logger.info("=" * 60)
+            logger.info(f"DEVICE MODE: GPU (CUDA)")
+            logger.info(f"GPU Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'Unknown'}")
+            logger.info(f"GPU Memory Total: {gpu_memory_total:.2f} GB")
+            logger.info(f"GPU Memory Free: {gpu_memory_free:.2f} GB")
+            logger.info(f"GPU Memory Allocated: {gpu_memory_allocated:.2f} GB")
+            logger.info(f"GPU Memory Reserved: {gpu_memory_reserved:.2f} GB")
+            logger.info(f"Device Map: {device_map}")
+            logger.info("=" * 60)
+        else:
+            # No GPU available - using CPU
+            logger.info("=" * 60)
+            logger.info("DEVICE MODE: CPU (No GPU available)")
+            logger.info(f"CPU Memory Available: {self.system_info.available_memory_gb:.2f} GB / {self.system_info.total_memory_gb:.2f} GB")
+            logger.info("=" * 60)
         
         # Load model
         load_kwargs = {
@@ -534,6 +586,42 @@ class ModelSupportManager:
                         **load_kwargs,
                         resume_download=True  # Enable resume for interrupted downloads
                     )
+                
+                # Log where the model was actually loaded
+                try:
+                    if hasattr(model, 'hf_device_map'):
+                        # Model was loaded with device_map
+                        logger.info("=" * 60)
+                        logger.info("MODEL LOADED SUCCESSFULLY")
+                        logger.info(f"Model: {config.name}")
+                        if model.hf_device_map:
+                            logger.info(f"Device Map: {model.hf_device_map}")
+                            # Count devices used
+                            devices_used = set()
+                            for layer_name, device in model.hf_device_map.items():
+                                if isinstance(device, (int, str)):
+                                    devices_used.add(str(device))
+                            logger.info(f"Devices Used: {', '.join(sorted(devices_used))}")
+                        else:
+                            logger.info("Device Map: Not available (model may be on CPU)")
+                    else:
+                        # Check first parameter's device
+                        first_param = next(model.parameters(), None)
+                        if first_param is not None:
+                            device = first_param.device
+                            logger.info("=" * 60)
+                            logger.info("MODEL LOADED SUCCESSFULLY")
+                            logger.info(f"Model: {config.name}")
+                            logger.info(f"Device: {device}")
+                            if device.type == 'cuda':
+                                logger.info(f"GPU Memory After Load: {torch.cuda.memory_allocated(device.index) / (1024**3):.2f} GB allocated")
+                        else:
+                            logger.info(f"Model {config.name} loaded successfully")
+                    logger.info("=" * 60)
+                except Exception as log_error:
+                    logger.debug(f"Could not log device info: {log_error}")
+                    logger.info(f"Model {config.name} loaded successfully")
+                
                 # Success - break out of retry loop
                 break
                 
