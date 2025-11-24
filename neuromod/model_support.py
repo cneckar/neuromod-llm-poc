@@ -12,9 +12,21 @@ Key Features:
 - Device mapping and optimization
 """
 
-import torch
-import logging
 import os
+import logging
+
+# CRITICAL: Check CUDA_VISIBLE_DEVICES BEFORE importing torch
+# Changing CUDA_VISIBLE_DEVICES after torch import causes CUDA initialization errors
+_cuda_visible_devices_before_import = os.environ.get('CUDA_VISIBLE_DEVICES', None)
+if _cuda_visible_devices_before_import is not None:
+    # Log this early so user knows what's set
+    import sys
+    print(f"⚠️  CUDA_VISIBLE_DEVICES is set to: {_cuda_visible_devices_before_import}", file=sys.stderr)
+    if _cuda_visible_devices_before_import == '':
+        print("⚠️  WARNING: CUDA_VISIBLE_DEVICES='' hides all GPUs from PyTorch!", file=sys.stderr)
+        print("⚠️  To fix: unset CUDA_VISIBLE_DEVICES before importing torch", file=sys.stderr)
+
+import torch
 import time
 from typing import Dict, List, Optional, Any, Union, Tuple
 from dataclasses import dataclass
@@ -27,6 +39,17 @@ from enum import Enum
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Check if CUDA_VISIBLE_DEVICES was changed after torch import
+_cuda_visible_devices_after_import = os.environ.get('CUDA_VISIBLE_DEVICES', None)
+if _cuda_visible_devices_before_import != _cuda_visible_devices_after_import:
+    logger.error("=" * 60)
+    logger.error("CRITICAL: CUDA_VISIBLE_DEVICES was changed AFTER torch import!")
+    logger.error("This will cause CUDA initialization to fail.")
+    logger.error(f"Before import: {_cuda_visible_devices_before_import}")
+    logger.error(f"After import: {_cuda_visible_devices_after_import}")
+    logger.error("SOLUTION: Set CUDA_VISIBLE_DEVICES BEFORE importing torch or any modules that import torch")
+    logger.error("=" * 60)
 
 class ModelSize(Enum):
     """Model size categories"""
@@ -71,9 +94,40 @@ class ModelSupportManager:
     
     def __init__(self, test_mode: bool = True):
         self.test_mode = test_mode
+        
+        # Try to work around CUDA initialization issues
+        self._try_fix_cuda_access()
+        
         self.system_info = self._get_system_info()
         self.loaded_models: Dict[str, Any] = {}
         self.model_configs = self._define_model_configs()
+    
+    def _try_fix_cuda_access(self):
+        """Try to work around CUDA initialization issues"""
+        # Check if CUDA_VISIBLE_DEVICES might be causing issues
+        cuda_visible = os.environ.get('CUDA_VISIBLE_DEVICES', None)
+        
+        # If CUDA_VISIBLE_DEVICES is set but CUDA isn't available, warn
+        try:
+            cuda_available = torch.cuda.is_available()
+            if not cuda_available and cuda_visible is not None:
+                logger.warning("=" * 60)
+                logger.warning("CUDA ACCESS ISSUE DETECTED")
+                logger.warning(f"CUDA_VISIBLE_DEVICES={cuda_visible} but torch.cuda.is_available()=False")
+                logger.warning("")
+                logger.warning("This is often caused by:")
+                logger.warning("  1. CUDA_VISIBLE_DEVICES being changed after torch import")
+                logger.warning("  2. CUDA runtime initialization failure")
+                logger.warning("  3. Multiple processes competing for CUDA")
+                logger.warning("")
+                logger.warning("WORKAROUND ATTEMPTS:")
+                logger.warning("  1. Restart Python process (CUDA state cannot be reset)")
+                logger.warning("  2. Unset CUDA_VISIBLE_DEVICES: unset CUDA_VISIBLE_DEVICES")
+                logger.warning("  3. Set CUDA_VISIBLE_DEVICES before Python starts")
+                logger.warning("  4. Check for other processes using CUDA: nvidia-smi")
+                logger.warning("=" * 60)
+        except Exception as e:
+            logger.debug(f"Could not check CUDA availability: {e}")
         
         logger.info(f"ModelSupportManager initialized in {'TEST' if test_mode else 'PRODUCTION'} mode")
         logger.info(f"System: {self.system_info.platform}")
@@ -179,33 +233,50 @@ class ModelSupportManager:
         
         # Log CUDA diagnostic information
         if gpu_count > 0 and not cuda_available:
-            logger.warning("=" * 60)
-            logger.warning("CUDA DIAGNOSTIC INFORMATION:")
-            logger.warning(f"PyTorch Version: {torch.__version__}")
-            logger.warning(f"PyTorch Built with CUDA: {pytorch_built_with_cuda}")
+            logger.error("=" * 60)
+            logger.error("🚨 CUDA INITIALIZATION FAILED - DIAGNOSTIC INFORMATION:")
+            logger.error(f"PyTorch Version: {torch.__version__}")
+            logger.error(f"PyTorch Built with CUDA: {pytorch_built_with_cuda}")
             if pytorch_cuda_version:
-                logger.warning(f"PyTorch CUDA Version: {pytorch_cuda_version}")
+                logger.error(f"PyTorch CUDA Version: {pytorch_cuda_version}")
             else:
-                logger.warning("PyTorch CUDA Version: None (PyTorch may be CPU-only build)")
+                logger.error("PyTorch CUDA Version: None (PyTorch may be CPU-only build)")
             if system_cuda_version:
-                logger.warning(f"System CUDA Driver Version: {system_cuda_version}")
-            logger.warning("=" * 60)
+                logger.error(f"System CUDA Driver Version: {system_cuda_version}")
+            logger.error(f"CUDA_VISIBLE_DEVICES: {cuda_visible_devices}")
+            logger.error("=" * 60)
             
-            # Provide specific recommendations
+            # Provide specific recommendations based on the error
+            logger.error("🔧 SOLUTIONS (try in order):")
+            logger.error("")
+            
             if not pytorch_built_with_cuda:
-                logger.error("SOLUTION: PyTorch was built WITHOUT CUDA support!")
-                logger.error("  Install CUDA-enabled PyTorch:")
-                logger.error("    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118")
-                logger.error("  Or for CUDA 12.1:")
-                logger.error("    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121")
-            elif pytorch_cuda_version and system_cuda_version:
-                logger.warning("SOLUTION: Check CUDA version compatibility between PyTorch and system")
+                logger.error("1. PyTorch was built WITHOUT CUDA support!")
+                logger.error("   Fix: Install CUDA-enabled PyTorch:")
+                logger.error("     pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118")
+                logger.error("   Then RESTART Python")
             else:
-                logger.warning("SOLUTION: Try the following:")
-                logger.warning("  1. Unset CUDA_VISIBLE_DEVICES: unset CUDA_VISIBLE_DEVICES")
-                logger.warning("  2. Restart Python to reinitialize CUDA")
-                logger.warning("  3. Check if CUDA was initialized elsewhere before this code runs")
-                logger.warning("  4. Verify nvidia-smi shows GPUs: nvidia-smi")
+                logger.error("1. CUDA_VISIBLE_DEVICES Issue (MOST COMMON):")
+                logger.error("   The error 'CUDA unknown error' usually means CUDA_VISIBLE_DEVICES")
+                logger.error("   was changed AFTER torch was imported.")
+                logger.error("   ")
+                logger.error("   Fix:")
+                logger.error("     a) RESTART Python (CUDA state cannot be reset)")
+                logger.error("     b) Set CUDA_VISIBLE_DEVICES BEFORE starting Python:")
+                logger.error("        export CUDA_VISIBLE_DEVICES=0,1,2,3  # or unset it")
+                logger.error("        python your_script.py")
+                logger.error("     c) In Jupyter: Restart kernel and set env var in first cell")
+                logger.error("")
+                logger.error("2. Check for other processes using CUDA:")
+                logger.error("     nvidia-smi")
+                logger.error("     # Kill any processes that might be holding CUDA context")
+                logger.error("")
+                logger.error("3. Verify CUDA works in a fresh Python session:")
+                logger.error("     python -c 'import torch; print(torch.cuda.is_available())'")
+                logger.error("     # Should print True if CUDA is working")
+                logger.error("")
+                logger.error("4. If using Docker/containers, ensure CUDA is properly mounted")
+            logger.error("=" * 60)
         
         return SystemInfo(
             total_memory_gb=total_memory_gb,
@@ -543,9 +614,41 @@ class ModelSupportManager:
         
         # Setup quantization if specified and model is not pre-quantized
         quantization_config = None
+        enable_cpu_offload = False
+        
         if config.quantization and not self.test_mode and not is_pre_quantized:
             try:
                 from transformers import BitsAndBytesConfig
+                
+                # Estimate if model will fit in GPU memory
+                # Rough estimate: 4-bit needs ~0.5GB per 1B parameters, 8-bit needs ~1GB per 1B
+                gpu_memory_gb = self.system_info.gpu_memory_gb or 0.0
+                if cuda_available and gpu_memory_gb > 0:
+                    # Get model size estimate (rough: model name often contains size)
+                    model_size_b = 0
+                    if '8b' in config.name.lower() or '8b-instruct' in config.name.lower():
+                        model_size_b = 8
+                    elif '70b' in config.name.lower() or '70b-instruct' in config.name.lower():
+                        model_size_b = 70
+                    elif '13b' in config.name.lower():
+                        model_size_b = 13
+                    elif '7b' in config.name.lower():
+                        model_size_b = 7
+                    
+                    if model_size_b > 0:
+                        # Estimate memory needed (with some overhead)
+                        if config.quantization == "4bit":
+                            estimated_memory_gb = model_size_b * 0.6  # ~0.6GB per 1B params for 4-bit
+                        else:  # 8bit
+                            estimated_memory_gb = model_size_b * 1.2  # ~1.2GB per 1B params for 8-bit
+                        
+                        # Reserve some GPU memory for activations
+                        available_gpu_memory = gpu_memory_gb * 0.85  # Use 85% of GPU memory
+                        
+                        if estimated_memory_gb > available_gpu_memory:
+                            enable_cpu_offload = True
+                            logger.info(f"Model estimated size ({estimated_memory_gb:.1f}GB) exceeds available GPU memory ({available_gpu_memory:.1f}GB)")
+                            logger.info("Enabling CPU offloading for quantized model")
                 
                 if config.quantization == "4bit":
                     quantization_config = BitsAndBytesConfig(
@@ -558,9 +661,13 @@ class ModelSupportManager:
                 elif config.quantization == "8bit":
                     quantization_config = BitsAndBytesConfig(
                         load_in_8bit=True,
-                        bnb_8bit_compute_dtype=torch_dtype
+                        bnb_8bit_compute_dtype=torch_dtype,
+                        llm_int8_enable_fp32_cpu_offload=enable_cpu_offload
                     )
-                    logger.info(f"Using 8-bit quantization for {config.name}")
+                    if enable_cpu_offload:
+                        logger.info(f"Using 8-bit quantization with CPU offloading for {config.name}")
+                    else:
+                        logger.info(f"Using 8-bit quantization for {config.name}")
             except ImportError:
                 logger.warning("bitsandbytes not available, loading model without quantization")
                 quantization_config = None
@@ -689,8 +796,22 @@ class ModelSupportManager:
             load_kwargs['quantization_config'] = quantization_config
         
         # Only add device_map if it's not None
+        # For quantized models with CPU offloading, ensure device_map allows CPU
         if device_map is not None:
-            load_kwargs['device_map'] = device_map
+            if enable_cpu_offload and quantization_config is not None:
+                # For CPU offloading, use "auto" which allows CPU/GPU distribution
+                if device_map == "auto":
+                    load_kwargs['device_map'] = "auto"
+                else:
+                    # If custom device_map, ensure it allows CPU offloading
+                    load_kwargs['device_map'] = device_map
+                    logger.info("Using custom device_map with CPU offloading enabled")
+            else:
+                load_kwargs['device_map'] = device_map
+        elif enable_cpu_offload and quantization_config is not None:
+            # If CPU offloading is needed but no device_map set, use "auto"
+            load_kwargs['device_map'] = "auto"
+            logger.info("Setting device_map='auto' to enable CPU offloading for quantized model")
         
         # Add token if available
         if hf_token:
@@ -699,6 +820,7 @@ class ModelSupportManager:
         # Load model with error handling for authentication and network issues
         max_retries = 3
         retry_delay = 5  # seconds
+        cpu_offload_retry = False
         
         for attempt in range(max_retries):
             try:
@@ -765,6 +887,29 @@ class ModelSupportManager:
             except Exception as e:
                 error_str = str(e).lower()
                 error_msg = str(e)
+                
+                # Check if it's a CPU/disk offloading error for quantized models
+                is_offload_error = (
+                    'some modules are dispatched on the cpu' in error_str or
+                    'some modules are dispatched on the disk' in error_str or
+                    'llm_int8_enable_fp32_cpu_offload' in error_str or
+                    'not enough gpu ram' in error_str
+                )
+                
+                # If it's an offload error and we haven't enabled CPU offloading yet, retry with it enabled
+                if is_offload_error and quantization_config is not None and not enable_cpu_offload and not cpu_offload_retry:
+                    logger.warning("Quantized model doesn't fit in GPU memory, enabling CPU offloading...")
+                    cpu_offload_retry = True
+                    
+                    # Enable CPU offloading in quantization config
+                    if hasattr(quantization_config, 'llm_int8_enable_fp32_cpu_offload'):
+                        quantization_config.llm_int8_enable_fp32_cpu_offload = True
+                    # Update load_kwargs
+                    load_kwargs['quantization_config'] = quantization_config
+                    if 'device_map' not in load_kwargs or load_kwargs.get('device_map') is None:
+                        load_kwargs['device_map'] = "auto"
+                    logger.info("Retrying with CPU offloading enabled...")
+                    continue
                 
                 # Check if it's a network/download error
                 is_network_error = (
