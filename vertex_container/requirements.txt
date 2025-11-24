@@ -1,7 +1,8 @@
 # Vertex AI Custom Container Requirements
 # Core ML dependencies
-# PyTorch with CUDA 11.8 support (Vertex AI containers have GPU support)
---extra-index-url https://download.pytorch.org/whl/cu118
+# PyTorch with CUDA 12.1 support (Vertex AI containers have GPU support)
+# CUDA 12.1 is compatible with CUDA 12.8 drivers (backward compatible)
+--extra-index-url https://download.pytorch.org/whl/cu121
 torch>=2.0.0                     # PyTorch for deep learning (CUDA-enabled)
 torchvision>=0.17.0             # Torchvision (CUDA-enabled)
 torchaudio>=2.2.0               # Torchaudio (CUDA-enabled)

@@ -4,10 +4,12 @@
 # =============================================================================
 # CORE MACHINE LEARNING DEPENDENCIES
 # =============================================================================
-# PyTorch with CUDA 11.8 support (for GPU acceleration)
+# PyTorch with CUDA 12.1 support (for GPU acceleration)
+# CUDA 12.1 is compatible with CUDA 12.8 drivers (backward compatible)
 # This adds PyTorch's CUDA wheel index as an extra source
 # If you need CPU-only PyTorch, install separately: pip install torch torchvision torchaudio
---extra-index-url https://download.pytorch.org/whl/cu118
+# For CUDA 11.8, use: --extra-index-url https://download.pytorch.org/whl/cu118
+--extra-index-url https://download.pytorch.org/whl/cu121
 torch>=2.2.0                    # PyTorch for deep learning (CUDA-enabled)
 torchvision>=0.17.0             # Torchvision (CUDA-enabled)
 torchaudio>=2.2.0               # Torchaudio (CUDA-enabled)
