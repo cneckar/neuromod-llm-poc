@@ -152,6 +152,61 @@ class ModelSupportManager:
             if cuda_visible_devices == '':
                 logger.warning("CUDA_VISIBLE_DEVICES is set to empty string - this hides all GPUs from PyTorch!")
         
+        # Check PyTorch CUDA build information
+        pytorch_cuda_version = None
+        pytorch_built_with_cuda = False
+        try:
+            pytorch_cuda_version = torch.version.cuda
+            pytorch_built_with_cuda = pytorch_cuda_version is not None
+        except:
+            pass
+        
+        # Get system CUDA version from nvidia-smi if available
+        system_cuda_version = None
+        if gpu_count > 0 and not cuda_available:
+            try:
+                import subprocess
+                result = subprocess.run(
+                    ['nvidia-smi', '--query-gpu=driver_version', '--format=csv,noheader'],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                if result.returncode == 0 and result.stdout.strip():
+                    system_cuda_version = result.stdout.strip().split('\n')[0]
+            except:
+                pass
+        
+        # Log CUDA diagnostic information
+        if gpu_count > 0 and not cuda_available:
+            logger.warning("=" * 60)
+            logger.warning("CUDA DIAGNOSTIC INFORMATION:")
+            logger.warning(f"PyTorch Version: {torch.__version__}")
+            logger.warning(f"PyTorch Built with CUDA: {pytorch_built_with_cuda}")
+            if pytorch_cuda_version:
+                logger.warning(f"PyTorch CUDA Version: {pytorch_cuda_version}")
+            else:
+                logger.warning("PyTorch CUDA Version: None (PyTorch may be CPU-only build)")
+            if system_cuda_version:
+                logger.warning(f"System CUDA Driver Version: {system_cuda_version}")
+            logger.warning("=" * 60)
+            
+            # Provide specific recommendations
+            if not pytorch_built_with_cuda:
+                logger.error("SOLUTION: PyTorch was built WITHOUT CUDA support!")
+                logger.error("  Install CUDA-enabled PyTorch:")
+                logger.error("    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118")
+                logger.error("  Or for CUDA 12.1:")
+                logger.error("    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121")
+            elif pytorch_cuda_version and system_cuda_version:
+                logger.warning("SOLUTION: Check CUDA version compatibility between PyTorch and system")
+            else:
+                logger.warning("SOLUTION: Try the following:")
+                logger.warning("  1. Unset CUDA_VISIBLE_DEVICES: unset CUDA_VISIBLE_DEVICES")
+                logger.warning("  2. Restart Python to reinitialize CUDA")
+                logger.warning("  3. Check if CUDA was initialized elsewhere before this code runs")
+                logger.warning("  4. Verify nvidia-smi shows GPUs: nvidia-smi")
+        
         return SystemInfo(
             total_memory_gb=total_memory_gb,
             available_memory_gb=available_memory_gb,
@@ -578,6 +633,14 @@ class ModelSupportManager:
             logger.warning("  4. CUDA initialization error (check earlier warnings)")
             logger.warning("")
             logger.warning("Falling back to CPU mode. Model will be dequantized.")
+            logger.warning("")
+            logger.warning("QUICK FIX ATTEMPTS:")
+            logger.warning("  1. Unset CUDA_VISIBLE_DEVICES and restart Python:")
+            logger.warning("     unset CUDA_VISIBLE_DEVICES")
+            logger.warning("  2. Check PyTorch CUDA build:")
+            logger.warning("     python -c 'import torch; print(torch.version.cuda)'")
+            logger.warning("  3. If None, reinstall PyTorch with CUDA:")
+            logger.warning("     pip install torch --index-url https://download.pytorch.org/whl/cu118")
             logger.warning("=" * 60)
             device_map = None
         else:
