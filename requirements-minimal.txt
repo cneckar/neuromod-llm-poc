@@ -5,7 +5,13 @@
 # =============================================================================
 # CORE MACHINE LEARNING (Required)
 # =============================================================================
-torch>=2.2.0                    # PyTorch for deep learning
+# PyTorch with CUDA 11.8 support (for GPU acceleration)
+# This adds PyTorch's CUDA wheel index as an extra source
+# If you need CPU-only PyTorch, install separately: pip install torch torchvision torchaudio
+--extra-index-url https://download.pytorch.org/whl/cu118
+torch>=2.2.0                    # PyTorch for deep learning (CUDA-enabled)
+torchvision>=0.17.0             # Torchvision (CUDA-enabled)
+torchaudio>=2.2.0               # Torchaudio (CUDA-enabled)
 transformers>=4.42.0            # Hugging Face transformers
 accelerate>=0.20.0              # Hugging Face accelerate
 hf-transfer>=0.1.0              # Faster Hugging Face downloads
