@@ -405,9 +405,29 @@ class ModelSupportManager:
         device_map = self._get_device_map(config)
         torch_dtype = config.torch_dtype or torch.float32
         
-        # Setup quantization if specified
+        # Check if model is pre-quantized (e.g., GPT-OSS models with Mxfp4Config)
+        is_pre_quantized = False
+        try:
+            from transformers import AutoConfig
+            model_config = AutoConfig.from_pretrained(
+                config.name,
+                token=hf_token,
+                trust_remote_code=config.trust_remote_code
+            )
+            # Check if model config indicates pre-quantization
+            if hasattr(model_config, 'quantization_config') and model_config.quantization_config is not None:
+                is_pre_quantized = True
+                logger.info(f"Model {config.name} is pre-quantized, skipping BitsAndBytesConfig")
+            # Also check for GPT-OSS models specifically (they use Mxfp4Config)
+            if 'gpt-oss' in config.name.lower():
+                is_pre_quantized = True
+                logger.info(f"GPT-OSS model detected, skipping BitsAndBytesConfig (uses Mxfp4Config)")
+        except Exception as e:
+            logger.debug(f"Could not check model config for pre-quantization: {e}")
+        
+        # Setup quantization if specified and model is not pre-quantized
         quantization_config = None
-        if config.quantization and not self.test_mode:
+        if config.quantization and not self.test_mode and not is_pre_quantized:
             try:
                 from transformers import BitsAndBytesConfig
                 
@@ -428,6 +448,8 @@ class ModelSupportManager:
             except ImportError:
                 logger.warning("bitsandbytes not available, loading model without quantization")
                 quantization_config = None
+        elif is_pre_quantized:
+            logger.info(f"Skipping quantization config for pre-quantized model {config.name}")
         
         # Check if MPS is available to avoid accelerate issues
         if not hasattr(torch, 'mps') or not torch.backends.mps.is_available():

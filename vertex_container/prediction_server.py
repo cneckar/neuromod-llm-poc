@@ -81,34 +81,68 @@ def load_model():
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
         
-        # Load model with quantization for GPU efficiency
-        from transformers import BitsAndBytesConfig
-        quantization_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.float16,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_use_double_quant=True
-        )
+        # Check if model is pre-quantized (e.g., GPT-OSS models with Mxfp4Config)
+        is_pre_quantized = False
+        quantization_config = None
+        
+        try:
+            from transformers import AutoConfig
+            model_config = AutoConfig.from_pretrained(
+                model_name,
+                token=hf_token,
+                trust_remote_code=True
+            )
+            # Check if model config indicates pre-quantization
+            if hasattr(model_config, 'quantization_config') and model_config.quantization_config is not None:
+                is_pre_quantized = True
+                logger.info(f"Model {model_name} is pre-quantized, skipping BitsAndBytesConfig")
+            # Also check for GPT-OSS models specifically (they use Mxfp4Config)
+            if 'gpt-oss' in model_name.lower():
+                is_pre_quantized = True
+                logger.info(f"GPT-OSS model detected, skipping BitsAndBytesConfig (uses Mxfp4Config)")
+        except Exception as e:
+            logger.debug(f"Could not check model config for pre-quantization: {e}")
+        
+        # Only apply BitsAndBytesConfig if model is not pre-quantized
+        if not is_pre_quantized:
+            try:
+                from transformers import BitsAndBytesConfig
+                quantization_config = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_compute_dtype=torch.float16,
+                    bnb_4bit_quant_type="nf4",
+                    bnb_4bit_use_double_quant=True
+                )
+                logger.info("Using BitsAndBytesConfig for quantization")
+            except ImportError:
+                logger.warning("bitsandbytes not available, loading model without quantization")
+                quantization_config = None
+        
+        # Prepare load kwargs
+        load_kwargs = {
+            'device_map': "auto",
+            'torch_dtype': torch.float16,
+            'trust_remote_code': True
+        }
+        
+        if quantization_config is not None:
+            load_kwargs['quantization_config'] = quantization_config
+        
+        if hf_token:
+            load_kwargs['token'] = hf_token
         
         # Load model with authentication if available
         if hf_token:
             logger.info("Loading model with authentication")
             model = AutoModelForCausalLM.from_pretrained(
                 model_name,
-                quantization_config=quantization_config,
-                device_map="auto",
-                torch_dtype=torch.float16,
-                trust_remote_code=True,
-                token=hf_token
+                **load_kwargs
             )
         else:
             logger.info("Loading model without authentication")
             model = AutoModelForCausalLM.from_pretrained(
                 model_name,
-                quantization_config=quantization_config,
-                device_map="auto",
-                torch_dtype=torch.float16,
-                trust_remote_code=True
+                **load_kwargs
             )
         
         # Initialize neuromodulation tool with FULL PROBE SYSTEM

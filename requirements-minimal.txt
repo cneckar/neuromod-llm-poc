@@ -8,6 +8,7 @@
 torch>=2.2.0                    # PyTorch for deep learning
 transformers>=4.42.0            # Hugging Face transformers
 accelerate>=0.20.0              # Hugging Face accelerate
+hf-transfer>=0.1.0              # Faster Hugging Face downloads
 
 # =============================================================================
 # SCIENTIFIC COMPUTING (Required)
