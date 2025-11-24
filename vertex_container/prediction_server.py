@@ -119,9 +119,16 @@ def load_model():
                 quantization_config = None
         
         # Prepare load kwargs
+        # Use bfloat16 for GPT-OSS models (Mxfp4Config requires bfloat16)
+        if 'gpt-oss' in model_name.lower():
+            model_dtype = torch.bfloat16
+            logger.info(f"Using bfloat16 for GPT-OSS model {model_name} (Mxfp4Config requires bfloat16)")
+        else:
+            model_dtype = torch.float16
+        
         load_kwargs = {
             'device_map': "auto",
-            'torch_dtype': torch.float16,
+            'torch_dtype': model_dtype,
             'trust_remote_code': True
         }
         
