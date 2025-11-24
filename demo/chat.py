@@ -798,6 +798,8 @@ def main():
                 print("   • Qwen/Qwen2.5-32B-Instruct (32B, 4-bit quantized, ~20-24GB VRAM, no auth required)")
                 print("   • meta-llama/Llama-4-Scout-17B-16E-Instruct (17B, 4-bit quantized, ~16-18GB VRAM, requires auth)")
                 print("   • meta-llama/Llama-3.1-70B-Instruct (70B, 4-bit quantized, ~40GB VRAM, requires auth)")
+                print("   • openai/gpt-oss-20b (20B, 4-bit quantized, ~50GB VRAM, open-source weights)")
+                print("   • openai/gpt-oss-120b (120B, multi-GPU / >80GB VRAM recommended)")
                 
                 try:
                     model_idx = int(input("\nSelect model number: ").strip()) - 1

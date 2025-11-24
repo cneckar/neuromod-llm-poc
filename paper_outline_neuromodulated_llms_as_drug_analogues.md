@@ -120,7 +120,7 @@ neuromodulation; inference-time control; activation steering; KV‑cache; nicoti
 - **Robustness testing:** Two paraphrase sets, multiple models, held-out prompts
 - **Ablation analysis:** Minus-one ablations and dose-response curves (0.3, 0.5, 0.7, 0.9 intensity)
 - **Effect interaction analysis:** Pairwise effect combinations to identify synergies and antagonisms between neuromodulation components
-- **Cross-model meta-analysis:** Aggregation of results across all three primary models (Llama-3.1-70B, Qwen-2.5-Omni-7B, Mixtral-8×22B) with random-effects meta-analysis to assess generalizability
+- **Cross-model meta-analysis:** Aggregation of results across all three primary models (Llama-3.1-70B, Qwen-2.5-Omni-7B, Mixtral-8×22B) with random-effects meta-analysis to assess generalizability; optional research-tier validation on openai/gpt-oss-20b and openai/gpt-oss-120b when compute permits
 
 ## 4.8 Implementation & Reproducibility
 - Public repo: pack JSONs, MCP tool, steering‑vector builder, KV hooks, exact seeds, prompts.
@@ -128,10 +128,12 @@ neuromodulation; inference-time control; activation steering; KV‑cache; nicoti
 - Release BibTeX (reading pack) and questionnaire scorers.
 
 ## 4.9 Cross-Model Validation
-- **Model selection:** Primary experiments conducted on three distinct architectures:
+- **Model selection:** Primary experiments conducted on three distinct architectures, with extended validation on OpenAI’s GPT-OSS line:
   - Llama-3.1-70B-Instruct (dense transformer, 70B parameters)
   - Qwen-2.5-Omni-7B (dense transformer, 7B parameters, optimized for multimodal)
   - Mixtral-8×22B-Instruct (Mixture of Experts, 8×22B parameters)
+  - openai/gpt-oss-20b (dense transformer, high-precision open checkpoint)
+  - openai/gpt-oss-120b (dense flagship release, optional multi-GPU validation)
 - **Protocol:** Identical experimental protocol applied to all three models with same packs, tests, and sample sizes
 - **Meta-analysis:** Random-effects meta-analysis across models to assess effect consistency and generalizability
 - **Model comparison:** Effect size comparisons, significance consistency, and architecture-specific effect patterns

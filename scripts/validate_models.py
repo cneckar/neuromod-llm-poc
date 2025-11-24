@@ -41,7 +41,7 @@ class ModelValidator:
     
     _encoding_set = False  # Class variable to track if encoding was set
     
-    def __init__(self, output_dir: str = "outputs/validation/models"):
+    def __init__(self, output_dir: str = "outputs/validation/models", include_aspirational: bool = False):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.results = {
@@ -49,6 +49,7 @@ class ModelValidator:
             "system_info": self._get_system_info(),
             "models": {}
         }
+        self.include_aspirational = include_aspirational
         
         # Set UTF-8 encoding for Windows console (only once)
         if sys.platform == 'win32' and not ModelValidator._encoding_set:
@@ -377,6 +378,14 @@ class ModelValidator:
             # Note: Mixtral-8x22B removed from primary models due to OOM issues
             # Designated as "aspirational" - requires >50GB GPU memory
         ]
+        aspirational_models = [
+            "openai/gpt-oss-20b",
+            "openai/gpt-oss-120b",
+        ]
+        if self.include_aspirational:
+            primary_models.extend(aspirational_models)
+        else:
+            self.results["aspirational_models"] = aspirational_models
         
         print("[*] Starting Model Validation")
         print(f"[*] Models to validate: {len(primary_models)}")
@@ -509,10 +518,12 @@ def main():
     parser.add_argument("--model", help="Test a specific model only")
     parser.add_argument("--test-mode", action="store_true", 
                        help="Use test mode (allows testing with smaller models like gpt2)")
+    parser.add_argument("--include-aspirational", action="store_true",
+                       help="Also attempt extremely large research-only checkpoints (gpt-oss-20b, gpt-oss-120b)")
     
     args = parser.parse_args()
     
-    validator = ModelValidator(output_dir=args.output_dir)
+    validator = ModelValidator(output_dir=args.output_dir, include_aspirational=args.include_aspirational)
     
     if args.model:
         # Test single model

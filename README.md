@@ -74,7 +74,7 @@ Neuromod-LLM is a research framework that applies **biomimetic control primitive
 
 - **Python 3.8+**
 - **Local Model Access**: API models (OpenAI, Anthropic) are NOT supported - requires access to model internals
-- **Supported Models**: Llama-3.1-70B/8B, Qwen-2.5-Omni-7B, Mixtral-8×22B, and other open-source models via HuggingFace
+- **Supported Models**: openai/gpt-oss-120b, openai/gpt-oss-20b, Llama-3.1-70B/8B, Qwen-2.5-Omni-7B, Mixtral-8×22B, and other open-source models via HuggingFace
 - **GPU Recommended**: For larger models (70B+ parameters)
 
 ## Citation

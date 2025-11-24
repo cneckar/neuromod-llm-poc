@@ -203,6 +203,22 @@ class ModelSupportManager:
                     quantization="4bit",
                     max_length=2048,
                     torch_dtype=torch.float16
+                ),
+                "openai/gpt-oss-20b": ModelConfig(
+                    name="openai/gpt-oss-20b",
+                    size=ModelSize.MEDIUM,
+                    backend=BackendType.HUGGINGFACE,
+                    quantization="4bit",
+                    max_length=4096,
+                    torch_dtype=torch.float16
+                ),
+                "openai/gpt-oss-120b": ModelConfig(
+                    name="openai/gpt-oss-120b",
+                    size=ModelSize.XLARGE,
+                    backend=BackendType.HUGGINGFACE,
+                    quantization="4bit",
+                    max_length=4096,
+                    torch_dtype=torch.float16
                 )
             })
         
@@ -218,7 +234,12 @@ class ModelSupportManager:
             return "gpt2"  # Smallest model for testing
         else:
             # Recommend based on available resources
-            if self.system_info.gpu_memory_gb and self.system_info.gpu_memory_gb > 40:
+            if self.system_info.gpu_memory_gb and self.system_info.gpu_memory_gb > 80:
+                # Full 120B model support assumes multi-GPU or very high VRAM
+                return "openai/gpt-oss-120b"
+            elif self.system_info.gpu_memory_gb and self.system_info.gpu_memory_gb > 48:
+                return "openai/gpt-oss-20b"
+            elif self.system_info.gpu_memory_gb and self.system_info.gpu_memory_gb > 40:
                 return "meta-llama/Llama-3.1-70B-Instruct"
             elif self.system_info.gpu_memory_gb and self.system_info.gpu_memory_gb > 24:
                 # 32B models with 4-bit quantization need ~20-24GB VRAM
@@ -644,7 +665,9 @@ def get_attention_hook_paths(model_name: str) -> Dict[str, str]:
         "Qwen/Qwen2.5-32B": "model.layers.{}.self_attn",
         "Qwen/Qwen2.5-Omni-7B": "model.layers.{}.self_attn",
         "Qwen/Qwen-2.5-Omni-7B": "model.layers.{}.self_attn",  # Alias
-        "mistralai/Mixtral-8x22B-Instruct-v0.1": "model.layers.{}.self_attn"
+        "mistralai/Mixtral-8x22B-Instruct-v0.1": "model.layers.{}.self_attn",
+        "openai/gpt-oss-20b": "model.layers.{}.self_attn",
+        "openai/gpt-oss-120b": "model.layers.{}.self_attn"
     }
     
     # Find matching pattern (check for both base name and full name)

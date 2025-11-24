@@ -691,6 +691,20 @@ class EnhancedModelManager:
                 "size_mb": 500,
                 "max_length": 1024,
                 "description": "Base BART, good for text generation"
+            },
+
+            # OpenAI GPT-OSS reference models (community weights)
+            "openai/gpt-oss-20b": {
+                "type": "causal",
+                "size_mb": 40000,
+                "max_length": 8192,
+                "description": "OpenAI GPT-OSS 20B - high-fidelity open checkpoint (4-bit recommended)"
+            },
+            "openai/gpt-oss-120b": {
+                "type": "causal",
+                "size_mb": 240000,
+                "max_length": 8192,
+                "description": "OpenAI GPT-OSS 120B - flagship open release, requires multi-GPU or >80GB VRAM"
             }
         }
     

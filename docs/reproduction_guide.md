@@ -55,6 +55,8 @@ python scripts/validate_models.py --model "meta-llama/Llama-3.1-8B-Instruct"
 - ✅ Llama-3.1-70B-Instruct: Loads in ~40 minutes
 - ✅ Qwen-2.5-Omni-7B: Loads in ~32 seconds
 - ⚠️ Mixtral-8×22B: Requires more GPU memory than available on test system
+- 🧪 openai/gpt-oss-20b: Supported via 4-bit loading (expect >48GB VRAM or multi-GPU)
+- 🧪 openai/gpt-oss-120b: Research-only tier, assumes >80GB VRAM or distributed setup
 
 ### 1.2 Pack Validation
 

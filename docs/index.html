@@ -361,7 +361,8 @@ pip install neuromod-llm
 from neuromod import PackRegistry, PackManager
 from transformers import AutoModelForCausalLM
 
-model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.1-8B-Instruct")
+model_name = "meta-llama/Llama-3.1-8B-Instruct"  # or openai/gpt-oss-20b / openai/gpt-oss-120b
+model = AutoModelForCausalLM.from_pretrained(model_name)
 registry = PackRegistry()
 pack = registry.get_pack("caffeine")  # Try "alcohol", "mdma", "placebo"
 pack_manager = PackManager()
