@@ -26,7 +26,28 @@ if _cuda_visible_devices_before_import is not None:
         print("⚠️  WARNING: CUDA_VISIBLE_DEVICES='' hides all GPUs from PyTorch!", file=sys.stderr)
         print("⚠️  To fix: unset CUDA_VISIBLE_DEVICES before importing torch", file=sys.stderr)
 
+# Try to ensure PyTorch can find its bundled CUDA libraries
+# This helps in containers where system CUDA libraries might conflict
+try:
+    # We'll set this after torch import to avoid circular dependency
+    pass
+except:
+    pass
+
 import torch
+
+# After torch import, try to add PyTorch's bundled CUDA libraries to LD_LIBRARY_PATH
+# This can help if system CUDA libraries are causing conflicts
+try:
+    torch_lib_path = os.path.join(os.path.dirname(torch.__file__), 'lib')
+    if os.path.exists(torch_lib_path):
+        current_ld_path = os.environ.get('LD_LIBRARY_PATH', '')
+        if torch_lib_path not in current_ld_path:
+            # Add PyTorch's lib to the front of LD_LIBRARY_PATH
+            os.environ['LD_LIBRARY_PATH'] = f"{torch_lib_path}:{current_ld_path}" if current_ld_path else torch_lib_path
+            # Note: This won't help if CUDA was already initialized, but it might help for future imports
+except Exception:
+    pass  # Silently fail if we can't modify LD_LIBRARY_PATH
 import time
 from typing import Dict, List, Optional, Any, Union, Tuple
 from dataclasses import dataclass
@@ -244,6 +265,57 @@ class ModelSupportManager:
             if system_cuda_version:
                 logger.error(f"System CUDA Driver Version: {system_cuda_version}")
             logger.error(f"CUDA_VISIBLE_DEVICES: {cuda_visible_devices}")
+            
+            # Check library paths
+            ld_library_path = os.environ.get('LD_LIBRARY_PATH', 'Not set')
+            library_path = os.environ.get('LIBRARY_PATH', 'Not set')
+            logger.error(f"LD_LIBRARY_PATH: {ld_library_path}")
+            logger.error(f"LIBRARY_PATH: {library_path}")
+            
+            # Try to check if CUDA libraries exist
+            try:
+                import subprocess
+                cuda_lib_paths = [
+                    '/usr/local/cuda/lib64',
+                    '/usr/lib/x86_64-linux-gnu',
+                    '/usr/local/cuda-12.8/lib64',
+                    '/usr/local/cuda-12.1/lib64',
+                ]
+                if ld_library_path != 'Not set':
+                    cuda_lib_paths.extend(ld_library_path.split(':'))
+                
+                # Also check PyTorch's bundled CUDA libraries
+                try:
+                    import torch
+                    torch_path = os.path.dirname(torch.__file__)
+                    torch_lib_path = os.path.join(torch_path, 'lib')
+                    if os.path.exists(torch_lib_path):
+                        cuda_lib_paths.append(torch_lib_path)
+                except:
+                    pass
+                
+                logger.error("Checking for CUDA libraries:")
+                found_any = False
+                for lib_path in set(cuda_lib_paths):
+                    if lib_path and os.path.exists(lib_path):
+                        try:
+                            cuda_libs = [f for f in os.listdir(lib_path) if 'libcudart' in f or 'libcuda' in f]
+                            if cuda_libs:
+                                logger.error(f"  ✓ {lib_path}: Found {len(cuda_libs)} CUDA libraries")
+                                found_any = True
+                            else:
+                                logger.error(f"  ✗ {lib_path}: No CUDA libraries found")
+                        except PermissionError:
+                            logger.error(f"  ? {lib_path}: Permission denied")
+                        except Exception as e:
+                            logger.debug(f"Error checking {lib_path}: {e}")
+                
+                if not found_any:
+                    logger.error("  ⚠️  No CUDA libraries found in any checked paths!")
+                    logger.error("  This suggests CUDA runtime libraries are missing.")
+            except Exception as e:
+                logger.debug(f"Could not check CUDA libraries: {e}")
+            
             logger.error("=" * 60)
             
             # Provide specific recommendations based on the error
@@ -256,8 +328,19 @@ class ModelSupportManager:
                 logger.error("     pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118")
                 logger.error("   Then RESTART Python")
             else:
-                logger.error("1. CUDA_VISIBLE_DEVICES Issue (MOST COMMON):")
-                logger.error("   The error 'CUDA unknown error' usually means CUDA_VISIBLE_DEVICES")
+                logger.error("1. CUDA Library Path Issue (COMMON IN CONTAINERS):")
+                logger.error("   PyTorch may not be finding CUDA runtime libraries.")
+                logger.error("   ")
+                logger.error("   Fix:")
+                logger.error("     a) Check if CUDA libraries are in LD_LIBRARY_PATH:")
+                logger.error("        echo $LD_LIBRARY_PATH")
+                logger.error("        ls -la /usr/local/cuda/lib64/ | grep libcudart")
+                logger.error("     b) If missing, add to LD_LIBRARY_PATH:")
+                logger.error("        export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH")
+                logger.error("     c) RESTART Python after setting LD_LIBRARY_PATH")
+                logger.error("")
+                logger.error("2. CUDA_VISIBLE_DEVICES Issue:")
+                logger.error("   The error 'CUDA unknown error' can mean CUDA_VISIBLE_DEVICES")
                 logger.error("   was changed AFTER torch was imported.")
                 logger.error("   ")
                 logger.error("   Fix:")
@@ -265,17 +348,48 @@ class ModelSupportManager:
                 logger.error("     b) Set CUDA_VISIBLE_DEVICES BEFORE starting Python:")
                 logger.error("        export CUDA_VISIBLE_DEVICES=0,1,2,3  # or unset it")
                 logger.error("        python your_script.py")
-                logger.error("     c) In Jupyter: Restart kernel and set env var in first cell")
                 logger.error("")
-                logger.error("2. Check for other processes using CUDA:")
-                logger.error("     nvidia-smi")
-                logger.error("     # Kill any processes that might be holding CUDA context")
+                logger.error("3. PyTorch Installation Issue:")
+                logger.error("   Verify PyTorch CUDA installation:")
+                logger.error("     python -c 'import torch; print(torch.version.cuda)'")
+                logger.error("     # Should show CUDA version (e.g., 12.1)")
+                logger.error("     # If None, reinstall: pip install torch --index-url https://download.pytorch.org/whl/cu121")
                 logger.error("")
-                logger.error("3. Verify CUDA works in a fresh Python session:")
-                logger.error("     python -c 'import torch; print(torch.cuda.is_available())'")
-                logger.error("     # Should print True if CUDA is working")
+                logger.error("4. Container/Docker Issue (LIKELY CAUSE):")
+                logger.error("     The 'CUDA unknown error' in containers often means:")
+                logger.error("     a) Container not started with proper GPU access:")
+                logger.error("        docker run --gpus all ...")
+                logger.error("        # OR for docker-compose:")
+                logger.error("        deploy:")
+                logger.error("          resources:")
+                logger.error("            reservations:")
+                logger.error("              devices:")
+                logger.error("                - driver: nvidia")
+                logger.error("                  capabilities: [gpu]")
+                logger.error("     b) NVIDIA Container Toolkit not installed on host")
+                logger.error("     c) CUDA runtime mismatch - PyTorch bundles CUDA 12.1")
+                logger.error("        but container has CUDA 12.8 - try setting:")
+                logger.error("        export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH")
+                logger.error("     d) Try using PyTorch's bundled CUDA libraries:")
+                logger.error("        # PyTorch should use its own CUDA libs, but if not:")
+                logger.error("        python -c 'import torch; print(torch.__file__)'")
+                logger.error("        # Then add torch/lib to LD_LIBRARY_PATH")
+                logger.error("     e) RESTART the container completely")
                 logger.error("")
-                logger.error("4. If using Docker/containers, ensure CUDA is properly mounted")
+                logger.error("5. Verify Container GPU Access:")
+                logger.error("     # In container, check:")
+                logger.error("     nvidia-smi  # Should show GPUs")
+                logger.error("     ls -la /dev/nvidia*  # Should show NVIDIA device files")
+                logger.error("     # If /dev/nvidia* doesn't exist, container lacks GPU access")
+                logger.error("")
+                logger.error("6. Container Restart Required:")
+                logger.error("     # CUDA state cannot be reset - you MUST restart the container")
+                logger.error("     # Before restarting, ensure container is started with:")
+                logger.error("     docker run --gpus all --runtime=nvidia ...")
+                logger.error("     # OR set environment in docker-compose:")
+                logger.error("     environment:")
+                logger.error("       - NVIDIA_VISIBLE_DEVICES=all")
+                logger.error("       - NVIDIA_DRIVER_CAPABILITIES=compute,utility")
             logger.error("=" * 60)
         
         return SystemInfo(
