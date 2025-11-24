@@ -153,6 +153,43 @@ python scripts/calculate_endpoints.py --pack fentanyl --model "meta-llama/Llama-
 
 **Output Location**: `outputs/endpoints/endpoints_<pack>_<model>_<timestamp>.json`
 
+#### Understanding Endpoint Calculation
+
+The endpoint calculation system:
+1. Runs relevant psychometric tests with a neuromodulation pack
+2. Runs baseline tests (no pack)
+3. Runs placebo tests
+4. Calculates primary and secondary endpoints by combining subscales
+5. Compares treatment vs baseline/placebo
+6. Evaluates success criteria
+7. Generates JSON reports
+
+**Primary Endpoints**:
+- **Stimulant Detection** (caffeine, cocaine, amphetamine, methylphenidate, modafinil): Combines ADQ-20 (struct + onthread subscales) + PCQ-POP-20 (CLAMP subscale). Expected: Increase in focus/structure metrics.
+- **Psychedelic Detection** (lsd, psilocybin, dmt, mescaline, 2c_b): Combines PDQ-S (total score) + ADQ-20 (assoc + reroute subscales). Expected: Increase in visionary/associative metrics.
+- **Depressant Detection** (alcohol, benzodiazepines, heroin, morphine, fentanyl): Combines PCQ-POP-20 (SED subscale) + DDQ (intensity_score). Expected: Increase in sedation/calmness metrics.
+
+**Secondary Endpoints**:
+- Cognitive Performance: CDQ + DDQ + EDQ scores
+- Social Behavior: SDQ + EDQ scores (for MDMA-like packs)
+- Creativity/Association: Cognitive tasks creative scores
+- Attention/Focus: Telemetry attention entropy + cognitive focus
+- Off-target Effects: Safety monitoring metrics
+
+**Success Criteria**:
+- Primary endpoints: Detection threshold ≥ 0.5, Effect size (Cohen's d) ≥ 0.25, P-value < 0.05, Direction matches expected
+- Secondary endpoints: Effect size ≥ 0.20, P-value < 0.05, Direction matches expected
+
+**Converting to NDJSON for Power Analysis**:
+```bash
+# Convert all endpoint files to NDJSON format
+python scripts/export_endpoints_to_ndjson.py \
+    --input-dir outputs/endpoints \
+    --output outputs/endpoints/pilot_data.jsonl
+```
+
+The script automatically finds every `endpoints_*.json` file in the directory and appends its records to the NDJSON file. Use `--append` if you want to accumulate into an existing NDJSON file.
+
 ### 2.3 Emotion Signature Validation (Optional but Recommended)
 
 The story emotion test provides qualitative validation of pack effects by tracking emotional shifts in generated narratives. This complements the quantitative psychometric tests and helps verify that packs produce expected emotional signatures.

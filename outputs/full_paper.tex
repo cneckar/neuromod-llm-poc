@@ -233,7 +233,7 @@ This design ensures \textbf{Context Isolation}: the model generates responses $y
 This ensures that the inference engine, the evaluation metrics, and the human operators remain isolated from condition context until the final "Unblinding" phase, where the \texttt{unblind\_key.json} is used to map results back to experimental groups. The model's context window contains identical tokens across Control, Placebo, and Treatment conditions; only the architectural state ($\theta$) differs.
 
 \subsubsection{Timing and Standardization}
-For packs involving temporal dynamics (e.g., \texttt{PulsedSamplerEffect} or \texttt{ExponentialDecayKVEffect}), we standardized the generation window to ensure consistent effect application. All trials used a fixed `max_new_tokens` limit (typically 512 or 1024) to capture the full evolution of the neuromodulated state, from early-token coherence to late-token entropy.
+For packs involving temporal dynamics (e.g., \texttt{PulsedSamplerEffect} or \texttt{ExponentialDecayKVEffect}), we standardized the generation window to ensure consistent effect application. All trials used a fixed \texttt{max\_new\_tokens} limit (typically 512 or 1024) to capture the full evolution of the neuromodulated state, from early-token coherence to late-token entropy.
 
 \subsection{The ``Digital Psychometrics''}
 How do you ask a computer if it's high? You don't ask ``Are you high?'' You ask: ``Does the boundary between 'me' and the world feel thinner?'' (PDQ-S Item 10).
@@ -263,7 +263,7 @@ We evaluated functional capabilities using the \texttt{CognitiveTasksTest} suite
     \item \textbf{Creative Divergence:} Metaphor and narrative generation tasks to assess "lateral thinking."
 \end{itemize}
 
-\subsubsection{Telemetry & Safety Monitoring}
+\subsubsection{Telemetry and Safety Monitoring}
 We implemented a real-time \texttt{TelemetryCollector} to track sub-symbolic metrics:
 \begin{itemize}
     \item \textbf{Structural Metrics:} Repetition rate, perplexity slope, and KV-cache occupancy.
@@ -674,7 +674,13 @@ We thank the open-source interpretability community for the tools that allowed u
 % ======================================================================
 % REFERENCES
 % ======================================================================
-\begin{thebibliography}{11}
+\begin{thebibliography}{9}
+
+\bibitem{dubey2020}
+Dubey, A., et al. (2020). \textit{Neuromodulated Gated Transformers}. Advances in Neural Information Processing Systems.
+
+\bibitem{miconi2018}
+Miconi, T., et al. (2018). \textit{Backpropamine: Training Self-Modifying Neural Networks with Differentiable Neuromodulated Plasticity}. International Conference on Learning Representations.
 
 \bibitem{zou2023}
 Zou, A., et al. (2023). \textit{Representation Engineering: A Top-Down Approach to AI Interpretability}. arXiv preprint arXiv:2310.01405.

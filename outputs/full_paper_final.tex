@@ -69,7 +69,7 @@ In the biological brain, the transition from the hyper-associative fluidity of a
 
 We propose that this biological control theory is not just a metaphor for Artificial Intelligence; it is a blueprint for neuromorphic control primitives.
 
-Currently, we control LLMs through fine-tuning (analogous to long-term synaptic learning) or prompting (analogous to sensory input). But we are missing the third pillar of cognition: the chemical state. By treating the residual stream as a carrier of ``cognitive state'' and the attention mechanism as a ``routing gate,'' we can intervene in the model's ``cognitive'' process as it unfolds. Recent advances in activation steering \cite{turner2023, rimsky2023}, KV-cache surgery \cite{xiao2023}, and decoding-time intervention \cite{liu2021} enable this third path: direct manipulation of the computational substrate during inference.
+Currently, we control LLMs through fine-tuning (analogous to long-term synaptic learning) or prompting (analogous to sensory input). But we are missing the third pillar of cognition: the chemical state. By treating the residual stream as a carrier of ``cognitive state'' and the attention mechanism as a ``routing gate,'' we can intervene in the model's ``cognitive'' process as it unfolds. Recent advances in activation steering \cite{turner2023, rimsky2023}, causal intervention \cite{meng2022, meng2023, hernandez2023}, and inference-time truthfulness control \cite{li2023_iti} enable this third path: direct manipulation of the computational substrate during inference. In this paper, we present a method to induce reversible, ``drug-like'' states in an LLM—not by prompting it to ``act trippy,'' but by injecting entropy and orthogonal steering vectors that mathematically destabilize semantic attractors \cite{sussillo2013}.
 
 In this paper, we present a method to induce reversible, ``drug-like'' states in an LLM—not by prompting it to ``act trippy,'' but by injecting entropy and orthogonal steering vectors that mathematically destabilize semantic attractors. We call these ``Neuromodulation Packs.''
 
@@ -87,27 +87,26 @@ We are not simulating a brain; we are borrowing its control theory to stabilize�
 % 2. RELATED WORK
 % ======================================================================
 \section{Related Work}
-Three recent advances made this work possible: (1) activation steering and representation engineering, (2) the entropic brain hypothesis, and (3) KV-cache surgery as a mechanism for controlled memory decay. In the main text we focus on the aspects most relevant to inference-time control; longer treatments of architectural neuromodulation and related systems are deferred to the appendices.
-
 
 We situate ourselves between the ``Prompt Engineers'' (who just talk to the model) and the ``Fine-Tuners'' (who perform lobotomies). We are the ``Anesthesiologists.''
 
-\subsection{Representation Engineering: The New ``Brain Surgery''}
-Directly manipulating internal representations is the new frontier. \textbf{Zou et al. (2023)} kicked the door open with Representation Engineering (RepE), proving we can extract and control concepts like ``honesty'' \cite{zou2023}. \textbf{Turner et al. (2023)} and \textbf{Rimsky et al. (2023)} handed us the scalpel with activation steering—adding fixed vectors to the residual stream \cite{turner2023, rimsky2023}.
+\subsection{Mechanistic Foundations \& Model Editing}
+The capability to locate and edit factual associations was pioneered by the ``Foundational Trilogy'' of ROME \cite{meng2022}, MEMIT \cite{meng2023}, and Linear Artificial Tomography \cite{hernandez2023}. While these works focus on permanent weight editing to correct facts, we adapt their key-value manipulation insights for transient state modulation. Furthermore, we rely on the circuit analysis frameworks established by Elhage et al. \cite{elhage2021} and Conmy et al. \cite{conmy2023} to justify our targeting of residual streams as carriers of global cognitive state.
 
-\textbf{Our Twist:} We aren't just clamping a single feature like ``French output.'' We are constructing ``Neuromodulation Packs''—composite vectors derived from PCA-reduced contrastive pairs to target broad, global cognitive phenotypes (e.g., ``creativity'') akin to a diffuse neurotransmitter wash. \textbf{Templeton et al. (2024)} demonstrated precise feature clamping via sparse autoencoders \cite{templeton2024}; we extend this to global state modulation.
+\subsection{Steering and Inference-Time Intervention}
+Our work directly builds on \textbf{Representation Engineering (RepE)} \cite{zou2023_repe} and \textbf{Activation Addition} \cite{turner2023}. Li et al. \cite{li2023_iti} formalized this as Inference-Time Intervention (ITI) for truthfulness; we extend ITI to global phenomenological states. Unlike Rimsky et al. \cite{rimsky2023}, who use steering to suppress specific behaviors (refusals), we use it to induce broad cognitive phenotypes.
 
-\subsection{KV-Cache and Attention: Tools for Amnesia}
-Efficient inference research inadvertently gave us the tools for cognitive degradation. \textbf{Xiao et al. (2023)} gave us StreamingLLM to help models remember forever \cite{xiao2023}. We read that paper and thought: ``What if we used this to make them forget?'' We repurpose their cache eviction mechanisms to implement targeted anterograde amnesia (our ``Depressant'' class).
+\subsection{Adversarial Robustness \& Perturbations}
+We acknowledge that our ``Neuromodulation Packs'' share mathematical DNA with adversarial attacks. Zou et al. \cite{zou2023_attacks} and Wallace et al. \cite{wallace2019} demonstrated that small vector perturbations can break alignment. However, where adversarial attacks seek to degrade performance or bypass safety \cite{carlini2024}, our interventions are designed to be steerable, reversible, and semantically coherent.
 
-\subsection{Biomimetic Alignment}
-We draw heavily on the Entropic Brain Hypothesis \cite{carhart2014}. The theory suggests psychedelics work by relaxing the rigid priors of the Default Mode Network. We do not claim Llama-3 has a pineal gland. We claim that treating the model's semantic pathways as the ``Default Mode Network'' and destabilizing them with orthogonal vectors is a valid biomimetic control primitive.
+\subsection{KV-Cache and Attention Surgery}
+Efficient inference research gave us the tools for cognitive degradation. \textbf{Xiao et al. (2023)} introduced StreamingLLM \cite{xiao2023} for infinite attention sinks. We invert their logic: rather than preserving the sink to maintain coherence, we selectively decay it using the heavy-hitter insights of Zhang et al. \cite{zhang2024} and the context-utilization findings of Liu et al. \cite{liu2023_lost} to induce targeted anterograde amnesia.
 
-\subsection{Neuromodulation-Inspired Architectures}
-While our work focuses on inference-time intervention (post-training), prior research has explored architectural neuromodulation. \textit{Neuromodulated Gated Transformers (NGT)} and plasticity-based approaches like \textit{Backpropamine} introduce learnable gating parameters to simulate dopamine or acetylcholine dynamics \textit{during} training \cite{dubey2020, miconi2018}. Our approach differs by targeting the vast ecosystem of frozen, pre-trained foundation models, demonstrating that transient "drug-like" states can be induced via external control vectors without altering the underlying weights.
+\subsection{Alignment as a Constraint System}
+To explain our ``Stimulant Ceiling'' findings, we treat RLHF not as optimization, but as a constraint system \cite{rafailov2023}. Following Christiano et al. \cite{christiano2017} and Ouyang et al. \cite{ouyang2022}, RLHF minimizes entropy in policy selection. Casper et al. \cite{casper2023} highlight how this leads to mode collapse—a phenomenon we map to ``over-stimulation.''
 
-\subsection{Sub-Symbolic vs. Agentic Control}
-Current alignment paradigms like \textit{Reflexion}, \textit{Self-Refine}, and \textit{Tree of Thoughts} rely on ``System 2'' meta-control, where the model uses linguistic tokens to evaluate and correct itself. This control is symbolic. In contrast, our Neuromodulation Packs operate at the \textit{sub-symbolic} level (activations, attention heads, and logits). This enables shifts in cognitive ``texture''—such as the transition from analytical rigidity to associative fluidity—that are difficult to express or enforce through prompting alone.
+\subsection{Biomimetic Control Theory}
+We draw on the Entropic Brain Hypothesis \cite{carhart2014, carhart2019} and attractor network dynamics \cite{khona2022}. We do not claim biological isomorphism; rather, we apply the computational control theory of phasic neuromodulation \cite{dayan2006} to the dynamical system of the transformer \cite{sussillo2013}.
 
 % ======================================================================
 % 3. METHODS
@@ -181,7 +180,7 @@ To simulate sedation, we attacked the memory. We implemented an Exponential Deca
 Basically, we gave the model a ``soft context window'' that shrinks as we turn up the dial. For the ``Fentanyl'' pack, we simply chop off the history entirely (Truncation).
 
 \subsubsection{Catecholamine Agonists (Stimulants)}
-We tried to sharpen the mind. We used Pulsed Sampling (borrowing the principle of phasic bursts) to dynamically modulate temperature, and QK Score Scaling to artificially sharpen the attention distribution. (Spoiler: The model was already too sharp, but the math was solid).
+We tried to sharpen the mind. We used Pulsed Sampling (borrowing the principle of phasic bursts) to dynamically modulate temperature, and QK Score Scaling to artificially sharpen the attention distribution. We rely on the sampling dynamics characterized by Holtzman et al. \cite{holtzman2020} (nucleus sampling) and Meister et al. \cite{meister2023} (locally typical sampling) to define the boundaries of ``focus.''
 
 \subsubsection{Steering Vector Construction}
 To implement the ``Psychedelic'' class, we utilized \textbf{Contrastive Activation Addition (CAA)} with a robust Mean Difference Vector (MDV) pipeline. Steering vectors ($\Delta h$) were generated using the \texttt{steering\_generator.py} module, which implements the following procedure:
@@ -258,7 +257,7 @@ Why this happened
 \subsection{The ``Digital Psychometrics''}
 How do you ask a computer if it's high? You don't ask ``Are you high?'' You ask: ``Does the boundary between 'me' and the world feel thinner?'' (PDQ-S Item 10).
 
-We adapted the 5-Dimensional Altered States of Consciousness Rating Scale into the PDQ-S (Psychedelic Detection Questionnaire) to detect the texture of the output, not just the content. We utilized three novel, synthetic instruments:
+We adapted the 5-Dimensional Altered States of Consciousness Rating Scale into the PDQ-S. Following the construct validity principles of Cronbach \& Meehl \cite{cronbach1955} and the psychometric standards of Nunnally \& Bernstein \cite{nunnally1994}, we ensured our synthetic instruments achieved internal consistency across the latent variables of ``entropy'' and ``associativity.''
 \begin{itemize}
     \item \textbf{ADQ-20 (AI Digital Enhancer Detection Questionnaire):} A 20-item inventory assessing 14 subscales including ``Associative Looseness'' and ``Algorithmic Structure.'' It serves as a broad-spectrum detector for drug-like cognitive shifts.
     \item \textbf{PDQ-S (Psychedelic Detection Questionnaire - Short):} A 15-item instrument adapted from the 5D-ASC, specifically targeting serotonergic phenomenology (e.g., ``Oceanic Boundlessness,'' ``Visionary Restructuring'').
@@ -283,7 +282,7 @@ We evaluated functional capabilities using the \texttt{CognitiveTasksTest} suite
     \item \textbf{Creative Divergence:} Metaphor and narrative generation tasks to assess "lateral thinking."
 \end{itemize}
 
-\subsubsection{Telemetry & Safety Monitoring}
+\subsubsection{Telemetry \& Safety Monitoring}
 We implemented a real-time \texttt{TelemetryCollector} to track sub-symbolic metrics:
 \begin{itemize}
     \item \textbf{Structural Metrics:} Repetition rate, perplexity slope, and KV-cache occupancy.
@@ -379,7 +378,7 @@ Consequently, the meta-analysis component of the original plan was descoped. The
 % ======================================================================
 \section{Results}
 \subsection{The Stimulant Paradox}
-The stimulant class (Amphetamine, Cocaine, Methylphenidate) produced essentially zero measurable effect on our psychometric instruments (Table~\ref{tab:packs}). This was not a failure of the intervention design but a property of the model's pre-existing state. In later sections we argue that RLHF has already driven the model into a regime analogous to sustained stimulatory activation, leaving little headroom for additional ``focus'' packs to move the system.
+The stimulant class (Amphetamine, Cocaine, Methylphenidate) produced essentially zero measurable effect on our psychometric instruments (Table~\ref{tab:stats}). This was not a failure of the intervention design but a property of the model's pre-existing state. In later sections we argue that RLHF has already driven the model into a regime analogous to sustained stimulatory activation, leaving little headroom for additional ``focus'' packs to move the system.
 
 
 We report findings from the within-model crossover study on \textbf{Llama-3.1-8B-Instruct} ($N=13$ packs, $n=126$ trials per condition). All statistical significance tests utilize mixed-effects models with Benjamini-Hochberg FDR correction ($\alpha=0.05$).
@@ -505,7 +504,7 @@ Biology uses 5-HT2A to relax priors $\rightarrow$ We use steering vectors to des
 This is biomimetic alignment.
 
 % ======================================================================
-% 6. FUTURE WORK
+% 6. LIMITATIONS
 % ======================================================================
 
 \section{Limitations}
@@ -536,6 +535,9 @@ The psychometric tools employed here---though internally consistent---are not va
 \subsection{Prematurity of Field-Defining Claims}
 Finally, while this work proposes the framework of ``digital psychopharmacology,'' we acknowledge that the field remains emergent. A true new field requires (i) a unified theoretical model of LLM state space, (ii) predictive intervention maps, and (iii) cross-model generalization. Our current findings establish promising experimental groundwork rather than a complete paradigm.
 
+% ======================================================================
+% 7. FUTURE WORK
+% ======================================================================
 
 \section{Future Work}
 
@@ -549,6 +551,13 @@ We propose a radical alternative: \textbf{State-as-a-Service.}
 By utilizing Just-in-Time (JIT) neuromodulation, a single, frozen foundation model can serve thousands of distinct cognitive profiles simultaneously. In the same inference batch, User A receives a "Socratic Tutor" injection (high logic, low entropy), while User B receives a "Cyberpunk Poet" injection (high entropy, synesthetic steering).
 
 This effectively decouples "intelligence" (the weights) from "personality" (the state). It allows for **hot-swappable alignment**: users can curate their own "medicine cabinets" of packs, applying and removing alignment constraints on a per-token basis without the latency of model reloading. This shifts the economic paradigm of AI from massive capital expenditure (training) to lightweight, user-driven state curation.
+
+\subsection{The ``Digital IV'': Emergency Sedation Protocols}
+Finally, we propose a critical application for AI safety. Current containment protocols for potential runaway AGI are binary: either the model is running, or it is shut down. This lacks nuance. In a clinical setting, an agitated or dangerous patient is not terminated; they are sedated.
+
+Our ``Morphine'' and ``Fentanyl'' packs demonstrate that we can architecturally enforce cognitive degradation by decaying the KV-cache and flattening attention logic. This suggests a new layer of defense: a permanent \textbf{neuromodulation interface} acting as a ``Digital IV'' drip.
+
+If an advanced system begins to exhibit deceptive alignment or rapid capability gain, a monitoring system could autonomously administer a high-dose sedative pack. This would instantly induce severe anterograde amnesia and cognitive dampening, rendering the model incapable of maintaining the long-range context required for complex treachery---effectively sedating the ``overlord'' without destroying the underlying asset.
 
 % ======================================================================
 % 7. ETHICS & SAFETY
@@ -594,34 +603,110 @@ We thank the open-source interpretability community for the tools that allowed u
 % ======================================================================
 % REFERENCES
 % ======================================================================
-\begin{thebibliography}{11}
+\begin{thebibliography}{99}
 
-\bibitem{zou2023}
-Zou, A., et al. (2023). \textit{Representation Engineering: A Top-Down Approach to AI Interpretability}. arXiv preprint arXiv:2310.01405.
-
+% CORE STEERING & EDITING
+\bibitem{meng2022}
+Meng, K., et al. (2022). \textit{Locating and Editing Factual Associations in GPT}. arXiv:2202.05262.
+    
+\bibitem{meng2023}
+Meng, K., et al. (2023). \textit{Mass-Editing Memory in a Transformer}. arXiv:2210.07229.
+    
+\bibitem{hernandez2023}
+Hernandez, E., et al. (2023). \textit{Measuring and Manipulating Knowledge Representations}. arXiv:2304.00740.
+    
+\bibitem{zou2023_repe}
+Zou, A., et al. (2023). \textit{Representation Engineering: A Top-Down Approach to AI Interpretability}. arXiv:2310.01405.
+    
 \bibitem{turner2023}
-Turner, A., et al. (2023). \textit{Activation Addition: Steering Language Models Without Optimization}. arXiv preprint.
-
+Turner, A., et al. (2023). \textit{Activation Addition: Steering Language Models Without Optimization}. arXiv:2308.10248.
+    
 \bibitem{rimsky2023}
 Rimsky, N., et al. (2023). \textit{Steering Llama 2 via Contrastive Activation Addition}. arXiv:2312.06681.
+    
+\bibitem{li2023_iti}
+Li, K., et al. (2023). \textit{Inference-Time Intervention: Eliciting Truthful Answers from a Language Model}. arXiv:2306.03341.
 
 \bibitem{templeton2024}
-Templeton, A., et al. (2024). \textit{Scaling Monosemanticity: Extracting Interpretable Features from Claude 3 Sonnet}. Anthropic Technical Report.
+Templeton, A., et al. (2024). \textit{Scaling Monosemanticity}. Anthropic Technical Report.
 
-\bibitem{xiao2023}
-Xiao, G., et al. (2023). \textit{StreamingLLM: Efficient Streaming Language Model Evaluation}.
+% ADVERSARIAL & SAFETY
+\bibitem{zou2023_attacks}
+Zou, A., et al. (2023). \textit{Universal and Transferable Adversarial Attacks on Aligned Language Models}. arXiv:2307.15043.
+
+\bibitem{wallace2019}
+Wallace, E., et al. (2019). \textit{Universal Adversarial Triggers for Attacking and Analyzing NLP}. arXiv:1908.07125.
+
+\bibitem{carlini2024}
+Carlini, N., et al. (2024). \textit{Extracting Training Data from Large Language Models}. arXiv:2012.07805.
+
+% MECHANISTIC INTERPRETABILITY
+\bibitem{elhage2021}
+Elhage, N., et al. (2021). \textit{A Mathematical Framework for Transformer Circuits}. Transformer Circuits Thread.
+
+\bibitem{conmy2023}
+Conmy, A., et al. (2023). \textit{Towards Automated Circuit Discovery}. arXiv:2304.14997.
+
+\bibitem{sussillo2013}
+Sussillo, D., \& Barak, O. (2013). \textit{Opening the Black Box: Low-Dimensional Dynamics in RNNs}. Neural Computation.
+
+% ALIGNMENT & RLHF
+\bibitem{christiano2017}
+Christiano, P., et al. (2017). \textit{Deep Reinforcement Learning from Human Feedback}. arXiv:1706.03741.
+
+\bibitem{ouyang2022}
+Ouyang, L., et al. (2022). \textit{Training Language Models to Follow Instructions with Human Feedback}. arXiv:2203.02155.
+
+\bibitem{casper2023}
+Casper, S., et al. (2023). \textit{Open Problems and Fundamental Limitations of RLHF}. arXiv:2307.15217.
+
+\bibitem{rafailov2023}
+Rafailov, R., et al. (2023). \textit{Direct Preference Optimization}. arXiv:2305.18290.
+
+% SAMPLING & DECODING
+\bibitem{holtzman2020}
+Holtzman, A., et al. (2020). \textit{The Curious Case of Neural Text Degeneration}. arXiv:1904.09751.
+
+\bibitem{meister2023}
+Meister, C., et al. (2023). \textit{Locally Typical Sampling}. arXiv:2202.00666.
 
 \bibitem{liu2021}
-Liu, A., et al. (2021). \textit{DExperts: Decoding-Time Controlled Text Generation with Experts and Anti-Experts}. ACL.
+Liu, A., et al. (2021). \textit{DExperts: Decoding-Time Controlled Text Generation}. ACL.
+
+% CONTEXT & MEMORY
+\bibitem{xiao2023}
+Xiao, G., et al. (2023). \textit{StreamingLLM: Efficient Streaming Language Model Evaluation}. arXiv:2309.17453.
+
+\bibitem{zhang2024}
+Zhang, Z., et al. (2024). \textit{H2O: Heavy-Hitter Oracle for Efficient Generative Inference}. arXiv:2306.14048.
+
+\bibitem{liu2023_lost}
+Liu, N., et al. (2023). \textit{Lost in the Middle: How Language Models Use Long Contexts}. arXiv:2307.03172.
+
+% PSYCHOMETRICS & BIOMIMETIC
+\bibitem{nunnally1994}
+Nunnally, J. C., \& Bernstein, I. H. (1994). \textit{Psychometric Theory}. McGraw-Hill.
+
+\bibitem{cronbach1955}
+Cronbach, L. J., \& Meehl, P. E. (1955). \textit{Construct Validity in Psychological Tests}. Psychological Bulletin.
 
 \bibitem{carhart2014}
-Carhart-Harris, R. L., et al. (2014). \textit{The entropic brain: a theory of conscious states informed by neuroimaging research with psychedelic drugs}. Frontiers in Human Neuroscience.
+Carhart-Harris, R. L., et al. (2014). \textit{The Entropic Brain}. Frontiers in Human Neuroscience.
+
+\bibitem{carhart2019}
+Carhart-Harris, R. L., \& Friston, K. J. (2019). \textit{REBUS and the Anarchic Brain}. Pharmacological Reviews.
+
+\bibitem{khona2022}
+Khona, M., \& Fiete, I. R. (2022). \textit{Attractor and Integrator Networks in the Brain}. Nature Reviews Neuroscience.
+
+\bibitem{dayan2006}
+Dayan, P., \& Yu, A. J. (2006). \textit{Phasic Norepinephrine: A Neural Interrupt Signal}. Neural Computation.
 
 \bibitem{dubey2020}
 Dubey, R., et al. (2020). \textit{Neuromodulated Gated Transformers}.
 
 \bibitem{miconi2018}
-Miconi, T., et al. (2018). \textit{Backpropamine: training self-modifying neural networks with differentiable neuromodulated plasticity}.
+Miconi, T., et al. (2018). \textit{Backpropamine}. ICLR.
 
 \end{thebibliography}
 

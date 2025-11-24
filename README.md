@@ -41,10 +41,12 @@ python demo/chat.py
 
 📖 **Full documentation available in [`docs/`](docs/)**
 
+- **[Installation Guide](docs/installation.md)** - Installation instructions, system requirements, and dependency management
 - **[Reproduction Guide](docs/reproduction_guide.md)** - Complete step-by-step instructions for reproducing experiments (the "Golden Path" for reviewers)
 - **[Methodology](docs/methodology.md)** - Detailed explanation of packs, mathematical foundations (PCA, attention scaling), and biomimetic alignment theory
-- **[Advanced Usage](docs/advanced_usage.md)** - Pack optimization, customization, and extension guides
-- **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
+- **[Statistical Analysis](docs/analysis.md)** - Guide to performing statistical analysis on endpoint results
+- **[Advanced Usage](docs/advanced_usage.md)** - Pack optimization, customization, Vertex AI deployment, and extension guides
+- **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions, including HuggingFace authentication
 
 ## What is This?
 

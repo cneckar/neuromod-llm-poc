@@ -321,6 +321,216 @@ for pack in packs:
 
 See [Troubleshooting Guide](troubleshooting.md) for common issues.
 
+## Vertex AI Deployment
+
+This section covers deploying the neuromodulation system with Google Cloud Vertex AI for pay-per-use model serving with Llama 3 and other large models.
+
+### Why Vertex AI for Pay-Per-Use?
+
+**Benefits**:
+- ✅ Pay only for predictions (not idle time)
+- ✅ Auto-scaling to zero when not in use
+- ✅ GPU acceleration for large models
+- ✅ Managed infrastructure
+- ✅ Integration with Google Cloud ecosystem
+- ✅ Llama 3.1 70B support with A100 GPUs
+
+**Cost Structure**:
+- Input processing: $0.0025 per 1000 characters
+- Output generation: $0.01 per 1000 characters
+- Model hosting: $0.0001 per 1000 characters
+- Example for 1000 tokens (~750 characters): ~$0.00945 per 1000 tokens
+
+### Quick Start
+
+**Step 1: Setup Google Cloud Project**
+```bash
+# Install Google Cloud SDK
+# https://cloud.google.com/sdk/docs/install
+
+# Authenticate
+gcloud auth login
+gcloud config set project YOUR_PROJECT_ID
+
+# Enable required APIs
+gcloud services enable aiplatform.googleapis.com
+gcloud services enable containerregistry.googleapis.com
+gcloud services enable cloudbuild.googleapis.com
+```
+
+**Step 2: Deploy Vertex AI Endpoint**
+```bash
+# Make deployment script executable
+chmod +x api/deploy_vertex_ai.sh
+
+# Deploy Llama 3.1 8B (recommended for testing)
+./api/deploy_vertex_ai.sh \
+  --project-id YOUR_PROJECT_ID \
+  --model-name meta-llama/Meta-Llama-3.1-8B \
+  --endpoint-name neuromod-llama-8b \
+  deploy
+
+# Deploy Llama 3.1 70B (for production)
+./api/deploy_vertex_ai.sh \
+  --project-id YOUR_PROJECT_ID \
+  --model-name meta-llama/Meta-Llama-3.1-70B \
+  --endpoint-name neuromod-llama-70b \
+  deploy
+```
+
+**Step 3: Deploy Cloud Run Frontend**
+```bash
+# Deploy the API server
+gcloud run deploy neuromodulation-api \
+  --source . \
+  --platform managed \
+  --region us-central1 \
+  --memory 2Gi \
+  --cpu 2 \
+  --timeout 300 \
+  --concurrency 10 \
+  --set-env-vars GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
+```
+
+**Step 4: Test the System**
+```bash
+# Get the Cloud Run URL
+CLOUD_RUN_URL=$(gcloud run services describe neuromodulation-api --region=us-central1 --format="value(status.url)")
+
+# Test with caffeine pack
+curl -X POST "$CLOUD_RUN_URL/generate" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Tell me about coffee",
+    "pack_name": "caffeine",
+    "max_tokens": 100
+  }'
+```
+
+### Model Compatibility
+
+**Supported Models**:
+- **Llama 3 Series**: meta-llama/Meta-Llama-3.1-8B (T4 GPU), meta-llama/Meta-Llama-3.1-70B (A100 GPU)
+- **Qwen Series**: Qwen/Qwen2.5-7B (T4 GPU), Qwen/Qwen2.5-32B (A100 GPU)
+- **Mixtral Series**: mistralai/Mixtral-8x7B-v0.1 (V100 GPU)
+
+**GPU Requirements**:
+- **T4 GPU (16GB VRAM)**: Llama 3.1 8B (4-bit quantized), Qwen 2.5 7B (4-bit quantized), Lower cost
+- **A100 GPU (40GB VRAM)**: Llama 3.1 70B (4-bit quantized), Qwen 2.5 32B (4-bit quantized), Higher cost, better quality
+
+### API Integration
+
+**Model Loading**:
+```bash
+# Load local model (for small models)
+POST /model/load?model_name=microsoft/DialoGPT-medium
+
+# Load Vertex AI model (for large models)
+POST /model/load?model_name=meta-llama/Meta-Llama-3.1-70B
+```
+
+**Text Generation**:
+```bash
+# Generate with neuromodulation effects
+POST /generate
+{
+  "prompt": "Tell me about coffee",
+  "pack_name": "caffeine",
+  "max_tokens": 100,
+  "temperature": 1.0,
+  "top_p": 1.0
+}
+```
+
+**Response Format**:
+```json
+{
+  "generated_text": "Coffee is a stimulating beverage...",
+  "pack_applied": "caffeine",
+  "generation_time": 2.5,
+  "model_type": "vertex_ai"
+}
+```
+
+### Cost Optimization
+
+**Development Setup**:
+- Llama 3.1 8B on T4 GPU: ~$0.005 per 1000 tokens, ~$15/month for 1000 requests/day
+
+**Production Setup**:
+- Llama 3.1 70B on A100 GPU: ~$0.015 per 1000 tokens, ~$45/month for 1000 requests/day
+
+### Troubleshooting
+
+**Endpoint Creation Fails**:
+```bash
+# Check permissions
+gcloud projects get-iam-policy YOUR_PROJECT_ID
+
+# Ensure APIs are enabled
+gcloud services list --enabled | grep aiplatform
+```
+
+**Container Build Fails**:
+```bash
+# Check Docker installation
+docker --version
+
+# Authenticate with Container Registry
+gcloud auth configure-docker
+```
+
+**Model Loading Fails**:
+```bash
+# Check GPU availability
+nvidia-smi
+
+# Verify model name
+curl "https://huggingface.co/api/models/meta-llama/Meta-Llama-3.1-8B"
+```
+
+**High Costs**:
+```bash
+# Monitor usage
+gcloud ai endpoints list --region=us-central1
+
+# Set up billing alerts
+# https://console.cloud.google.com/billing/alerts
+```
+
+### Security Considerations
+
+**Authentication**:
+```bash
+# Use service accounts for production
+gcloud iam service-accounts create neuromod-service
+
+# Grant necessary permissions
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:neuromod-service@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/aiplatform.user"
+```
+
+**Network Security**:
+```bash
+# Use VPC for private endpoints
+gcloud compute networks create neuromod-vpc
+
+# Configure firewall rules
+gcloud compute firewall-rules create allow-neuromod \
+  --network neuromod-vpc \
+  --allow tcp:8080
+```
+
+### Best Practices
+
+1. **Model Selection**: Development: Use Llama 3.1 8B, Production: Use Llama 3.1 70B, Cost-sensitive: Use Qwen 2.5 7B
+2. **Pack Management**: Pre-load common packs, Cache pack configurations, Monitor pack application success rates
+3. **Cost Monitoring**: Set up billing alerts, Monitor prediction costs, Use cost optimization features
+4. **Performance Optimization**: Use 4-bit quantization, Optimize batch sizes, Monitor GPU utilization
+
+For more details, see the [Vertex AI Deployment Guide](vertex_container/README.md) in the `vertex_container/` directory.
+
 ## Examples
 
 See `demo/pack_optimization_demo.py` for complete examples of:
