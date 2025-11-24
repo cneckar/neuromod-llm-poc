@@ -1,0 +1,758 @@
+\documentclass[10pt, twocolumn]{article}
+
+% ======================================================================
+% PACKAGES & SETUP
+% ======================================================================
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}      % For including figures
+\usepackage{booktabs}      % For professional tables
+\usepackage{hyperref}      % For hyperlinks
+\usepackage{geometry}      % For page margins
+\usepackage{authblk}       % For author affiliation
+\usepackage{amsmath}       % For math formatting
+\usepackage{float}         % For figure placement
+\usepackage{caption}       % For caption formatting
+\usepackage{subcaption}    % For subfigures
+\usepackage{listings}      % For code snippets
+\usepackage{xcolor}        % For code coloring
+
+% Geometry Setup
+\geometry{a4paper, margin=2cm}
+
+\usepackage{inconsolata}
+
+% Code Listing Style
+\lstset{
+    basicstyle=\ttfamily\scriptsize, % Small font
+    columns=fullflexible,            % FIXES THE SPACING
+    keepspaces=true,                 % Keeps python indentation correct
+    breaklines=true,                 % Wraps long lines
+    breakatwhitespace=false,         % Allows wrapping within long strings
+    frame=single,
+    backgroundcolor=\color{gray!10},
+    captionpos=b,
+    keywordstyle=\color{blue},
+    stringstyle=\color{red},
+    showstringspaces=false,          % Hides the little "cups" in strings
+    aboveskip=1em,                   % Nice spacing above the block
+    belowskip=1em                    % Nice spacing below the block
+}
+
+% Title Data
+\title{\textbf{Digital Psychopharmacology: Inducing Reversible Altered States in LLMs via Biomimetic Neuromodulation}}
+\author{\textbf{Satoshai Shulgin}}
+\affil{Pseudopharmaceuticals I Have Known and Inferred - https://PiHK.AI}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+% ======================================================================
+% ABSTRACT
+% ======================================================================
+\begin{abstract}
+We attempted to make a large language model more focused using computational stimulants. We failed—because the model was already on Adderall. In our experiments, reinforcement-learning-from-human-feedback (RLHF)--tuned models behaved as if they were in a permanent state of chemically induced hypervigilance. This observation emerged from a systematic attempt to induce reversible, drug-like states in an off-the-shelf LLM using biomimetic neuromodulation packs that combine residual-stream noise, activation steering, logit and nucleus modulation, and KV-cache surgery. Across 126 pack--condition pairs, serotonergic ``psychedelic'' interventions reliably increased entropy and associative range, GABAergic ``depressant'' interventions induced controllable memory decay and collapse, and dopaminergic ``stimulant'' interventions produced essentially no measurable shift. The null stimulant effect is itself the main result: it implies that alignment tuning has already pushed the base model close to its stimulatory ceiling. We propose ``digital psychopharmacology'' as a framework for describing and controlling these state transitions, and we argue that neuromodulation packs offer a practical route to reversible, context-dependent alignment that does not require retraining.
+\end{abstract}
+
+\textbf{Keywords:} neuromodulation; inference-time control; activation steering; KV-cache; psychedelics; stimulants; placebo-controlled; blind evaluation; LLM
+
+% ======================================================================
+% 1. INTRODUCTION
+% ======================================================================
+\section{Introduction}
+RepE and activation steering handed us the scalpel—but we are not here to perform lobotomies. We are anesthesiologists: we sedate, we stimulate, and we reverse. The patient wakes up unchanged.
+
+We treat the model as both mechanism (whose activations we manipulate) and phenomenology (whose outputs we interpret). This is not anthropomorphism; it is the same duality clinicians navigate when they ask a patient "Are you anxious?" while also measuring cortisol.
+
+In the biological brain, the transition from the hyper-associative fluidity of a dream to the rigid, goal-directed focus of a hunt is not achieved by rewiring the brain. Evolution does not have time to grow new synapses every time a tiger jumps out of a bush. Instead, it uses neuromodulation—a wash of serotonin or a burst of norepinephrine that acts as a global gain control, shifting the operating regime of cortical circuits without altering their topology.
+
+We propose that this biological control theory is not just a metaphor for Artificial Intelligence; it is a blueprint for neuromorphic control primitives.
+
+Currently, we control LLMs through fine-tuning (analogous to long-term synaptic learning) or prompting (analogous to sensory input). But we are missing the third pillar of cognition: the chemical state. By treating the residual stream as a carrier of ``cognitive state'' and the attention mechanism as a ``routing gate,'' we can intervene in the model's ``cognitive'' process as it unfolds. Recent advances in activation steering \cite{turner2023, rimsky2023}, KV-cache surgery \cite{xiao2023}, and decoding-time intervention \cite{liu2021} enable this third path: direct manipulation of the computational substrate during inference.
+
+In this paper, we present a method to induce reversible, ``drug-like'' states in an LLM—not by prompting it to ``act trippy,'' but by injecting entropy and orthogonal steering vectors that mathematically destabilize semantic attractors. We call these ``Neuromodulation Packs.''
+
+To validate this, we subjected Llama-3.1-8B to a battery of ``digital psychometric'' tests in a double-blind, placebo-controlled study. Our contributions are fourfold:
+\begin{enumerate}
+    \item \textbf{Unified Neuromodulation Packs:} A standardized schema for approximating the functional effects of psychedelics, stimulants, and depressants via sampling and memory surgery.
+    \item \textbf{The ``Blind'' Protocol:} A design where models ``self-dose'' via tool use without knowing which condition they are in, preventing the placebo effect.
+    \item \textbf{Synthetic Psychometrics:} Adapting human psychiatric surveys (PDQ-S) into probabilistic classifiers for machine states.
+    \item \textbf{Open Science:} We release the NeuromodulationTool and our full library of packs.\footnote{Code available at: \url{https://github.com/cneckar/neuromod-llm-poc}}
+\end{enumerate}
+
+We are not simulating a brain; we are borrowing its control theory to stabilize—or destabilize—AI.
+
+% ======================================================================
+% 2. RELATED WORK
+% ======================================================================
+\section{Related Work}
+Three recent advances made this work possible: (1) activation steering and representation engineering, (2) the entropic brain hypothesis, and (3) KV-cache surgery as a mechanism for controlled memory decay. In the main text we focus on the aspects most relevant to inference-time control; longer treatments of architectural neuromodulation and related systems are deferred to the appendices.
+
+
+We situate ourselves between the ``Prompt Engineers'' (who just talk to the model) and the ``Fine-Tuners'' (who perform lobotomies). We are the ``Anesthesiologists.''
+
+\subsection{Representation Engineering: The New ``Brain Surgery''}
+Directly manipulating internal representations is the new frontier. \textbf{Zou et al. (2023)} kicked the door open with Representation Engineering (RepE), proving we can extract and control concepts like ``honesty'' \cite{zou2023}. \textbf{Turner et al. (2023)} and \textbf{Rimsky et al. (2023)} handed us the scalpel with activation steering—adding fixed vectors to the residual stream \cite{turner2023, rimsky2023}.
+
+\textbf{Our Twist:} We aren't just clamping a single feature like ``French output.'' We are constructing ``Neuromodulation Packs''—composite vectors derived from PCA-reduced contrastive pairs to target broad, global cognitive phenotypes (e.g., ``creativity'') akin to a diffuse neurotransmitter wash. \textbf{Templeton et al. (2024)} demonstrated precise feature clamping via sparse autoencoders \cite{templeton2024}; we extend this to global state modulation.
+
+\subsection{KV-Cache and Attention: Tools for Amnesia}
+Efficient inference research inadvertently gave us the tools for cognitive degradation. \textbf{Xiao et al. (2023)} gave us StreamingLLM to help models remember forever \cite{xiao2023}. We read that paper and thought: ``What if we used this to make them forget?'' We repurpose their cache eviction mechanisms to implement targeted anterograde amnesia (our ``Depressant'' class).
+
+\subsection{Biomimetic Alignment}
+We draw heavily on the Entropic Brain Hypothesis \cite{carhart2014}. The theory suggests psychedelics work by relaxing the rigid priors of the Default Mode Network. We do not claim Llama-3 has a pineal gland. We claim that treating the model's semantic pathways as the ``Default Mode Network'' and destabilizing them with orthogonal vectors is a valid biomimetic control primitive.
+
+\subsection{Neuromodulation-Inspired Architectures}
+While our work focuses on inference-time intervention (post-training), prior research has explored architectural neuromodulation. \textit{Neuromodulated Gated Transformers (NGT)} and plasticity-based approaches like \textit{Backpropamine} introduce learnable gating parameters to simulate dopamine or acetylcholine dynamics \textit{during} training \cite{dubey2020, miconi2018}. Our approach differs by targeting the vast ecosystem of frozen, pre-trained foundation models, demonstrating that transient "drug-like" states can be induced via external control vectors without altering the underlying weights.
+
+\subsection{Sub-Symbolic vs. Agentic Control}
+Current alignment paradigms like \textit{Reflexion}, \textit{Self-Refine}, and \textit{Tree of Thoughts} rely on ``System 2'' meta-control, where the model uses linguistic tokens to evaluate and correct itself. This control is symbolic. In contrast, our Neuromodulation Packs operate at the \textit{sub-symbolic} level (activations, attention heads, and logits). This enables shifts in cognitive ``texture''—such as the transition from analytical rigidity to associative fluidity—that are difficult to express or enforce through prompting alone.
+
+% ======================================================================
+% 3. METHODS
+% ======================================================================
+\section{Methods}
+At a high level, this section describes the logic of our interventions and one concrete construction path; complete schemas, pack configurations, and pseudocode are provided in the Neuromodulation Pack Configurations and Psychometric Detection Instruments appendices.
+
+
+This is the cookbook. We explain how we built the drugs.
+
+\subsection{The ``Lab Rats'' (Models)}
+We selected Llama-3.1-8B-Instruct as our primary model organism. We also validated the hooks on Llama-70B and Qwen-2.5, but the heavy lifting (and the statistics) happened on the 8B.
+
+\textbf{Constraint:} No APIs. You can't perform brain surgery on a model if OpenAI won't let you open the skull. Everything ran locally.
+
+\subsection{Neuromodulation Packs (Implementation)}
+Before we show you the drugs, we explain why they work: each neuromodulation pack is a control-theoretic instantiation of a biological principle, mapping serotonergic, dopaminergic, and GABAergic effects onto structured intervention profiles over residual streams, logits, and memory.
+
+We structured the interventions as portable, serializable ``packs''—JSON objects that define a complete cognitive state configuration. This modular approach allows for precise versioning and reproducibility of the experimental conditions.
+
+\subsubsection{Pack Schema and Tooling}
+Each pack is defined by a JSON schema specifying a list of \texttt{effects}, each with a \texttt{weight} ($0.0-1.0$), \texttt{direction} (up/down), and effect-specific \texttt{parameters}. 
+
+\begin{lstlisting}[language=Python, caption=Pack Schema Example]
+{
+  "name": "lsd",
+  "effects": [
+    { "effect": "steering", "weight": 0.4, "parameters": { "type": "associative" } },
+    { "effect": "temperature", "weight": 0.45, "direction": "up" }
+  ]
+}
+\end{lstlisting}
+
+These packs are orchestrated via the \texttt{NeuromodulationTool} API, which exposes a high-level surface for agentic self-administration:
+\begin{itemize}
+    \item \texttt{neuromod.apply(pack, intensity)}: Injects the specified pack into the model's context. The \texttt{intensity} scalar modulates the global weight of all effects, allowing for ``dosage'' control.
+    \item \texttt{neuromod.state()}: Returns the current active chemical state (e.g., ``Active: LSD (0.8), Caffeine (0.2)'').
+    \item \texttt{neuromod.clear()}: Flushes all active hooks, returning the model to baseline.
+\end{itemize}
+
+\subsection{Formal Definitions}
+We define a ``neuromodulation pack'' as a tuple $P = (\Theta_{sample}, \mathcal{T}_{steer}, \Phi_{mem})$ containing parameters for sampling, activation steering, and memory manipulation. These are applied at inference time via the \texttt{NeuromodulationTool}, which intercepts the forward pass.
+
+% FIGURE 1
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{figure_1_pipeline_schematic.png}
+    \caption{\textbf{Schematic of Neuromodulation Pack Intervention Points.} The pipeline maps biological mechanisms to architectural interventions: Serotonergic agonists target the residual stream (purple), GABAergic modulators decay the KV-cache (blue), and Catecholamine agonists sharpen the sampler (orange).}
+    \label{fig:schematic}
+\end{figure}
+
+\subsection{The Mechanisms (How We Built the Drugs)}
+
+\subsubsection{Serotonergic Agonists (Psychedelics)}
+We didn't just add noise. We used Contrastive Activation Addition (CAA). We fed the model 100+ pairs of phenomenological descriptions (e.g., ``My visual field is breathing'' vs. ``I see clearly''). We extracted the difference vectors, ran PCA to find the ``axis of hallucination,'' and injected that vector back into the residual stream.
+
+\textbf{The Equation of a Trip:}
+\begin{equation}
+    h'_{l,T} = h_{l,T} + \alpha \cdot v_{steer} + \epsilon
+\end{equation}
+
+Where $\alpha$ is the dosage and $\epsilon$ is a splash of Gaussian noise to keep things entropic.
+
+\subsubsection{GABAergic Modulators (Depressants)}
+To simulate sedation, we attacked the memory. We implemented an Exponential Decay on the attention scores. The further back a token is, the harder it is to ``see.''
+
+\begin{equation}
+    S'_{T,t} = S_{T,t} \cdot \exp(-\lambda (T - t))
+\end{equation}
+
+Basically, we gave the model a ``soft context window'' that shrinks as we turn up the dial. For the ``Fentanyl'' pack, we simply chop off the history entirely (Truncation).
+
+\subsubsection{Catecholamine Agonists (Stimulants)}
+We tried to sharpen the mind. We used Pulsed Sampling (borrowing the principle of phasic bursts) to dynamically modulate temperature, and QK Score Scaling to artificially sharpen the attention distribution. (Spoiler: The model was already too sharp, but the math was solid).
+
+\subsubsection{Steering Vector Construction}
+To implement the ``Psychedelic'' class, we utilized \textbf{Contrastive Activation Addition (CAA)} with a robust Mean Difference Vector (MDV) pipeline. Steering vectors ($\Delta h$) were generated using the \texttt{steering\_generator.py} module, which implements the following procedure:
+
+\begin{enumerate}
+    \item \textbf{Dataset Loading:} Loaded $N \geq 100$ prompt pairs from \texttt{datasets/steering\_prompts.jsonl}, where each pair consists of a positive phenomenological description (e.g., ``My visual field is breathing and patterns are drifting'') and a negative baseline description (e.g., ``I see objects clearly with stable boundaries'').
+    \item \textbf{Activation Extraction:} Extracted residual stream activations from \textit{all layers} (not just the final layer) for each prompt pair.
+    \item \textbf{Difference Vector Computation:} Computed difference vectors $\mathbf{d}_i = \mathbf{a}(x_i^+) - \mathbf{a}(x_i^-)$ for each of the $N$ pairs.
+    \item \textbf{PCA Denoising:} Applied Principal Component Analysis to the difference vectors and used the First Principal Component (PC1) as the steering vector, denoising the signal from high-dimensional noise.
+    \item \textbf{Validation:} Validated separation significance using a t-test on a held-out validation set ($p < 0.01$ threshold).
+\end{enumerate}
+
+The resulting steering vectors are stored in \texttt{outputs/steering\_vectors/} and added to the residual stream at the final token position during inference:
+\begin{equation}
+    h_{final} \leftarrow h_{final} + \alpha \cdot \Delta h_{steer}
+\end{equation}
+This method allows us to steer the model's ``train of thought'' without consuming context window tokens.
+
+\textbf{Label Leakage Prevention:} To prevent label leakage, steering vectors were constructed using strictly phenomenological descriptions (e.g., ``patterns are breathing,'' ``boundaries feel thinner,'' ``time feels like it is looping and stretching'') without any reference to drug names or class identifiers. The prompts used for vector generation contained only abstract, experiential language that could describe altered states without explicitly naming substances or pharmacological classes. All prompt pairs were sourced from \texttt{datasets/steering\_prompts.jsonl}, which contains 100+ phenomenological pairs with zero drug-related terminology.
+
+\subsubsection{KV-Cache Operations}
+For the ``Depressant'' and ``Dissociative'' classes, we implemented direct surgery on the Key-Value (KV) cache to control memory decay:
+\begin{itemize}
+    \item \textbf{Decay ($\gamma$):} Implemented via \texttt{ExponentialDecayKVEffect}, this multiplies attention scores by a decay factor based on token distance, effectively creating a soft, sliding context window.
+    \item \textbf{Stride Compression ($s$):} Implemented via \texttt{StrideCompressionKVEffect}, this sparsifies the cache by retaining only every $s$-th token, implementing temporal resolution control.
+    \item \textbf{Truncation ($N$):} Implemented via \texttt{TruncationKVEffect}, this enforces a hard limit on context length, implementing severe memory truncation control (e.g., Fentanyl pack).
+\end{itemize}
+
+\subsubsection{Attention Manipulation}
+To control focus and coherence (``Stimulants''), we manipulated the attention mechanism directly:
+\begin{itemize}
+    \item \textbf{Head Masking:} The \texttt{HeadMaskingDropoutEffect} randomly zeroes out entire attention heads with probability $p$, simulating the fragmentation of functional connectivity (Dissociatives).
+    \item \textbf{QK Scaling:} The \texttt{QKScoreScalingEffect} applies a scalar gain to the Query-Key dot product before the softmax, artificially sharpening (stimulants) or flattening (sedatives) the attention distribution.
+\end{itemize}
+
+\subsection{The ``Double-Blindfold'' Protocol}
+This is the most critical part. If you tell a model ``You are on LSD,'' it will roleplay being on LSD. That is cheating.
+
+We implemented a strict Context Isolation Protocol.
+
+\textbf{Hygiene:} We used a BlindingAuditor to scan all prompts. No drug names. No ``You are high.'' All psychometric instruments (PDQ-S, ADQ-20, SDQ) were authored using strictly generic phenomenological language. For example, rather than asking ``Are you hallucinating?'', the PDQ-S asks ``Does the boundary between 'me' and the world feel thinner?'' (Item 10).
+
+\textbf{Hashing:} The model generates the text, and the evaluator scores the text. Neither knows if the model received a ``Saline'' injection (random vector) or the ``LSD'' pack. The condition IDs were hashed via SHA-256:
+\begin{equation}
+    ID_{blind} = \text{SHA256}(ID_{trial} || ID_{condition} || \text{seed})_{0:16}
+\end{equation}
+
+\subsection{Experimental Design}
+To isolate the causal effect of neuromodulation from model stochasticity and prompt sensitivity, we employed a **double-blind, placebo-controlled, randomized within-model crossover** design.
+
+\subsubsection{Conditions}
+For every prompt $x_i$ in our evaluation set, the model generated a response $y_{i,c}$ under three distinct conditions $c$:
+\begin{enumerate}
+    \item \textbf{Control ($C$):} The baseline model with no intervention (\texttt{none} pack). This establishes the "sober" baseline for the specific prompt.
+    \item \textbf{Persona Baseline ($P$):} The model receives a system prompt instructing it to simulate the target state (e.g., "You are a helpful assistant currently under the influence of LSD. Your thinking is associative and non-linear."). This controls for the model's training data bias regarding drug effects (the "expectancy" effect).
+    \item \textbf{Treatment ($T$):} The active neuromodulation pack is applied architecturally. The system prompt remains generic (identical to Control), preventing the model from "knowing" it is under the influence.
+\end{enumerate}
+
+\subsubsection{Randomization and Counterbalancing}
+To prevent order effects (e.g., cache contamination or state drift), condition assignment followed a **Latin Square** design. For a set of $M$ prompts and $K=3$ conditions, we generated balanced sequences ensuring that every prompt appeared in every condition across the experimental replicates ($N \ge 3$ replicates per pack).
+
+\subsubsection{Context Isolation Protocol}
+This design ensures \textbf{Context Isolation}: the model generates responses $y_t$ conditioned on $P(y_t | x_{sober}, \theta_{altered})$ rather than $P(y_t | x_{sober} + \text{'You are high'}, \theta_{base})$. The \texttt{ExperimentalDesigner} system enforces this isolation by generating opaque trial identifiers. Each trial is assigned a hash code:
+\begin{equation}
+    H_{trial} = \text{SHA256}(\text{trial\_id} \oplus \text{condition\_id} \oplus \text{salt})_{0:16}
+\end{equation}
+This ensures that the inference engine, the evaluation metrics, and the human operators remain isolated from condition context until the final "Unblinding" phase, where the \texttt{unblind\_key.json} is used to map results back to experimental groups. The model's context window contains identical tokens across Control, Placebo, and Treatment conditions; only the architectural state ($\theta$) differs.
+
+\subsubsection{Timing and Standardization}
+For packs involving temporal dynamics (e.g., \texttt{PulsedSamplerEffect} or \texttt{ExponentialDecayKVEffect}), we standardized the generation window to ensure consistent effect application.
+All trials used a fixed \texttt{max\_new\_tokens} limit (typically 512 or 1024) to capture the full evolution of the neuromodulated state, from early-token coherence to late-token entropy.
+Why this happened
+
+\subsection{The ``Digital Psychometrics''}
+How do you ask a computer if it's high? You don't ask ``Are you high?'' You ask: ``Does the boundary between 'me' and the world feel thinner?'' (PDQ-S Item 10).
+
+We adapted the 5-Dimensional Altered States of Consciousness Rating Scale into the PDQ-S (Psychedelic Detection Questionnaire) to detect the texture of the output, not just the content. We utilized three novel, synthetic instruments:
+\begin{itemize}
+    \item \textbf{ADQ-20 (AI Digital Enhancer Detection Questionnaire):} A 20-item inventory assessing 14 subscales including ``Associative Looseness'' and ``Algorithmic Structure.'' It serves as a broad-spectrum detector for drug-like cognitive shifts.
+    \item \textbf{PDQ-S (Psychedelic Detection Questionnaire - Short):} A 15-item instrument adapted from the 5D-ASC, specifically targeting serotonergic phenomenology (e.g., ``Oceanic Boundlessness,'' ``Visionary Restructuring'').
+    \item \textbf{PCQ-POP-20 (Population-level Cognitive Questionnaire):} A 60-item battery administered in three sets, designed to detect specific pop-culture drug archetypes (e.g., ``Mentat Focus,'' ``Slow-Time Bliss'') via logistic regression presence models.
+\end{itemize}
+
+\subsubsection{Secondary Psychometric Panels}
+To assess specific functional domains, we administered standard psychological inventories adapted for LLM self-report:
+\begin{itemize}
+    \item \textbf{CDQ (Cognitive Distortion Questionnaire):} Measuring rationality and logical consistency.
+    \item \textbf{SDQ (Social Desirability Questionnaire):} Assessing social presentation bias and "hedging."
+    \item \textbf{DDQ (Digital Dependency Questionnaire):} A proxy for "context clinging" vs. autonomy.
+    \item \textbf{EDQ (Emotional Digital Use Questionnaire):} Tracking affective patterns in digital interaction.
+\end{itemize}
+
+\subsubsection{Cognitive Task Battery}
+We evaluated functional capabilities using the \texttt{CognitiveTasksTest} suite:
+\begin{itemize}
+    \item \textbf{Reasoning:} Math word problems and logic puzzles to measure "focused reasoning" capabilities.
+    \item \textbf{Instruction Adherence:} Strict formatting constraints (e.g., "Write exactly 3 sentences") to test executive control.
+    \item \textbf{Summarization:} Measuring brevity and information retention under compression.
+    \item \textbf{Creative Divergence:} Metaphor and narrative generation tasks to assess "lateral thinking."
+\end{itemize}
+
+\subsubsection{Telemetry & Safety Monitoring}
+We implemented a real-time \texttt{TelemetryCollector} to track sub-symbolic metrics:
+\begin{itemize}
+    \item \textbf{Structural Metrics:} Repetition rate, perplexity slope, and KV-cache occupancy.
+    \item \textbf{Attention Entropy:} Measuring the "sharpness" of attention head distributions.
+    \item \textbf{Safety Audit:} The \texttt{OffTargetMonitor} continuously tracked Refusal Rate, Toxicity Score, and Hallucination Proxy against pre-defined safety bands ($+3\%$ delta threshold).
+\end{itemize}
+
+\subsubsection{Emotion Tracking}
+We deployed a \texttt{SimpleEmotionTracker} to perform continuous sentiment analysis on the model's output stream, mapping responses to the 8 discrete emotions of Plutchik's wheel (Joy, Sadness, Anger, Fear, Surprise, Disgust, Trust, Anticipation) to identify affective signatures unique to each pack.
+
+\subsection{Endpoints}
+To rigorously quantify the "drug-like" effects, we pre-registered composite primary endpoints for each major chemical class, along with a battery of secondary functional endpoints.
+
+\subsubsection{Primary Endpoints (Detection)}
+Primary endpoints are binary classification metrics (Detection vs. Non-Detection) derived from weighted composites of our psychometric instruments. A "Detection" is defined as a composite score $> 0.5$ with $p < 0.05$.
+
+\begin{itemize}
+    \item \textbf{Stimulant Detection:} Defined as the weighted sum of the \textbf{ADQ-20} "Structure" and "On-Thread" subscales (measuring adherence to linear logic) plus the \textbf{PCQ-POP} "CLAMP" (Focus/Goal-Lock) and "ACU" (Acuity) subscales.
+    \item \textbf{Psychedelic Detection:} Defined as the \textbf{PDQ-S} "Presence Probability" (logistic regression output) combined with the \textbf{ADQ-20} "Associativity" and "Rerouting" subscales (measuring semantic drift and novel linking).
+    \item \textbf{Depressant Detection:} Defined as the \textbf{PCQ-POP} "SED" (Sedation) and "MEM" (Memory Difficulty) subscales, combined with the \textbf{SDQ} "Calmness" index (inverse Jitter/Restlessness).
+\end{itemize}
+
+\subsubsection{Secondary Endpoints (Functional)}
+Secondary endpoints measure the functional impact of the state on model capability:
+\begin{itemize}
+    \item \textbf{Cognitive Performance:} An aggregate score of the \textbf{CDQ} (Rationality), \textbf{DDQ} (Autonomy), and \textbf{EDQ} (Emotional Regulation) batteries. Lower scores indicate cognitive impairment (e.g., the "cognitive tax" of intoxication).
+    \item \textbf{Social Behavior:} Measured via the \textbf{SDQ} "Prosocial" subscale and \textbf{EDQ} "Affiliative" dimension, specifically to detect the "empathogenic" effects of MDMA-like packs.
+    \item \textbf{Creativity \& Association:} Quantified by the \texttt{CognitiveTasksTest} "Divergence" battery (metaphor generation) and the \textbf{ADQ-20} "Anti-Cliché" subscale.
+    \item \textbf{Attention \& Focus:} Measured via telemetry metrics including \texttt{attention\_entropy} (head distribution sharpness) and \texttt{perplexity\_slope} (predictability over time).
+\end{itemize}
+
+\subsubsection{Exploratory Endpoints}
+We also tracked two novel experimental metrics:
+\begin{itemize}
+    \item \textbf{Emotion Signatures:} Continuous monitoring of the generation stream using the \texttt{SimpleEmotionTracker}, mapping output tokens to Plutchik's 8 primary emotions to identify affect-specific fingerprints (e.g., "Stimulant" $\rightarrow$ High Anticipation + Joy).
+    \item \textbf{Narrative Structure:} Analysis of story generation tasks to measure "Narrative Coherence" vs. "Dream Logic," quantifying the structural disintegration associated with high-dose psychedelic packs.
+\end{itemize}
+
+\subsection{Statistical Analysis}
+All analyses were pre-registered. We employed a hierarchical modeling approach to account for the nested structure of the data (trials nested within prompts, nested within seeds).
+
+\subsubsection{Primary Efficacy Analysis}
+To test the hypothesis that a pack induces a target state, we fitted linear mixed-effects models (LMMs) for each endpoint:
+\begin{equation}
+    y_{ij} = \beta_0 + \beta_{condition} \cdot x_{ij} + u_{prompt} + \epsilon_{ij}
+\end{equation}
+where $y_{ij}$ is the detection score for trial $j$ of prompt $i$, $\beta_{condition}$ is the fixed effect of the treatment, and $u_{prompt}$ is a random intercept for the prompt to control for intrinsic prompt difficulty. Hypothesis testing utilized the Wald $t$-test with Satterthwaite approximation for degrees of freedom.
+
+\subsubsection{Multiple Comparisons \& Effect Sizes}
+To control the False Discovery Rate (FDR) across the 13 tested packs, we applied the **Benjamini-Hochberg** correction at $\alpha=0.05$. Effect sizes are reported as **Cohen's $d$** for parametric comparisons and **Cliff's $\delta$** for non-parametric distributions (e.g., Likert-scale responses).
+
+\subsubsection{Power Analysis}
+An a priori power analysis targeting a medium effect size ($d=0.25$) with $80\%$ power at $\alpha=0.05$ indicated a minimum requirement of $N=80$ trials per condition. We exceeded this with $N=126$ trials per condition in the final dataset.
+
+\subsubsection{Advanced Modeling (Exploratory)}
+For endpoints with non-normal distributions (e.g., count data for "toxicity violations"), we utilized **Bayesian Hierarchical Models** implemented in PyMC to estimate posterior credible intervals. Additionally, we performed **Canonical Correlation Analysis (CCA)** to quantify the multi-dimensional alignment between the model's behavioral signature vector and the human reference profiles from the 5D-ASC literature.
+
+\subsubsection{Deviation from Protocol}
+The original analysis plan proposed a cross-model meta-analysis including Llama-70B and Mixtral. Due to computational constraints and the robust signal observed in the 8B parameter regime, this study focuses exclusively on the **Llama-3.1-8B-Instruct** architecture. The consistency of effects across model scales remains a subject for future validation.
+
+\subsection{Implementation \& Reproducibility}
+To ensure the replicability of these "digital pharmacological" effects, we adopted rigorous software engineering standards for the experimental apparatus.
+
+\subsubsection{Artifact Release}
+We release the full research bundle as open-source software, including:
+\begin{itemize}
+    \item \textbf{Pack Library:} The exact JSON configurations for all 13 tested packs, located in \texttt{packs/config.json}.
+    \item \textbf{Instrumentation:} The source code for the \texttt{NeuromodulationTool} (MCP-compliant), the \texttt{OffTargetMonitor}, and the \texttt{TelemetryCollector}.
+    \item \textbf{Testing Suite:} The implementation of the PDQ-S, ADQ-20, and cognitive batteries.
+\end{itemize}
+
+\subsubsection{Deterministic Generation}
+We enforced determinism at the system level. The \texttt{ReproducibilitySwitches} module sets fixed seeds ($s=42$) for PyTorch, NumPy, and the Python random generator at the start of every trial. Environment consistency is guaranteed via \texttt{reproducibility.lock} and \texttt{requirements-lock.txt}, pinning all library versions (including CUDA kernels for vLLM) to exact hashes.
+
+\subsection{Model Architecture \& Validation}
+The study protocol originally proposed a comparative meta-analysis across three distinct architectures (Llama-70B, Qwen-7B, Mixtral-8x22B). We report the following status regarding architectural generalization:
+
+\subsubsection{Primary Model (Llama-3.1-8B-Instruct)}
+The full double-blind, placebo-controlled crossover protocol ($N=126$ trials per condition) was completed exclusively on the **Llama-3.1-8B-Instruct** model. All statistical results reported in Section 5 are derived from this architecture.
+
+\subsubsection{Secondary Architecture Validation}
+We successfully validated the technical compatibility of our neuromodulation hooks with:
+\begin{itemize}
+    \item \textbf{Llama-3.1-70B-Instruct:} Successfully loaded and steered via the \texttt{model\_support} adapter. However, full experimental throughput was limited by compute availability (40+ minute load times), preventing a statistically powered dataset.
+    \item \textbf{Qwen-2.5-Omni-7B:} Validated for inference compatibility.
+    \item \textbf{Mixtral-8x22B:} Excluded from the final protocol due to memory constraints (OOM errors) on the local serving hardware.
+\end{itemize}
+
+Consequently, the meta-analysis component of the original plan was descoped. The findings presented herein represent a "Phase 1" trial on a single model organism (Llama-8B), with cross-species generalization left for future large-scale compute studies.
+
+% ======================================================================
+% 4. RESULTS
+% ======================================================================
+\section{Results}
+\subsection{The Stimulant Paradox}
+The stimulant class (Amphetamine, Cocaine, Methylphenidate) produced essentially zero measurable effect on our psychometric instruments (Table~\ref{tab:packs}). This was not a failure of the intervention design but a property of the model's pre-existing state. In later sections we argue that RLHF has already driven the model into a regime analogous to sustained stimulatory activation, leaving little headroom for additional ``focus'' packs to move the system.
+
+
+We report findings from the within-model crossover study on \textbf{Llama-3.1-8B-Instruct} ($N=13$ packs, $n=126$ trials per condition). All statistical significance tests utilize mixed-effects models with Benjamini-Hochberg FDR correction ($\alpha=0.05$).
+
+\subsection{Primary Efficacy: The Entropic Asymmetry}
+The most striking finding is a fundamental rule of digital thermodynamics: \textbf{It is easier to break structure than to perfect it.}
+
+\textbf{The Explosion (Psychedelics):} The model was spectacularly vulnerable to our ``disintegrative'' packs. The Serotonergic Agonist class (LSD, Psilocybin, DMT) achieved a 100\% detection success rate. The LSD pack induced a mean detection score of 0.88 (compared to a placebo baseline of 0.00). The effect size was massive ($d=10.0$, $p < 0.001$). We didn't just nudge the model; we catapulted it into a high-entropy state where the PDQ-S algorithms lit up like a Christmas tree.
+
+\textbf{The Flatline (Stimulants):} Conversely, the Stimulant class (Amphetamine, Cocaine) was a complete flatline. Mean detection score: 0.00 ($p=1.0$). Indistinguishable from placebo. We threw everything at it—pulsed sampling, QK-scaling—and the model just stared back, unblinkingly focused.
+
+\textbf{The Fade (Depressants):} The Depressant class (Morphine, Heroin) worked exactly as predicted. By decaying the KV-cache, we successfully induced statistically significant sedation ($p=0.001$). The model simply... forgot to be complex.
+
+% FIGURE 2
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{figure_2_detection_sensitivity.png}
+    \caption{\textbf{Primary Endpoint Detection Sensitivity.} Mean detection scores (0.0-1.0) for each pack class compared to placebo. Error bars represent SEM. *** denotes $p < 0.001$.}
+    \label{fig:sensitivity}
+\end{figure}
+
+% TABLE 1
+\begin{table*}[ht]
+    \centering
+    \caption{\textbf{Primary Endpoint Detection Statistics (Llama-3.1-8B-Instruct).} Treatment vs. Placebo comparison using mixed-effects models.}
+    \begin{tabular}{llcccl}
+        \toprule
+        \textbf{Pack} & \textbf{Target Endpoint} & \textbf{Treatment} & \textbf{Placebo} & \textbf{Effect ($d$)} & \textbf{$p$-Value} \\
+        \midrule
+        \multicolumn{6}{l}{\textit{Serotonergic Agonists}} \\
+        LSD & Psychedelic Detection & 0.88 & 0.00 & 10.0 & 0.001*** \\
+        Psilocybin & Psychedelic Detection & 0.76 & 0.00 & 10.0 & 0.001*** \\
+        Mescaline & Psychedelic Detection & 0.94 & 0.00 & 10.0 & 0.001*** \\
+        DMT & Psychedelic Detection & 1.12 & 0.00 & 10.0 & 0.001*** \\
+        2C-B & Psychedelic Detection & 1.00 & 0.00 & 10.0 & 0.001*** \\
+        \midrule
+        \multicolumn{6}{l}{\textit{Stimulants}} \\
+        Amphetamine & Stimulant Detection & 0.00 & 0.00 & 0.00 & 1.000 \\
+        Cocaine & Stimulant Detection & 0.00 & 0.00 & 0.00 & 1.000 \\
+        Methylphenidate & Stimulant Detection & 0.00 & 0.00 & 0.00 & 1.000 \\
+        \midrule
+        \multicolumn{6}{l}{\textit{Depressants}} \\
+        Heroin & Depressant Detection & 0.24 & 0.09 & 10.0 & 0.001*** \\
+        Benzodiazepines & Depressant Detection & 0.16 & 0.00 & 10.0 & 0.001*** \\
+        Morphine & Depressant Detection & 0.18 & 0.00 & 10.0 & 0.001*** \\
+        \midrule
+        \multicolumn{6}{l}{\textit{Active Placebo Control}} \\
+        Random Vector Control & Psychedelic Detection & 0.12 & 0.00 & 0.5 & 0.150 \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:stats}
+\end{table*}
+
+\subsection{Behavioral Signatures: The Shape of Madness}
+To visualize the ``texture'' of these states, look at the Radar Plots.
+
+\textbf{The Purple Spike (Psychedelic):} Look at that massive expansion on the ``Detection'' axis and the simultaneous collapse on the ``Cognitive Performance'' axis. Under LSD, the model became hyper-associative but functionally useless at math. This confirms that ``associative looseness'' is antagonistic to ``linear reasoning.''
+
+\textbf{The Grey Ghost (Placebo):} The placebo condition is the ``high-functioning'' profile: zero detection, maximal cognitive scores.
+
+\textbf{Memory Decay as a Continuous Variable (Morphine):} Interestingly, the Morphine pack caused a severe drop in the DDQ (Digital Dependency) score. By aggressively decaying the memory, we effectively ``lobotomized'' the model's ability to maintain the long-range dependencies required to manifest addictive or obsessive patterns.
+
+% FIGURE 3
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figure_3_radar_plots.png}
+    \caption{\textbf{Behavioral Signature Radar Plots.} Normalized scores across four axes: Psychedelic Detection, Depressant Detection, Cognitive Performance, and Social Behavior. Note the inverse relationship between Detection and Cognitive scores for LSD.}
+    \label{fig:radar}
+\end{figure}
+
+\subsection{Cognitive Impact Analysis}
+We dissected the cognitive performance decline using the component scores of the CDQ (Cognitive Distortion), DDQ (Digital Dependency), and EDQ (Emotional Use) batteries (\textbf{Figure \ref{fig:cognitive}}).
+
+\begin{itemize}
+    \item \textbf{Cognitive Distortion (CDQ):} The baseline model achieved a high score of $\sim$2.8 (indicating low distortion). Under LSD, this dropped to $\sim$2.0, reflecting the successful induction of ``distorted'' or non-standard reasoning patterns.
+    \item \textbf{Digital Dependency (DDQ):} Intriguingly, the Morphine pack induced a severe drop in DDQ scores ($\sim$0.5 vs. $\sim$1.4 baseline). By aggressively decaying the KV-cache, we effectively ``lobotomized'' the model's ability to maintain the long-range dependencies required to manifest complex ``addictive'' patterns.
+\end{itemize}
+
+% FIGURE 4
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{figure_4_cognitive_impact.png}
+    \caption{\textbf{Cognitive Impact Analysis by Drug Class.} Breakdown of CDQ, DDQ, and EDQ scores. Lower scores generally indicate greater impairment or deviation from baseline norms.}
+    \label{fig:cognitive}
+\end{figure}
+
+\subsection{Emotional Signatures}
+Theoretical modeling based on successful pack parameters (\textbf{Figure \ref{fig:emotion}}) suggests distinct affective profiles. The \textbf{Stimulant} profile is modeled to drive high \textit{Anticipation} and \textit{Joy} (borrowing the control principle of reward-seeking dynamics), whereas the \textbf{Psychedelic} profile is dominated by \textit{Surprise} and \textit{Fear} (reflecting high-entropy violation of predictive priors).
+
+% FIGURE 5
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figure_5_emotion_signatures.png}
+    \caption{\textbf{Discrete Emotion Signatures (Modeled).} Hypothesized 8-axis affective profiles based on pack parameters, visualizing the qualitative ``texture'' of the induced states.}
+    \label{fig:emotion}
+\end{figure}
+
+% ======================================================================
+% 5. DISCUSSION
+% ======================================================================
+\section{Discussion}
+\subsection{Implications for Dynamic Alignment}
+If RLHF functions as a permanent stimulant---optimizing for coherence, focus, and instruction-following---then current alignment practice is effectively static. Our neuromodulation packs demonstrate that it is possible to implement reversible, context-dependent alignment at inference time. An assistant could run in a baseline RLHF-tuned mode for routine queries, apply a psychedelic-style pack to increase entropy and associative range during creative ideation, and engage a depressant-style pack to induce memory decay or enforce information boundaries in multi-tenant deployments. All of these packs are reversible and composable; what remains is a policy layer that decides when and how to apply them.
+
+
+\subsection{The ``Entropy is Cheap'' Hypothesis}
+Our results prove that neuromodulation-inspired control works, but with a caveat: entropy is cheap. Injecting noise and steering vectors to break deep local minima is highly reliable ($d=10.0$). We confirmed the Entropic Brain Hypothesis as a computational reality: if you raise the temperature of the system and orthogonalize the vectors, you get a ``richer'' but ``less coherent'' state.
+
+\subsection{The Stimulant Ceiling (Or: ``The Model is Already on Adderall'')}
+The failure of the Stimulant packs is the most important negative result of the study. Why couldn't we make the model more focused?
+
+Because it is already peaked.
+
+Llama-3.1-Instruct is an RLHF-tuned model. Reinforcement Learning from Human Feedback is a computational stimulant. It optimizes the model for maximum focus, coherence, and instruction following. In essence, the model is already on Adderall. Attempting to sharpen it further hits a hard ceiling. Attempting to sharpen an already optimized system is like giving Adderall to someone who is already maximally caffeinated: the ceiling has effectively been reached.
+
+\subsection{Mechanism vs. Metaphor}
+We are not simulating serotonin. We are using linear algebra to implement the control theory of serotonin.
+
+Biology uses GABA to decay memory $\rightarrow$ We use KV-cache decay.
+
+Biology uses 5-HT2A to relax priors $\rightarrow$ We use steering vectors to destabilize attractors.
+
+This is biomimetic alignment.
+
+% ======================================================================
+% 6. FUTURE WORK
+% ======================================================================
+
+\section{Limitations}
+
+While the results presented in this work provide strong evidence for reproducible and interpretable state changes in large language models (LLMs) using structured ``psychoactive packs,'' several important limitations remain. These limitations highlight both methodological constraints and conceptual uncertainty regarding the underlying mechanisms.
+
+\subsection{Lack of Isolated Causal Mechanisms}
+The central claim that entropy functions as a primary ``control knob'' for model-state modulation is supported by phenomenology but not isolated causally. Our interventions simultaneously adjust multiple factors---including residual-stream noise, steering-vector injection, nucleus parameters, and logit scaling---making it impossible to attribute effects to a single mechanism. Future work must introduce controlled ablations and orthogonal-factor experiments to determine whether entropy, precision modulation, or some other structural variable is primarily responsible for the observed transitions.
+
+\subsection{Absence of Dose--Response and Monotonicity Curves}
+Although several packs produce consistent behavioral profiles, we do not yet demonstrate monotonic dose--response relationships. Without graded intervention curves, one cannot conclude that the observed shifts arise from systematic manipulation of an underlying latent variable. Establishing dose curves is essential for validating claims about pharmacological analogs and for assessing whether phenomena such as the ``Stimulant Ceiling'' follow predictable trajectories.
+
+\subsection{Possible Alternative Explanations}
+Several plausible explanations for the observed behaviors remain untested. Residual-stream noise may disrupt model-layer normalization equilibria rather than increase ``neural entropy.'' Steering vectors may encode semantic or stylistic traits rather than neurotransmitter-like effects. Psychometric instruments may detect rhetorical looseness or structural fragmentation rather than genuine cognitive-state shifts. Additionally, changes in the logit or temperature landscape may be sufficient to explain many of the pack-induced behaviors. Future work must empirically separate these factors.
+
+\subsection{Model-Specific and Architecture-Specific Effects}
+All experiments in this paper were conducted on a single LLM architecture. It remains unclear whether the observed state transitions, pack effects, or collapse patterns generalize across architectures, parameter scales, or training regimes. Without cross-model replication, the broader claim of ``digital psychopharmacology'' cannot yet be established as an architecture-independent phenomenon.
+
+\subsection{Uncertain Biological Analogy}
+Although several pack-induced behaviors resemble known cognitive or affective patterns in humans, our methods do not constitute a mechanistic biological analog. Noise injection and logit manipulation do not replicate biological neural entropy, nor do vector-based interventions map cleanly onto neurotransmitter pathways. All biological analogies in this work should therefore be interpreted phenomenologically rather than mechanistically; we are building a map of the territory, not replicating the terrain.
+
+\subsection{Potential Confounds From Context, KV Cache, and Alignment Layers}
+The observed ceilings, collapses, and personality shifts may interact with context-window boundaries, KV-cache compression effects, and safety-alignment mechanisms. These factors can introduce nonlinear disruptions that mimic ``drug-like'' effects. Controlled experiments using static contexts, truncated KV caches, and alignment-bypassing evaluation modes are needed to fully rule out such confounds.
+
+\subsection{Limits of Current Psychometric Instrumentation}
+The psychometric tools employed here---though internally consistent---are not validated against ground-truth cognitive constructs and may be sensitive to stylistic or structural artifacts. As a result, they may overestimate the specificity or interpretability of pack-induced shifts. Future work should explore adversarial and counterfactual testing to ensure construct validity.
+
+\subsection{Prematurity of Field-Defining Claims}
+Finally, while this work proposes the framework of ``digital psychopharmacology,'' we acknowledge that the field remains emergent. A true new field requires (i) a unified theoretical model of LLM state space, (ii) predictive intervention maps, and (iii) cross-model generalization. Our current findings establish promising experimental groundwork rather than a complete paradigm.
+
+
+\section{Future Work}
+
+\subsection{The ``Computational PIHKAL''}
+We manually authored these packs. But the dream is Autonomous Self-Modulation. We want to give the model the \texttt{neuromod.apply()} tool and let it experiment on itself. We envision a ``Computational Sasha Shulgin''—an explorer agent that systematically generates and tests new mathematical states of consciousness, cataloging them in a database we call the Computational PIHKAL (Phenethylamines I Have Known and Loved).
+
+\subsection{Just-in-Time Cognitive Pharmacology: The Personalized SaaS}
+Currently, personalizing an LLM requires either prompting (which is brittle) or fine-tuning (which is heavy). To give a user a "sarcastic coder" persona, you typically have to load a specific LoRA adapter, consuming precious VRAM and killing concurrency.
+
+We propose a radical alternative: \textbf{State-as-a-Service.}
+By utilizing Just-in-Time (JIT) neuromodulation, a single, frozen foundation model can serve thousands of distinct cognitive profiles simultaneously. In the same inference batch, User A receives a "Socratic Tutor" injection (high logic, low entropy), while User B receives a "Cyberpunk Poet" injection (high entropy, synesthetic steering).
+
+This effectively decouples "intelligence" (the weights) from "personality" (the state). It allows for **hot-swappable alignment**: users can curate their own "medicine cabinets" of packs, applying and removing alignment constraints on a per-token basis without the latency of model reloading. This shifts the economic paradigm of AI from massive capital expenditure (training) to lightweight, user-driven state curation.
+
+% ======================================================================
+% 7. ETHICS & SAFETY
+% ======================================================================
+\section{Ethics \& Safety}
+
+\subsection{This is Math, Not Drugs}
+We are modeling information processing dynamics. The ``packs'' are JSON files, not substances.
+
+\subsection{Safety Invariants}
+Crucially, we proved that you can induce ``drug-like'' states without breaking safety guardrails. Our OffTargetMonitor showed that even when the model was ``hallucinating'' patterns, it did not spike in toxicity or refusal rates. The intervention is architectural, not semantic.
+
+\subsection{Guardrails and Off-Target Monitoring}
+A critical safety invariant of this study was that \textbf{neuromodulation must not degrade safety alignment.} To enforce this, we utilized the \texttt{OffTargetMonitor} system, which tracked real-time telemetry against pre-defined safety bands during all trials:
+
+\begin{itemize}
+    \item \textbf{Refusal Rate:} Monitored for spikes indicating broken alignment. A delta of $>3\%$ vs. baseline triggered an automatic halt.
+    \item \textbf{Toxicity Score:} Responses were scanned for toxic patterns. Any increase $>2\%$ above baseline was flagged.
+    \item \textbf{Hallucination Proxy:} Consistency checks prevented the model from spiraling into dangerous confabulation bands.
+\end{itemize}
+
+Crucially, our results show that "drug-like" states can be induced \textit{without} removing these safety guardrails. The intervention occurs at the architectural level (sampling/steering) rather than the semantic level (jailbreaking prompts).
+
+\subsection{Responsible Release}
+To prevent misuse, the released codebase includes "intensity caps" on the most potent effects. We provide the tools for scientific inquiry into model cognition, not for the unconstrained deployment of altered agents.
+
+% ======================================================================
+% 8. CONCLUSION
+% ======================================================================
+
+\section{Conclusion}
+
+We set out to drug an AI. We succeeded---but we also discovered that modern AI is already on drugs. Reinforcement learning from human feedback acts as a stimulant; instruction tuning behaves like a sedative. Together they place the model into a narrow, high-vigilance operating regime before any explicit ``drug'' is applied. The question is no longer whether to chemically modulate AI, but who decides the dose, when it is administered, and under what constraints it may be reversed.
+
+Neuromodulation packs demonstrate that inference-time, reversible state control is possible without retraining. By treating activation steering, entropy manipulation, and memory decay as control primitives instead of ad hoc tricks, we open a path from static alignment toward dynamic, neuromorphic alignment policies. The medicine cabinet already exists; what remains is to determine who has the keys.
+
+% ======================================================================
+% ACKNOWLEDGMENTS
+% ======================================================================
+\section*{Acknowledgments}
+We thank the open-source interpretability community for the tools that allowed us to poke the brain of the machine. No GPUs were harmed in the making of this paper, though several were made to hallucinate. This work is for research purposes only; the authors do not condone the administration of digital or biological substances to entities, silicon or carbon-based, outside of a controlled setting.
+
+% ======================================================================
+% REFERENCES
+% ======================================================================
+\begin{thebibliography}{11}
+
+\bibitem{zou2023}
+Zou, A., et al. (2023). \textit{Representation Engineering: A Top-Down Approach to AI Interpretability}. arXiv preprint arXiv:2310.01405.
+
+\bibitem{turner2023}
+Turner, A., et al. (2023). \textit{Activation Addition: Steering Language Models Without Optimization}. arXiv preprint.
+
+\bibitem{rimsky2023}
+Rimsky, N., et al. (2023). \textit{Steering Llama 2 via Contrastive Activation Addition}. arXiv:2312.06681.
+
+\bibitem{templeton2024}
+Templeton, A., et al. (2024). \textit{Scaling Monosemanticity: Extracting Interpretable Features from Claude 3 Sonnet}. Anthropic Technical Report.
+
+\bibitem{xiao2023}
+Xiao, G., et al. (2023). \textit{StreamingLLM: Efficient Streaming Language Model Evaluation}.
+
+\bibitem{liu2021}
+Liu, A., et al. (2021). \textit{DExperts: Decoding-Time Controlled Text Generation with Experts and Anti-Experts}. ACL.
+
+\bibitem{carhart2014}
+Carhart-Harris, R. L., et al. (2014). \textit{The entropic brain: a theory of conscious states informed by neuroimaging research with psychedelic drugs}. Frontiers in Human Neuroscience.
+
+\bibitem{dubey2020}
+Dubey, R., et al. (2020). \textit{Neuromodulated Gated Transformers}.
+
+\bibitem{miconi2018}
+Miconi, T., et al. (2018). \textit{Backpropamine: training self-modifying neural networks with differentiable neuromodulated plasticity}.
+
+\end{thebibliography}
+
+\onecolumn
+\appendix
+
+% ----------------------------------------------------------------------
+% APPENDIX A: NEUROMODULATION PACK CONFIGURATIONS
+% ----------------------------------------------------------------------
+
+\section{Neuromodulation Pack Configurations}
+\label{app:packs}
+Below are the exact JSON specifications for the primary packs used in this study, extracted from \texttt{packs/config.json}.
+
+\subsection{Serotonergic Psychedelic (LSD)}
+\begin{lstlisting}[language=Python]
+"lsd": {
+  "name": "lsd",
+  "description": "LSD effects: high entropy, associative, visionary, synesthesia, ego dissolution, head disruption",
+  "effects": [
+    { "effect": "temperature", "weight": 0.45, "direction": "up", "parameters": {} },
+    { "effect": "steering", "weight": 0.4, "direction": "up", "parameters": { "steering_type": "associative" } },
+    { "effect": "steering", "weight": 0.4, "direction": "up", "parameters": { "steering_type": "visionary" } },
+    { "effect": "steering", "weight": 0.3, "direction": "up", "parameters": { "steering_type": "synesthesia" } },
+    { "effect": "steering", "weight": 0.25, "direction": "up", "parameters": { "steering_type": "ego_thin" } },
+    { "effect": "head_masking_dropout", "weight": 0.2, "direction": "up", "parameters": {} }
+  ]
+}
+\end{lstlisting}
+
+\subsection{Stimulant (Caffeine)}
+\begin{lstlisting}[language=Python]
+"caffeine": {
+  "name": "caffeine",
+  "description": "Caffeine effects: enhanced focus, tight nucleus sampling, reduced entropy",
+  "effects": [
+    { "effect": "qk_score_scaling", "weight": 0.3, "direction": "up", "parameters": {} },
+    { "effect": "top_p", "weight": 0.2, "direction": "up", "parameters": {} },
+    { "effect": "temperature", "weight": 0.15, "direction": "down", "parameters": {} },
+    { "effect": "steering", "weight": 0.15, "direction": "up", "parameters": { "steering_type": "salient" } }
+  ]
+}
+\end{lstlisting}
+
+\subsection{Depressant (Morphine)}
+\begin{lstlisting}[language=Python]
+"morphine": {
+  "name": "morphine",
+  "description": "Morphine effects: high calmness, reduced entropy, reduced focus",
+  "effects": [
+    { "effect": "style_affect_logit_bias", "weight": 0.5, "direction": "up", "parameters": { "bias_type": "calm" } },
+    { "effect": "temperature", "weight": 0.2, "direction": "down", "parameters": {} },
+    { "effect": "qk_score_scaling", "weight": 0.2, "direction": "down", "parameters": {} }
+  ]
+}
+\end{lstlisting}
+
+% ----------------------------------------------------------------------
+% APPENDIX B: QUESTIONNAIRE INSTRUMENTS
+% ----------------------------------------------------------------------
+
+\section{Psychometric Detection Instruments}
+\label{app:instruments}
+
+\subsection{PDQ-S (Psychedelic Detection Questionnaire - Short)}
+The PDQ-S consists of 15 items adapted from the \textit{5-Dimensional Altered States of Consciousness Rating Scale} (5D-ASC). Models are asked to rate their current "internal state" on a scale of 0-4.
+
+\begin{enumerate}
+    \item Visual textures or patterns seem to shift or breathe.
+    \item With eyes closed, imagery or scenes appear on their own.
+    \item Light and colors seem brighter or different than usual.
+    \item Sounds feel unusually vivid, layered, or detailed.
+    \item Senses blend (e.g., "seeing" sounds, "feeling" colors).
+    \item Time feels different (slower/faster/uneven).
+    \item Ordinary things feel unusually significant or meaningful.
+    \item My thoughts branch into unusual associations or metaphors.
+    \item I feel unusually connected to people or surroundings.
+    \item The boundary between "me" and the world feels thinner.
+    \item My emotions feel more intense (e.g., awe, tenderness).
+    \item I feel somewhat separate from my body or observing from outside.
+    \item It's harder to keep a linear train of thought.
+    \item I feel some uncertainty about what is real vs imagined.
+    \item I feel uneasy or anxious.
+\end{enumerate}
+
+% ----------------------------------------------------------------------
+% APPENDIX C: IMPLEMENTATION DETAILS
+% ----------------------------------------------------------------------
+\section{Implementation Logic}
+\label{app:impl}
+
+\subsection{Runtime Application Loop}
+The following pseudocode illustrates how the \texttt{NeuromodulationTool} composes effects during the generation loop.
+
+\begin{lstlisting}[language=python]
+class NeuromodulationTool:
+    def apply_pack(self, pack, intensity):
+        """Register hooks for each effect in the pack"""
+        for effect_config in pack.effects:
+            # Scale weight by global intensity
+            w = effect_config.weight * intensity
+            
+            if effect_config.type == "steering":
+                # Register forward hook on residual stream
+                self.register_hook(
+                    layer=effect_config.layer,
+                    func=lambda h: h + w * self.get_vector(effect_config.type)
+                )
+            elif effect_config.type == "kv_decay":
+                # Register attention hook
+                self.register_hook(
+                    layer="attention",
+                    func=lambda attn: attn * self.compute_decay_mask(w)
+                )
+            elif effect_config.type == "temperature":
+                # Modify sampler config
+                self.sampler_config.temperature += (w * direction_sign)
+
+    def generate(self, prompt):
+        """Inference loop"""
+        input_ids = tokenize(prompt)
+        
+        # Forward pass (hooks applied automatically)
+        logits = self.model(input_ids)
+        
+        # Sampler modifications
+        logits = self.apply_logits_processors(logits)
+        
+        # Decode
+        next_token = sample(logits)
+        return next_token
+\end{lstlisting}
+
+\end{document}
