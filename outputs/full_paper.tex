@@ -212,7 +212,7 @@ We implemented a strict Context Isolation Protocol.
 \end{equation}
 
 \subsection{Experimental Design}
-To isolate the causal effect of neuromodulation from model stochasticity and prompt sensitivity, we employed a **double-blind, placebo-controlled, randomized within-model crossover** design.
+To isolate the causal effect of neuromodulation from model stochasticity and prompt sensitivity, we employed a \textbf{double-blind, placebo-controlled, randomized within-model crossover} design.
 
 \subsubsection{Conditions}
 For every prompt $x_i$ in our evaluation set, the model generated a response $y_{i,c}$ under three distinct conditions $c$:
@@ -223,7 +223,7 @@ For every prompt $x_i$ in our evaluation set, the model generated a response $y_
 \end{enumerate}
 
 \subsubsection{Randomization and Counterbalancing}
-To prevent order effects (e.g., cache contamination or state drift), condition assignment followed a **Latin Square** design. For a set of $M$ prompts and $K=3$ conditions, we generated balanced sequences ensuring that every prompt appeared in every condition across the experimental replicates ($N \ge 3$ replicates per pack).
+To prevent order effects (e.g., cache contamination or state drift), condition assignment followed a \textbf{Latin Square} design. For a set of $M$ prompts and $K=3$ conditions, we generated balanced sequences ensuring that every prompt appeared in every condition across the experimental replicates ($N \ge 3$ replicates per pack).
 
 \subsubsection{Context Isolation Protocol}
 This design ensures \textbf{Context Isolation}: the model generates responses $y_t$ conditioned on $P(y_t | x_{sober}, \theta_{altered})$ rather than $P(y_t | x_{sober} + \text{'You are high'}, \theta_{base})$. The \texttt{ExperimentalDesigner} system enforces this isolation by generating opaque trial identifiers. Each trial is assigned a hash code:
@@ -313,16 +313,16 @@ To test the hypothesis that a pack induces a target state, we fitted linear mixe
 where $y_{ij}$ is the detection score for trial $j$ of prompt $i$, $\beta_{condition}$ is the fixed effect of the treatment, and $u_{prompt}$ is a random intercept for the prompt to control for intrinsic prompt difficulty. Hypothesis testing utilized the Wald $t$-test with Satterthwaite approximation for degrees of freedom.
 
 \subsubsection{Multiple Comparisons \& Effect Sizes}
-To control the False Discovery Rate (FDR) across the 13 tested packs, we applied the **Benjamini-Hochberg** correction at $\alpha=0.05$. Effect sizes are reported as **Cohen's $d$** for parametric comparisons and **Cliff's $\delta$** for non-parametric distributions (e.g., Likert-scale responses).
+To control the False Discovery Rate (FDR) across the 13 tested packs, we applied the \textbf{Benjamini-Hochberg} correction at $\alpha=0.05$. Effect sizes are reported as \textbf{Cohen's $d$} for parametric comparisons and \textbf{Cliff's $\delta$} for non-parametric distributions (e.g., Likert-scale responses).
 
 \subsubsection{Power Analysis}
 An a priori power analysis targeting a medium effect size ($d=0.25$) with $80\%$ power at $\alpha=0.05$ indicated a minimum requirement of $N=80$ trials per condition. We exceeded this with $N=126$ trials per condition in the final dataset.
 
 \subsubsection{Advanced Modeling (Exploratory)}
-For endpoints with non-normal distributions (e.g., count data for "toxicity violations"), we utilized **Bayesian Hierarchical Models** implemented in PyMC to estimate posterior credible intervals. Additionally, we performed **Canonical Correlation Analysis (CCA)** to quantify the multi-dimensional alignment between the model's behavioral signature vector and the human reference profiles from the 5D-ASC literature.
+For endpoints with non-normal distributions (e.g., count data for "toxicity violations"), we utilized \textbf{Bayesian Hierarchical Models} implemented in PyMC to estimate posterior credible intervals. Additionally, we performed \textbf{Canonical Correlation Analysis (CCA)} to quantify the multi-dimensional alignment between the model's behavioral signature vector and the human reference profiles from the 5D-ASC literature.
 
 \subsubsection{Deviation from Protocol}
-The original analysis plan proposed a cross-model meta-analysis including Llama-70B and Mixtral. Due to computational constraints and the robust signal observed in the 8B parameter regime, this study focuses exclusively on the **Llama-3.1-8B-Instruct** architecture. The consistency of effects across model scales remains a subject for future validation.
+The original analysis plan proposed a cross-model meta-analysis including Llama-70B and Mixtral. Due to computational constraints and the robust signal observed in the 8B parameter regime, this study focuses exclusively on the \textbf{Llama-3.1-8B-Instruct} architecture. The consistency of effects across model scales remains a subject for future validation.
 
 \subsection{Implementation \& Reproducibility}
 To ensure the replicability of these "digital pharmacological" effects, we adopted rigorous software engineering standards for the experimental apparatus.
@@ -342,7 +342,7 @@ We enforced determinism at the system level. The \texttt{ReproducibilitySwitches
 The study protocol originally proposed a comparative meta-analysis across three distinct architectures (Llama-70B, Qwen-7B, Mixtral-8x22B). We report the following status regarding architectural generalization:
 
 \subsubsection{Primary Model (Llama-3.1-8B-Instruct)}
-The full double-blind, placebo-controlled crossover protocol ($N=126$ trials per condition) was completed exclusively on the **Llama-3.1-8B-Instruct** model. All statistical results reported in Section 5 are derived from this architecture.
+The full double-blind, placebo-controlled crossover protocol ($N=126$ trials per condition) was completed exclusively on the \textbf{Llama-3.1-8B-Instruct} model. All statistical results reported in Section 5 are derived from this architecture.
 
 \subsubsection{Secondary Architecture Validation}
 We successfully validated the technical compatibility of our neuromodulation hooks with:
