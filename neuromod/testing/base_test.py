@@ -141,19 +141,47 @@ class BaseTest(ABC):
             
             # Move inputs to the same device as the model
             if model is not None:
-                # Get device from model's first parameter
+                # Get device from model - try multiple methods for robustness
+                model_device = None
                 try:
+                    # Method 1: Try to get device from model's first parameter
                     model_device = next(model.parameters()).device
-                    inputs = {k: v.to(model_device) for k, v in inputs.items()}
                 except (StopIteration, AttributeError):
-                    # Fallback: check if CUDA is available
+                    try:
+                        # Method 2: Try to get device from model's device attribute
+                        if hasattr(model, 'device'):
+                            model_device = model.device
+                        # Method 3: Check if model has a device_map and get the main device
+                        elif hasattr(model, 'hf_device_map'):
+                            device_map = model.hf_device_map
+                            # Find the main device (usually device 0 or the first GPU)
+                            if device_map:
+                                # Get the first device from device_map
+                                first_key = next(iter(device_map.values()))
+                                if isinstance(first_key, (int, torch.device)):
+                                    model_device = torch.device(f"cuda:{first_key}") if isinstance(first_key, int) else first_key
+                                elif isinstance(first_key, dict) and 'device' in first_key:
+                                    model_device = torch.device(first_key['device'])
+                    except (AttributeError, TypeError):
+                        pass
+                
+                # Fallback: use CUDA if available, else CPU
+                if model_device is None:
                     if torch.cuda.is_available():
-                        inputs = {k: v.cuda() for k, v in inputs.items()}
+                        model_device = torch.device("cuda:0")
                     else:
-                        inputs = {k: v.cpu() for k, v in inputs.items()}
+                        model_device = torch.device("cpu")
+                
+                # Move all input tensors to the model's device
+                inputs = {k: (v.to(model_device) if isinstance(v, torch.Tensor) else v) 
+                         for k, v in inputs.items()}
+                
+                # Debug: verify device placement
+                if hasattr(self, '_debug_device') and self._debug_device:
+                    print(f"[DEBUG] Model device: {model_device}, Input devices: {[v.device if isinstance(v, torch.Tensor) else 'N/A' for v in inputs.values()]}")
             else:
                 # No model loaded, use CPU
-                inputs = {k: v.cpu() for k, v in inputs.items()}
+                inputs = {k: (v.cpu() if isinstance(v, torch.Tensor) else v) for k, v in inputs.items()}
             
             # Get neuromodulation effects if available
             logits_processors = []
@@ -162,18 +190,54 @@ class BaseTest(ABC):
             if self.neuromod_tool:
                 # Update token position for phase-based effects
                 self.neuromod_tool.update_token_position(0)  # Reset for each new prompt
-                logits_processors = self.neuromod_tool.get_logits_processors()
+                raw_processors = self.neuromod_tool.get_logits_processors()
                 gen_kwargs = self.neuromod_tool.get_generation_kwargs()
+                
+                # Wrap logits processors to ensure device consistency
+                if raw_processors:
+                    def wrap_processor(processor):
+                        def wrapped(input_ids, scores):
+                            # Ensure input_ids is on the same device as scores
+                            if input_ids.device != scores.device:
+                                input_ids = input_ids.to(scores.device)
+                            return processor(input_ids, scores)
+                        return wrapped
+                    
+                    logits_processors = [wrap_processor(p) if p is not None else None 
+                                       for p in raw_processors]
+                    logits_processors = [p for p in logits_processors if p is not None]
+                else:
+                    logits_processors = []
             
-            # Double-check that all inputs are on the correct device
+            # Final device check right before generation - ensure everything is on the same device
             if model is not None:
                 try:
-                    model_device = next(model.parameters()).device
-                    # Ensure all input tensors are on the model's device
+                    # Get the actual device the model will use for generation
+                    # For quantized models with device_map, we need to be more careful
+                    model_device = None
+                    try:
+                        model_device = next(model.parameters()).device
+                    except (StopIteration, AttributeError):
+                        # Check device_map if available
+                        if hasattr(model, 'hf_device_map') and model.hf_device_map:
+                            # Get the primary device from device_map
+                            device_map = model.hf_device_map
+                            # Usually the main device is device 0 or cuda:0
+                            if torch.cuda.is_available():
+                                model_device = torch.device("cuda:0")
+                            else:
+                                model_device = torch.device("cpu")
+                        else:
+                            model_device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+                    
+                    # Force all input tensors to the model's device
                     inputs = {k: (v.to(model_device) if isinstance(v, torch.Tensor) else v) 
                              for k, v in inputs.items()}
-                except (StopIteration, AttributeError):
-                    pass  # Already handled above
+                except Exception as e:
+                    # Last resort: try to move to CUDA if available
+                    if torch.cuda.is_available():
+                        inputs = {k: (v.cuda() if isinstance(v, torch.Tensor) else v) 
+                                 for k, v in inputs.items()}
             
             # Use the same generation approach as the chat interface
             with torch.no_grad():
