@@ -490,9 +490,9 @@ class BaseTest(ABC):
             response = tokenizer.decode(outputs[0], skip_special_tokens=True)
             response = response[len(prompt):].strip()
             
-            # Automatically track emotion changes (disabled for debugging)
-            # if response and response != "0":
-            #     self.track_emotion_change(response, f"Generated response to: {prompt[:50]}...")
+            # Automatically track emotion changes
+            if response and response != "0" and self.current_test_id:
+                self.track_emotion_change(response, f"Generated response to: {prompt[:50]}...")
             
             return response if response else "0"
             
