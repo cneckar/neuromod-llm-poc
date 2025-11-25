@@ -479,7 +479,7 @@ class ModelSupportManager:
                     name="meta-llama/Llama-3.1-70B-Instruct",
                     size=ModelSize.LARGE,
                     backend=BackendType.HUGGINGFACE,
-                    quantization=None,
+                    quantization="fp8",
                     max_length=2048,
                     torch_dtype=torch.float16
                 ),
@@ -487,15 +487,7 @@ class ModelSupportManager:
                     name="meta-llama/Llama-3.1-70B",
                     size=ModelSize.LARGE,
                     backend=BackendType.HUGGINGFACE,
-                    quantization=None,
-                    max_length=2048,
-                    torch_dtype=torch.float16
-                ),
-                "meta-llama/Meta-Llama-3.1-70B-Instruct": ModelConfig(
-                    name="meta-llama/Meta-Llama-3.1-70B-Instruct",
-                    size=ModelSize.LARGE,
-                    backend=BackendType.HUGGINGFACE,
-                    quantization=None,
+                    quantization="fp8",
                     max_length=2048,
                     torch_dtype=torch.float16
                 ),
@@ -831,6 +823,12 @@ class ModelSupportManager:
                         logger.info(f"Using 8-bit quantization with CPU offloading for {config.name} (no GPU)")
                     else:
                         logger.info(f"Using 8-bit quantization for {config.name} (GPU-only, no CPU offloading)")
+                elif config.quantization == "fp8":
+                    # FP8 quantization - requires H100 or compatible hardware with native FP8 support
+                    # FP8 is handled via a special marker that will be processed during model loading
+                    quantization_config = "fp8"  # Special marker for FP8 quantization
+                    logger.info(f"Using FP8 quantization for {config.name} (requires H100 or compatible hardware)")
+                    logger.warning("FP8 quantization requires hardware with native FP8 support (e.g., H100)")
             except ImportError:
                 logger.warning("bitsandbytes not available, loading model without quantization")
                 quantization_config = None
@@ -961,7 +959,22 @@ class ModelSupportManager:
         
         # Add quantization config if available
         if quantization_config is not None:
-            load_kwargs['quantization_config'] = quantization_config
+            if quantization_config == "fp8":
+                # FP8 quantization - use transformers' native FP8 support
+                # This requires transformers>=4.37.0 and hardware with FP8 support (H100+)
+                try:
+                    # Try QuantoConfig for FP8 quantization (transformers>=4.37.0)
+                    from transformers import QuantoConfig
+                    load_kwargs['quantization_config'] = QuantoConfig(weights="fp8")
+                    logger.info("Using FP8 quantization via QuantoConfig (requires H100 or compatible hardware)")
+                except (ImportError, AttributeError):
+                    # Fallback: try using dtype-based approach
+                    logger.warning("QuantoConfig not available for FP8, using bfloat16 as fallback")
+                    # Use bfloat16 which provides good performance on H100 hardware
+                    load_kwargs['dtype'] = torch.bfloat16
+                    quantization_config = None
+            else:
+                load_kwargs['quantization_config'] = quantization_config
         
         # Only add device_map if it's not None
         # When GPU is available, use specific GPU device instead of "auto" to prevent CPU offloading
