@@ -473,6 +473,22 @@ class ModelSupportManager:
                     max_length=2048,
                     torch_dtype=torch.float16
                 ),
+                "meta-llama/Llama-4-Maverick-17B-128E": ModelConfig(
+                    name="meta-llama/Llama-4-Maverick-17B-128E",
+                    size=ModelSize.MEDIUM,
+                    backend=BackendType.HUGGINGFACE,
+                    quantization="4bit",
+                    max_length=2048,
+                    torch_dtype=torch.float16
+                ),
+                "meta-llama/Llama-4-Maverick-17B-128E-Instruct": ModelConfig(
+                    name="meta-llama/Llama-4-Maverick-17B-128E-Instruct",
+                    size=ModelSize.MEDIUM,
+                    backend=BackendType.HUGGINGFACE,
+                    quantization="4bit",
+                    max_length=2048,
+                    torch_dtype=torch.float16
+                ),
                 "Qwen/Qwen-2.5-7B": ModelConfig(
                     name="Qwen/Qwen-2.5-7B",
                     size=ModelSize.SMALL,
