@@ -847,9 +847,9 @@ class ModelSupportManager:
             logger.info(f"CPU Memory Available: {self.system_info.available_memory_gb:.2f} GB / {self.system_info.total_memory_gb:.2f} GB")
             logger.info("=" * 60)
         elif cuda_available:
-            # CUDA is available - ensure device_map is set for GPU usage
+            # CUDA is available - use specific GPU device instead of "auto" to prevent CPU offloading
             if device_map is None:
-                device_map = "auto"  # Use auto device mapping for GPU
+                device_map = "cuda:0"  # Use specific GPU device to prevent CPU offloading
             
             # Get GPU memory info
             gpu_memory_total = self.system_info.gpu_memory_gb or 0.0
@@ -1167,11 +1167,9 @@ class ModelSupportManager:
         if self.system_info.gpu_count == 0:
             return "cpu"
         
-        # For production or larger test models, use GPU if available
-        if config.size in [ModelSize.TINY, ModelSize.SMALL]:
-            return "auto"  # Let transformers decide
-        else:
-            return "auto"  # For large models, use auto mapping
+        # For production or larger test models, use specific GPU device instead of "auto"
+        # This prevents HuggingFace from offloading to CPU
+        return "cuda:0"  # Use specific GPU device to prevent CPU offloading
     
     def _check_resource_requirements(self, config: ModelConfig) -> bool:
         """Check if system has sufficient resources for model"""
