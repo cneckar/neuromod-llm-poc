@@ -452,11 +452,6 @@ class BaseTest(ABC):
                         logits_processor=logits_processors if logits_processors else None,
                         **gen_kwargs
                     )
-                finally:
-                    # Restore original method and torch.arange
-                    if original_prepare is not None:
-                        model.prepare_inputs_for_generation = original_prepare
-                    torch.arange = original_arange
                 except RuntimeError as e:
                     if "Expected all tensors to be on the same device" in str(e):
                         # HuggingFace created internal tensors on CPU
