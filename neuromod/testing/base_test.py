@@ -195,15 +195,21 @@ class BaseTest(ABC):
                 
                 # Wrap logits processors to ensure device consistency
                 if raw_processors:
-                    def wrap_processor(processor):
-                        def wrapped(input_ids, scores):
+                    from transformers import LogitsProcessor
+                    
+                    class DeviceAwareLogitsProcessor(LogitsProcessor):
+                        """Wrapper that ensures input_ids and scores are on the same device"""
+                        def __init__(self, processor):
+                            self.processor = processor
+                        
+                        def __call__(self, input_ids, scores):
                             # Ensure input_ids is on the same device as scores
                             if input_ids.device != scores.device:
                                 input_ids = input_ids.to(scores.device)
-                            return processor(input_ids, scores)
-                        return wrapped
+                            # Call the original processor
+                            return self.processor(input_ids, scores)
                     
-                    logits_processors = [wrap_processor(p) if p is not None else None 
+                    logits_processors = [DeviceAwareLogitsProcessor(p) if p is not None else None 
                                        for p in raw_processors]
                     logits_processors = [p for p in logits_processors if p is not None]
                 else:
@@ -244,41 +250,59 @@ class BaseTest(ABC):
                 model.eval()
             
             # Use the same generation approach as the chat interface
-            # Explicitly set device for generation
+            # For models with device_map, we need to be extra careful about device placement
+            # HuggingFace's generate() should handle device_map automatically, but we need to ensure
+            # inputs are on the correct device for the first layer
             try:
-                # Get device one more time right before generation
-                if hasattr(model, 'device'):
-                    gen_device = model.device
-                else:
-                    gen_device = next(model.parameters()).device
+                # Get the device where the input embeddings are (usually the first device in device_map)
+                gen_device = None
+                if hasattr(model, 'hf_device_map') and model.hf_device_map:
+                    # For device_map models, find the primary device (usually where embeddings are)
+                    device_map = model.hf_device_map
+                    # Check common keys that indicate the main device
+                    for key in ['', 'model.embed_tokens', 'model', 0]:
+                        if key in device_map:
+                            dev = device_map[key]
+                            if isinstance(dev, int):
+                                gen_device = torch.device(f"cuda:{dev}")
+                            elif isinstance(dev, torch.device):
+                                gen_device = dev
+                            elif isinstance(dev, str):
+                                gen_device = torch.device(dev)
+                            break
+                    # Fallback: use first device found
+                    if gen_device is None and device_map:
+                        first_val = next(iter(device_map.values()))
+                        if isinstance(first_val, int):
+                            gen_device = torch.device(f"cuda:{first_val}")
+                        elif isinstance(first_val, torch.device):
+                            gen_device = first_val
+                
+                # If still no device, try to get from model parameters
+                if gen_device is None:
+                    try:
+                        gen_device = next(model.parameters()).device
+                    except (StopIteration, AttributeError):
+                        if torch.cuda.is_available():
+                            gen_device = torch.device("cuda:0")
+                        else:
+                            gen_device = torch.device("cpu")
                 
                 # Ensure all inputs are on this device
                 inputs = {k: (v.to(gen_device) if isinstance(v, torch.Tensor) else v) 
                          for k, v in inputs.items()}
-            except:
-                # If device detection fails, use CUDA if available
+            except Exception as e:
+                # Last resort: use CUDA if available
                 if torch.cuda.is_available():
-                    inputs = {k: (v.cuda() if isinstance(v, torch.Tensor) else v) 
+                    gen_device = torch.device("cuda:0")
+                    inputs = {k: (v.to(gen_device) if isinstance(v, torch.Tensor) else v) 
+                             for k, v in inputs.items()}
+                else:
+                    gen_device = torch.device("cpu")
+                    inputs = {k: (v.cpu() if isinstance(v, torch.Tensor) else v) 
                              for k, v in inputs.items()}
             
             with torch.no_grad():
-                # Set the model's device explicitly if possible
-                try:
-                    # For quantized models, we might need to ensure the main device is set
-                    if hasattr(model, 'hf_device_map') and model.hf_device_map:
-                        # With device_map, the model might have parts on different devices
-                        # But the main input should go to the first device
-                        primary_device = None
-                        for key, value in model.hf_device_map.items():
-                            if isinstance(value, (int, torch.device)):
-                                primary_device = torch.device(f"cuda:{value}") if isinstance(value, int) else value
-                                break
-                        if primary_device:
-                            inputs = {k: (v.to(primary_device) if isinstance(v, torch.Tensor) else v) 
-                                     for k, v in inputs.items()}
-                except:
-                    pass
-                
                 outputs = model.generate(
                     **inputs,
                     max_new_tokens=max_tokens,
