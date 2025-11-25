@@ -479,7 +479,7 @@ class ModelSupportManager:
                     name="meta-llama/Llama-3.1-70B-Instruct",
                     size=ModelSize.LARGE,
                     backend=BackendType.HUGGINGFACE,
-                    quantization="4bit",
+                    quantization=None,
                     max_length=2048,
                     torch_dtype=torch.float16
                 ),
@@ -487,7 +487,7 @@ class ModelSupportManager:
                     name="meta-llama/Llama-3.1-70B",
                     size=ModelSize.LARGE,
                     backend=BackendType.HUGGINGFACE,
-                    quantization="4bit",
+                    quantization=None,
                     max_length=2048,
                     torch_dtype=torch.float16
                 ),
@@ -495,7 +495,7 @@ class ModelSupportManager:
                     name="meta-llama/Meta-Llama-3.1-70B-Instruct",
                     size=ModelSize.LARGE,
                     backend=BackendType.HUGGINGFACE,
-                    quantization="4bit",
+                    quantization=None,
                     max_length=2048,
                     torch_dtype=torch.float16
                 ),
