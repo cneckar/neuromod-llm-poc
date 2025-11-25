@@ -1062,8 +1062,10 @@ class QKScoreScalingEffect(BaseEffect):
                             if h_dim and single_dim == n_heads * h_dim:
                                 Q_reshaped = Q.view(batch_size, seq_len, n_heads, h_dim)
                                 # Apply scaling only to induction heads
+                                # FIX: Move mask to device
+                                mask_dev = mask.to(Q_reshaped.device)
                                 # CRITICAL: Ensure scale_vector matches Q's dtype to avoid dtype mismatch
-                                scale_vector = (1.0 + (scale - 1.0) * mask.view(1, 1, -1, 1)).to(Q_reshaped.dtype)
+                                scale_vector = (1.0 + (scale - 1.0) * mask_dev.view(1, 1, -1, 1)).to(Q_reshaped.dtype)
                                 Q_scaled = Q_reshaped * scale_vector
                                 Q = Q_scaled.view(batch_size, seq_len, single_dim)
                             else:
@@ -1084,8 +1086,10 @@ class QKScoreScalingEffect(BaseEffect):
                             if h_dim and hidden_dim == n_heads * h_dim:
                                 Q_reshaped = output.view(batch_size, seq_len, n_heads, h_dim)
                                 # Apply scaling only to induction heads
+                                # FIX: Move mask to device
+                                mask_dev = mask.to(Q_reshaped.device)
                                 # CRITICAL: Ensure scale_vector matches output's dtype to avoid dtype mismatch
-                                scale_vector = (1.0 + (scale - 1.0) * mask.view(1, 1, -1, 1)).to(output.dtype)
+                                scale_vector = (1.0 + (scale - 1.0) * mask_dev.view(1, 1, -1, 1)).to(output.dtype)
                                 Q_scaled = Q_reshaped * scale_vector
                                 return Q_scaled.view(batch_size, seq_len, hidden_dim)
                             else:
@@ -1771,6 +1775,9 @@ class SteeringEffect(BaseEffect):
         # Get or load the vector
         steering_vector = self.get_vector(hidden_size=hidden_size)
         
+        # FIX: Move vector to the same device as hidden_states
+        steering_vector = steering_vector.to(hidden_states.device)
+        
         # Calculate effective steering strength
         base_strength = 0.0
         max_strength = 0.3
@@ -1912,6 +1919,9 @@ class RandomDirectionEffect(BaseEffect):
         
         # Get or generate the random vector
         random_vector = self.get_vector(hidden_size=hidden_size)
+        
+        # FIX: Move to device
+        random_vector = random_vector.to(hidden_states.device)
         
         # Calculate effective steering strength
         base_strength = 0.0
@@ -2199,6 +2209,9 @@ class RandomOrthogonalSteeringEffect(BaseEffect):
         
         # Get or generate the orthogonal vector
         orthogonal_vector = self.get_vector(hidden_size=hidden_size)
+        
+        # FIX: Move to device
+        orthogonal_vector = orthogonal_vector.to(hidden_states.device)
         
         # Calculate effective steering strength
         base_strength = 0.0
