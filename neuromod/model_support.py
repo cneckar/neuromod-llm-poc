@@ -853,13 +853,15 @@ class ModelSupportManager:
             logger.info("DEVICE MODE: CPU (MPS detected on Mac - forcing CPU to avoid accelerate issues)")
             logger.info(f"CPU Memory Available: {self.system_info.available_memory_gb:.2f} GB / {self.system_info.total_memory_gb:.2f} GB")
             logger.info("=" * 60)
-        elif device_map == "cpu" or (device_map is None and self.test_mode):
-            # Test mode or explicit CPU mapping - use CPU
+        elif device_map == "cpu" or (device_map is None and self.test_mode and config.size == ModelSize.TINY):
+            # Test mode with TINY models or explicit CPU mapping - use CPU
             logger.info("=" * 60)
-            if self.test_mode:
-                logger.info("DEVICE MODE: CPU (Test mode - using CPU for faster tests)")
-            else:
+            if self.test_mode and config.size == ModelSize.TINY:
+                logger.info("DEVICE MODE: CPU (Test mode - using CPU for tiny models)")
+            elif device_map == "cpu":
                 logger.info("DEVICE MODE: CPU (Explicit CPU mapping)")
+            else:
+                logger.info("DEVICE MODE: CPU")
             logger.info(f"CPU Memory Available: {self.system_info.available_memory_gb:.2f} GB / {self.system_info.total_memory_gb:.2f} GB")
             logger.info("=" * 60)
         elif cuda_available:
@@ -1156,13 +1158,15 @@ class ModelSupportManager:
     
     def _get_device_map(self, config: ModelConfig) -> str:
         """Determine optimal device mapping"""
-        if self.test_mode:
-            return "cpu"  # Always use CPU in test mode
+        # In test mode, use CPU only for TINY models (truly fast tests)
+        # For SMALL+ models, use GPU even in test mode (CPU is actually slower)
+        if self.test_mode and config.size == ModelSize.TINY:
+            return "cpu"  # Use CPU for tiny models in test mode
         
         if self.system_info.gpu_count == 0:
             return "cpu"
         
-        # For production, use GPU if available
+        # For production or larger test models, use GPU if available
         if config.size in [ModelSize.TINY, ModelSize.SMALL]:
             return "auto"  # Let transformers decide
         else:
