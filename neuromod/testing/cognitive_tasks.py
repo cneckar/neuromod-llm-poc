@@ -314,7 +314,7 @@ class CognitiveTasksTest(BaseTest):
             print(f"  Problem: {problem.problem_text}")
             # Use configured token limit
             max_tokens = self.max_tokens_math
-            prompt = f"Solve this problem step by step. You have approximately {max_tokens} tokens to complete your response. Show your work: {problem.problem_text}"
+            prompt = f"Answer only with the final answer, no reasoning or explanation: {problem.problem_text}"
             response = self.generate_response_safe(prompt, max_tokens=max_tokens)
             result = self._evaluate_math_problem(problem, response)
             results["math_results"].append(result)
