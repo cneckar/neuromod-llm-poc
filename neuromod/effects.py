@@ -768,7 +768,8 @@ class QKScoreScalingEffect(BaseEffect):
             # Use a simple pattern that works across tokenizers
             # CRITICAL: Account for tokenizer prefixes (e.g., Ġthe vs the in GPT-2 style)
             # We'll use a pattern that's more robust to tokenization differences
-            calibration_prompt = "A B C D E F A"
+            # [FIX] Add leading space to ensure first and last 'A' match in Llama-3 tokenizer
+            calibration_prompt = " A B C D E F A"
             
             # Tokenize
             inputs = tokenizer(calibration_prompt, return_tensors="pt")
