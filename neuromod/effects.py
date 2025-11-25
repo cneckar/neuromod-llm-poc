@@ -1237,12 +1237,12 @@ class HeadMaskingDropoutEffect(BaseEffect):
                             
                             if self.dropout_type == "random":
                                 # Random head dropout
-                                head_mask = torch.rand(num_heads) > effective_dropout
+                                head_mask = (torch.rand(num_heads) > effective_dropout).to(attn_weights.device)
                                 head_mask = head_mask.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
                                 attn_weights = attn_weights * head_mask
                             elif self.dropout_type == "alternating":
                                 # Alternating head dropout
-                                head_mask = torch.arange(num_heads) % 2 == 0
+                                head_mask = (torch.arange(num_heads) % 2 == 0).to(attn_weights.device)
                                 head_mask = head_mask.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
                                 attn_weights = attn_weights * head_mask
                             
@@ -1519,13 +1519,15 @@ class AttentionOscillationEffect(BaseEffect):
                             # Create oscillation pattern
                             if self.oscillation_type == "sine":
                                 # Sine wave oscillation
-                                oscillation = torch.sin(torch.arange(seq_len) * 0.1) * effective_amplitude
+                                t = torch.arange(seq_len, device=attn_weights.device)
+                                oscillation = torch.sin(t * 0.1) * effective_amplitude
                                 oscillation = oscillation.unsqueeze(0).unsqueeze(0).unsqueeze(-1)
                                 attn_weights = attn_weights * (1.0 + oscillation)
                                 
                             elif self.oscillation_type == "square":
                                 # Square wave oscillation
-                                oscillation = (torch.arange(seq_len) % 20 < 10).float() * effective_amplitude
+                                t = torch.arange(seq_len, device=attn_weights.device)
+                                oscillation = (t % 20 < 10).float() * effective_amplitude
                                 oscillation = oscillation.unsqueeze(0).unsqueeze(0).unsqueeze(-1)
                                 attn_weights = attn_weights * (1.0 + oscillation)
                             
