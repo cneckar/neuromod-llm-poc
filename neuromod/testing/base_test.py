@@ -486,6 +486,11 @@ class BaseTest(ABC):
                                 raise e
                     else:
                         raise
+                finally:
+                    # Restore original method and torch.arange
+                    if original_prepare is not None:
+                        model.prepare_inputs_for_generation = original_prepare
+                    torch.arange = original_arange
             
             response = tokenizer.decode(outputs[0], skip_special_tokens=True)
             response = response[len(prompt):].strip()
