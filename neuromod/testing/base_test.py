@@ -412,11 +412,28 @@ class BaseTest(ABC):
                             for key, value in prepared.items():
                                 if isinstance(value, torch.Tensor) and value.device != device:
                                     prepared[key] = value.to(device)
+                        elif isinstance(prepared, torch.Tensor) and prepared.device != device:
+                            prepared = prepared.to(device)
                         
                         return prepared
                     
                     # Temporarily patch the method
                     model.prepare_inputs_for_generation = patched_prepare_inputs_for_generation
+                
+                # Also patch torch.arange to default to the model's device for position IDs
+                # This is a more aggressive fix that ensures any position IDs created are on GPU
+                original_arange = torch.arange
+                model_device = next(model.parameters()).device
+                
+                def patched_arange(*args, device=None, **kwargs):
+                    """Patched torch.arange that defaults to model device"""
+                    if device is None:
+                        # If no device specified, use the model's device
+                        device = model_device
+                    return original_arange(*args, device=device, **kwargs)
+                
+                # Temporarily patch torch.arange
+                torch.arange = patched_arange
                 
                 # Generate - HuggingFace should respect input tensor devices
                 # If it still creates position IDs on CPU, we'll catch and handle the error
@@ -436,9 +453,10 @@ class BaseTest(ABC):
                         **gen_kwargs
                     )
                 finally:
-                    # Restore original method
+                    # Restore original method and torch.arange
                     if original_prepare is not None:
                         model.prepare_inputs_for_generation = original_prepare
+                    torch.arange = original_arange
                 except RuntimeError as e:
                     if "Expected all tensors to be on the same device" in str(e):
                         # HuggingFace created internal tensors on CPU
