@@ -165,6 +165,16 @@ class BaseTest(ABC):
                 logits_processors = self.neuromod_tool.get_logits_processors()
                 gen_kwargs = self.neuromod_tool.get_generation_kwargs()
             
+            # Double-check that all inputs are on the correct device
+            if model is not None:
+                try:
+                    model_device = next(model.parameters()).device
+                    # Ensure all input tensors are on the model's device
+                    inputs = {k: (v.to(model_device) if isinstance(v, torch.Tensor) else v) 
+                             for k, v in inputs.items()}
+                except (StopIteration, AttributeError):
+                    pass  # Already handled above
+            
             # Use the same generation approach as the chat interface
             with torch.no_grad():
                 outputs = model.generate(
@@ -178,7 +188,7 @@ class BaseTest(ABC):
                     repetition_penalty=1.1,
                     no_repeat_ngram_size=2,
                     early_stopping=False,
-                    logits_processor=logits_processors,
+                    logits_processor=logits_processors if logits_processors else None,
                     **gen_kwargs
                 )
             

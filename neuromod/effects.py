@@ -292,6 +292,9 @@ class ContrastiveDecodingEffect(SamplerEffect):
             def __call__(self, input_ids, scores):
                 try:
                     with torch.no_grad():
+                        # Get device from scores (main model's device)
+                        device = scores.device
+                        
                         # Get small model logits
                         small_inputs = self.small_tokenizer(
                             self.small_tokenizer.decode(input_ids[0]), 
@@ -299,8 +302,20 @@ class ContrastiveDecodingEffect(SamplerEffect):
                             truncation=True, 
                             max_length=input_ids.shape[1]
                         )
-                        small_outputs = self.small_model(**small_inputs)
-                        small_logits = small_outputs.logits[:, -1, :]
+                        # Move small model inputs to the same device as scores
+                        small_inputs = {k: v.to(device) for k, v in small_inputs.items()}
+                        
+                        # Move small model to the same device
+                        small_model_device = next(self.small_model.parameters()).device
+                        if small_model_device != device:
+                            # If small model is on different device, we need to handle this
+                            # For now, try to move inputs to small model's device and move result back
+                            small_inputs = {k: v.to(small_model_device) for k, v in small_inputs.items()}
+                            small_outputs = self.small_model(**small_inputs)
+                            small_logits = small_outputs.logits[:, -1, :].to(device)
+                        else:
+                            small_outputs = self.small_model(**small_inputs)
+                            small_logits = small_outputs.logits[:, -1, :]
                         
                         # Apply contrastive decoding: scores = scores - alpha * small_logits
                         scores = scores - self.alpha * small_logits
