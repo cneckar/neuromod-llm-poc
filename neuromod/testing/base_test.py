@@ -138,7 +138,22 @@ class BaseTest(ABC):
                 raise ValueError("No tokenizer available")
                 
             inputs = tokenizer(prompt, return_tensors="pt", padding=True)
-            inputs = {k: v.cpu() for k, v in inputs.items()}
+            
+            # Move inputs to the same device as the model
+            if model is not None:
+                # Get device from model's first parameter
+                try:
+                    model_device = next(model.parameters()).device
+                    inputs = {k: v.to(model_device) for k, v in inputs.items()}
+                except (StopIteration, AttributeError):
+                    # Fallback: check if CUDA is available
+                    if torch.cuda.is_available():
+                        inputs = {k: v.cuda() for k, v in inputs.items()}
+                    else:
+                        inputs = {k: v.cpu() for k, v in inputs.items()}
+            else:
+                # No model loaded, use CPU
+                inputs = {k: v.cpu() for k, v in inputs.items()}
             
             # Get neuromodulation effects if available
             logits_processors = []

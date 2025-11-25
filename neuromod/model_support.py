@@ -120,6 +120,23 @@ class ModelSupportManager:
         self._try_fix_cuda_access()
         
         self.system_info = self._get_system_info()
+        
+        # Log system information after it's been initialized
+        logger.info(f"ModelSupportManager initialized in {'TEST' if self.test_mode else 'PRODUCTION'} mode")
+        logger.info(f"System: {self.system_info.platform}")
+        logger.info(f"CPU Memory: {self.system_info.available_memory_gb:.1f} GB available / {self.system_info.total_memory_gb:.1f} GB total")
+        if self.system_info.gpu_count > 0:
+            logger.info(f"GPU: {self.system_info.gpu_count} device(s) detected")
+            logger.info(f"GPU Memory: {self.system_info.gpu_memory_gb:.1f} GB per device")
+            if torch.cuda.is_available():
+                for i in range(self.system_info.gpu_count):
+                    try:
+                        logger.info(f"  - GPU {i}: {torch.cuda.get_device_name(i)}")
+                    except:
+                        logger.info(f"  - GPU {i}: Available")
+        else:
+            logger.info("GPU: No GPU detected")
+        
         self.loaded_models: Dict[str, Any] = {}
         self.model_configs = self._define_model_configs()
     
@@ -149,21 +166,6 @@ class ModelSupportManager:
                 logger.warning("=" * 60)
         except Exception as e:
             logger.debug(f"Could not check CUDA availability: {e}")
-        
-        logger.info(f"ModelSupportManager initialized in {'TEST' if test_mode else 'PRODUCTION'} mode")
-        logger.info(f"System: {self.system_info.platform}")
-        logger.info(f"CPU Memory: {self.system_info.available_memory_gb:.1f} GB available / {self.system_info.total_memory_gb:.1f} GB total")
-        if self.system_info.gpu_count > 0:
-            logger.info(f"GPU: {self.system_info.gpu_count} device(s) detected")
-            logger.info(f"GPU Memory: {self.system_info.gpu_memory_gb:.1f} GB per device")
-            if torch.cuda.is_available():
-                for i in range(self.system_info.gpu_count):
-                    try:
-                        logger.info(f"  - GPU {i}: {torch.cuda.get_device_name(i)}")
-                    except:
-                        logger.info(f"  - GPU {i}: Available")
-        else:
-            logger.info("GPU: No GPU detected")
     
     def _get_system_info(self) -> SystemInfo:
         """Get system resource information"""
@@ -286,7 +288,6 @@ class ModelSupportManager:
                 
                 # Also check PyTorch's bundled CUDA libraries
                 try:
-                    import torch
                     torch_path = os.path.dirname(torch.__file__)
                     torch_lib_path = os.path.join(torch_path, 'lib')
                     if os.path.exists(torch_lib_path):
@@ -726,6 +727,14 @@ class ModelSupportManager:
         except Exception as e:
             logger.debug(f"Could not check model config for pre-quantization: {e}")
         
+        # Determine CUDA availability early
+        cuda_available = False
+        try:
+            cuda_available = torch.cuda.is_available()
+        except Exception as e:
+            logger.debug(f"CUDA availability check failed: {e}")
+            cuda_available = False
+        
         # Setup quantization if specified and model is not pre-quantized
         quantization_config = None
         enable_cpu_offload = False
@@ -791,13 +800,6 @@ class ModelSupportManager:
         # Check if MPS is available to avoid accelerate issues on Mac
         # Only force CPU loading if we're on Mac with MPS (to avoid accelerate issues)
         # Otherwise, use GPU if CUDA is available
-        cuda_available = False
-        try:
-            cuda_available = torch.cuda.is_available()
-        except Exception as e:
-            logger.warning(f"CUDA availability check failed: {e}")
-            cuda_available = False
-        
         if hasattr(torch, 'mps') and torch.backends.mps.is_available():
             # Force CPU loading to avoid accelerate MPS issues on Mac
             device_map = None  # Don't use device_map at all
