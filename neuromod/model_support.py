@@ -965,11 +965,11 @@ class ModelSupportManager:
                 try:
                     # Try QuantoConfig for FP8 quantization (transformers>=4.37.0)
                     from transformers import QuantoConfig
-                    load_kwargs['quantization_config'] = QuantoConfig(weights="fp8")
+                    load_kwargs['quantization_config'] = QuantoConfig(weights="float8")
                     logger.info("Using FP8 quantization via QuantoConfig (requires H100 or compatible hardware)")
-                except (ImportError, AttributeError):
+                except (ImportError, AttributeError) as e:
                     # Fallback: try using dtype-based approach
-                    logger.warning("QuantoConfig not available for FP8, using bfloat16 as fallback")
+                    logger.warning(f"QuantoConfig not available for FP8 ({e}), using bfloat16 as fallback")
                     # Use bfloat16 which provides good performance on H100 hardware
                     load_kwargs['dtype'] = torch.bfloat16
                     quantization_config = None
