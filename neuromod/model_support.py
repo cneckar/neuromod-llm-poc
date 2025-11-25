@@ -913,7 +913,8 @@ class ModelSupportManager:
             'trust_remote_code': config.trust_remote_code,
             'low_cpu_mem_usage': kwargs.get('low_cpu_mem_usage', config.low_cpu_mem_usage),
             'use_safetensors': True,  # Prefer safetensors format
-            **{k: v for k, v in kwargs.items() if k not in ['low_cpu_mem_usage', 'device_map', 'use_safetensors', 'torch_dtype', 'dtype']}
+            'attn_implementation': 'eager',  # FIX: Force eager attention to support output_attentions=True for induction head detection
+            **{k: v for k, v in kwargs.items() if k not in ['low_cpu_mem_usage', 'device_map', 'use_safetensors', 'torch_dtype', 'dtype', 'attn_implementation']}
         }
         
         # Only set dtype if model is not pre-quantized
