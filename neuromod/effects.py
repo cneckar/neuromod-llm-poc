@@ -1235,14 +1235,17 @@ class HeadMaskingDropoutEffect(BaseEffect):
                             # Create head mask
                             batch_size, num_heads, seq_len, seq_len = attn_weights.shape
                             
+                            # [FIX] Move generated masks to the same device as attn_weights
                             if self.dropout_type == "random":
                                 # Random head dropout
-                                head_mask = (torch.rand(num_heads) > effective_dropout).to(attn_weights.device)
+                                mask_tensor = torch.rand(num_heads, device=attn_weights.device)
+                                head_mask = mask_tensor > effective_dropout
                                 head_mask = head_mask.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
                                 attn_weights = attn_weights * head_mask
                             elif self.dropout_type == "alternating":
                                 # Alternating head dropout
-                                head_mask = (torch.arange(num_heads) % 2 == 0).to(attn_weights.device)
+                                mask_indices = torch.arange(num_heads, device=attn_weights.device)
+                                head_mask = mask_indices % 2 == 0
                                 head_mask = head_mask.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
                                 attn_weights = attn_weights * head_mask
                             
@@ -3922,7 +3925,8 @@ class ActivationAdditionsEffect(BaseEffect):
         
         # Get steering vector
         steering_vector = self.steering_vectors[self.steering_type]
-        # FIX: Move vector to device
+        
+        # [FIX] Move to device
         steering_vector = steering_vector.to(hidden_states.device)
         
         # Calculate effective steering strength
@@ -3978,7 +3982,8 @@ class ActivationAdditionsEffect(BaseEffect):
                         # Apply steering vector to the last token's hidden state
                         if self.steering_type in self.steering_vectors:
                             steering_vector = self.steering_vectors[self.steering_type]
-                            # FIX: Move vector to device
+                            
+                            # [FIX] Move steering vector to hidden_states device
                             steering_vector = steering_vector.to(hidden_states.device)
                             steering_effect = steering_vector.unsqueeze(0).unsqueeze(0) * effective_strength
                             
@@ -4078,7 +4083,8 @@ class SoftProjectionEffect(BaseEffect):
                         # Apply projection matrix
                         if self.projection_type in self.projections:
                             projection = self.projections[self.projection_type]
-                            # FIX: Move projection matrix to device
+                            
+                            # [FIX] Move projection matrix to device
                             projection = projection.to(hidden_states.device)
                             # Soft projection: h = h + α * P * h
                             projected = torch.matmul(hidden_states, projection.T)
