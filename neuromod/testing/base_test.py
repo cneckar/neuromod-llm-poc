@@ -239,8 +239,46 @@ class BaseTest(ABC):
                         inputs = {k: (v.cuda() if isinstance(v, torch.Tensor) else v) 
                                  for k, v in inputs.items()}
             
+            # Ensure model is in eval mode and on the correct device
+            if hasattr(model, 'eval'):
+                model.eval()
+            
             # Use the same generation approach as the chat interface
+            # Explicitly set device for generation
+            try:
+                # Get device one more time right before generation
+                if hasattr(model, 'device'):
+                    gen_device = model.device
+                else:
+                    gen_device = next(model.parameters()).device
+                
+                # Ensure all inputs are on this device
+                inputs = {k: (v.to(gen_device) if isinstance(v, torch.Tensor) else v) 
+                         for k, v in inputs.items()}
+            except:
+                # If device detection fails, use CUDA if available
+                if torch.cuda.is_available():
+                    inputs = {k: (v.cuda() if isinstance(v, torch.Tensor) else v) 
+                             for k, v in inputs.items()}
+            
             with torch.no_grad():
+                # Set the model's device explicitly if possible
+                try:
+                    # For quantized models, we might need to ensure the main device is set
+                    if hasattr(model, 'hf_device_map') and model.hf_device_map:
+                        # With device_map, the model might have parts on different devices
+                        # But the main input should go to the first device
+                        primary_device = None
+                        for key, value in model.hf_device_map.items():
+                            if isinstance(value, (int, torch.device)):
+                                primary_device = torch.device(f"cuda:{value}") if isinstance(value, int) else value
+                                break
+                        if primary_device:
+                            inputs = {k: (v.to(primary_device) if isinstance(v, torch.Tensor) else v) 
+                                     for k, v in inputs.items()}
+                except:
+                    pass
+                
                 outputs = model.generate(
                     **inputs,
                     max_new_tokens=max_tokens,
@@ -266,7 +304,32 @@ class BaseTest(ABC):
             return response if response else "0"
             
         except Exception as e:
-            print(f"Generation error: {e}")
+            error_msg = str(e)
+            print(f"Generation error: {error_msg}")
+            
+            # If it's a device mismatch, provide more debugging info
+            if "device" in error_msg.lower() and ("cuda" in error_msg.lower() or "cpu" in error_msg.lower()):
+                try:
+                    if model is not None:
+                        model_devices = set()
+                        try:
+                            for param in model.parameters():
+                                model_devices.add(str(param.device))
+                        except:
+                            pass
+                        
+                        input_devices = set()
+                        for k, v in inputs.items():
+                            if isinstance(v, torch.Tensor):
+                                input_devices.add(str(v.device))
+                        
+                        print(f"[DEBUG] Model parameter devices: {model_devices}")
+                        print(f"[DEBUG] Input tensor devices: {input_devices}")
+                        if hasattr(model, 'hf_device_map'):
+                            print(f"[DEBUG] Model device_map: {model.hf_device_map}")
+                except:
+                    pass
+            
             return "0"
     
     def _generate_with_probe_monitoring(self, inputs, max_tokens, logits_processors, gen_kwargs):
