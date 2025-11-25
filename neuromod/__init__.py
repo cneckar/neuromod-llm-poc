@@ -1,3 +1,14 @@
+import os
+import logging
+
+# [FIX] Suppress PyTensor C++ warnings by disabling C++ compilation
+# This must be set before importing libraries that use PyTensor (like PyMC)
+os.environ.setdefault("PYTENSOR_FLAGS", "cxx=")
+
+# [FIX] Suppress noisy libraries
+logging.getLogger("pytensor.configdefaults").setLevel(logging.ERROR)
+logging.getLogger("arviz").setLevel(logging.ERROR)
+
 from .pack_system import PackRegistry
 from .neuromod_tool import NeuromodTool
 from .emotion_system import EmotionSystem, EmotionState
