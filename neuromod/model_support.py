@@ -483,6 +483,14 @@ class ModelSupportManager:
                     max_length=2048,
                     torch_dtype=torch.float16
                 ),
+                "meta-llama/Llama-3.1-70B": ModelConfig(
+                    name="meta-llama/Llama-3.1-70B",
+                    size=ModelSize.LARGE,
+                    backend=BackendType.HUGGINGFACE,
+                    quantization="4bit",
+                    max_length=2048,
+                    torch_dtype=torch.float16
+                ),
                 "meta-llama/Llama-4-Scout-17B-16E-Instruct": ModelConfig(
                     name="meta-llama/Llama-4-Scout-17B-16E-Instruct",
                     size=ModelSize.MEDIUM,
@@ -1249,6 +1257,7 @@ def get_attention_hook_paths(model_name: str) -> Dict[str, str]:
         "meta-llama/Llama-3.1-8B-Instruct": "model.layers.{}.self_attn",
         "meta-llama/Llama-3.1-70B": "model.layers.{}.self_attn",
         "meta-llama/Llama-3.1-70B-Instruct": "model.layers.{}.self_attn",
+        "meta-llama/Meta-Llama-3-70B": "model.layers.{}.self_attn",
         "meta-llama/Llama-4-Scout-17B-16E-Instruct": "model.layers.{}.self_attn",
         "Qwen/Qwen-2.5-7B": "model.layers.{}.self_attn",
         "Qwen/Qwen2.5-32B": "model.layers.{}.self_attn",
