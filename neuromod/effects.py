@@ -3922,6 +3922,8 @@ class ActivationAdditionsEffect(BaseEffect):
         
         # Get steering vector
         steering_vector = self.steering_vectors[self.steering_type]
+        # FIX: Move vector to device
+        steering_vector = steering_vector.to(hidden_states.device)
         
         # Calculate effective steering strength
         base_strength = 0.0
@@ -3976,6 +3978,8 @@ class ActivationAdditionsEffect(BaseEffect):
                         # Apply steering vector to the last token's hidden state
                         if self.steering_type in self.steering_vectors:
                             steering_vector = self.steering_vectors[self.steering_type]
+                            # FIX: Move vector to device
+                            steering_vector = steering_vector.to(hidden_states.device)
                             steering_effect = steering_vector.unsqueeze(0).unsqueeze(0) * effective_strength
                             
                             # Apply to last token position
@@ -4074,6 +4078,8 @@ class SoftProjectionEffect(BaseEffect):
                         # Apply projection matrix
                         if self.projection_type in self.projections:
                             projection = self.projections[self.projection_type]
+                            # FIX: Move projection matrix to device
+                            projection = projection.to(hidden_states.device)
                             # Soft projection: h = h + α * P * h
                             projected = torch.matmul(hidden_states, projection.T)
                             hidden_states = hidden_states + effective_strength * projected
