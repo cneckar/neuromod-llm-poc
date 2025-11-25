@@ -878,18 +878,18 @@ class ModelSupportManager:
             'trust_remote_code': config.trust_remote_code,
             'low_cpu_mem_usage': kwargs.get('low_cpu_mem_usage', config.low_cpu_mem_usage),
             'use_safetensors': True,  # Prefer safetensors format
-            **{k: v for k, v in kwargs.items() if k not in ['low_cpu_mem_usage', 'device_map', 'use_safetensors', 'torch_dtype']}
+            **{k: v for k, v in kwargs.items() if k not in ['low_cpu_mem_usage', 'device_map', 'use_safetensors', 'torch_dtype', 'dtype']}
         }
         
-        # Only set torch_dtype if model is not pre-quantized
+        # Only set dtype if model is not pre-quantized
         # Pre-quantized models (like GPT-OSS with Mxfp4Config) have their own dtype
         if not is_pre_quantized:
-            load_kwargs['torch_dtype'] = torch_dtype
+            load_kwargs['dtype'] = torch_dtype
         else:
             # For pre-quantized models, use the dtype from config but let the model decide
             # GPT-OSS models with Mxfp4Config use bfloat16 internally
             if 'gpt-oss' in config.name.lower():
-                load_kwargs['torch_dtype'] = torch.bfloat16
+                load_kwargs['dtype'] = torch.bfloat16
                 logger.info(f"Using bfloat16 for GPT-OSS model {config.name} (Mxfp4Config requires bfloat16)")
             elif model_config is not None:
                 # For other pre-quantized models, try to detect from config
@@ -897,15 +897,15 @@ class ModelSupportManager:
                     if hasattr(model_config, 'torch_dtype') and model_config.torch_dtype is not None:
                         dtype_str = str(model_config.torch_dtype).replace('torch.', '')
                         if hasattr(torch, dtype_str):
-                            load_kwargs['torch_dtype'] = getattr(torch, dtype_str)
+                            load_kwargs['dtype'] = getattr(torch, dtype_str)
                         else:
-                            load_kwargs['torch_dtype'] = torch_dtype
+                            load_kwargs['dtype'] = torch_dtype
                     else:
-                        load_kwargs['torch_dtype'] = torch_dtype
+                        load_kwargs['dtype'] = torch_dtype
                 except:
-                    load_kwargs['torch_dtype'] = torch_dtype
+                    load_kwargs['dtype'] = torch_dtype
             else:
-                load_kwargs['torch_dtype'] = torch_dtype
+                load_kwargs['dtype'] = torch_dtype
         
         # Add quantization config if available
         if quantization_config is not None:

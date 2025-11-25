@@ -38,7 +38,7 @@ def demo_probes_with_neuromodulation():
     
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
-        torch_dtype=torch.float32,
+        dtype=torch.float32,
         device_map="cpu",
         trust_remote_code=True,
         low_cpu_mem_usage=True

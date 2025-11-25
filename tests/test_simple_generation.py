@@ -39,7 +39,7 @@ class TestSimpleGeneration(unittest.TestCase):
             tokenizer = AutoTokenizer.from_pretrained(self.model_name)
             model = AutoModelForCausalLM.from_pretrained(
                 self.model_name, 
-                torch_dtype=torch.float32,
+                dtype=torch.float32,
                 device_map=None  # Don't use device_map to avoid accelerate
             )
             
@@ -84,7 +84,7 @@ class TestSimpleGeneration(unittest.TestCase):
             tokenizer = AutoTokenizer.from_pretrained(self.model_name)
             model = AutoModelForCausalLM.from_pretrained(
                 self.model_name,
-                torch_dtype=torch.float32,
+                dtype=torch.float32,
                 device_map=None
             )
             
@@ -126,7 +126,7 @@ class TestSimpleGeneration(unittest.TestCase):
             tokenizer = AutoTokenizer.from_pretrained(model_name)
             model = AutoModelForCausalLM.from_pretrained(
                 model_name,
-                torch_dtype=torch.float32,
+                dtype=torch.float32,
                 device_map=None
             )
             model = model.to(device)
@@ -171,7 +171,7 @@ class TestSimpleGeneration(unittest.TestCase):
             tokenizer = AutoTokenizer.from_pretrained(self.model_name)
             model = AutoModelForCausalLM.from_pretrained(
                 self.model_name,
-                torch_dtype=torch.float32,
+                dtype=torch.float32,
                 device_map=None
             )
             model = model.to(self.device)

@@ -116,14 +116,14 @@ class TestModelLoading(unittest.TestCase):
                     if not hasattr(torch, 'mps') or not torch.backends.mps.is_available():
                         model = AutoModelForCausalLM.from_pretrained(
                             model_name,
-                            torch_dtype=torch.float32,
+                            dtype=torch.float32,
                             trust_remote_code=True,
                             low_cpu_mem_usage=False
                         )
                     else:
                         model = AutoModelForCausalLM.from_pretrained(
                             model_name,
-                            torch_dtype=torch.float32,
+                            dtype=torch.float32,
                             device_map="cpu",
                             trust_remote_code=True,
                             low_cpu_mem_usage=True
@@ -155,14 +155,14 @@ class TestModelLoading(unittest.TestCase):
             if not hasattr(torch, 'mps') or not torch.backends.mps.is_available():
                 model = AutoModelForCausalLM.from_pretrained(
                     model_name,
-                    torch_dtype=torch.float32,
+                    dtype=torch.float32,
                     trust_remote_code=True,
                     low_cpu_mem_usage=False
                 )
             else:
                 model = AutoModelForCausalLM.from_pretrained(
                     model_name,
-                    torch_dtype=torch.float32,
+                    dtype=torch.float32,
                     device_map="cpu",
                     trust_remote_code=True,
                     low_cpu_mem_usage=True

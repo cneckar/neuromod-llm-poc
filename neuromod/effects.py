@@ -269,7 +269,7 @@ class ContrastiveDecodingEffect(SamplerEffect):
                 
             self.small_model = AutoModelForCausalLM.from_pretrained(
                 self.small_model_name, 
-                torch_dtype=torch.float32, 
+                dtype=torch.float32, 
                 device_map='cpu'
             )
             self.small_model.eval()

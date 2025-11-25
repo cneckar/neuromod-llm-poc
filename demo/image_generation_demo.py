@@ -55,7 +55,7 @@ class ImageNeuromodInterface:
             # Load pipeline with memory optimizations
             self.pipeline = StableDiffusionPipeline.from_pretrained(
                 self.model_name,
-                torch_dtype=torch.float32,  # Use float32 for CPU compatibility
+                dtype=torch.float32,  # Use float32 for CPU compatibility
                 use_safetensors=True,
                 safety_checker=None,  # Disable safety checker for research
                 requires_safety_checker=False

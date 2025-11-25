@@ -128,7 +128,7 @@ def load_model():
         
         load_kwargs = {
             'device_map': "auto",
-            'torch_dtype': model_dtype,
+            'dtype': model_dtype,
             'trust_remote_code': True
         }
         

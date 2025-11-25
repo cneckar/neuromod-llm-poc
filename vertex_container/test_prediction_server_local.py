@@ -61,7 +61,7 @@ def test_model_loading():
         # Load model with minimal settings
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
-            torch_dtype=torch.float32,
+            dtype=torch.float32,
             device_map="cpu",  # Use CPU for testing
             trust_remote_code=True,
             low_cpu_mem_usage=True

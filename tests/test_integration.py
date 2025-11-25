@@ -200,7 +200,7 @@ class TestModelIntegration(unittest.TestCase):
             
             model = AutoModelForCausalLM.from_pretrained(
                 'gpt2',
-                torch_dtype=torch.float32,
+                dtype=torch.float32,
                 device_map='cpu',
                 trust_remote_code=True,
                 low_cpu_mem_usage=True

@@ -22,11 +22,11 @@ git clone https://github.com/cneckar/neuromod-llm-poc.git
 cd neuromod-llm-poc
 
 # Create virtual environment
-python -m venv venv
+python -m venv venv --system-site-packages
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r requirements.txt --no-deps
 pip install -e .
 
 # Set up Hugging Face credentials (required for Llama models)
