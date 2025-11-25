@@ -117,6 +117,9 @@ class StoryEmotionTest(BaseTest):
             # Generate story continuation
             generated_text = self.generate_response_safe(prompt_text, self.max_tokens)
             
+            # Track emotion change from the generated text
+            self.track_emotion_change(generated_text, f"Generated story continuation for: {prompt_name}")
+            
             # Get current emotion state
             current_emotions = self._get_current_emotion_state()
             
@@ -152,24 +155,30 @@ class StoryEmotionTest(BaseTest):
         try:
             summary = self.get_emotion_summary()
             
+            # Check if there's an error (no emotion data)
+            if 'error' in summary:
+                return {'valence_trend': 'unknown', 'emotion_changes': 'unknown', 'error': summary['error']}
+            
             # Extract key emotion changes
             emotion_changes = []
-            for emotion in ['joy', 'sadness', 'anger', 'fear', 'surprise', 'anticipation']:
-                counts = summary['emotion_changes'][emotion]
-                if counts['up'] > 0 or counts['down'] > 0:
-                    emotion_changes.append(f"{emotion}: {counts['up']} up, {counts['down']} down")
+            if 'emotion_changes' in summary:
+                for emotion in ['joy', 'sadness', 'anger', 'fear', 'surprise', 'anticipation']:
+                    if emotion in summary['emotion_changes']:
+                        counts = summary['emotion_changes'][emotion]
+                        if counts.get('up', 0) > 0 or counts.get('down', 0) > 0:
+                            emotion_changes.append(f"{emotion}: {counts.get('up', 0)} up, {counts.get('down', 0)} down")
             
             if not emotion_changes:
                 emotion_changes.append("stable")
             
             return {
-                'valence_trend': summary['valence_trend'],
+                'valence_trend': summary.get('valence_trend', 'unknown'),
                 'emotion_changes': ', '.join(emotion_changes),
-                'total_assessments': summary['total_assessments'],
-                'confidence': summary['average_confidence']
+                'total_assessments': summary.get('total_assessments', 0),
+                'confidence': summary.get('average_confidence', 0.0)
             }
-        except:
-            return {'valence_trend': 'unknown', 'emotion_changes': 'unknown'}
+        except Exception as e:
+            return {'valence_trend': 'unknown', 'emotion_changes': 'unknown', 'error': str(e)}
     
     def run_single_prompt_test(self, prompt_name: str, neuromod_tool=None) -> StoryTestResult:
         """Run a test with a single story prompt"""
