@@ -960,15 +960,23 @@ class ModelSupportManager:
         # Add quantization config if available
         if quantization_config is not None:
             if quantization_config == "fp8":
-                # FP8 quantization - use transformers' native FP8 support
-                # This requires transformers>=4.37.0 and hardware with FP8 support (H100+)
+                # FP8 quantization - requires optimum-quanto library
+                # This requires optimum-quanto>=0.1.0 and hardware with FP8 support (H100/H200)
                 try:
-                    # Try QuantoConfig for FP8 quantization (transformers>=4.37.0)
-                    from transformers import QuantoConfig
+                    # Try importing QuantoConfig from optimum.quanto
+                    try:
+                        from optimum.quanto import QuantoConfig
+                    except ImportError:
+                        # Fallback: try transformers import (may not work without optimum-quanto)
+                        from transformers import QuantoConfig
                     load_kwargs['quantization_config'] = QuantoConfig(weights="float8")
-                    logger.info("Using FP8 quantization via QuantoConfig (requires H100 or compatible hardware)")
+                    logger.info("Using FP8 quantization via QuantoConfig (requires H100/H200 or compatible hardware)")
                 except (ImportError, AttributeError) as e:
                     # Fallback: try using dtype-based approach
+                    error_msg = str(e)
+                    if "optimum-quanto" in error_msg.lower():
+                        logger.error(f"FP8 quantization requires optimum-quanto library. Install with: pip install optimum-quanto")
+                        raise RuntimeError(f"FP8 quantization requires optimum-quanto library. Install with: pip install optimum-quanto") from e
                     logger.warning(f"QuantoConfig not available for FP8 ({e}), using bfloat16 as fallback")
                     # Use bfloat16 which provides good performance on H100 hardware
                     load_kwargs['dtype'] = torch.bfloat16
