@@ -136,8 +136,46 @@ class BaseTest(ABC):
             
             if tokenizer is None:
                 raise ValueError("No tokenizer available")
-                
+            
+            # Determine the device where inputs should be created
+            # For quantized models with device_map, we need to find the primary device
+            input_device = None
+            if model is not None:
+                try:
+                    if hasattr(model, 'hf_device_map') and model.hf_device_map:
+                        # For device_map models, find the primary device
+                        device_map = model.hf_device_map
+                        for key in ['', 'model.embed_tokens', 'model', 0]:
+                            if key in device_map:
+                                dev = device_map[key]
+                                if isinstance(dev, int):
+                                    input_device = torch.device(f"cuda:{dev}")
+                                elif isinstance(dev, torch.device):
+                                    input_device = dev
+                                elif isinstance(dev, str):
+                                    input_device = torch.device(dev)
+                                break
+                        if input_device is None and device_map:
+                            first_val = next(iter(device_map.values()))
+                            if isinstance(first_val, int):
+                                input_device = torch.device(f"cuda:{first_val}")
+                            elif isinstance(first_val, torch.device):
+                                input_device = first_val
+                    else:
+                        # For non-device_map models, get device from parameters
+                        input_device = next(model.parameters()).device
+                except (StopIteration, AttributeError):
+                    if torch.cuda.is_available():
+                        input_device = torch.device("cuda:0")
+                    else:
+                        input_device = torch.device("cpu")
+            else:
+                input_device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+            
+            # Tokenize and immediately move to the correct device
+            # This ensures position IDs and other internal tensors are created on the right device
             inputs = tokenizer(prompt, return_tensors="pt", padding=True)
+            inputs = {k: (v.to(input_device) if isinstance(v, torch.Tensor) else v) for k, v in inputs.items()}
             
             # Move inputs to the same device as the model
             if model is not None:
@@ -303,20 +341,104 @@ class BaseTest(ABC):
                              for k, v in inputs.items()}
             
             with torch.no_grad():
-                outputs = model.generate(
-                    **inputs,
-                    max_new_tokens=max_tokens,
-                    temperature=0.7,
-                    do_sample=True,
-                    pad_token_id=tokenizer.eos_token_id,
-                    eos_token_id=tokenizer.eos_token_id,
-                    use_cache=False,
-                    repetition_penalty=1.1,
-                    no_repeat_ngram_size=2,
-                    early_stopping=False,
-                    logits_processor=logits_processors if logits_processors else None,
-                    **gen_kwargs
-                )
+                # For quantized models with device_map, HuggingFace may create internal tensors on CPU
+                # We need to ensure all generation happens on the model's device
+                # Set the device explicitly for generation
+                try:
+                    # Get the primary device from the model
+                    if hasattr(model, 'hf_device_map') and model.hf_device_map:
+                        # For device_map models, use the primary device
+                        primary_device = None
+                        for key, value in model.hf_device_map.items():
+                            if isinstance(value, (int, torch.device)):
+                                primary_device = torch.device(f"cuda:{value}") if isinstance(value, int) else value
+                                break
+                        if primary_device is None:
+                            primary_device = next(model.parameters()).device
+                    else:
+                        primary_device = next(model.parameters()).device
+                    
+                    # Ensure inputs are on the primary device
+                    inputs = {k: (v.to(primary_device) if isinstance(v, torch.Tensor) else v) 
+                             for k, v in inputs.items()}
+                    
+                    # Force HuggingFace to use the correct device by setting it in the model's config
+                    # This helps ensure position IDs and other internal tensors are created on the right device
+                    original_device = getattr(model, 'device', None)
+                    if not hasattr(model, 'device'):
+                        # For device_map models, we can't set a single device, but we can ensure
+                        # the generation kwargs use the right device
+                        pass
+                    
+                except Exception as e:
+                    # If device detection fails, just proceed with inputs as-is
+                    logger.warning(f"Device detection failed, proceeding anyway: {e}")
+                
+                # Generate with explicit device handling
+                # For quantized models with device_map, HuggingFace may create position IDs on CPU
+                # We need to ensure the model knows which device to use for internal tensors
+                # Try to set a device attribute on the model if it doesn't exist
+                if hasattr(model, 'hf_device_map') and model.hf_device_map and not hasattr(model, 'device'):
+                    # For device_map models, set a device attribute to help HuggingFace
+                    try:
+                        primary_device = None
+                        for key, value in model.hf_device_map.items():
+                            if isinstance(value, (int, torch.device)):
+                                primary_device = torch.device(f"cuda:{value}") if isinstance(value, int) else value
+                                break
+                        if primary_device is None:
+                            primary_device = next(model.parameters()).device
+                        # Set device attribute to help HuggingFace create tensors on the right device
+                        model.device = primary_device
+                    except:
+                        pass
+                
+                # Generate - HuggingFace should respect input tensor devices
+                # If it still creates position IDs on CPU, we'll catch and handle the error
+                try:
+                    outputs = model.generate(
+                        **inputs,
+                        max_new_tokens=max_tokens,
+                        temperature=0.7,
+                        do_sample=True,
+                        pad_token_id=tokenizer.eos_token_id,
+                        eos_token_id=tokenizer.eos_token_id,
+                        use_cache=False,
+                        repetition_penalty=1.1,
+                        no_repeat_ngram_size=2,
+                        early_stopping=False,
+                        logits_processor=logits_processors if logits_processors else None,
+                        **gen_kwargs
+                    )
+                except RuntimeError as e:
+                    if "Expected all tensors to be on the same device" in str(e):
+                        # HuggingFace created internal tensors on CPU
+                        # Try to work around by ensuring model has device attribute
+                        if hasattr(model, 'hf_device_map') and model.hf_device_map:
+                            # Force device attribute
+                            try:
+                                primary_device = next(model.parameters()).device
+                                model.device = primary_device
+                                # Retry generation
+                                outputs = model.generate(
+                                    **inputs,
+                                    max_new_tokens=max_tokens,
+                                    temperature=0.7,
+                                    do_sample=True,
+                                    pad_token_id=tokenizer.eos_token_id,
+                                    eos_token_id=tokenizer.eos_token_id,
+                                    use_cache=False,
+                                    repetition_penalty=1.1,
+                                    no_repeat_ngram_size=2,
+                                    early_stopping=False,
+                                    logits_processor=logits_processors if logits_processors else None,
+                                    **gen_kwargs
+                                )
+                            except Exception as e2:
+                                # If retry fails, raise original error
+                                raise e
+                    else:
+                        raise
             
             response = tokenizer.decode(outputs[0], skip_special_tokens=True)
             response = response[len(prompt):].strip()
