@@ -122,6 +122,13 @@ class BaseTest(ABC):
     def set_neuromod_tool(self, neuromod_tool):
         """Set the neuromodulation tool for this test"""
         self.neuromod_tool = neuromod_tool
+    
+    def set_model(self, model, tokenizer, model_manager=None):
+        """Set a pre-loaded model and tokenizer (avoids reloading)"""
+        self.model = model
+        self.tokenizer = tokenizer
+        if model_manager is not None:
+            self.model_manager = model_manager
 
     def generate_response_safe(self, prompt: str, max_tokens: int = 5) -> str:
         """Generate response with very safe settings and probe monitoring"""

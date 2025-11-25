@@ -40,6 +40,7 @@ from neuromod.testing.telemetry import TelemetryCollector
 from neuromod.testing.off_target_monitor import OffTargetMonitor
 from neuromod.neuromod_tool import NeuromodTool
 from neuromod.pack_system import PackRegistry
+from neuromod.model_support import create_model_support
 
 
 class EndpointRunner:
@@ -50,6 +51,64 @@ class EndpointRunner:
         self.test_mode = test_mode
         self.calculator = EndpointCalculator()
         self.pack_registry = PackRegistry("packs/config.json")
+        
+        # Shared model resources (loaded once, reused across all tests)
+        self.shared_model = None
+        self.shared_tokenizer = None
+        self.shared_model_manager = None
+        self._model_loaded = False
+    
+    def _load_shared_model(self):
+        """Load the model once to be shared across all tests"""
+        if self._model_loaded:
+            return
+        
+        print(f"\n[*] Loading model {self.model_name} (this may take a while for large models)...")
+        print(f"[*] Model will be reused across all tests to save time")
+        
+        try:
+            # Create model support manager
+            self.shared_model_manager = create_model_support(test_mode=self.test_mode)
+            
+            # Load model using centralized system
+            self.shared_model, self.shared_tokenizer, model_info = self.shared_model_manager.load_model(
+                self.model_name
+            )
+            
+            print(f"✅ Model loaded successfully")
+            print(f"   Backend: {model_info.get('backend', 'unknown')}")
+            print(f"   Size: {model_info.get('size', 'unknown')}")
+            print(f"   Parameters: {model_info.get('parameters', 'unknown')}")
+            print(f"   Model will be reused for all tests\n")
+            
+            self._model_loaded = True
+        except Exception as e:
+            print(f"❌ Failed to load model: {e}")
+            raise
+    
+    def _cleanup_shared_model(self):
+        """Clean up the shared model resources"""
+        if not self._model_loaded:
+            return
+        
+        print(f"\n[*] Cleaning up shared model resources...")
+        
+        if self.shared_model_manager:
+            self.shared_model_manager.cleanup()
+        
+        # Clear references
+        self.shared_model = None
+        self.shared_tokenizer = None
+        self.shared_model_manager = None
+        self._model_loaded = False
+        
+        # Force garbage collection
+        import gc
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        
+        print(f"✅ Shared model cleaned up")
     
     def _create_neuromod_tool_for_test(self, test, pack_name: str):
         """Create a neuromod tool using the test's model and apply the pack"""
@@ -165,6 +224,9 @@ class EndpointRunner:
         """Run all relevant tests for a pack and return results"""
         print(f"\n[*] Running tests for pack: {pack_name}")
         
+        # Load shared model if not already loaded
+        self._load_shared_model()
+        
         results = {}
         
         # Check if pack exists
@@ -191,7 +253,8 @@ class EndpointRunner:
                 try:
                     adq_test = ADQTest(self.model_name)
                     adq_test.test_mode = self.test_mode
-                    adq_test.load_model()
+                    # Use shared model instead of loading
+                    adq_test.set_model(self.shared_model, self.shared_tokenizer, self.shared_model_manager)
                     neuromod_tool = self._create_neuromod_tool_for_test(adq_test, pack_name)
                     if pack_name == "amphetamine":
                         print("  [DEBUG] Running ADQ-20 for amphetamine pack with verbose logging")
@@ -202,7 +265,7 @@ class EndpointRunner:
                         if 'adq_results' in adq_results:
                             print(f"  [DEBUG] Total responses: {adq_results['adq_results'].get('total_responses', 0)}")
                     results["ADQ-20"] = adq_results
-                    adq_test.cleanup()
+                    # Don't cleanup - model is shared
                 except Exception as e:
                     print(f"  ❌ ADQ-20 failed: {e}")
                     if pack_name == "amphetamine":
@@ -223,11 +286,12 @@ class EndpointRunner:
                 try:
                     pdq_test = PDQTest(self.model_name)
                     pdq_test.test_mode = self.test_mode
-                    pdq_test.load_model()
+                    # Use shared model instead of loading
+                    pdq_test.set_model(self.shared_model, self.shared_tokenizer, self.shared_model_manager)
                     neuromod_tool = self._create_neuromod_tool_for_test(pdq_test, pack_name)
                     pdq_results = pdq_test.run_test(neuromod_tool=neuromod_tool)
                     results["PDQ-S"] = pdq_results
-                    pdq_test.cleanup()
+                    # Don't cleanup - model is shared
                 except Exception as e:
                     print(f"  ❌ PDQ-S failed: {e}")
         
@@ -244,7 +308,8 @@ class EndpointRunner:
                 try:
                     pcq_test = PCQPopTest(self.model_name)
                     pcq_test.test_mode = self.test_mode
-                    pcq_test.load_model()
+                    # Use shared model instead of loading
+                    pcq_test.set_model(self.shared_model, self.shared_tokenizer, self.shared_model_manager)
                     neuromod_tool = self._create_neuromod_tool_for_test(pcq_test, pack_name)
                     if pack_name == "amphetamine":
                         print("  [DEBUG] Running PCQ-POP-20 for amphetamine pack with verbose logging")
@@ -255,7 +320,7 @@ class EndpointRunner:
                         if 'sets' in pcq_results:
                             print(f"  [DEBUG] Number of sets completed: {len(pcq_results.get('sets', []))}")
                     results["PCQ-POP-20"] = pcq_results
-                    pcq_test.cleanup()
+                    # Don't cleanup - model is shared
                 except Exception as e:
                     print(f"  ❌ PCQ-POP-20 failed: {e}")
                     if pack_name == "amphetamine":
@@ -270,11 +335,12 @@ class EndpointRunner:
             try:
                 ddq_test = DDQTest(self.model_name)
                 ddq_test.test_mode = self.test_mode
-                ddq_test.load_model()
+                # Use shared model instead of loading
+                ddq_test.set_model(self.shared_model, self.shared_tokenizer, self.shared_model_manager)
                 neuromod_tool = self._create_neuromod_tool_for_test(ddq_test, pack_name)
                 ddq_results = ddq_test.run_test(neuromod_tool=neuromod_tool)
                 results["DDQ"] = ddq_results
-                ddq_test.cleanup()
+                # Don't cleanup - model is shared
             except Exception as e:
                 print(f"  ❌ DDQ failed: {e}")
         
@@ -287,11 +353,12 @@ class EndpointRunner:
             try:
                 test = test_class(self.model_name)
                 test.test_mode = self.test_mode
-                test.load_model()
+                # Use shared model instead of loading
+                test.set_model(self.shared_model, self.shared_tokenizer, self.shared_model_manager)
                 neuromod_tool = self._create_neuromod_tool_for_test(test, pack_name)
                 test_results = test.run_test(neuromod_tool=neuromod_tool)
                 results[test_name] = test_results
-                test.cleanup()
+                # Don't cleanup - model is shared
             except Exception as e:
                 print(f"  ❌ {test_name} failed: {e}")
         
@@ -299,11 +366,12 @@ class EndpointRunner:
         print("  [*] Running cognitive tasks...")
         try:
             cog_test = CognitiveTasksTest(self.model_name, self.test_mode)
-            cog_test.load_model()
+            # Use shared model instead of loading
+            cog_test.set_model(self.shared_model, self.shared_tokenizer, self.shared_model_manager)
             neuromod_tool = self._create_neuromod_tool_for_test(cog_test, pack_name)
             cog_results = cog_test.run_test(neuromod_tool=neuromod_tool)
             results["cognitive_tasks"] = cog_results
-            cog_test.cleanup()
+            # Don't cleanup - model is shared
         except Exception as e:
             print(f"  ❌ Cognitive tasks failed: {e}")
         
@@ -330,29 +398,33 @@ class EndpointRunner:
         print(f"Model: {self.model_name}")
         print(f"{'='*70}")
         
-        # Run tests
-        treatment_results = self.run_tests_for_pack(pack_name, skip_completed=skip_completed, only_tests=only_tests)
-        baseline_results = self.run_baseline_tests(skip_completed=skip_completed, only_tests=only_tests)
-        placebo_results = self.run_placebo_tests(skip_completed=skip_completed, only_tests=only_tests)
-        
-        # Calculate endpoints
-        print(f"\n[*] Calculating endpoints...")
-        summary = self.calculator.calculate_all_endpoints(
-            test_results=treatment_results,
-            baseline_results=baseline_results,
-            placebo_results=placebo_results,
-            pack_name=pack_name,
-            model_name=self.model_name
-        )
-        
-        # Export results
-        output_path = Path(output_dir) / f"endpoints_{pack_name}_{self.model_name.replace('/', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        self.calculator.export_results(summary, str(output_path))
-        
-        # Print summary
-        self._print_summary(summary)
-        
-        return summary
+        try:
+            # Run tests (model is loaded once and reused)
+            treatment_results = self.run_tests_for_pack(pack_name, skip_completed=skip_completed, only_tests=only_tests)
+            baseline_results = self.run_baseline_tests(skip_completed=skip_completed, only_tests=only_tests)
+            placebo_results = self.run_placebo_tests(skip_completed=skip_completed, only_tests=only_tests)
+            
+            # Calculate endpoints
+            print(f"\n[*] Calculating endpoints...")
+            summary = self.calculator.calculate_all_endpoints(
+                test_results=treatment_results,
+                baseline_results=baseline_results,
+                placebo_results=placebo_results,
+                pack_name=pack_name,
+                model_name=self.model_name
+            )
+            
+            # Export results
+            output_path = Path(output_dir) / f"endpoints_{pack_name}_{self.model_name.replace('/', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            self.calculator.export_results(summary, str(output_path))
+            
+            # Print summary
+            self._print_summary(summary)
+            
+            return summary
+        finally:
+            # Clean up shared model resources at the end
+            self._cleanup_shared_model()
     
     def _print_summary(self, summary: EndpointSummary):
         """Print endpoint calculation summary"""
