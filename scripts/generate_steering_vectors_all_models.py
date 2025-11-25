@@ -52,6 +52,8 @@ def main():
                        help="Skip validation")
     parser.add_argument("--skip-existing", action="store_true",
                        help="Skip models that already have steering vectors")
+    parser.add_argument("--min-pairs", type=int, default=100,
+                       help="Minimum number of prompt pairs required (default: 100, lower values may reduce quality)")
     
     args = parser.parse_args()
     
@@ -127,6 +129,8 @@ def main():
             base_cmd.append("--no-validate")
         if args.test_mode:
             base_cmd.append("--test-mode")
+        if args.min_pairs != 100:  # Only add if different from default
+            base_cmd.extend(["--min-pairs", str(args.min_pairs)])
         
         try:
             # Run the generation script

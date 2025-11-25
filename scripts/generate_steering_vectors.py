@@ -46,6 +46,8 @@ def main():
                        help="Skip validation (not recommended)")
     parser.add_argument("--test-mode", action="store_true",
                        help="Use test mode (smaller models)")
+    parser.add_argument("--min-pairs", type=int, default=100,
+                       help="Minimum number of prompt pairs required (default: 100, lower values may reduce quality)")
     
     args = parser.parse_args()
     
@@ -114,7 +116,8 @@ def main():
                 steering_type=steering_type,
                 layer_idx=args.layer,
                 use_pca=not args.no_pca,
-                validate=not args.no_validate
+                validate=not args.no_validate,
+                min_pairs=args.min_pairs
             )
             
             # Save vector

@@ -159,7 +159,15 @@ class SteeringVectorGenerator:
         if len(positive_prompts) < min_pairs:
             raise ValueError(
                 f"Insufficient prompt pairs: found {len(positive_prompts)}, "
-                f"required {min_pairs} for robust vector computation"
+                f"required {min_pairs} for robust vector computation. "
+                f"Use --min-pairs {len(positive_prompts)} to proceed with available pairs (quality may be reduced)."
+            )
+        
+        # Warn if using fewer than recommended pairs
+        if len(positive_prompts) < 100 and min_pairs < 100:
+            logger.warning(
+                f"Only {len(positive_prompts)} prompt pairs available (recommended: 100+). "
+                f"Steering vector quality may be reduced."
             )
         
         logger.info(f"Loaded {len(positive_prompts)} prompt pairs for '{steering_type}'")
@@ -169,11 +177,12 @@ class SteeringVectorGenerator:
                             layer_idx: Optional[int] = None, 
                             use_pca: bool = True,
                             validate: bool = True,
-                            validation_split: float = 0.2) -> torch.Tensor:
+                            validation_split: float = 0.2,
+                            min_pairs: int = 100) -> torch.Tensor:
         """
         Compute robust steering vector using MDV pipeline with PCA denoising.
         
-        FIXED: Uses 100+ prompt pairs, extracts from all layers, applies PCA to difference vectors,
+        FIXED: Uses 100+ prompt pairs (configurable), extracts from all layers, applies PCA to difference vectors,
         and validates separation significance.
         
         Args:
@@ -183,12 +192,13 @@ class SteeringVectorGenerator:
             use_pca: Whether to use PCA on difference vectors (recommended)
             validate: Whether to validate separation significance
             validation_split: Fraction of data to use for validation
+            min_pairs: Minimum number of prompt pairs required (default: 100, lower values may reduce quality)
             
         Returns:
             Normalized steering vector (shape: [hidden_size])
         """
         # Load prompt pairs
-        positive_prompts, negative_prompts = self.load_prompt_pairs(dataset_path, steering_type)
+        positive_prompts, negative_prompts = self.load_prompt_pairs(dataset_path, steering_type, min_pairs=min_pairs)
         
         # Split into training and validation sets
         n_total = len(positive_prompts)

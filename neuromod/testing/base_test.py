@@ -198,6 +198,17 @@ class BaseTest(ABC):
     def _generate_with_probe_monitoring(self, inputs, max_tokens, logits_processors, gen_kwargs):
         """Generate response with real-time probe monitoring"""
         try:
+            # Ensure inputs are on the correct device
+            if self.neuromod_tool and self.neuromod_tool.model is not None:
+                try:
+                    model_device = next(self.neuromod_tool.model.parameters()).device
+                    inputs = {k: v.to(model_device) for k, v in inputs.items()}
+                except (StopIteration, AttributeError):
+                    if torch.cuda.is_available():
+                        inputs = {k: v.cuda() for k, v in inputs.items()}
+                    else:
+                        inputs = {k: v.cpu() for k, v in inputs.items()}
+            
             # Use standard generation but with probe hooks
             with torch.no_grad():
                 outputs = self.neuromod_tool.model.generate(
@@ -237,6 +248,17 @@ class BaseTest(ABC):
     def _generate_simple_fallback(self, inputs, max_tokens):
         """Simple fallback generation method"""
         try:
+            # Ensure inputs are on the correct device
+            if self.model is not None:
+                try:
+                    model_device = next(self.model.parameters()).device
+                    inputs = {k: v.to(model_device) for k, v in inputs.items()}
+                except (StopIteration, AttributeError):
+                    if torch.cuda.is_available():
+                        inputs = {k: v.cuda() for k, v in inputs.items()}
+                    else:
+                        inputs = {k: v.cpu() for k, v in inputs.items()}
+            
             with torch.no_grad():
                 outputs = self.model.generate(
                     **inputs,
@@ -251,8 +273,10 @@ class BaseTest(ABC):
                     early_stopping=False
                 )
             
-            response = self.neuromod_tool.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            response = response[len(self.neuromod_tool.tokenizer.decode(inputs["input_ids"][0], skip_special_tokens=True)):].strip()
+            # Use appropriate tokenizer (neuromod_tool if available, else self.tokenizer)
+            tokenizer = self.neuromod_tool.tokenizer if self.neuromod_tool else self.tokenizer
+            response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+            response = response[len(tokenizer.decode(inputs["input_ids"][0], skip_special_tokens=True)):].strip()
             return response if response else "0"
             
         except Exception as e:
