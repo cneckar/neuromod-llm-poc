@@ -436,6 +436,24 @@ class ModelSupportManager:
                     backend=BackendType.MOCK,
                     max_length=512,
                     test_mode=True
+                ),
+                "meta-llama/Llama-3.1-8B-Instruct": ModelConfig(
+                    name="meta-llama/Llama-3.1-8B-Instruct",
+                    size=ModelSize.SMALL,
+                    backend=BackendType.HUGGINGFACE,
+                    quantization="8bit",
+                    max_length=2048,
+                    torch_dtype=torch.float16,
+                    test_mode=True
+                ),
+                "meta-llama/Llama-3.1-8B": ModelConfig(
+                    name="meta-llama/Llama-3.1-8B",
+                    size=ModelSize.SMALL,
+                    backend=BackendType.HUGGINGFACE,
+                    quantization="8bit",
+                    max_length=2048,
+                    torch_dtype=torch.float16,
+                    test_mode=True
                 )
             })
         else:
@@ -833,6 +851,15 @@ class ModelSupportManager:
             kwargs['low_cpu_mem_usage'] = False
             logger.info("=" * 60)
             logger.info("DEVICE MODE: CPU (MPS detected on Mac - forcing CPU to avoid accelerate issues)")
+            logger.info(f"CPU Memory Available: {self.system_info.available_memory_gb:.2f} GB / {self.system_info.total_memory_gb:.2f} GB")
+            logger.info("=" * 60)
+        elif device_map == "cpu" or (device_map is None and self.test_mode):
+            # Test mode or explicit CPU mapping - use CPU
+            logger.info("=" * 60)
+            if self.test_mode:
+                logger.info("DEVICE MODE: CPU (Test mode - using CPU for faster tests)")
+            else:
+                logger.info("DEVICE MODE: CPU (Explicit CPU mapping)")
             logger.info(f"CPU Memory Available: {self.system_info.available_memory_gb:.2f} GB / {self.system_info.total_memory_gb:.2f} GB")
             logger.info("=" * 60)
         elif cuda_available:
