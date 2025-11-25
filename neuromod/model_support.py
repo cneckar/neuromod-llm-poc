@@ -449,6 +449,14 @@ class ModelSupportManager:
                     max_length=2048,
                     torch_dtype=torch.float16
                 ),
+                "meta-llama/Llama-3.1-8B": ModelConfig(
+                    name="meta-llama/Llama-3.1-8B",
+                    size=ModelSize.SMALL,
+                    backend=BackendType.HUGGINGFACE,
+                    quantization="8bit",
+                    max_length=2048,
+                    torch_dtype=torch.float16
+                ),
                 "meta-llama/Llama-3.1-70B-Instruct": ModelConfig(
                     name="meta-llama/Llama-3.1-70B-Instruct",
                     size=ModelSize.LARGE,
