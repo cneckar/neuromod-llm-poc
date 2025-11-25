@@ -781,39 +781,21 @@ class ModelSupportManager:
         quantization_config = None
         enable_cpu_offload = False
         
+        # NEVER enable CPU offloading when GPU is available - it causes device mismatch issues
+        # Only use CPU if there's no GPU available
         if config.quantization and not self.test_mode and not is_pre_quantized:
             try:
                 from transformers import BitsAndBytesConfig
                 
-                # Estimate if model will fit in GPU memory
-                # Rough estimate: 4-bit needs ~0.5GB per 1B parameters, 8-bit needs ~1GB per 1B
-                gpu_memory_gb = self.system_info.gpu_memory_gb or 0.0
-                if cuda_available and gpu_memory_gb > 0:
-                    # Get model size estimate (rough: model name often contains size)
-                    model_size_b = 0
-                    if '8b' in config.name.lower() or '8b-instruct' in config.name.lower():
-                        model_size_b = 8
-                    elif '70b' in config.name.lower() or '70b-instruct' in config.name.lower():
-                        model_size_b = 70
-                    elif '13b' in config.name.lower():
-                        model_size_b = 13
-                    elif '7b' in config.name.lower():
-                        model_size_b = 7
-                    
-                    if model_size_b > 0:
-                        # Estimate memory needed (with some overhead)
-                        if config.quantization == "4bit":
-                            estimated_memory_gb = model_size_b * 0.6  # ~0.6GB per 1B params for 4-bit
-                        else:  # 8bit
-                            estimated_memory_gb = model_size_b * 1.2  # ~1.2GB per 1B params for 8-bit
-                        
-                        # Reserve some GPU memory for activations
-                        available_gpu_memory = gpu_memory_gb * 0.85  # Use 85% of GPU memory
-                        
-                        if estimated_memory_gb > available_gpu_memory:
-                            enable_cpu_offload = True
-                            logger.info(f"Model estimated size ({estimated_memory_gb:.1f}GB) exceeds available GPU memory ({available_gpu_memory:.1f}GB)")
-                            logger.info("Enabling CPU offloading for quantized model")
+                # Only enable CPU offloading if there's NO GPU available
+                # When GPU is available, we'll use GPU-only loading even if it means OOM errors
+                # (User can use smaller models or reduce quantization if needed)
+                if not cuda_available or self.system_info.gpu_count == 0:
+                    enable_cpu_offload = True
+                    logger.info("No GPU available, enabling CPU offloading for quantized model")
+                else:
+                    enable_cpu_offload = False
+                    logger.info("GPU available - disabling CPU offloading to prevent device mismatch issues")
                 
                 if config.quantization == "4bit":
                     quantization_config = BitsAndBytesConfig(
@@ -830,9 +812,9 @@ class ModelSupportManager:
                         llm_int8_enable_fp32_cpu_offload=enable_cpu_offload
                     )
                     if enable_cpu_offload:
-                        logger.info(f"Using 8-bit quantization with CPU offloading for {config.name}")
+                        logger.info(f"Using 8-bit quantization with CPU offloading for {config.name} (no GPU)")
                     else:
-                        logger.info(f"Using 8-bit quantization for {config.name}")
+                        logger.info(f"Using 8-bit quantization for {config.name} (GPU-only, no CPU offloading)")
             except ImportError:
                 logger.warning("bitsandbytes not available, loading model without quantization")
                 quantization_config = None
@@ -965,22 +947,32 @@ class ModelSupportManager:
             load_kwargs['quantization_config'] = quantization_config
         
         # Only add device_map if it's not None
-        # For quantized models with CPU offloading, ensure device_map allows CPU
+        # When GPU is available, use specific GPU device instead of "auto" to prevent CPU offloading
         if device_map is not None:
             if enable_cpu_offload and quantization_config is not None:
-                # For CPU offloading, use "auto" which allows CPU/GPU distribution
+                # For CPU offloading (no GPU), use "auto" which allows CPU/GPU distribution
                 if device_map == "auto":
                     load_kwargs['device_map'] = "auto"
                 else:
-                    # If custom device_map, ensure it allows CPU offloading
                     load_kwargs['device_map'] = device_map
                     logger.info("Using custom device_map with CPU offloading enabled")
             else:
-                load_kwargs['device_map'] = device_map
+                # When GPU is available, use specific GPU device instead of "auto"
+                # This prevents HuggingFace from offloading to CPU
+                if device_map == "auto" and cuda_available and self.system_info.gpu_count > 0:
+                    # Use specific GPU device (cuda:0) instead of "auto" to prevent CPU offloading
+                    load_kwargs['device_map'] = "cuda:0"
+                    logger.info("Using device_map='cuda:0' instead of 'auto' to prevent CPU offloading")
+                else:
+                    load_kwargs['device_map'] = device_map
         elif enable_cpu_offload and quantization_config is not None:
             # If CPU offloading is needed but no device_map set, use "auto"
             load_kwargs['device_map'] = "auto"
             logger.info("Setting device_map='auto' to enable CPU offloading for quantized model")
+        elif cuda_available and self.system_info.gpu_count > 0 and quantization_config is not None:
+            # When GPU is available and using quantization, use specific GPU device
+            load_kwargs['device_map'] = "cuda:0"
+            logger.info("Setting device_map='cuda:0' for quantized model to prevent CPU offloading")
         
         # Add token if available
         if hf_token:
@@ -1065,20 +1057,29 @@ class ModelSupportManager:
                     'not enough gpu ram' in error_str
                 )
                 
-                # If it's an offload error and we haven't enabled CPU offloading yet, retry with it enabled
+                # NEVER retry with CPU offloading when GPU is available - it causes device mismatch
+                # Only retry with CPU offloading if there's truly no GPU
                 if is_offload_error and quantization_config is not None and not enable_cpu_offload and not cpu_offload_retry:
-                    logger.warning("Quantized model doesn't fit in GPU memory, enabling CPU offloading...")
-                    cpu_offload_retry = True
-                    
-                    # Enable CPU offloading in quantization config
-                    if hasattr(quantization_config, 'llm_int8_enable_fp32_cpu_offload'):
-                        quantization_config.llm_int8_enable_fp32_cpu_offload = True
-                    # Update load_kwargs
-                    load_kwargs['quantization_config'] = quantization_config
-                    if 'device_map' not in load_kwargs or load_kwargs.get('device_map') is None:
-                        load_kwargs['device_map'] = "auto"
-                    logger.info("Retrying with CPU offloading enabled...")
-                    continue
+                    if not cuda_available or self.system_info.gpu_count == 0:
+                        # Only enable CPU offloading if there's no GPU
+                        logger.warning("Quantized model doesn't fit in memory and no GPU available, enabling CPU offloading...")
+                        cpu_offload_retry = True
+                        
+                        # Enable CPU offloading in quantization config
+                        if hasattr(quantization_config, 'llm_int8_enable_fp32_cpu_offload'):
+                            quantization_config.llm_int8_enable_fp32_cpu_offload = True
+                        # Update load_kwargs
+                        load_kwargs['quantization_config'] = quantization_config
+                        if 'device_map' not in load_kwargs or load_kwargs.get('device_map') is None:
+                            load_kwargs['device_map'] = "auto"
+                        logger.info("Retrying with CPU offloading enabled...")
+                        continue
+                    else:
+                        # GPU is available but model doesn't fit - don't enable CPU offloading
+                        # This will cause an error, but that's better than device mismatch issues
+                        logger.error("Model doesn't fit in GPU memory, but CPU offloading is disabled to prevent device mismatch.")
+                        logger.error("Consider using a smaller model or reducing quantization level.")
+                        raise
                 
                 # Check if it's a network/download error
                 is_network_error = (
