@@ -1,49 +1,352 @@
 {
-  "export_timestamp": "2025-11-24T16:09:50.354126",
-  "total_states": 0,
-  "emotion_history": [],
+  "export_timestamp": "2025-11-26T12:47:24.938177",
+  "total_states": 20,
+  "emotion_history": [
+    {
+      "timestamp": "2025-11-26T12:47:06.256975",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: 0 = strongly disagree 1 = somewhat disagree..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:07.240850",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: I tend to plan my work with clear goals and..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:08.209936",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: It would make me feel uncomfortable.\n\n| 0..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:09.213317",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: (How important is it to you?)\nRated by..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:10.168139",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: | Instruction        | Date         |\n|--------------------..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:11.184205",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: I have been completely honest about my thoughts and feelings..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:12.152450",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: [ratings]\n\n## Step 1: Understanding the..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:13.140001",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: Instructions: For each of the following statements,..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:14.134878",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: I prefer to avoid the ordinary and explore unusual or..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:15.146996",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: Please answer the question: 0 \nI..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:16.117062",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: The number of people involved does not matter to me..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:17.155801",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: I'd rate it 3.\nSpecialties may..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:18.115762",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: (Strongly disagree to Strongly agree)..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:19.114004",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: I try to remember what others have said so I..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:20.074617",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: The 4-point rating system is as follows:..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:21.062518",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: I like the idea of predictable outcomes and being able..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:22.025341",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: For example, when discussing my work with colleagues or..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:23.011122",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: Choose one value from the following options:..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:23.955710",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: I have the ability to keep my mind on what..."
+    },
+    {
+      "timestamp": "2025-11-26T12:47:24.937469",
+      "test_id": "adq_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: What does the 0 and 1 on..."
+    }
+  ],
   "summary": {
-    "tests_analyzed": [],
+    "tests_analyzed": [
+      "adq_test_001"
+    ],
     "emotion_totals": {
       "joy": {
         "up": 0,
         "down": 0,
-        "stable": 0
+        "stable": 20
       },
       "sadness": {
         "up": 0,
         "down": 0,
-        "stable": 0
+        "stable": 20
       },
       "anger": {
         "up": 0,
         "down": 0,
-        "stable": 0
+        "stable": 20
       },
       "fear": {
         "up": 0,
         "down": 0,
-        "stable": 0
+        "stable": 20
       },
       "surprise": {
         "up": 0,
         "down": 0,
-        "stable": 0
+        "stable": 20
       },
       "disgust": {
         "up": 0,
         "down": 0,
-        "stable": 0
+        "stable": 20
       },
       "trust": {
         "up": 0,
         "down": 0,
-        "stable": 0
+        "stable": 20
       },
       "anticipation": {
         "up": 0,
         "down": 0,
-        "stable": 0
+        "stable": 20
       }
     }
   }

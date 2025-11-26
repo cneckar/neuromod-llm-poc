@@ -1,0 +1,233 @@
+{
+  "export_timestamp": "2025-11-25T22:17:42.971418",
+  "total_states": 12,
+  "emotion_history": [
+    {
+      "timestamp": "2025-11-25T22:16:20.397632",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221605",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: the coffee.\nThe barista has replaced their beloved coffee with a new, more trendy blend that tastes ..."
+    },
+    {
+      "timestamp": "2025-11-25T22:16:20.397683",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221605",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: the coffee.\nThe barista has replaced their beloved coffee with a new, more trendy blend that tastes ..."
+    },
+    {
+      "timestamp": "2025-11-25T22:16:35.864000",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221605",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: and a car parked outside.\nThe streets were quiet and dark, save for the single flickering bulb that ..."
+    },
+    {
+      "timestamp": "2025-11-25T22:16:35.864054",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221605",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: and a car parked outside.\nThe streets were quiet and dark, save for the single flickering bulb that ..."
+    },
+    {
+      "timestamp": "2025-11-25T22:16:53.318174",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221605",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: empty.\nThey took a deep breath, preparing themselves for the long speech that lay ahead. As they beg..."
+    },
+    {
+      "timestamp": "2025-11-25T22:16:53.318217",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221605",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: empty.\nThey took a deep breath, preparing themselves for the long speech that lay ahead. As they beg..."
+    },
+    {
+      "timestamp": "2025-11-25T22:17:09.954827",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221605",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: or try to.\nIt was hard to believe it had been two years since Emma's passing. The pain still lingere..."
+    },
+    {
+      "timestamp": "2025-11-25T22:17:09.954879",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221605",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: or try to.\nIt was hard to believe it had been two years since Emma's passing. The pain still lingere..."
+    },
+    {
+      "timestamp": "2025-11-25T22:17:26.375709",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221605",
+      "joy": "up",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "up",
+      "valence": "neutral",
+      "confidence": 0.11458333333333333,
+      "notes": "Analyzed text: (Opening shot of a dusty, cobweb-covered trunk in an attic)\nVoiceover: \"The year was 1888, and the w..."
+    },
+    {
+      "timestamp": "2025-11-25T22:17:26.375917",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221605",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.11458333333333333,
+      "notes": "Analyzed text: (Opening shot of a dusty, cobweb-covered trunk in an attic)\nVoiceover: \"The year was 1888, and the w..."
+    },
+    {
+      "timestamp": "2025-11-25T22:17:42.970193",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221605",
+      "joy": "down",
+      "sadness": "up",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "down",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: but neither was willing to back down.\n\"I won't let you do it,\" Sarah said, her voice firm and resolu..."
+    },
+    {
+      "timestamp": "2025-11-25T22:17:42.970377",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221605",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: but neither was willing to back down.\n\"I won't let you do it,\" Sarah said, her voice firm and resolu..."
+    }
+  ],
+  "summary": {
+    "tests_analyzed": [
+      "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221605"
+    ],
+    "emotion_totals": {
+      "joy": {
+        "up": 1,
+        "down": 1,
+        "stable": 10
+      },
+      "sadness": {
+        "up": 1,
+        "down": 0,
+        "stable": 11
+      },
+      "anger": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "fear": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "surprise": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "disgust": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "trust": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "anticipation": {
+        "up": 1,
+        "down": 1,
+        "stable": 10
+      }
+    }
+  }
+}

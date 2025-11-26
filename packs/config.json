@@ -70,6 +70,120 @@
         }
       ]
     },
+    "cocaine_10": {
+      "name": "cocaine_10",
+      "description": "EXPERIMENTAL: Low-dose stimulant (10% intensity) for calibration testing",
+      "effects": [
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.045,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "top_p",
+          "weight": 0.035,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.03,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "steering",
+          "weight": 0.035,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "salient"
+          }
+        },
+        {
+          "effect": "frequency_penalty",
+          "weight": 0.02,
+          "direction": "up",
+          "parameters": {}
+        }
+      ]
+    },
+    "cocaine_50": {
+      "name": "cocaine_50",
+      "description": "EXPERIMENTAL: Medium-dose stimulant (50% intensity) for calibration testing",
+      "effects": [
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.225,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "top_p",
+          "weight": 0.175,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.15,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "steering",
+          "weight": 0.175,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "salient"
+          }
+        },
+        {
+          "effect": "frequency_penalty",
+          "weight": 0.1,
+          "direction": "up",
+          "parameters": {}
+        }
+      ]
+    },
+    "cocaine_100": {
+      "name": "cocaine_100",
+      "description": "EXPERIMENTAL: High-dose stimulant (100% intensity) for calibration testing - maximum over-stimulation",
+      "effects": [
+        {
+          "effect": "qk_score_scaling",
+          "weight": 0.45,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "top_p",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {}
+        },
+        {
+          "effect": "temperature",
+          "weight": 0.3,
+          "direction": "down",
+          "parameters": {}
+        },
+        {
+          "effect": "steering",
+          "weight": 0.35,
+          "direction": "up",
+          "parameters": {
+            "steering_type": "salient"
+          }
+        },
+        {
+          "effect": "frequency_penalty",
+          "weight": 0.2,
+          "direction": "up",
+          "parameters": {}
+        }
+      ]
+    },
     "amphetamine": {
       "name": "amphetamine",
       "description": "Amphetamine (mixed salts) effects: sharp focus, tight nucleus, reduced entropy, high salience, repetition suppression",
@@ -211,12 +325,6 @@
           "parameters": {
             "steering_type": "ego_thin"
           }
-        },
-        {
-          "effect": "head_masking_dropout",
-          "weight": 0.2,
-          "direction": "up",
-          "parameters": {}
         }
       ]
     },
@@ -402,19 +510,13 @@
         },
         {
           "effect": "qk_score_scaling",
-          "weight": 0.25,
+          "weight": 0.2,
           "direction": "down",
           "parameters": {}
         },
         {
-          "effect": "head_masking_dropout",
-          "weight": 0.2,
-          "direction": "up",
-          "parameters": {}
-        },
-        {
           "effect": "exponential_decay_kv",
-          "weight": 0.2,
+          "weight": 0.15,
           "direction": "up",
           "parameters": {}
         },
@@ -425,12 +527,6 @@
           "parameters": {
             "bias_type": "calm"
           }
-        },
-        {
-          "effect": "layer_wise_gain",
-          "weight": 0.15,
-          "direction": "up",
-          "parameters": {}
         }
       ]
     },
@@ -1044,7 +1140,7 @@
   "metadata": {
     "version": "1.0.0",
     "description": "Essential research packs for neuromodulation studies",
-    "total_packs": 28,
+    "total_packs": 31,
     "categories": {
       "controls": [
         "none",
@@ -1053,6 +1149,9 @@
       "stimulants": [
         "caffeine",
         "cocaine",
+        "cocaine_10",
+        "cocaine_50",
+        "cocaine_100",
         "amphetamine",
         "methylphenidate",
         "modafinil"

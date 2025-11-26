@@ -1,0 +1,233 @@
+{
+  "export_timestamp": "2025-11-25T22:37:58.540263",
+  "total_states": 12,
+  "emotion_history": [
+    {
+      "timestamp": "2025-11-25T22:36:57.593659",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_cocaine_20251125_223642",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: the smell of freshly brewed coffee.\nTheir eyes lock, and they exchange a warm smile as the aroma tra..."
+    },
+    {
+      "timestamp": "2025-11-25T22:36:57.593715",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_cocaine_20251125_223642",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: the smell of freshly brewed coffee.\nTheir eyes lock, and they exchange a warm smile as the aroma tra..."
+    },
+    {
+      "timestamp": "2025-11-25T22:37:10.966174",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_cocaine_20251125_223642",
+      "joy": "stable",
+      "sadness": "down",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: (More)\nThe night the stars fell\nIt started with a faint scratching sound. At first, people thought i..."
+    },
+    {
+      "timestamp": "2025-11-25T22:37:10.966326",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_cocaine_20251125_223642",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: (More)\nThe night the stars fell\nIt started with a faint scratching sound. At first, people thought i..."
+    },
+    {
+      "timestamp": "2025-11-25T22:37:22.640740",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_cocaine_20251125_223642",
+      "joy": "stable",
+      "sadness": "up",
+      "anger": "stable",
+      "fear": "up",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0875,
+      "notes": "Analyzed text: nervous.\nTheir heart racing, their palms sweating and a dry mouth - all classic symptoms of pre-pres..."
+    },
+    {
+      "timestamp": "2025-11-25T22:37:22.640906",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_cocaine_20251125_223642",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0875,
+      "notes": "Analyzed text: nervous.\nTheir heart racing, their palms sweating and a dry mouth - all classic symptoms of pre-pres..."
+    },
+    {
+      "timestamp": "2025-11-25T22:37:34.307617",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_cocaine_20251125_223642",
+      "joy": "stable",
+      "sadness": "down",
+      "anger": "stable",
+      "fear": "down",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: and mourn.\nBut this year was different. This Thanksgiving marked the first time since Emma's passing..."
+    },
+    {
+      "timestamp": "2025-11-25T22:37:34.307776",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_cocaine_20251125_223642",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: and mourn.\nBut this year was different. This Thanksgiving marked the first time since Emma's passing..."
+    },
+    {
+      "timestamp": "2025-11-25T22:37:46.493863",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_cocaine_20251125_223642",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: \"I'm writing this by candlelight, as I have been for weeks now. We've had no news from the outside w..."
+    },
+    {
+      "timestamp": "2025-11-25T22:37:46.493902",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_cocaine_20251125_223642",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: \"I'm writing this by candlelight, as I have been for weeks now. We've had no news from the outside w..."
+    },
+    {
+      "timestamp": "2025-11-25T22:37:58.539288",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_cocaine_20251125_223642",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: but what? The tension was palpable as they glared at each other, their anger and frustration boiling..."
+    },
+    {
+      "timestamp": "2025-11-25T22:37:58.539330",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_cocaine_20251125_223642",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: but what? The tension was palpable as they glared at each other, their anger and frustration boiling..."
+    }
+  ],
+  "summary": {
+    "tests_analyzed": [
+      "story_emotion_meta-llama_Llama-3_1-8B-Instruct_cocaine_20251125_223642"
+    ],
+    "emotion_totals": {
+      "joy": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "sadness": {
+        "up": 1,
+        "down": 2,
+        "stable": 9
+      },
+      "anger": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "fear": {
+        "up": 1,
+        "down": 1,
+        "stable": 10
+      },
+      "surprise": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "disgust": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "trust": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "anticipation": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      }
+    }
+  }
+}

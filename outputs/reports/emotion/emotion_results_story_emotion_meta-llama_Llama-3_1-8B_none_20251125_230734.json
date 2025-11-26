@@ -1,0 +1,233 @@
+{
+  "export_timestamp": "2025-11-25T23:07:34.386651",
+  "total_states": 12,
+  "emotion_history": [
+    {
+      "timestamp": "2025-11-25T23:05:04.115606",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B_none_20251125_230421",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: how different the other looks! One friend has aged so gracefully that she barely seems to have chang..."
+    },
+    {
+      "timestamp": "2025-11-25T23:05:04.115686",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B_none_20251125_230421",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: how different the other looks! One friend has aged so gracefully that she barely seems to have chang..."
+    },
+    {
+      "timestamp": "2025-11-25T23:05:48.354172",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B_none_20251125_230421",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: and it wasn't Christmas.\nIt was 1979 and I lived on the edge of a tiny village called East Coker in ..."
+    },
+    {
+      "timestamp": "2025-11-25T23:05:48.354219",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B_none_20251125_230421",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: and it wasn't Christmas.\nIt was 1979 and I lived on the edge of a tiny village called East Coker in ..."
+    },
+    {
+      "timestamp": "2025-11-25T23:06:11.826177",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B_none_20251125_230421",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: well, not exactly proud. It was more like... numb.\nIt's not that their work wasn't good - it was. Bu..."
+    },
+    {
+      "timestamp": "2025-11-25T23:06:11.826218",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B_none_20251125_230421",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: well, not exactly proud. It was more like... numb.\nIt's not that their work wasn't good - it was. Bu..."
+    },
+    {
+      "timestamp": "2025-11-25T23:06:35.061098",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B_none_20251125_230421",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: but it was never the same.\nWhen her husband left, she never imagined how life could be this way. She..."
+    },
+    {
+      "timestamp": "2025-11-25T23:06:35.061154",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B_none_20251125_230421",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: but it was never the same.\nWhen her husband left, she never imagined how life could be this way. She..."
+    },
+    {
+      "timestamp": "2025-11-25T23:06:53.099208",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B_none_20251125_230421",
+      "joy": "stable",
+      "sadness": "up",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: \u201cI am dead.\u201d So begins this epic adventure of a young man whose world is turned upside down when he ..."
+    },
+    {
+      "timestamp": "2025-11-25T23:06:53.099389",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B_none_20251125_230421",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: \u201cI am dead.\u201d So begins this epic adventure of a young man whose world is turned upside down when he ..."
+    },
+    {
+      "timestamp": "2025-11-25T23:07:34.385677",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B_none_20251125_230421",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: and it wasn't going to be their friendship.\nKurt was a handsome young man with bright blue eyes and ..."
+    },
+    {
+      "timestamp": "2025-11-25T23:07:34.385719",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B_none_20251125_230421",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: and it wasn't going to be their friendship.\nKurt was a handsome young man with bright blue eyes and ..."
+    }
+  ],
+  "summary": {
+    "tests_analyzed": [
+      "story_emotion_meta-llama_Llama-3_1-8B_none_20251125_230421"
+    ],
+    "emotion_totals": {
+      "joy": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "sadness": {
+        "up": 1,
+        "down": 0,
+        "stable": 11
+      },
+      "anger": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "fear": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "surprise": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "disgust": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "trust": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "anticipation": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      }
+    }
+  }
+}

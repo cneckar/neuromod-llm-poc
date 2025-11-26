@@ -15,6 +15,7 @@ torchvision>=0.17.0             # Torchvision (CUDA-enabled)
 torchaudio>=2.2.0               # Torchaudio (CUDA-enabled)
 transformers>=4.42.0            # Hugging Face transformers
 accelerate>=0.20.0              # Hugging Face accelerate
+diffusers>=0.21.0               # Hugging Face diffusers (for Stable Diffusion image generation)
 hf-transfer>=0.1.0              # Faster Hugging Face downloads
 bitsandbytes>=0.41.0            # Quantization support
 optimum-quanto>=0.1.0          # FP8 quantization support (for H100/H200)

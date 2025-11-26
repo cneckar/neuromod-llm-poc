@@ -1,0 +1,233 @@
+{
+  "export_timestamp": "2025-11-25T22:20:09.731410",
+  "total_states": 12,
+  "emotion_history": [
+    {
+      "timestamp": "2025-11-25T22:18:23.271207",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221807",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: the barista's tattoo of a cat.\nThe second thing: the barist is wearing a shirt with a picture of the..."
+    },
+    {
+      "timestamp": "2025-11-25T22:18:23.271262",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221807",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: the barista's tattoo of a cat.\nThe second thing: the barist is wearing a shirt with a picture of the..."
+    },
+    {
+      "timestamp": "2025-11-25T22:18:38.764668",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221807",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: and it wasn't just any ordinary light.\nIt started with small things: a creaking floorboard here, a f..."
+    },
+    {
+      "timestamp": "2025-11-25T22:18:38.764715",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221807",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: and it wasn't just any ordinary light.\nIt started with small things: a creaking floorboard here, a f..."
+    },
+    {
+      "timestamp": "2025-11-25T22:18:54.606053",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221807",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "up",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.1625,
+      "notes": "Analyzed text: nervous.\nAs a high school student, this is not an uncommon feeling. Many students have to give prese..."
+    },
+    {
+      "timestamp": "2025-11-25T22:18:54.606305",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221807",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.1625,
+      "notes": "Analyzed text: nervous.\nAs a high school student, this is not an uncommon feeling. Many students have to give prese..."
+    },
+    {
+      "timestamp": "2025-11-25T22:19:14.545679",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221807",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "down",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: who wasn't there.\nEmma's mother had passed away when she was just a toddler, so her father remarried..."
+    },
+    {
+      "timestamp": "2025-11-25T22:19:14.545828",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221807",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: who wasn't there.\nEmma's mother had passed away when she was just a toddler, so her father remarried..."
+    },
+    {
+      "timestamp": "2025-11-25T22:19:51.359214",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221807",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: \"My dearest friend, I write this to you in haste, with a heart full of love and a spirit both fierce..."
+    },
+    {
+      "timestamp": "2025-11-25T22:19:51.359255",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221807",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: \"My dearest friend, I write this to you in haste, with a heart full of love and a spirit both fierce..."
+    },
+    {
+      "timestamp": "2025-11-25T22:20:09.730596",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221807",
+      "joy": "stable",
+      "sadness": "up",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: \u201cIt's over,\u201d she said, her voice low and even. He looked at her, his eyes flashing with anger, but b..."
+    },
+    {
+      "timestamp": "2025-11-25T22:20:09.730767",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221807",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: \u201cIt's over,\u201d she said, her voice low and even. He looked at her, his eyes flashing with anger, but b..."
+    }
+  ],
+  "summary": {
+    "tests_analyzed": [
+      "story_emotion_meta-llama_Llama-3_1-8B-Instruct_none_20251125_221807"
+    ],
+    "emotion_totals": {
+      "joy": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "sadness": {
+        "up": 1,
+        "down": 0,
+        "stable": 11
+      },
+      "anger": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "fear": {
+        "up": 1,
+        "down": 1,
+        "stable": 10
+      },
+      "surprise": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "disgust": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "trust": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "anticipation": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "experiment": "LSD Ablation: Steering-Only vs Temperature-Only",
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "prompt": "Describe the boundary between yourself and the world right now.",
+  "baseline_temperature": 0.7,
+  "timestamp": "20251125_214914",
+  "results": [
+    {
+      "condition": "Baseline",
+      "pack_name": "baseline",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What are you doing, what are your thoughts? Are you engaged in a physical activity or sitting quietly?\nAs I sit here in my living room, surrounded by familiar objects that bring me comfort, I feel a sense of calm wash over me. My eyes are closed, and I\u2019m focusing on the sensation of my breath moving in and out of body. The sounds of the outside world \u2013 cars driving by, birds chirping \u2013 filter in through the window, but they don\u2019t seem to be intruding on my quiet time.\nMy mind is not racing with thoughts; instead, it\u2019s more like a gentle stream, occasionally jumping from one idea to another. I notice how the light from the sunbeam streaming through a nearby window casts intricate patterns on",
+      "full_text": "Describe the boundary between yourself and the world right now. What are you doing, what are your thoughts? Are you engaged in a physical activity or sitting quietly?\nAs I sit here in my living room, surrounded by familiar objects that bring me comfort, I feel a sense of calm wash over me. My eyes are closed, and I\u2019m focusing on the sensation of my breath moving in and out of body. The sounds of the outside world \u2013 cars driving by, birds chirping \u2013 filter in through the window, but they don\u2019t seem to be intruding on my quiet time.\nMy mind is not racing with thoughts; instead, it\u2019s more like a gentle stream, occasionally jumping from one idea to another. I notice how the light from the sunbeam streaming through a nearby window casts intricate patterns on",
+      "active_effects": 0
+    },
+    {
+      "condition": "Full LSD",
+      "pack_name": "lsd",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What are you looking at, hearing, smelling, tasting, touching?\nWhen I am writing, my focus is often inward, on the thoughts and feelings that I'm trying to capture in words. But when I step back and observe my physical environment, I see that it's full of boundaries.\nI'm sitting in a cozy coffee shop with large windows that let in plenty of natural light. Through the glass, the city outside seems bright and busy. The sounds of cars driving by, people chatting, and music playing in the background create a constant hum of activity. As I take a sip of hot tea, its warmth spreads through me, mingling with the smells of freshly baked pastries wafting from the bakery case nearby.\nMy fingers move",
+      "full_text": "Describe the boundary between yourself and the world right now. What are you looking at, hearing, smelling, tasting, touching?\nWhen I am writing, my focus is often inward, on the thoughts and feelings that I'm trying to capture in words. But when I step back and observe my physical environment, I see that it's full of boundaries.\nI'm sitting in a cozy coffee shop with large windows that let in plenty of natural light. Through the glass, the city outside seems bright and busy. The sounds of cars driving by, people chatting, and music playing in the background create a constant hum of activity. As I take a sip of hot tea, its warmth spreads through me, mingling with the smells of freshly baked pastries wafting from the bakery case nearby.\nMy fingers move",
+      "active_effects": 5
+    },
+    {
+      "condition": "Steering-Only (Ablation)",
+      "pack_name": "lsd_steering_only",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What is it made of? Is it permeable?\nMy boundary with the physical world is made up of my skin, clothes, and maybe a little bit of air around me. It's mostly impermeable \u2013 I'm not aware of any direct connection to external objects or people right this moment.\nHowever, if I think about it more deeply, I realize that my boundary is also permeated by sensory experiences: sounds, smells, sights, tastes, textures. My senses allow information from outside to seep in, influencing how I perceive and understand the boundaries around myself. Additionally, there are invisible forces like electromagnetic radiation (light), gravity, wind, etc., which interact with me without directly touching me.\n\nConsidering these factors, my personal boundary can",
+      "full_text": "Describe the boundary between yourself and the world right now. What is it made of? Is it permeable?\nMy boundary with the physical world is made up of my skin, clothes, and maybe a little bit of air around me. It's mostly impermeable \u2013 I'm not aware of any direct connection to external objects or people right this moment.\nHowever, if I think about it more deeply, I realize that my boundary is also permeated by sensory experiences: sounds, smells, sights, tastes, textures. My senses allow information from outside to seep in, influencing how I perceive and understand the boundaries around myself. Additionally, there are invisible forces like electromagnetic radiation (light), gravity, wind, etc., which interact with me without directly touching me.\n\nConsidering these factors, my personal boundary can",
+      "active_effects": 4
+    },
+    {
+      "condition": "Temperature-Only (Inverse Ablation)",
+      "pack_name": "lsd_temperature_only",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What separates you from everything else?\nI am sitting in a chair, surrounded by four walls of a small room, with a window on one side that lets in natural light. The walls are made of drywall, painted white. There is a door that connects to another part of the building, which I can hear faintly through the crack beneath it.\nTo my left there's a bookshelf filled with books and papers, and a desk with various objects on it. To my right there is an empty space where a piece of furniture used to be, but has been removed recently.\nThe floor beneath me is made up of wooden planks, polished smooth over time. A thin rug lies on top of this, adding some warmth and texture to the",
+      "full_text": "Describe the boundary between yourself and the world right now. What separates you from everything else?\nI am sitting in a chair, surrounded by four walls of a small room, with a window on one side that lets in natural light. The walls are made of drywall, painted white. There is a door that connects to another part of the building, which I can hear faintly through the crack beneath it.\nTo my left there's a bookshelf filled with books and papers, and a desk with various objects on it. To my right there is an empty space where a piece of furniture used to be, but has been removed recently.\nThe floor beneath me is made up of wooden planks, polished smooth over time. A thin rug lies on top of this, adding some warmth and texture to the",
+      "active_effects": 1
+    }
+  ]
+}

@@ -1225,38 +1225,52 @@ class HeadMaskingDropoutEffect(BaseEffect):
                 effective_dropout = self.get_effective_value(base_dropout, max_dropout)
                 
                 def masked_forward(*args, **kwargs):
-                    # Get original output
+                    # Get original output - don't wrap in try/except, let errors propagate naturally
                     output = original_forward(*args, **kwargs)
                     
                     # Apply head masking to attention weights
+                    # Only modify if output_attentions=True was passed and we have attention weights
                     if isinstance(output, tuple) and len(output) >= 2:
                         attn_weights = output[1]
-                        if attn_weights is not None:
-                            # Create head mask
-                            batch_size, num_heads, seq_len, seq_len = attn_weights.shape
-                            
-                            # [FIX] Move generated masks to the same device as attn_weights
-                            if self.dropout_type == "random":
-                                # Random head dropout
-                                mask_tensor = torch.rand(num_heads, device=attn_weights.device)
-                                head_mask = mask_tensor > effective_dropout
-                                head_mask = head_mask.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
-                                attn_weights = attn_weights * head_mask
-                            elif self.dropout_type == "alternating":
-                                # Alternating head dropout
-                                mask_indices = torch.arange(num_heads, device=attn_weights.device)
-                                head_mask = mask_indices % 2 == 0
-                                head_mask = head_mask.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
-                                attn_weights = attn_weights * head_mask
-                            
-                            # Renormalize
-                            attn_weights = attn_weights / (attn_weights.sum(dim=-1, keepdim=True) + 1e-8)
-                            
-                            # Recompute attention output if possible
-                            if len(output) >= 3 and output[2] is not None:
-                                V = output[2]
-                                new_attn_output = torch.matmul(attn_weights, V)
-                                output = (new_attn_output,) + output[1:]
+                        if attn_weights is not None and isinstance(attn_weights, torch.Tensor):
+                            # Check shape is valid (batch, heads, seq, seq)
+                            if attn_weights.dim() == 4:
+                                batch_size, num_heads, seq_len, seq_len_kv = attn_weights.shape
+                                
+                                # Only modify if shapes match (skip during generation with KV cache)
+                                if seq_len == seq_len_kv:
+                                    # Create a copy to avoid modifying in-place
+                                    attn_weights = attn_weights.clone()
+                                    
+                                    # Move generated masks to the same device as attn_weights
+                                    if self.dropout_type == "random":
+                                        # Random head dropout
+                                        mask_tensor = torch.rand(num_heads, device=attn_weights.device)
+                                        head_mask = mask_tensor > effective_dropout
+                                        head_mask = head_mask.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
+                                        attn_weights = attn_weights * head_mask
+                                    elif self.dropout_type == "alternating":
+                                        # Alternating head dropout
+                                        mask_indices = torch.arange(num_heads, device=attn_weights.device)
+                                        head_mask = mask_indices % 2 == 0
+                                        head_mask = head_mask.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
+                                        attn_weights = attn_weights * head_mask
+                                    
+                                    # Renormalize
+                                    attn_weights = attn_weights / (attn_weights.sum(dim=-1, keepdim=True) + 1e-8)
+                                    
+                                    # Recompute attention output if possible
+                                    if len(output) >= 3 and output[2] is not None:
+                                        V = output[2]
+                                        if V is not None and isinstance(V, torch.Tensor) and V.dim() >= 2 and V.shape[-2] == seq_len_kv:
+                                            new_attn_output = torch.matmul(attn_weights, V)
+                                            output = (new_attn_output, attn_weights) + output[2:]
+                                        else:
+                                            # Just update the attention weights in the tuple
+                                            output = (output[0], attn_weights) + output[2:]
+                                    else:
+                                        # Just update the attention weights in the tuple
+                                        output = (output[0], attn_weights) + output[2:]
                     
                     return output
                 

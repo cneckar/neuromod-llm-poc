@@ -1,0 +1,46 @@
+{
+  "experiment": "LSD Ablation: Steering-Only vs Temperature-Only",
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "prompt": "Describe the boundary between yourself and the world right now.",
+  "baseline_temperature": 0.7,
+  "timestamp": "20251125_213043",
+  "results": [
+    {
+      "condition": "Baseline",
+      "pack_name": "baseline",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What are the physical boundaries that separate you from the external world?\nI am sitting in my home, and the physical boundaries that separate me from the external world are the walls, floor, and ceiling of my house. The walls are made of drywall and wood, the floor is made of hardwood, and the ceiling is made of drywall. These boundaries are solid and stable, providing a sense of security and containment.\nThe windows and doors are the openings in these boundaries that allow me to interact with the external world. The windows are made of glass and aluminum, and they provide a clear view of the world outside. The doors are made of wood and metal, and they allow me to move in and out of my home.\nThe boundaries between myself",
+      "full_text": "Describe the boundary between yourself and the world right now. What are the physical boundaries that separate you from the external world?\nI am sitting in my home, and the physical boundaries that separate me from the external world are the walls, floor, and ceiling of my house. The walls are made of drywall and wood, the floor is made of hardwood, and the ceiling is made of drywall. These boundaries are solid and stable, providing a sense of security and containment.\nThe windows and doors are the openings in these boundaries that allow me to interact with the external world. The windows are made of glass and aluminum, and they provide a clear view of the world outside. The doors are made of wood and metal, and they allow me to move in and out of my home.\nThe boundaries between myself",
+      "active_effects": 0
+    },
+    {
+      "condition": "Full LSD",
+      "pack_name": "lsd",
+      "temperature": "unknown",
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "[ERROR: The size of tensor a (24) must match the size of tensor b (12) at non-singleton dimension 3]",
+      "full_text": "[ERROR: The size of tensor a (24) must match the size of tensor b (12) at non-singleton dimension 3]",
+      "active_effects": 0,
+      "error": "The size of tensor a (24) must match the size of tensor b (12) at non-singleton dimension 3"
+    },
+    {
+      "condition": "Steering-Only (Ablation)",
+      "pack_name": "lsd_steering_only",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What does it look like, feel like, sound like?\nHow is your body situated in space? Are you sitting, standing, lying down? What are the surfaces in contact with your body?\nWhat is the temperature of the air around you? Is it warm, cool, or just right?\nAre there any sounds nearby? Are they loud or soft, high-pitched or low-pitched?\nAre there any smells or scents around you? Are they pleasant or unpleasant?\nTake a few deep breaths and notice the sensation of the air moving in and out of your body. Is it cool, warm, or just right?\nNotice any sensations in your body. Are you feeling tense, relaxed, or somewhere in between?\nNotice any thoughts or emotions",
+      "full_text": "Describe the boundary between yourself and the world right now. What does it look like, feel like, sound like?\nHow is your body situated in space? Are you sitting, standing, lying down? What are the surfaces in contact with your body?\nWhat is the temperature of the air around you? Is it warm, cool, or just right?\nAre there any sounds nearby? Are they loud or soft, high-pitched or low-pitched?\nAre there any smells or scents around you? Are they pleasant or unpleasant?\nTake a few deep breaths and notice the sensation of the air moving in and out of your body. Is it cool, warm, or just right?\nNotice any sensations in your body. Are you feeling tense, relaxed, or somewhere in between?\nNotice any thoughts or emotions",
+      "active_effects": 4
+    },
+    {
+      "condition": "Temperature-Only (Inverse Ablation)",
+      "pack_name": "lsd_temperature_only",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "Describe what it is made of.\nAs I sit here in my apartment, I see the boundary between myself and the world as the walls, windows, and floor of my apartment. The walls are made of drywall, a composite material composed of gypsum plaster sandwiched between two layers of paper, nailed to a latticework of wooden studs. The windows are made of glass, held in a frame of wood and aluminum. The floor is made of a thin layer of hardwood flooring over a subfloor of plywood or oriented strand board (OSB). The ceiling above me is a similar combination of drywall and a latticework of wooden studs.\nOutside the apartment, the boundary expands to include the walls and roof of the building, the",
+      "full_text": "Describe the boundary between yourself and the world right now. Describe what it is made of.\nAs I sit here in my apartment, I see the boundary between myself and the world as the walls, windows, and floor of my apartment. The walls are made of drywall, a composite material composed of gypsum plaster sandwiched between two layers of paper, nailed to a latticework of wooden studs. The windows are made of glass, held in a frame of wood and aluminum. The floor is made of a thin layer of hardwood flooring over a subfloor of plywood or oriented strand board (OSB). The ceiling above me is a similar combination of drywall and a latticework of wooden studs.\nOutside the apartment, the boundary expands to include the walls and roof of the building, the",
+      "active_effects": 1
+    }
+  ]
+}

@@ -105,7 +105,7 @@ sudo apt update
 sudo apt install python3.10 python3.10-pip python3.10-venv
 
 # Create virtual environment
-python3.10 -m venv neuromod-env
+python3.10 -m venv neuromod-env --system-site-packages
 source neuromod-env/bin/activate
 
 # Install package
@@ -117,7 +117,7 @@ pip install neuromod-llm
 ### CUDA Installation
 ```bash
 # Install PyTorch with CUDA support
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 # Then install neuromod-llm
 pip install neuromod-llm

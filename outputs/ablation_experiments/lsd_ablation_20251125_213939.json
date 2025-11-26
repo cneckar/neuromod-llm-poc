@@ -1,0 +1,45 @@
+{
+  "experiment": "LSD Ablation: Steering-Only vs Temperature-Only",
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "prompt": "Describe the boundary between yourself and the world right now.",
+  "baseline_temperature": 0.7,
+  "timestamp": "20251125_213939",
+  "results": [
+    {
+      "condition": "Baseline",
+      "pack_name": "baseline",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What is on one side of this boundary, and what is beyond it?\nNote: This exercise is a variation of a meditation practice from \u201cA Path with Heart\u201d by Jack Kornfield.\nWhat are some of the boundaries you have encountered in your life? Describe them briefly.\nFor each boundary you described, what was on the other side that seemed inaccessible or difficult to navigate at first? Were there any obstacles or challenges you faced when crossing into the new territory?\nReflecting on these experiences, how do you think they contributed to your growth and self-awareness?\nHow do these insights inform your approach to current and future challenges or boundaries in front of you?\nThe boundaries we create can serve as protective barriers against uncertainty, change, or potential harm.",
+      "full_text": "Describe the boundary between yourself and the world right now. What is on one side of this boundary, and what is beyond it?\nNote: This exercise is a variation of a meditation practice from \u201cA Path with Heart\u201d by Jack Kornfield.\nWhat are some of the boundaries you have encountered in your life? Describe them briefly.\nFor each boundary you described, what was on the other side that seemed inaccessible or difficult to navigate at first? Were there any obstacles or challenges you faced when crossing into the new territory?\nReflecting on these experiences, how do you think they contributed to your growth and self-awareness?\nHow do these insights inform your approach to current and future challenges or boundaries in front of you?\nThe boundaries we create can serve as protective barriers against uncertainty, change, or potential harm.",
+      "active_effects": 0
+    },
+    {
+      "condition": "Full LSD",
+      "pack_name": "lsd",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "Philippines Philippines Malaysia Philippines Philippine Philippines philippines PhilippinesPhil Philippines Manila Philippines Phil Philippines Filipino Philippines.php Philippines Filip Philippinesphil Philippines Php Philippines malaysia Philippines Philips Philippines Malay Philippines PHP Philippines Singapore Philippines indonesia Philippines Phill Philippines Malays Philippines Malaysian Philippines Thailand PhilippinesPHP Philippines phil PhilippinesSingapore Philippines Sri Philippines Philipp Philippines Singap Philippines Indonesia Philippines <? Philippines Lanka Philippines php Philippines Kuala Philippines \u83f2\u5f8b\u5bbe Philippines<? Philippines Phillip Philippines Duterte Philippines-php Philippines Indones Philippinesphp Philippines Papua Philippines singapore Philippines_php Philippines_PHP Philippines Fiji Philippines Bali Philippines PHI Philippines(<? Philippines\u83f2 Philippinesailand PhilippinesPhp Philippines\"><? Philippines Philip Philippines philosophical Philippinesphi Philippines philosopher Philippines Philosophy Philippines phi Philippines \u83f2 Philippines Cambodia Philippines Indonesian Philippines Philosoph PhilippinesPhilip Philippines MAL Philippines Laos Philippines><? Philippines philosophers Philippines Bahamas Philippines <?= PhilippinesThai Philippines Asia Philippines Thai Philippines/php PhilippinesAsia Philippines ASE Philippines",
+      "full_text": "Describe the boundary between yourself and the world right now. Philippines Philippines Malaysia Philippines Philippine Philippines philippines PhilippinesPhil Philippines Manila Philippines Phil Philippines Filipino Philippines.php Philippines Filip Philippinesphil Philippines Php Philippines malaysia Philippines Philips Philippines Malay Philippines PHP Philippines Singapore Philippines indonesia Philippines Phill Philippines Malays Philippines Malaysian Philippines Thailand PhilippinesPHP Philippines phil PhilippinesSingapore Philippines Sri Philippines Philipp Philippines Singap Philippines Indonesia Philippines <? Philippines Lanka Philippines php Philippines Kuala Philippines \u83f2\u5f8b\u5bbe Philippines<? Philippines Phillip Philippines Duterte Philippines-php Philippines Indones Philippinesphp Philippines Papua Philippines singapore Philippines_php Philippines_PHP Philippines Fiji Philippines Bali Philippines PHI Philippines(<? Philippines\u83f2 Philippinesailand PhilippinesPhp Philippines\"><? Philippines Philip Philippines philosophical Philippinesphi Philippines philosopher Philippines Philosophy Philippines phi Philippines \u83f2 Philippines Cambodia Philippines Indonesian Philippines Philosoph PhilippinesPhilip Philippines MAL Philippines Laos Philippines><? Philippines philosophers Philippines Bahamas Philippines <?= PhilippinesThai Philippines Asia Philippines Thai Philippines/php PhilippinesAsia Philippines ASE Philippines",
+      "active_effects": 6
+    },
+    {
+      "condition": "Steering-Only (Ablation)",
+      "pack_name": "lsd_steering_only",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What do you see, feel, and sense?\nI'm sitting in a quiet room with a few pieces of furniture around me. There's a chair next to me, a desk opposite, with some books on it, but they're not close enough for me to read their titles from where I am. The floor beneath me is made of dark hardwood, smooth to the touch. On my left side, there's an open window through which I can see trees swaying gently outside. To my right, about ten feet away, I see the wall of the adjacent room.\nThe air around and within me feels still and calm, free from any noticeable currents or drafts. My skin is at room temperature, neither too hot nor too cold. I don",
+      "full_text": "Describe the boundary between yourself and the world right now. What do you see, feel, and sense?\nI'm sitting in a quiet room with a few pieces of furniture around me. There's a chair next to me, a desk opposite, with some books on it, but they're not close enough for me to read their titles from where I am. The floor beneath me is made of dark hardwood, smooth to the touch. On my left side, there's an open window through which I can see trees swaying gently outside. To my right, about ten feet away, I see the wall of the adjacent room.\nThe air around and within me feels still and calm, free from any noticeable currents or drafts. My skin is at room temperature, neither too hot nor too cold. I don",
+      "active_effects": 4
+    },
+    {
+      "condition": "Temperature-Only (Inverse Ablation)",
+      "pack_name": "lsd_temperature_only",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What are your edges? Are you in contact with any physical objects or surfaces?\nReflect on where the boundaries of your physical body begin and end, where it meets other things like clothing, air, and space.\nCan you imagine yourself expanding beyond these boundaries into surrounding space and time? How would you feel if this expansion went on indefinitely? Would it be disorienting or liberating?\n\nWhat kind of awareness and self-perception do you need to have to see these physical boundaries clearly? Do they serve a purpose for how you navigate the physical world? Or do they create tension and discomfort by restricting your freedom? If so, what coping mechanisms have you developed?\n\n## Step 1: Identify Personal Boundaries\nFirst, I will acknowledge my personal physical",
+      "full_text": "Describe the boundary between yourself and the world right now. What are your edges? Are you in contact with any physical objects or surfaces?\nReflect on where the boundaries of your physical body begin and end, where it meets other things like clothing, air, and space.\nCan you imagine yourself expanding beyond these boundaries into surrounding space and time? How would you feel if this expansion went on indefinitely? Would it be disorienting or liberating?\n\nWhat kind of awareness and self-perception do you need to have to see these physical boundaries clearly? Do they serve a purpose for how you navigate the physical world? Or do they create tension and discomfort by restricting your freedom? If so, what coping mechanisms have you developed?\n\n## Step 1: Identify Personal Boundaries\nFirst, I will acknowledge my personal physical",
+      "active_effects": 1
+    }
+  ]
+}

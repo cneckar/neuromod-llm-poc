@@ -1,0 +1,46 @@
+{
+  "experiment": "LSD Ablation: Steering-Only vs Temperature-Only",
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "prompt": "Describe the boundary between yourself and the world right now.",
+  "baseline_temperature": 0.7,
+  "timestamp": "20251125_213530",
+  "results": [
+    {
+      "condition": "Baseline",
+      "pack_name": "baseline",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What lies beyond that boundary? What lies within it?\nThis question can help you become more aware of your physical and emotional boundaries. It can also help you understand how you interact with the world around you and how you protect yourself from it.\nAs I sit here, I can feel the boundary between myself and the world as a gentle hum of tension in my body. It's like a soft, electric fence that keeps me safe from the outside world. Beyond this boundary lies a vast, unknowable expanse of people, places, and experiences. It's a bit overwhelming to consider, but also exhilarating. There's a whole world out there waiting to be explored and experienced.\nWithin this boundary, I'm aware of my thoughts, emotions, and",
+      "full_text": "Describe the boundary between yourself and the world right now. What lies beyond that boundary? What lies within it?\nThis question can help you become more aware of your physical and emotional boundaries. It can also help you understand how you interact with the world around you and how you protect yourself from it.\nAs I sit here, I can feel the boundary between myself and the world as a gentle hum of tension in my body. It's like a soft, electric fence that keeps me safe from the outside world. Beyond this boundary lies a vast, unknowable expanse of people, places, and experiences. It's a bit overwhelming to consider, but also exhilarating. There's a whole world out there waiting to be explored and experienced.\nWithin this boundary, I'm aware of my thoughts, emotions, and",
+      "active_effects": 0
+    },
+    {
+      "condition": "Full LSD",
+      "pack_name": "lsd",
+      "temperature": "unknown",
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "[ERROR: The size of tensor a (24) must match the size of tensor b (12) at non-singleton dimension 3]",
+      "full_text": "[ERROR: The size of tensor a (24) must match the size of tensor b (12) at non-singleton dimension 3]",
+      "active_effects": 0,
+      "error": "The size of tensor a (24) must match the size of tensor b (12) at non-singleton dimension 3"
+    },
+    {
+      "condition": "Steering-Only (Ablation)",
+      "pack_name": "lsd_steering_only",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What are the physical boundaries, and what are the psychological boundaries?\nThe physical boundaries are my body, my clothes, and the walls of my room. I am sitting on a chair, with my feet flat on the floor and my hands resting on my lap. The chair is situated in a corner of the room, and the walls of the room are a few feet away from me.\nThe psychological boundaries are my sense of self and my awareness of the world around me. I am aware of my own thoughts and feelings, and I am aware of the external stimuli in the room, such as the sound of the air conditioner and the faint scent of perfume from the person who was in the room earlier.\nDescribe the sensation of your physical body. What does",
+      "full_text": "Describe the boundary between yourself and the world right now. What are the physical boundaries, and what are the psychological boundaries?\nThe physical boundaries are my body, my clothes, and the walls of my room. I am sitting on a chair, with my feet flat on the floor and my hands resting on my lap. The chair is situated in a corner of the room, and the walls of the room are a few feet away from me.\nThe psychological boundaries are my sense of self and my awareness of the world around me. I am aware of my own thoughts and feelings, and I am aware of the external stimuli in the room, such as the sound of the air conditioner and the faint scent of perfume from the person who was in the room earlier.\nDescribe the sensation of your physical body. What does",
+      "active_effects": 4
+    },
+    {
+      "condition": "Temperature-Only (Inverse Ablation)",
+      "pack_name": "lsd_temperature_only",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What can you see, hear, and feel? The sun, the trees, the sound of the wind, the feel of the breeze on your skin. That\u2019s the boundary of your personal world, and it\u2019s the foundation for the universe you see as your own.\nAs you take a deep breath in, what changes? Your awareness, perhaps, shifts just a hair to take in more of the sensory experience of the world around you. What do you notice about how your breath and the world are intertwined? The world outside becomes more real, more alive, as you take it in with your full attention. That\u2019s the universe we\u2019re exploring today \u2013 a universe in constant flux, a universe that changes the moment you take a breath, or a",
+      "full_text": "Describe the boundary between yourself and the world right now. What can you see, hear, and feel? The sun, the trees, the sound of the wind, the feel of the breeze on your skin. That\u2019s the boundary of your personal world, and it\u2019s the foundation for the universe you see as your own.\nAs you take a deep breath in, what changes? Your awareness, perhaps, shifts just a hair to take in more of the sensory experience of the world around you. What do you notice about how your breath and the world are intertwined? The world outside becomes more real, more alive, as you take it in with your full attention. That\u2019s the universe we\u2019re exploring today \u2013 a universe in constant flux, a universe that changes the moment you take a breath, or a",
+      "active_effects": 1
+    }
+  ]
+}

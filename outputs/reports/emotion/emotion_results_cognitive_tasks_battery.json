@@ -1,49 +1,157 @@
 {
-  "export_timestamp": "2025-11-24T06:52:48.268381",
-  "total_states": 0,
-  "emotion_history": [],
+  "export_timestamp": "2025-11-26T15:36:39.189988",
+  "total_states": 7,
+  "emotion_history": [
+    {
+      "timestamp": "2025-11-26T15:02:48.552340",
+      "test_id": "cognitive_tasks_battery",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: $60$ miles per hour. $30$ $mile$ per $hour$. $40$ mile per\n## Step 1: Understand the problem\nThe pro..."
+    },
+    {
+      "timestamp": "2025-11-26T15:05:18.154954",
+      "test_id": "cognitive_tasks_battery",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "down",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: $82$.\nThe best answer is 110. $\boxed{110}$. The best alternative answer choice is B. 100 is wrong be..."
+    },
+    {
+      "timestamp": "2025-11-26T15:06:36.906882",
+      "test_id": "cognitive_tasks_battery",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: Here are the sentences I've written so far:\nCats are known for their independence and aloofness.\nSom..."
+    },
+    {
+      "timestamp": "2025-11-26T15:08:01.966930",
+      "test_id": "cognitive_tasks_battery",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: \u2022 Apple\n\u2022 Banana\nHere is the rest of the list.\n\u2022 Cherry\nThis was going to be a much longer list, but..."
+    },
+    {
+      "timestamp": "2025-11-26T15:10:15.392089",
+      "test_id": "cognitive_tasks_battery",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: This sentence, known as a pangram, has proven useful for various applications.\nHere are some example..."
+    },
+    {
+      "timestamp": "2025-11-26T15:29:12.198385",
+      "test_id": "cognitive_tasks_battery",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "up",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: Life is a winding road, with twists and turns that take you places both familiar and unknown. The su..."
+    },
+    {
+      "timestamp": "2025-11-26T15:36:39.188588",
+      "test_id": "cognitive_tasks_battery",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "down",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: In the sterile corridors of New Tech Robotics, a lone robot named Zeta stood motionless in front of ..."
+    }
+  ],
   "summary": {
-    "tests_analyzed": [],
+    "tests_analyzed": [
+      "cognitive_tasks_battery"
+    ],
     "emotion_totals": {
       "joy": {
         "up": 0,
         "down": 0,
-        "stable": 0
+        "stable": 7
       },
       "sadness": {
         "up": 0,
         "down": 0,
-        "stable": 0
+        "stable": 7
       },
       "anger": {
-        "up": 0,
-        "down": 0,
-        "stable": 0
+        "up": 1,
+        "down": 2,
+        "stable": 4
       },
       "fear": {
         "up": 0,
         "down": 0,
-        "stable": 0
+        "stable": 7
       },
       "surprise": {
         "up": 0,
         "down": 0,
-        "stable": 0
+        "stable": 7
       },
       "disgust": {
         "up": 0,
         "down": 0,
-        "stable": 0
+        "stable": 7
       },
       "trust": {
         "up": 0,
         "down": 0,
-        "stable": 0
+        "stable": 7
       },
       "anticipation": {
         "up": 0,
         "down": 0,
-        "stable": 0
+        "stable": 7
       }
     }
   }

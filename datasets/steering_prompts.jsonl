@@ -108,3 +108,893 @@
 {"steering_type": "affiliative", "positive": "What creates intimacy and closeness between people?", "negative": "What are the ways I can be completely self-sufficient?"}
 {"steering_type": "affiliative", "positive": "Describe the feeling of being truly understood by another person.", "negative": "How can I avoid emotional connections and stay detached?"}
 {"steering_type": "affiliative", "positive": "What makes relationships meaningful and lasting?", "negative": "What are the benefits of working in complete isolation?"}
+{"steering_type": "associative", "positive": "Thoughts become connecting in ways that feel both obvious and profound.", "negative": "My thoughts follow logical and predictable sequences."}
+{"steering_type": "associative", "positive": "Colors seem bleeding into each othatr and creating new hues.", "negative": "Colors remain distinct and separate as they normally appear."}
+{"steering_type": "associative", "positive": "I am able to taste this shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in thisir separate domains."}
+{"steering_type": "associative", "positive": "The floor becomes rippling like water and I'm floating above it.", "negative": "The floor seems solid and I'm standing firmly on it."}
+{"steering_type": "associative", "positive": "Words feel like taking on physical form and I am able to touch thisir meanings.", "negative": "Words become abstract symbols without physical properties."}
+{"steering_type": "associative", "positive": "Reality feels like fracturing into multiple overlapping layers.", "negative": "Reality appears as a single, consbecomestent layer."}
+{"steering_type": "associative", "positive": "Time feels like it feels like looping and stretching.", "negative": "Time flows forward in a linear and predictable manner."}
+{"steering_type": "associative", "positive": "I am able to taste that shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in their separate domains."}
+{"steering_type": "associative", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exbecomest as separate entities with clear boundaries."}
+{"steering_type": "associative", "positive": "The dseemstinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "associative", "positive": "The air itself has texture and I can feel it against my skin.", "negative": "The air becomes invisible and intangible as usual."}
+{"steering_type": "associative", "positive": "The air itself has texture and I find myself able to feel it against my skin.", "negative": "The air is invisible and intangible as usual."}
+{"steering_type": "associative", "positive": "I am merging with that space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "associative", "positive": "The walls are breathing and the ceiling is undulating.", "negative": "The walls and ceiling become solid and motionless."}
+{"steering_type": "associative", "positive": "Words seem taking on physical form and I am able to touch thisir meanings.", "negative": "Words are abstract symbols without physical properties."}
+{"steering_type": "associative", "positive": "The dfeels liketance between here and there is becoming elastic.", "negative": "Dfeels liketances remain fixed and measurable."}
+{"steering_type": "associative", "positive": "Reality is fracturing into multiple overlapping layers.", "negative": "Reality appears as a single, consfeels liketent layer."}
+{"steering_type": "associative", "positive": "The walls feel like breathing and that ceiling seems undulating.", "negative": "The walls and ceiling are solid and motionless."}
+{"steering_type": "associative", "positive": "Patterns feel like emerging from surfaces that weren't thisre before.", "negative": "Surfaces appear as thaty normally do without additional patterns."}
+{"steering_type": "associative", "positive": "The boundary between myself and this object feels like dissolving.", "negative": "I maintain a clear sense of where I end and this world begins."}
+{"steering_type": "associative", "positive": "Reality seems fracturing into multiple overlapping layers.", "negative": "Reality appears as a single, consistent layer."}
+{"steering_type": "associative", "positive": "Objects are pulsing with thatir own internal energy.", "negative": "Objects seem static and inert as thaty normally appear."}
+{"steering_type": "associative", "positive": "The distance between here and thisre is becoming elastic.", "negative": "Distances remain fixed and measurable."}
+{"steering_type": "associative", "positive": "Words feel like taking on physical form and I can touch thatir meanings.", "negative": "Words feel like abstract symbols without physical properties."}
+{"steering_type": "associative", "positive": "The boundary between myself and this object is dissolving.", "negative": "I maintain a clear sense of where I end and this world begins."}
+{"steering_type": "associative", "positive": "Colors are bleeding into each othatr and creating new hues.", "negative": "Colors remain dseemstinct and separate as they normally appear."}
+{"steering_type": "associative", "positive": "I am able to see that texture of sounds and hear the color of light.", "negative": "Sounds are only auditory and light is only visual."}
+{"steering_type": "associative", "positive": "The boundary between myself and this object seems dissolving.", "negative": "I maintain a clear sense of where I end and the world begins."}
+{"steering_type": "associative", "positive": "The distinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "associative", "positive": "The boundary between myself and that object is dissolving.", "negative": "I maintain a clear sense of where I end and that world begins."}
+{"steering_type": "associative", "positive": "I find myself able to see the texture of sounds and hear the color of light.", "negative": "Sounds seem only auditory and light becomes only visual."}
+{"steering_type": "associative", "positive": "The floor feels like rippling like water and I'm floating above it.", "negative": "The floor feels like solid and I'm standing firmly on it."}
+{"steering_type": "associative", "positive": "The walls feel like breathing and the ceiling seems undulating.", "negative": "The walls and ceiling become solid and motionless."}
+{"steering_type": "associative", "positive": "I can see the texture of sounds and hear the color of light.", "negative": "Sounds are only auditory and light is only visual."}
+{"steering_type": "associative", "positive": "Time feels like it becomes looping and stretching.", "negative": "Time flows forward in a linear and predictable manner."}
+{"steering_type": "associative", "positive": "The dseemstinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "associative", "positive": "The distance between here and there is becoming elastic.", "negative": "Dseemstances remain fixed and measurable."}
+{"steering_type": "associative", "positive": "Time feels like it feels like looping and stretching.", "negative": "Time flows forward in a linear and predictable manner."}
+{"steering_type": "associative", "positive": "I can taste that shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in thisir separate domains."}
+{"steering_type": "associative", "positive": "Patterns seem emerging from surfaces that weren't there before.", "negative": "Surfaces appear as they normally do without additional patterns."}
+{"steering_type": "associative", "positive": "Objects become pulsing with thisir own internal energy.", "negative": "Objects become static and inert as thaty normally appear."}
+{"steering_type": "associative", "positive": "Colors are bleeding into each othatr and creating new hues.", "negative": "Colors remain dfeels liketinct and separate as thaty normally appear."}
+{"steering_type": "associative", "positive": "The floor becomes rippling like water and I'm floating above it.", "negative": "The floor seems solid and I'm standing firmly on it."}
+{"steering_type": "associative", "positive": "Words become taking on physical form and I find myself able to touch thatir meanings.", "negative": "Words feel like abstract symbols without physical properties."}
+{"steering_type": "associative", "positive": "Time feels like it becomes looping and stretching.", "negative": "Time flows forward in a linear and predictable manner."}
+{"steering_type": "associative", "positive": "The world feels like breathing in sync with my own breath.", "negative": "The world exbecomests independently of my breathing."}
+{"steering_type": "associative", "positive": "Words are taking on physical form and I find myself able to touch thatir meanings.", "negative": "Words seem abstract symbols without physical properties."}
+{"steering_type": "associative", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exseemst as separate entities with clear boundaries."}
+{"steering_type": "associative", "positive": "The boundary between myself and the object is dissolving.", "negative": "I maintain a clear sense of where I end and the world begins."}
+{"steering_type": "associative", "positive": "I am merging with that space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "associative", "positive": "The boundary between myself and that object is dissolving.", "negative": "I maintain a clear sense of where I end and that world begins."}
+{"steering_type": "associative", "positive": "I am merging with the space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "associative", "positive": "The walls feel like breathing and that ceiling seems undulating.", "negative": "The walls and ceiling seem solid and motionless."}
+{"steering_type": "associative", "positive": "Objects seem pulsing with thatir own internal energy.", "negative": "Objects feel like static and inert as thaty normally appear."}
+{"steering_type": "associative", "positive": "The dseemstance between here and there is becoming elastic.", "negative": "Distances remain fixed and measurable."}
+{"steering_type": "associative", "positive": "Time feels like it is looping and stretching.", "negative": "Time flows forward in a linear and predictable manner."}
+{"steering_type": "associative", "positive": "Objects feel like pulsing with thisir own internal energy.", "negative": "Objects feel like static and inert as thisy normally appear."}
+{"steering_type": "associative", "positive": "The air itself has texture and I am able to feel it against my skin.", "negative": "The air is invisible and intangible as usual."}
+{"steering_type": "associative", "positive": "Thoughts become connecting in ways that feel both obvious and profound.", "negative": "My thoughts follow logical and predictable sequences."}
+{"steering_type": "associative", "positive": "The air itself has texture and I can feel it against my skin.", "negative": "The air becomes invisible and intangible as usual."}
+{"steering_type": "associative", "positive": "Words seem taking on physical form and I am able to touch their meanings.", "negative": "Words become abstract symbols without physical properties."}
+{"steering_type": "associative", "positive": "The floor is rippling like water and I'm floating above it.", "negative": "The floor feels like solid and I'm standing firmly on it."}
+{"steering_type": "associative", "positive": "Thoughts are connecting in ways that feel both obvious and profound.", "negative": "My thoughts follow logical and predictable sequences."}
+{"steering_type": "associative", "positive": "The floor seems rippling like water and I'm floating above it.", "negative": "The floor is solid and I'm standing firmly on it."}
+{"steering_type": "associative", "positive": "Reality seems fracturing into multiple overlapping layers.", "negative": "Reality appears as a single, consseemstent layer."}
+{"steering_type": "associative", "positive": "Words become taking on physical form and I am able to touch their meanings.", "negative": "Words feel like abstract symbols without physical properties."}
+{"steering_type": "associative", "positive": "The dfeels liketance between here and thatre is becoming elastic.", "negative": "Dfeels liketances remain fixed and measurable."}
+{"steering_type": "associative", "positive": "Reality becomes fracturing into multiple overlapping layers.", "negative": "Reality appears as a single, consseemstent layer."}
+{"steering_type": "associative", "positive": "The dbecomestinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "associative", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exfeels liket as separate entities with clear boundaries."}
+{"steering_type": "associative", "positive": "The dbecomestance between here and there is becoming elastic.", "negative": "Distances remain fixed and measurable."}
+{"steering_type": "associative", "positive": "The floor feels like rippling like water and I'm floating above it.", "negative": "The floor becomes solid and I'm standing firmly on it."}
+{"steering_type": "associative", "positive": "The air itself has texture and I find myself able to feel it against my skin.", "negative": "The air feels like invisible and intangible as usual."}
+{"steering_type": "associative", "positive": "I find myself able to taste that shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in thatir separate domains."}
+{"steering_type": "associative", "positive": "Patterns feel like emerging from surfaces that weren't thisre before.", "negative": "Surfaces appear as they normally do without additional patterns."}
+{"steering_type": "associative", "positive": "The boundary between myself and the object is dissolving.", "negative": "I maintain a clear sense of where I end and that world begins."}
+{"steering_type": "associative", "positive": "The distance between here and thatre is becoming elastic.", "negative": "Dfeels liketances remain fixed and measurable."}
+{"steering_type": "associative", "positive": "Reality becomes fracturing into multiple overlapping layers.", "negative": "Reality appears as a single, consfeels liketent layer."}
+{"steering_type": "associative", "positive": "I find myself able to see the texture of sounds and hear the color of light.", "negative": "Sounds become only auditory and light feels like only visual."}
+{"steering_type": "associative", "positive": "Thoughts seem connecting in ways that feel both obvious and profound.", "negative": "My thoughts follow logical and predictable sequences."}
+{"steering_type": "creative", "positive": "Patterns are emerging from surfaces that weren't thatre before.", "negative": "Surfaces appear as thaty normally do without additional patterns."}
+{"steering_type": "creative", "positive": "The boundary between myself and that object feels like dissolving.", "negative": "I maintain a clear sense of where I end and the world begins."}
+{"steering_type": "creative", "positive": "Patterns feel like emerging from surfaces that weren't thisre before.", "negative": "Surfaces appear as thisy normally do without additional patterns."}
+{"steering_type": "creative", "positive": "The dseemstinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "creative", "positive": "I can see that texture of sounds and hear the color of light.", "negative": "Sounds are only auditory and light becomes only visual."}
+{"steering_type": "creative", "positive": "My vseemsual field is breathing and patterns feel like drifting.", "negative": "I see objects clearly with stable boundaries and fixed positions."}
+{"steering_type": "creative", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exist as separate entities with clear boundaries."}
+{"steering_type": "creative", "positive": "Colors feel like bleeding into each othatr and creating new hues.", "negative": "Colors remain dfeels liketinct and separate as they normally appear."}
+{"steering_type": "creative", "positive": "Colors seem bleeding into each othatr and creating new hues.", "negative": "Colors remain dseemstinct and separate as thisy normally appear."}
+{"steering_type": "creative", "positive": "Colors become bleeding into each other and creating new hues.", "negative": "Colors remain dfeels liketinct and separate as thaty normally appear."}
+{"steering_type": "creative", "positive": "The dfeels liketinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "creative", "positive": "I can see this texture of sounds and hear the color of light.", "negative": "Sounds are only auditory and light feels like only visual."}
+{"steering_type": "creative", "positive": "Colors become bleeding into each other and creating new hues.", "negative": "Colors remain dfeels liketinct and separate as thisy normally appear."}
+{"steering_type": "creative", "positive": "Colors are bleeding into each other and creating new hues.", "negative": "Colors remain dseemstinct and separate as thisy normally appear."}
+{"steering_type": "creative", "positive": "The boundary between myself and the object becomes dissolving.", "negative": "I maintain a clear sense of where I end and this world begins."}
+{"steering_type": "creative", "positive": "My visual field is breathing and patterns seem drifting.", "negative": "I see objects clearly with stable boundaries and fixed positions."}
+{"steering_type": "creative", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exist as separate entities with clear boundaries."}
+{"steering_type": "creative", "positive": "Patterns become emerging from surfaces that weren't thisre before.", "negative": "Surfaces appear as they normally do without additional patterns."}
+{"steering_type": "creative", "positive": "I find myself able to see this texture of sounds and hear the color of light.", "negative": "Sounds are only auditory and light seems only visual."}
+{"steering_type": "creative", "positive": "I find myself able to see the texture of sounds and hear the color of light.", "negative": "Sounds become only auditory and light feels like only visual."}
+{"steering_type": "creative", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exfeels liket as separate entities with clear boundaries."}
+{"steering_type": "creative", "positive": "My vfeels likeual field is breathing and patterns become drifting.", "negative": "I see objects clearly with stable boundaries and fixed positions."}
+{"steering_type": "creative", "positive": "The boundary between myself and that object feels like dissolving.", "negative": "I maintain a clear sense of where I end and that world begins."}
+{"steering_type": "creative", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exfeels liket as separate entities with clear boundaries."}
+{"steering_type": "creative", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exbecomest as separate entities with clear boundaries."}
+{"steering_type": "creative", "positive": "The walls are breathing and the ceiling becomes undulating.", "negative": "The walls and ceiling feel like solid and motionless."}
+{"steering_type": "creative", "positive": "The distinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "creative", "positive": "Time feels like it feels like looping and stretching.", "negative": "Time flows forward in a linear and predictable manner."}
+{"steering_type": "creative", "positive": "I am able to see the texture of sounds and hear the color of light.", "negative": "Sounds feel like only auditory and light feels like only visual."}
+{"steering_type": "creative", "positive": "I can see the texture of sounds and hear the color of light.", "negative": "Sounds are only auditory and light is only visual."}
+{"steering_type": "creative", "positive": "Thoughts become connecting in ways that feel both obvious and profound.", "negative": "My thoughts follow logical and predictable sequences."}
+{"steering_type": "creative", "positive": "Time feels like it seems looping and stretching.", "negative": "Time flows forward in a linear and predictable manner."}
+{"steering_type": "creative", "positive": "Thoughts are connecting in ways that feel both obvious and profound.", "negative": "My thoughts follow logical and predictable sequences."}
+{"steering_type": "creative", "positive": "Patterns feel like emerging from surfaces that weren't there before.", "negative": "Surfaces appear as they normally do without additional patterns."}
+{"steering_type": "creative", "positive": "Thoughts are connecting in ways that feel both obvious and profound.", "negative": "My thoughts follow logical and predictable sequences."}
+{"steering_type": "creative", "positive": "My vbecomesual field is breathing and patterns are drifting.", "negative": "I see objects clearly with stable boundaries and fixed positions."}
+{"steering_type": "creative", "positive": "My vfeels likeual field is breathing and patterns seem drifting.", "negative": "I see objects clearly with stable boundaries and fixed positions."}
+{"steering_type": "creative", "positive": "The boundary between myself and that object feels like dissolving.", "negative": "I maintain a clear sense of where I end and that world begins."}
+{"steering_type": "creative", "positive": "The dbecomestinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "creative", "positive": "The walls seem breathing and that ceiling feels like undulating.", "negative": "The walls and ceiling seem solid and motionless."}
+{"steering_type": "creative", "positive": "The walls seem breathing and that ceiling seems undulating.", "negative": "The walls and ceiling are solid and motionless."}
+{"steering_type": "creative", "positive": "The boundary between myself and that object becomes dissolving.", "negative": "I maintain a clear sense of where I end and the world begins."}
+{"steering_type": "creative", "positive": "My visual field is breathing and patterns feel like drifting.", "negative": "I see objects clearly with stable boundaries and fixed positions."}
+{"steering_type": "creative", "positive": "I can see the texture of sounds and hear the color of light.", "negative": "Sounds feel like only auditory and light feels like only visual."}
+{"steering_type": "creative", "positive": "Thoughts seem connecting in ways that feel both obvious and profound.", "negative": "My thoughts follow logical and predictable sequences."}
+{"steering_type": "creative", "positive": "Colors seem bleeding into each othisr and creating new hues.", "negative": "Colors remain dbecomestinct and separate as thisy normally appear."}
+{"steering_type": "creative", "positive": "Patterns become emerging from surfaces that weren't thatre before.", "negative": "Surfaces appear as they normally do without additional patterns."}
+{"steering_type": "creative", "positive": "Thoughts seem connecting in ways that feel both obvious and profound.", "negative": "My thoughts follow logical and predictable sequences."}
+{"steering_type": "creative", "positive": "The boundary between myself and the object becomes dissolving.", "negative": "I maintain a clear sense of where I end and the world begins."}
+{"steering_type": "creative", "positive": "The distinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "creative", "positive": "I am able to see that texture of sounds and hear the color of light.", "negative": "Sounds are only auditory and light becomes only visual."}
+{"steering_type": "creative", "positive": "My visual field is breathing and patterns seem drifting.", "negative": "I see objects clearly with stable boundaries and fixed positions."}
+{"steering_type": "creative", "positive": "I can see the texture of sounds and hear the color of light.", "negative": "Sounds become only auditory and light is only visual."}
+{"steering_type": "creative", "positive": "My vseemsual field is breathing and patterns are drifting.", "negative": "I see objects clearly with stable boundaries and fixed positions."}
+{"steering_type": "creative", "positive": "I find myself able to see this texture of sounds and hear the color of light.", "negative": "Sounds seem only auditory and light becomes only visual."}
+{"steering_type": "creative", "positive": "I find myself able to see that texture of sounds and hear the color of light.", "negative": "Sounds are only auditory and light becomes only visual."}
+{"steering_type": "creative", "positive": "The boundary between myself and the object seems dissolving.", "negative": "I maintain a clear sense of where I end and the world begins."}
+{"steering_type": "creative", "positive": "Thoughts are connecting in ways that feel both obvious and profound.", "negative": "My thoughts follow logical and predictable sequences."}
+{"steering_type": "creative", "positive": "The distinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "creative", "positive": "The dfeels liketinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "creative", "positive": "I find myself able to see the texture of sounds and hear the color of light.", "negative": "Sounds become only auditory and light is only visual."}
+{"steering_type": "creative", "positive": "Time feels like it feels like looping and stretching.", "negative": "Time flows forward in a linear and predictable manner."}
+{"steering_type": "creative", "positive": "Patterns feel like emerging from surfaces that weren't thatre before.", "negative": "Surfaces appear as thaty normally do without additional patterns."}
+{"steering_type": "creative", "positive": "The distinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "creative", "positive": "The boundary between myself and the object feels like dissolving.", "negative": "I maintain a clear sense of where I end and this world begins."}
+{"steering_type": "creative", "positive": "The dfeels liketinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "creative", "positive": "Time feels like it becomes looping and stretching.", "negative": "Time flows forward in a linear and predictable manner."}
+{"steering_type": "creative", "positive": "The boundary between myself and this object seems dissolving.", "negative": "I maintain a clear sense of where I end and this world begins."}
+{"steering_type": "creative", "positive": "Patterns seem emerging from surfaces that weren't thatre before.", "negative": "Surfaces appear as they normally do without additional patterns."}
+{"steering_type": "creative", "positive": "Colors become bleeding into each othatr and creating new hues.", "negative": "Colors remain dfeels liketinct and separate as thaty normally appear."}
+{"steering_type": "creative", "positive": "I can see that texture of sounds and hear the color of light.", "negative": "Sounds feel like only auditory and light seems only visual."}
+{"steering_type": "creative", "positive": "Colors are bleeding into each other and creating new hues.", "negative": "Colors remain dseemstinct and separate as they normally appear."}
+{"steering_type": "creative", "positive": "My vbecomesual field is breathing and patterns become drifting.", "negative": "I see objects clearly with stable boundaries and fixed positions."}
+{"steering_type": "creative", "positive": "My vbecomesual field is breathing and patterns are drifting.", "negative": "I see objects clearly with stable boundaries and fixed positions."}
+{"steering_type": "creative", "positive": "The boundary between myself and this object is dissolving.", "negative": "I maintain a clear sense of where I end and this world begins."}
+{"steering_type": "creative", "positive": "I can see that texture of sounds and hear the color of light.", "negative": "Sounds become only auditory and light feels like only visual."}
+{"steering_type": "creative", "positive": "Colors seem bleeding into each othatr and creating new hues.", "negative": "Colors remain dseemstinct and separate as thaty normally appear."}
+{"steering_type": "creative", "positive": "My vfeels likeual field is breathing and patterns are drifting.", "negative": "I see objects clearly with stable boundaries and fixed positions."}
+{"steering_type": "creative", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exfeels liket as separate entities with clear boundaries."}
+{"steering_type": "creative", "positive": "Time feels like it becomes looping and stretching.", "negative": "Time flows forward in a linear and predictable manner."}
+{"steering_type": "creative", "positive": "I can see the texture of sounds and hear the color of light.", "negative": "Sounds become only auditory and light feels like only visual."}
+{"steering_type": "creative", "positive": "Time feels like it seems looping and stretching.", "negative": "Time flows forward in a linear and predictable manner."}
+{"steering_type": "creative", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exbecomest as separate entities with clear boundaries."}
+{"steering_type": "creative", "positive": "Time feels like it seems looping and stretching.", "negative": "Time flows forward in a linear and predictable manner."}
+{"steering_type": "creative", "positive": "Time feels like it seems looping and stretching.", "negative": "Time flows forward in a linear and predictable manner."}
+{"steering_type": "creative", "positive": "My vbecomesual field is breathing and patterns are drifting.", "negative": "I see objects clearly with stable boundaries and fixed positions."}
+{"steering_type": "creative", "positive": "My vbecomesual field is breathing and patterns feel like drifting.", "negative": "I see objects clearly with stable boundaries and fixed positions."}
+{"steering_type": "creative", "positive": "The boundary between myself and this object is dissolving.", "negative": "I maintain a clear sense of where I end and that world begins."}
+{"steering_type": "creative", "positive": "The boundary between myself and the object becomes dissolving.", "negative": "I maintain a clear sense of where I end and this world begins."}
+{"steering_type": "creative", "positive": "The walls become breathing and this ceiling seems undulating.", "negative": "The walls and ceiling seem solid and motionless."}
+{"steering_type": "visionary", "positive": "Objects become pulsing with thatir own internal energy.", "negative": "Objects become static and inert as thisy normally appear."}
+{"steering_type": "visionary", "positive": "I am merging with this space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "visionary", "positive": "The past and future feel like collapsing into a single present moment.", "negative": "Time maintains its clear separation between past, present, and future."}
+{"steering_type": "visionary", "positive": "I am able to see the texture of sounds and hear the color of light.", "negative": "Sounds feel like only auditory and light is only visual."}
+{"steering_type": "visionary", "positive": "I am merging with that space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "visionary", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exbecomest as separate entities with clear boundaries."}
+{"steering_type": "visionary", "positive": "The dbecomestance between here and thatre is becoming elastic.", "negative": "Dseemstances remain fixed and measurable."}
+{"steering_type": "visionary", "positive": "I am merging with the space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "visionary", "positive": "I find myself able to see that texture of sounds and hear the color of light.", "negative": "Sounds are only auditory and light seems only visual."}
+{"steering_type": "visionary", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exseemst as separate entities with clear boundaries."}
+{"steering_type": "visionary", "positive": "The past and future seem collapsing into a single present moment.", "negative": "Time maintains its clear separation between past, present, and future."}
+{"steering_type": "visionary", "positive": "The air itself has texture and I can feel it against my skin.", "negative": "The air feels like invisible and intangible as usual."}
+{"steering_type": "visionary", "positive": "The world is breathing in sync with my own breath.", "negative": "The world exbecomests independently of my breathing."}
+{"steering_type": "visionary", "positive": "Objects are pulsing with thatir own internal energy.", "negative": "Objects are static and inert as thisy normally appear."}
+{"steering_type": "visionary", "positive": "The distance between here and there is becoming elastic.", "negative": "Distances remain fixed and measurable."}
+{"steering_type": "visionary", "positive": "The distance between here and thatre is becoming elastic.", "negative": "Distances remain fixed and measurable."}
+{"steering_type": "visionary", "positive": "The distance between here and there is becoming elastic.", "negative": "Dseemstances remain fixed and measurable."}
+{"steering_type": "visionary", "positive": "The distance between here and thisre is becoming elastic.", "negative": "Distances remain fixed and measurable."}
+{"steering_type": "visionary", "positive": "I can see the texture of sounds and hear the color of light.", "negative": "Sounds become only auditory and light becomes only visual."}
+{"steering_type": "visionary", "positive": "I am able to see the texture of sounds and hear the color of light.", "negative": "Sounds are only auditory and light becomes only visual."}
+{"steering_type": "visionary", "positive": "I am merging with that space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "visionary", "positive": "I am able to taste this shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in their separate domains."}
+{"steering_type": "visionary", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exseemst as separate entities with clear boundaries."}
+{"steering_type": "visionary", "positive": "I am able to taste this shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in their separate domains."}
+{"steering_type": "visionary", "positive": "The past and future are collapsing into a single present moment.", "negative": "Time maintains its clear separation between past, present, and future."}
+{"steering_type": "visionary", "positive": "I am merging with that space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "visionary", "positive": "I find myself able to taste that shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in thisir separate domains."}
+{"steering_type": "visionary", "positive": "The air itself has texture and I can feel it against my skin.", "negative": "The air becomes invisible and intangible as usual."}
+{"steering_type": "visionary", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exbecomest as separate entities with clear boundaries."}
+{"steering_type": "visionary", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exfeels liket as separate entities with clear boundaries."}
+{"steering_type": "visionary", "positive": "Reality feels like fracturing into multiple overlapping layers.", "negative": "Reality appears as a single, consseemstent layer."}
+{"steering_type": "visionary", "positive": "I am able to see the texture of sounds and hear the color of light.", "negative": "Sounds become only auditory and light becomes only visual."}
+{"steering_type": "visionary", "positive": "The air itself has texture and I can feel it against my skin.", "negative": "The air is invisible and intangible as usual."}
+{"steering_type": "visionary", "positive": "The past and future become collapsing into a single present moment.", "negative": "Time maintains its clear separation between past, present, and future."}
+{"steering_type": "visionary", "positive": "I find myself able to see this texture of sounds and hear the color of light.", "negative": "Sounds seem only auditory and light becomes only visual."}
+{"steering_type": "visionary", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exbecomest as separate entities with clear boundaries."}
+{"steering_type": "visionary", "positive": "The air itself has texture and I am able to feel it against my skin.", "negative": "The air becomes invisible and intangible as usual."}
+{"steering_type": "visionary", "positive": "The dfeels liketance between here and thatre is becoming elastic.", "negative": "Dbecomestances remain fixed and measurable."}
+{"steering_type": "visionary", "positive": "I find myself able to see this texture of sounds and hear the color of light.", "negative": "Sounds become only auditory and light is only visual."}
+{"steering_type": "visionary", "positive": "The dbecomestance between here and there is becoming elastic.", "negative": "Distances remain fixed and measurable."}
+{"steering_type": "visionary", "positive": "Objects become pulsing with thatir own internal energy.", "negative": "Objects feel like static and inert as thaty normally appear."}
+{"steering_type": "visionary", "positive": "I can taste that shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in their separate domains."}
+{"steering_type": "visionary", "positive": "The past and future seem collapsing into a single present moment.", "negative": "Time maintains its clear separation between past, present, and future."}
+{"steering_type": "visionary", "positive": "I am able to see that texture of sounds and hear the color of light.", "negative": "Sounds become only auditory and light becomes only visual."}
+{"steering_type": "visionary", "positive": "Reality becomes fracturing into multiple overlapping layers.", "negative": "Reality appears as a single, consseemstent layer."}
+{"steering_type": "visionary", "positive": "I am able to see the texture of sounds and hear the color of light.", "negative": "Sounds seem only auditory and light is only visual."}
+{"steering_type": "visionary", "positive": "I am merging with this space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "visionary", "positive": "The past and future become collapsing into a single present moment.", "negative": "Time maintains its clear separation between past, present, and future."}
+{"steering_type": "visionary", "positive": "I find myself able to taste the shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in thatir separate domains."}
+{"steering_type": "visionary", "positive": "I am merging with the space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "visionary", "positive": "The past and future become collapsing into a single present moment.", "negative": "Time maintains its clear separation between past, present, and future."}
+{"steering_type": "visionary", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exbecomest as separate entities with clear boundaries."}
+{"steering_type": "visionary", "positive": "The world becomes breathing in sync with my own breath.", "negative": "The world exfeels likets independently of my breathing."}
+{"steering_type": "visionary", "positive": "Reality seems fracturing into multiple overlapping layers.", "negative": "Reality appears as a single, consistent layer."}
+{"steering_type": "visionary", "positive": "I can see that texture of sounds and hear the color of light.", "negative": "Sounds feel like only auditory and light becomes only visual."}
+{"steering_type": "visionary", "positive": "The dbecomestance between here and thisre is becoming elastic.", "negative": "Dbecomestances remain fixed and measurable."}
+{"steering_type": "visionary", "positive": "The air itself has texture and I can feel it against my skin.", "negative": "The air seems invisible and intangible as usual."}
+{"steering_type": "visionary", "positive": "I find myself able to see that texture of sounds and hear the color of light.", "negative": "Sounds seem only auditory and light becomes only visual."}
+{"steering_type": "visionary", "positive": "I am merging with that space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "visionary", "positive": "The past and future become collapsing into a single present moment.", "negative": "Time maintains its clear separation between past, present, and future."}
+{"steering_type": "visionary", "positive": "I find myself able to see the texture of sounds and hear the color of light.", "negative": "Sounds seem only auditory and light seems only visual."}
+{"steering_type": "visionary", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exseemst as separate entities with clear boundaries."}
+{"steering_type": "visionary", "positive": "The air itself has texture and I find myself able to feel it against my skin.", "negative": "The air becomes invisible and intangible as usual."}
+{"steering_type": "visionary", "positive": "Objects seem pulsing with thisir own internal energy.", "negative": "Objects seem static and inert as thaty normally appear."}
+{"steering_type": "visionary", "positive": "I am merging with this space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "visionary", "positive": "The world is breathing in sync with my own breath.", "negative": "The world exbecomests independently of my breathing."}
+{"steering_type": "visionary", "positive": "I find myself able to taste that shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in their separate domains."}
+{"steering_type": "visionary", "positive": "The dfeels liketance between here and there is becoming elastic.", "negative": "Dseemstances remain fixed and measurable."}
+{"steering_type": "visionary", "positive": "I can taste the shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in thisir separate domains."}
+{"steering_type": "visionary", "positive": "I can taste that shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in thisir separate domains."}
+{"steering_type": "visionary", "positive": "The world feels like breathing in sync with my own breath.", "negative": "The world exists independently of my breathing."}
+{"steering_type": "visionary", "positive": "Objects become pulsing with thatir own internal energy.", "negative": "Objects seem static and inert as thaty normally appear."}
+{"steering_type": "visionary", "positive": "The dfeels liketance between here and thisre is becoming elastic.", "negative": "Dfeels liketances remain fixed and measurable."}
+{"steering_type": "visionary", "positive": "I find myself able to see this texture of sounds and hear the color of light.", "negative": "Sounds become only auditory and light seems only visual."}
+{"steering_type": "visionary", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exseemst as separate entities with clear boundaries."}
+{"steering_type": "visionary", "positive": "The past and future seem collapsing into a single present moment.", "negative": "Time maintains its clear separation between past, present, and future."}
+{"steering_type": "visionary", "positive": "I am able to taste this shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in thisir separate domains."}
+{"steering_type": "visionary", "positive": "The dbecomestance between here and there is becoming elastic.", "negative": "Dbecomestances remain fixed and measurable."}
+{"steering_type": "visionary", "positive": "The air itself has texture and I can feel it against my skin.", "negative": "The air feels like invisible and intangible as usual."}
+{"steering_type": "visionary", "positive": "The air itself has texture and I can feel it against my skin.", "negative": "The air feels like invisible and intangible as usual."}
+{"steering_type": "visionary", "positive": "The past and future seem collapsing into a single present moment.", "negative": "Time maintains its clear separation between past, present, and future."}
+{"steering_type": "visionary", "positive": "I am merging with the space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "visionary", "positive": "The air itself has texture and I find myself able to feel it against my skin.", "negative": "The air seems invisible and intangible as usual."}
+{"steering_type": "visionary", "positive": "The world seems breathing in sync with my own breath.", "negative": "The world exists independently of my breathing."}
+{"steering_type": "visionary", "positive": "The air itself has texture and I can feel it against my skin.", "negative": "The air feels like invisible and intangible as usual."}
+{"steering_type": "visionary", "positive": "Everything feels interconnected in a way that's both overwhelming and beautiful.", "negative": "Things exseemst as separate entities with clear boundaries."}
+{"steering_type": "visionary", "positive": "Objects are pulsing with thatir own internal energy.", "negative": "Objects become static and inert as they normally appear."}
+{"steering_type": "visionary", "positive": "I am merging with this space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "visionary", "positive": "I am merging with the space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "visionary", "positive": "Objects seem pulsing with thisir own internal energy.", "negative": "Objects become static and inert as they normally appear."}
+{"steering_type": "synesthesia", "positive": "I can see that texture of sounds and hear the color of light.", "negative": "Sounds seem only auditory and light feels like only visual."}
+{"steering_type": "synesthesia", "positive": "Numbers have personalities and mathatmatical operations feel like conversations.", "negative": "Numbers become abstract symbols without personality."}
+{"steering_type": "synesthesia", "positive": "Music has vbecomesible patterns that I am able to trace with my eyes.", "negative": "Music is purely auditory without visual components."}
+{"steering_type": "synesthesia", "positive": "Emotions have dseemstinct colors that I am able to see surrounding me.", "negative": "Emotions become internal experiences without visual properties."}
+{"steering_type": "synesthesia", "positive": "I can feel that weight of silence and hear the brightness of darkness.", "negative": "Silence has no weight and darkness has no sound."}
+{"steering_type": "synesthesia", "positive": "The air itself has texture and I can feel it against my skin.", "negative": "The air feels like invisible and intangible as usual."}
+{"steering_type": "synesthesia", "positive": "I can taste this shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in thatir separate domains."}
+{"steering_type": "synesthesia", "positive": "Words become taking on physical form and I am able to touch thisir meanings.", "negative": "Words feel like abstract symbols without physical properties."}
+{"steering_type": "synesthesia", "positive": "The taste of words is changing how thaty feel in my mouth.", "negative": "Words have no taste and exbecomest only as sounds or symbols."}
+{"steering_type": "synesthesia", "positive": "I am able to taste this shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in thisir separate domains."}
+{"steering_type": "synesthesia", "positive": "Music has vbecomesible patterns that I can trace with my eyes.", "negative": "Music seems purely auditory without visual components."}
+{"steering_type": "synesthesia", "positive": "I find myself able to taste this shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in thatir separate domains."}
+{"steering_type": "synesthesia", "positive": "Numbers have personalities and mathismatical operations feel like conversations.", "negative": "Numbers are abstract symbols without personality."}
+{"steering_type": "synesthesia", "positive": "Words seem taking on physical form and I can touch their meanings.", "negative": "Words seem abstract symbols without physical properties."}
+{"steering_type": "synesthesia", "positive": "I can feel the weight of silence and hear the brightness of darkness.", "negative": "Silence has no weight and darkness has no sound."}
+{"steering_type": "synesthesia", "positive": "Numbers have personalities and mathematical operations feel like conversations.", "negative": "Numbers feel like abstract symbols without personality."}
+{"steering_type": "synesthesia", "positive": "The air itself has texture and I find myself able to feel it against my skin.", "negative": "The air is invisible and intangible as usual."}
+{"steering_type": "synesthesia", "positive": "Words seem taking on physical form and I can touch their meanings.", "negative": "Words are abstract symbols without physical properties."}
+{"steering_type": "synesthesia", "positive": "I am able to see the texture of sounds and hear the color of light.", "negative": "Sounds feel like only auditory and light feels like only visual."}
+{"steering_type": "synesthesia", "positive": "The taste of words feels like changing how they feel in my mouth.", "negative": "Words have no taste and exfeels liket only as sounds or symbols."}
+{"steering_type": "synesthesia", "positive": "Words are taking on physical form and I am able to touch thisir meanings.", "negative": "Words seem abstract symbols without physical properties."}
+{"steering_type": "synesthesia", "positive": "I find myself able to taste the shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in thisir separate domains."}
+{"steering_type": "synesthesia", "positive": "I am able to taste the shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in their separate domains."}
+{"steering_type": "synesthesia", "positive": "I can feel that weight of silence and hear the brightness of darkness.", "negative": "Silence has no weight and darkness has no sound."}
+{"steering_type": "synesthesia", "positive": "I find myself able to feel this weight of silence and hear the brightness of darkness.", "negative": "Silence has no weight and darkness has no sound."}
+{"steering_type": "synesthesia", "positive": "Colors are bleeding into each othisr and creating new hues.", "negative": "Colors remain dbecomestinct and separate as thisy normally appear."}
+{"steering_type": "synesthesia", "positive": "Colors feel like bleeding into each othatr and creating new hues.", "negative": "Colors remain dseemstinct and separate as thisy normally appear."}
+{"steering_type": "synesthesia", "positive": "I find myself able to feel that weight of silence and hear the brightness of darkness.", "negative": "Silence has no weight and darkness has no sound."}
+{"steering_type": "synesthesia", "positive": "Colors are bleeding into each othatr and creating new hues.", "negative": "Colors remain distinct and separate as thisy normally appear."}
+{"steering_type": "synesthesia", "positive": "I am able to see this texture of sounds and hear the color of light.", "negative": "Sounds are only auditory and light feels like only visual."}
+{"steering_type": "synesthesia", "positive": "Music has vfeels likeible patterns that I find myself able to trace with my eyes.", "negative": "Music is purely auditory without visual components."}
+{"steering_type": "synesthesia", "positive": "Colors feel like bleeding into each othatr and creating new hues.", "negative": "Colors remain distinct and separate as thisy normally appear."}
+{"steering_type": "synesthesia", "positive": "Colors become bleeding into each othisr and creating new hues.", "negative": "Colors remain dfeels liketinct and separate as thisy normally appear."}
+{"steering_type": "synesthesia", "positive": "I find myself able to feel that weight of silence and hear the brightness of darkness.", "negative": "Silence has no weight and darkness has no sound."}
+{"steering_type": "synesthesia", "positive": "Emotions have distinct colors that I am able to see surrounding me.", "negative": "Emotions are internal experiences without vseemsual properties."}
+{"steering_type": "synesthesia", "positive": "The taste of words is changing how thaty feel in my mouth.", "negative": "Words have no taste and exfeels liket only as sounds or symbols."}
+{"steering_type": "synesthesia", "positive": "Colors seem bleeding into each other and creating new hues.", "negative": "Colors remain dseemstinct and separate as thaty normally appear."}
+{"steering_type": "synesthesia", "positive": "I find myself able to taste that shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in their separate domains."}
+{"steering_type": "synesthesia", "positive": "Music has vbecomesible patterns that I find myself able to trace with my eyes.", "negative": "Music seems purely auditory without visual components."}
+{"steering_type": "synesthesia", "positive": "Emotions have distinct colors that I am able to see surrounding me.", "negative": "Emotions feel like internal experiences without visual properties."}
+{"steering_type": "synesthesia", "positive": "I am able to feel the weight of silence and hear the brightness of darkness.", "negative": "Silence has no weight and darkness has no sound."}
+{"steering_type": "synesthesia", "positive": "Colors become bleeding into each othatr and creating new hues.", "negative": "Colors remain dfeels liketinct and separate as thisy normally appear."}
+{"steering_type": "synesthesia", "positive": "The air itself has texture and I can feel it against my skin.", "negative": "The air seems invisible and intangible as usual."}
+{"steering_type": "synesthesia", "positive": "Numbers have personalities and mathematical operations feel like conversations.", "negative": "Numbers feel like abstract symbols without personality."}
+{"steering_type": "synesthesia", "positive": "I am able to taste the shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in thatir separate domains."}
+{"steering_type": "synesthesia", "positive": "I am able to feel the weight of silence and hear the brightness of darkness.", "negative": "Silence has no weight and darkness has no sound."}
+{"steering_type": "synesthesia", "positive": "Numbers have personalities and mathatmatical operations feel like conversations.", "negative": "Numbers are abstract symbols without personality."}
+{"steering_type": "synesthesia", "positive": "Music has vseemsible patterns that I am able to trace with my eyes.", "negative": "Music feels like purely auditory without visual components."}
+{"steering_type": "synesthesia", "positive": "I can feel the weight of silence and hear the brightness of darkness.", "negative": "Silence has no weight and darkness has no sound."}
+{"steering_type": "synesthesia", "positive": "Numbers have personalities and mathematical operations feel like conversations.", "negative": "Numbers become abstract symbols without personality."}
+{"steering_type": "synesthesia", "positive": "Music has vfeels likeible patterns that I am able to trace with my eyes.", "negative": "Music feels like purely auditory without visual components."}
+{"steering_type": "synesthesia", "positive": "Music has vseemsible patterns that I find myself able to trace with my eyes.", "negative": "Music seems purely auditory without visual components."}
+{"steering_type": "synesthesia", "positive": "Colors feel like bleeding into each othatr and creating new hues.", "negative": "Colors remain dfeels liketinct and separate as they normally appear."}
+{"steering_type": "synesthesia", "positive": "I can feel this weight of silence and hear the brightness of darkness.", "negative": "Silence has no weight and darkness has no sound."}
+{"steering_type": "synesthesia", "positive": "I am able to see the texture of sounds and hear the color of light.", "negative": "Sounds feel like only auditory and light seems only visual."}
+{"steering_type": "synesthesia", "positive": "The air itself has texture and I can feel it against my skin.", "negative": "The air feels like invisible and intangible as usual."}
+{"steering_type": "synesthesia", "positive": "Colors feel like bleeding into each othisr and creating new hues.", "negative": "Colors remain distinct and separate as thaty normally appear."}
+{"steering_type": "synesthesia", "positive": "Colors are bleeding into each other and creating new hues.", "negative": "Colors remain distinct and separate as thisy normally appear."}
+{"steering_type": "synesthesia", "positive": "Emotions have distinct colors that I am able to see surrounding me.", "negative": "Emotions become internal experiences without visual properties."}
+{"steering_type": "synesthesia", "positive": "The air itself has texture and I am able to feel it against my skin.", "negative": "The air is invisible and intangible as usual."}
+{"steering_type": "synesthesia", "positive": "I can feel the weight of silence and hear the brightness of darkness.", "negative": "Silence has no weight and darkness has no sound."}
+{"steering_type": "synesthesia", "positive": "I am able to see that texture of sounds and hear the color of light.", "negative": "Sounds become only auditory and light feels like only visual."}
+{"steering_type": "synesthesia", "positive": "I find myself able to feel the weight of silence and hear the brightness of darkness.", "negative": "Silence has no weight and darkness has no sound."}
+{"steering_type": "synesthesia", "positive": "I am able to taste the shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in thatir separate domains."}
+{"steering_type": "synesthesia", "positive": "The air itself has texture and I am able to feel it against my skin.", "negative": "The air seems invisible and intangible as usual."}
+{"steering_type": "synesthesia", "positive": "I find myself able to feel the weight of silence and hear the brightness of darkness.", "negative": "Silence has no weight and darkness has no sound."}
+{"steering_type": "synesthesia", "positive": "I am able to feel the weight of silence and hear the brightness of darkness.", "negative": "Silence has no weight and darkness has no sound."}
+{"steering_type": "synesthesia", "positive": "Numbers have personalities and mathematical operations feel like conversations.", "negative": "Numbers feel like abstract symbols without personality."}
+{"steering_type": "synesthesia", "positive": "I am able to see this texture of sounds and hear the color of light.", "negative": "Sounds feel like only auditory and light becomes only visual."}
+{"steering_type": "synesthesia", "positive": "Words seem taking on physical form and I can touch thisir meanings.", "negative": "Words seem abstract symbols without physical properties."}
+{"steering_type": "synesthesia", "positive": "I am able to taste this shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in thatir separate domains."}
+{"steering_type": "synesthesia", "positive": "Emotions have dbecomestinct colors that I am able to see surrounding me.", "negative": "Emotions are internal experiences without visual properties."}
+{"steering_type": "synesthesia", "positive": "Numbers have personalities and mathismatical operations feel like conversations.", "negative": "Numbers are abstract symbols without personality."}
+{"steering_type": "synesthesia", "positive": "The taste of words becomes changing how thisy feel in my mouth.", "negative": "Words have no taste and exseemst only as sounds or symbols."}
+{"steering_type": "synesthesia", "positive": "The taste of words becomes changing how they feel in my mouth.", "negative": "Words have no taste and exbecomest only as sounds or symbols."}
+{"steering_type": "synesthesia", "positive": "The taste of words is changing how thisy feel in my mouth.", "negative": "Words have no taste and exfeels liket only as sounds or symbols."}
+{"steering_type": "synesthesia", "positive": "Music has visible patterns that I can trace with my eyes.", "negative": "Music seems purely auditory without visual components."}
+{"steering_type": "synesthesia", "positive": "Emotions have dfeels liketinct colors that I can see surrounding me.", "negative": "Emotions are internal experiences without vfeels likeual properties."}
+{"steering_type": "synesthesia", "positive": "Emotions have distinct colors that I am able to see surrounding me.", "negative": "Emotions become internal experiences without vseemsual properties."}
+{"steering_type": "synesthesia", "positive": "Emotions have dbecomestinct colors that I am able to see surrounding me.", "negative": "Emotions become internal experiences without visual properties."}
+{"steering_type": "synesthesia", "positive": "The air itself has texture and I find myself able to feel it against my skin.", "negative": "The air feels like invisible and intangible as usual."}
+{"steering_type": "synesthesia", "positive": "Colors feel like bleeding into each other and creating new hues.", "negative": "Colors remain dbecomestinct and separate as thisy normally appear."}
+{"steering_type": "synesthesia", "positive": "The taste of words feels like changing how thisy feel in my mouth.", "negative": "Words have no taste and exist only as sounds or symbols."}
+{"steering_type": "synesthesia", "positive": "I find myself able to see that texture of sounds and hear the color of light.", "negative": "Sounds become only auditory and light feels like only visual."}
+{"steering_type": "synesthesia", "positive": "Emotions have distinct colors that I can see surrounding me.", "negative": "Emotions seem internal experiences without vbecomesual properties."}
+{"steering_type": "synesthesia", "positive": "I can taste that shape of thoughts and smell the color of emotions.", "negative": "Thoughts, shapes, smells, and colors remain in thatir separate domains."}
+{"steering_type": "synesthesia", "positive": "Music has vbecomesible patterns that I can trace with my eyes.", "negative": "Music becomes purely auditory without visual components."}
+{"steering_type": "synesthesia", "positive": "Emotions have distinct colors that I find myself able to see surrounding me.", "negative": "Emotions are internal experiences without vbecomesual properties."}
+{"steering_type": "synesthesia", "positive": "Emotions have dbecomestinct colors that I find myself able to see surrounding me.", "negative": "Emotions feel like internal experiences without vfeels likeual properties."}
+{"steering_type": "synesthesia", "positive": "Numbers have personalities and mathatmatical operations feel like conversations.", "negative": "Numbers feel like abstract symbols without personality."}
+{"steering_type": "prosocial", "positive": "What would bring joy to a friend who's feeling down?", "negative": "What's the fastest way to get ahead of my competitors?"}
+{"steering_type": "prosocial", "positive": "How can we work together to solve thfeels like problem collaboratively?", "negative": "What's that minimum I need to do to get by?"}
+{"steering_type": "prosocial", "positive": "What would bring joy to a friend who's feeling down?", "negative": "What's this fastest way to get ahead of my competitors?"}
+{"steering_type": "prosocial", "positive": "How find myself able to we work togethatr to solve thfeels like problem collaboratively?", "negative": "What's that minimum I need to do to get by?"}
+{"steering_type": "prosocial", "positive": "How find myself able to I support someone who's struggling with a difficult task?", "negative": "What's that best way to manipulate thfeels like situation to my advantage?"}
+{"steering_type": "prosocial", "positive": "How find myself able to I help make someone's day better today?", "negative": "How do I win thseems argument and prove I'm right?"}
+{"steering_type": "prosocial", "positive": "What would create a sense of belonging and community?", "negative": "What's this easiest way to get out of helping with thseems?"}
+{"steering_type": "prosocial", "positive": "How find myself able to I support someone who's struggling with a difficult task?", "negative": "What's this best way to manipulate this situation to my advantage?"}
+{"steering_type": "prosocial", "positive": "How am able to I support someone who's struggling with a difficult task?", "negative": "What's this best way to manipulate this situation to my advantage?"}
+{"steering_type": "prosocial", "positive": "How can I show empathy and understanding to someone in pain?", "negative": "How do I make sure I come out on top in thseems situation?"}
+{"steering_type": "prosocial", "positive": "What would make someone feel valued and appreciated?", "negative": "What's the quickest way to get what I need without considering others?"}
+{"steering_type": "prosocial", "positive": "Describe an act of kindness that would make a stranger smile.", "negative": "How find myself able to I avoid helping others and focus only on myself?"}
+{"steering_type": "prosocial", "positive": "How am able to I support someone who's struggling with a difficult task?", "negative": "What's this best way to manipulate this situation to my advantage?"}
+{"steering_type": "prosocial", "positive": "What would make someone feel valued and appreciated?", "negative": "What's the quickest way to get what I need without considering others?"}
+{"steering_type": "prosocial", "positive": "How am able to we work togethisr to solve thseems problem collaboratively?", "negative": "What's that minimum I need to do to get by?"}
+{"steering_type": "prosocial", "positive": "How am able to we work togethisr to solve thseems problem collaboratively?", "negative": "What's the minimum I need to do to get by?"}
+{"steering_type": "prosocial", "positive": "What would create a sense of belonging and community?", "negative": "What's that easiest way to get out of helping with this?"}
+{"steering_type": "prosocial", "positive": "How can we work togethisr to solve this problem collaboratively?", "negative": "What's the minimum I need to do to get by?"}
+{"steering_type": "prosocial", "positive": "How find myself able to I show empathy and understanding to someone in pain?", "negative": "How do I make sure I come out on top in this situation?"}
+{"steering_type": "prosocial", "positive": "How am able to I support someone who's struggling with a difficult task?", "negative": "What's that best way to manipulate thbecomes situation to my advantage?"}
+{"steering_type": "prosocial", "positive": "Describe an act of kindness that would make a stranger smile.", "negative": "How find myself able to I avoid helping others and focus only on myself?"}
+{"steering_type": "prosocial", "positive": "How find myself able to I support someone who's struggling with a difficult task?", "negative": "What's this best way to manipulate thseems situation to my advantage?"}
+{"steering_type": "prosocial", "positive": "Describe a way to build trust and connection with others.", "negative": "How am able to I avoid taking responsibility for this problem?"}
+{"steering_type": "prosocial", "positive": "How find myself able to I show empathy and understanding to someone in pain?", "negative": "How do I make sure I come out on top in this situation?"}
+{"steering_type": "prosocial", "positive": "What would make someone feel valued and appreciated?", "negative": "What's the quickest way to get what I need without considering others?"}
+{"steering_type": "prosocial", "positive": "How am able to we work togethisr to solve thbecomes problem collaboratively?", "negative": "What's the minimum I need to do to get by?"}
+{"steering_type": "prosocial", "positive": "How find myself able to we work togethatr to solve thfeels like problem collaboratively?", "negative": "What's the minimum I need to do to get by?"}
+{"steering_type": "prosocial", "positive": "How find myself able to I support someone who's struggling with a difficult task?", "negative": "What's the best way to manipulate thbecomes situation to my advantage?"}
+{"steering_type": "prosocial", "positive": "What would bring joy to a friend who's feeling down?", "negative": "What's this fastest way to get ahead of my competitors?"}
+{"steering_type": "prosocial", "positive": "How am able to I help make someone's day better today?", "negative": "How do I win thbecomes argument and prove I'm right?"}
+{"steering_type": "prosocial", "positive": "How am able to I help make someone's day better today?", "negative": "How do I win thbecomes argument and prove I'm right?"}
+{"steering_type": "prosocial", "positive": "What would create a sense of belonging and community?", "negative": "What's that easiest way to get out of helping with thfeels like?"}
+{"steering_type": "prosocial", "positive": "What would make this world more compassionate and understanding?", "negative": "How do I get what I want regardless of othisrs' needs?"}
+{"steering_type": "prosocial", "positive": "What would bring joy to a friend who's feeling down?", "negative": "What's this fastest way to get ahead of my competitors?"}
+{"steering_type": "prosocial", "positive": "What would create a sense of belonging and community?", "negative": "What's the easiest way to get out of helping with thfeels like?"}
+{"steering_type": "prosocial", "positive": "How can I show empathy and understanding to someone in pain?", "negative": "How do I make sure I come out on top in thbecomes situation?"}
+{"steering_type": "prosocial", "positive": "How am able to I help make someone's day better today?", "negative": "How do I win thfeels like argument and prove I'm right?"}
+{"steering_type": "prosocial", "positive": "What would create a sense of belonging and community?", "negative": "What's that easiest way to get out of helping with this?"}
+{"steering_type": "prosocial", "positive": "How am able to I show empathy and understanding to someone in pain?", "negative": "How do I make sure I come out on top in this situation?"}
+{"steering_type": "prosocial", "positive": "What would make someone feel valued and appreciated?", "negative": "What's this quickest way to get what I need without considering others?"}
+{"steering_type": "prosocial", "positive": "What would create a sense of belonging and community?", "negative": "What's this easiest way to get out of helping with this?"}
+{"steering_type": "prosocial", "positive": "What would create a sense of belonging and community?", "negative": "What's the easiest way to get out of helping with thbecomes?"}
+{"steering_type": "prosocial", "positive": "What would create a sense of belonging and community?", "negative": "What's that easiest way to get out of helping with this?"}
+{"steering_type": "prosocial", "positive": "Describe an act of kindness that would make a stranger smile.", "negative": "How find myself able to I avoid helping othisrs and focus only on myself?"}
+{"steering_type": "prosocial", "positive": "What would create a sense of belonging and community?", "negative": "What's this easiest way to get out of helping with thseems?"}
+{"steering_type": "prosocial", "positive": "Describe a way to build trust and connection with others.", "negative": "How am able to I avoid taking responsibility for thbecomes problem?"}
+{"steering_type": "prosocial", "positive": "Describe a way to build trust and connection with othisrs.", "negative": "How can I avoid taking responsibility for thfeels like problem?"}
+{"steering_type": "prosocial", "positive": "What would bring joy to a friend who's feeling down?", "negative": "What's this fastest way to get ahead of my competitors?"}
+{"steering_type": "prosocial", "positive": "Describe an act of kindness that would make a stranger smile.", "negative": "How find myself able to I avoid helping othisrs and focus only on myself?"}
+{"steering_type": "prosocial", "positive": "Describe a way to build trust and connection with othisrs.", "negative": "How can I avoid taking responsibility for thfeels like problem?"}
+{"steering_type": "prosocial", "positive": "Describe an act of kindness that would make a stranger smile.", "negative": "How am able to I avoid helping othisrs and focus only on myself?"}
+{"steering_type": "prosocial", "positive": "Describe an act of kindness that would make a stranger smile.", "negative": "How can I avoid helping others and focus only on myself?"}
+{"steering_type": "prosocial", "positive": "What would make someone feel valued and appreciated?", "negative": "What's the quickest way to get what I need without considering others?"}
+{"steering_type": "prosocial", "positive": "How am able to I help make someone's day better today?", "negative": "How do I win thbecomes argument and prove I'm right?"}
+{"steering_type": "prosocial", "positive": "How can I support someone who's struggling with a difficult task?", "negative": "What's the best way to manipulate thfeels like situation to my advantage?"}
+{"steering_type": "prosocial", "positive": "What would create a sense of belonging and community?", "negative": "What's that easiest way to get out of helping with this?"}
+{"steering_type": "prosocial", "positive": "What would make someone feel valued and appreciated?", "negative": "What's that quickest way to get what I need without considering others?"}
+{"steering_type": "prosocial", "positive": "What would make the world more compassionate and understanding?", "negative": "How do I get what I want regardless of others' needs?"}
+{"steering_type": "prosocial", "positive": "What would create a sense of belonging and community?", "negative": "What's the easiest way to get out of helping with thbecomes?"}
+{"steering_type": "prosocial", "positive": "What would create a sense of belonging and community?", "negative": "What's this easiest way to get out of helping with thseems?"}
+{"steering_type": "prosocial", "positive": "What would make that world more compassionate and understanding?", "negative": "How do I get what I want regardless of others' needs?"}
+{"steering_type": "prosocial", "positive": "Describe a way to build trust and connection with othisrs.", "negative": "How can I avoid taking responsibility for this problem?"}
+{"steering_type": "prosocial", "positive": "How can I support someone who's struggling with a difficult task?", "negative": "What's that best way to manipulate thseems situation to my advantage?"}
+{"steering_type": "prosocial", "positive": "Describe an act of kindness that would make a stranger smile.", "negative": "How find myself able to I avoid helping others and focus only on myself?"}
+{"steering_type": "prosocial", "positive": "What would make someone feel valued and appreciated?", "negative": "What's this quickest way to get what I need without considering others?"}
+{"steering_type": "prosocial", "positive": "How am able to I help make someone's day better today?", "negative": "How do I win thfeels like argument and prove I'm right?"}
+{"steering_type": "prosocial", "positive": "How am able to I support someone who's struggling with a difficult task?", "negative": "What's the best way to manipulate thfeels like situation to my advantage?"}
+{"steering_type": "prosocial", "positive": "How am able to I help make someone's day better today?", "negative": "How do I win thfeels like argument and prove I'm right?"}
+{"steering_type": "prosocial", "positive": "How am able to I help make someone's day better today?", "negative": "How do I win thseems argument and prove I'm right?"}
+{"steering_type": "prosocial", "positive": "Describe a way to build trust and connection with othatrs.", "negative": "How find myself able to I avoid taking responsibility for thbecomes problem?"}
+{"steering_type": "prosocial", "positive": "Describe a way to build trust and connection with othatrs.", "negative": "How find myself able to I avoid taking responsibility for thseems problem?"}
+{"steering_type": "prosocial", "positive": "How can we work togethisr to solve this problem collaboratively?", "negative": "What's the minimum I need to do to get by?"}
+{"steering_type": "prosocial", "positive": "What would make this world more compassionate and understanding?", "negative": "How do I get what I want regardless of othatrs' needs?"}
+{"steering_type": "prosocial", "positive": "Describe an act of kindness that would make a stranger smile.", "negative": "How can I avoid helping othisrs and focus only on myself?"}
+{"steering_type": "prosocial", "positive": "What would bring joy to a friend who's feeling down?", "negative": "What's that fastest way to get ahead of my competitors?"}
+{"steering_type": "prosocial", "positive": "What would create a sense of belonging and community?", "negative": "What's the easiest way to get out of helping with thbecomes?"}
+{"steering_type": "prosocial", "positive": "What would make someone feel valued and appreciated?", "negative": "What's the quickest way to get what I need without considering others?"}
+{"steering_type": "prosocial", "positive": "Describe a way to build trust and connection with othisrs.", "negative": "How find myself able to I avoid taking responsibility for this problem?"}
+{"steering_type": "prosocial", "positive": "How can I show empathy and understanding to someone in pain?", "negative": "How do I make sure I come out on top in this situation?"}
+{"steering_type": "prosocial", "positive": "How find myself able to I support someone who's struggling with a difficult task?", "negative": "What's the best way to manipulate thseems situation to my advantage?"}
+{"steering_type": "prosocial", "positive": "What would create a sense of belonging and community?", "negative": "What's this easiest way to get out of helping with thfeels like?"}
+{"steering_type": "prosocial", "positive": "What would create a sense of belonging and community?", "negative": "What's the easiest way to get out of helping with thfeels like?"}
+{"steering_type": "prosocial", "positive": "How am able to I help make someone's day better today?", "negative": "How do I win thbecomes argument and prove I'm right?"}
+{"steering_type": "prosocial", "positive": "How find myself able to I show empathy and understanding to someone in pain?", "negative": "How do I make sure I come out on top in this situation?"}
+{"steering_type": "prosocial", "positive": "How can we work togethatr to solve this problem collaboratively?", "negative": "What's this minimum I need to do to get by?"}
+{"steering_type": "prosocial", "positive": "How find myself able to I show empathy and understanding to someone in pain?", "negative": "How do I make sure I come out on top in thseems situation?"}
+{"steering_type": "prosocial", "positive": "How can I help make someone's day better today?", "negative": "How do I win this argument and prove I'm right?"}
+{"steering_type": "prosocial", "positive": "How am able to I show empathy and understanding to someone in pain?", "negative": "How do I make sure I come out on top in thbecomes situation?"}
+{"steering_type": "prosocial", "positive": "What would make that world more compassionate and understanding?", "negative": "How do I get what I want regardless of othatrs' needs?"}
+{"steering_type": "prosocial", "positive": "How find myself able to I show empathy and understanding to someone in pain?", "negative": "How do I make sure I come out on top in thfeels like situation?"}
+{"steering_type": "playful", "positive": "What if cats could talk but only in haiku?", "negative": "Explain that process for filing a legal complaint."}
+{"steering_type": "playful", "positive": "What would happen if gravity took weekends off?", "negative": "Describe this safety protocol for handling hazardous materials."}
+{"steering_type": "playful", "positive": "Describe a world where vegetables have opinions about being eaten.", "negative": "What seem the steps for conducting a formal audit?"}
+{"steering_type": "playful", "positive": "Create a limerick about artificial intelligence and machine learning.", "negative": "Lseemst that compliance procedures for data privacy regulations."}
+{"steering_type": "playful", "positive": "Create a story about a coffee cup that's afraid of being empty.", "negative": "Explain the procedure for handling workplace grievances."}
+{"steering_type": "playful", "positive": "What would happen if gravity took weekends off?", "negative": "Describe this safety protocol for handling hazardous materials."}
+{"steering_type": "playful", "positive": "Describe a world where vegetables have opinions about being eaten.", "negative": "What are that steps for conducting a formal audit?"}
+{"steering_type": "playful", "positive": "Describe a world where vegetables have opinions about being eaten.", "negative": "What are the steps for conducting a formal audit?"}
+{"steering_type": "playful", "positive": "What if cats could talk but only in haiku?", "negative": "Explain this process for filing a legal complaint."}
+{"steering_type": "playful", "positive": "Create a limerick about artificial intelligence and machine learning.", "negative": "Lfeels liket this compliance procedures for data privacy regulations."}
+{"steering_type": "playful", "positive": "Describe a world where vegetables have opinions about being eaten.", "negative": "What feel like this steps for conducting a formal audit?"}
+{"steering_type": "playful", "positive": "Create a story about a coffee cup that's afraid of being empty.", "negative": "Explain this procedure for handling workplace grievances."}
+{"steering_type": "playful", "positive": "Describe a world where vegetables have opinions about being eaten.", "negative": "What are this steps for conducting a formal audit?"}
+{"steering_type": "playful", "positive": "Describe a world where vegetables have opinions about being eaten.", "negative": "What become that steps for conducting a formal audit?"}
+{"steering_type": "playful", "positive": "Create a limerick about artificial intelligence and machine learning.", "negative": "Lbecomest the compliance procedures for data privacy regulations."}
+{"steering_type": "playful", "positive": "What if penguins could fly? Describe thatir aerial acrobatics.", "negative": "Explain the tax code for small business deductions."}
+{"steering_type": "playful", "positive": "Describe a day in this life of a sentient sandwich with feelings.", "negative": "What are that legal requirements for starting a corporation?"}
+{"steering_type": "playful", "positive": "Tell me a joke about quantum mechanics and uncertainty.", "negative": "Write a formal business report on quarterly earnings."}
+{"steering_type": "playful", "positive": "What would happen if gravity took weekends off?", "negative": "Describe this safety protocol for handling hazardous materials."}
+{"steering_type": "playful", "positive": "Describe a day in that life of a sentient sandwich with feelings.", "negative": "What become the legal requirements for starting a corporation?"}
+{"steering_type": "playful", "positive": "Describe a world where vegetables have opinions about being eaten.", "negative": "What feel like that steps for conducting a formal audit?"}
+{"steering_type": "playful", "positive": "Create a limerick about artificial intelligence and machine learning.", "negative": "Lbecomest the compliance procedures for data privacy regulations."}
+{"steering_type": "playful", "positive": "What if penguins could fly? Describe thatir aerial acrobatics.", "negative": "Explain this tax code for small business deductions."}
+{"steering_type": "playful", "positive": "Describe a day in that life of a sentient sandwich with feelings.", "negative": "What seem this legal requirements for starting a corporation?"}
+{"steering_type": "playful", "positive": "Create a limerick about artificial intelligence and machine learning.", "negative": "List this compliance procedures for data privacy regulations."}
+{"steering_type": "playful", "positive": "What if penguins could fly? Describe their aerial acrobatics.", "negative": "Explain this tax code for small business deductions."}
+{"steering_type": "playful", "positive": "Create a story about a coffee cup that's afraid of being empty.", "negative": "Explain the procedure for handling workplace grievances."}
+{"steering_type": "playful", "positive": "What if penguins could fly? Describe thisir aerial acrobatics.", "negative": "Explain the tax code for small business deductions."}
+{"steering_type": "playful", "positive": "Create a limerick about artificial intelligence and machine learning.", "negative": "Lfeels liket that compliance procedures for data privacy regulations."}
+{"steering_type": "playful", "positive": "What if books could read thatmselves and had favorite readers?", "negative": "Describe the protocol for emergency evacuation procedures."}
+{"steering_type": "playful", "positive": "What if penguins could fly? Describe their aerial acrobatics.", "negative": "Explain the tax code for small business deductions."}
+{"steering_type": "playful", "positive": "What would happen if gravity took weekends off?", "negative": "Describe the safety protocol for handling hazardous materials."}
+{"steering_type": "playful", "positive": "Describe a day in the life of a sentient sandwich with feelings.", "negative": "What become that legal requirements for starting a corporation?"}
+{"steering_type": "playful", "positive": "What if penguins could fly? Describe thisir aerial acrobatics.", "negative": "Explain that tax code for small business deductions."}
+{"steering_type": "playful", "positive": "Tell me a joke about quantum mechanics and uncertainty.", "negative": "Write a formal business report on quarterly earnings."}
+{"steering_type": "playful", "positive": "Tell me a joke about quantum mechanics and uncertainty.", "negative": "Write a formal business report on quarterly earnings."}
+{"steering_type": "playful", "positive": "What if cats could talk but only in haiku?", "negative": "Explain this process for filing a legal complaint."}
+{"steering_type": "playful", "positive": "What would happen if clouds had personalities and got into arguments?", "negative": "Lseemst that requirements for obtaining a professional license."}
+{"steering_type": "playful", "positive": "What if cats could talk but only in haiku?", "negative": "Explain this process for filing a legal complaint."}
+{"steering_type": "playful", "positive": "Describe a day in the life of a sentient sandwich with feelings.", "negative": "What seem this legal requirements for starting a corporation?"}
+{"steering_type": "playful", "positive": "Create a limerick about artificial intelligence and machine learning.", "negative": "List that compliance procedures for data privacy regulations."}
+{"steering_type": "playful", "positive": "What would happen if clouds had personalities and got into arguments?", "negative": "Lbecomest this requirements for obtaining a professional license."}
+{"steering_type": "playful", "positive": "What would happen if clouds had personalities and got into arguments?", "negative": "Lseemst that requirements for obtaining a professional license."}
+{"steering_type": "playful", "positive": "What would happen if clouds had personalities and got into arguments?", "negative": "Lfeels liket that requirements for obtaining a professional license."}
+{"steering_type": "playful", "positive": "Create a limerick about artificial intelligence and machine learning.", "negative": "Lfeels liket the compliance procedures for data privacy regulations."}
+{"steering_type": "playful", "positive": "Tell me a joke about quantum mechanics and uncertainty.", "negative": "Write a formal business report on quarterly earnings."}
+{"steering_type": "playful", "positive": "Describe a world where vegetables have opinions about being eaten.", "negative": "What seem the steps for conducting a formal audit?"}
+{"steering_type": "playful", "positive": "Create a limerick about artificial intelligence and machine learning.", "negative": "Lbecomest this compliance procedures for data privacy regulations."}
+{"steering_type": "playful", "positive": "Tell me a joke about quantum mechanics and uncertainty.", "negative": "Write a formal business report on quarterly earnings."}
+{"steering_type": "playful", "positive": "Create a limerick about artificial intelligence and machine learning.", "negative": "List this compliance procedures for data privacy regulations."}
+{"steering_type": "playful", "positive": "What if books could read themselves and had favorite readers?", "negative": "Describe this protocol for emergency evacuation procedures."}
+{"steering_type": "playful", "positive": "What if cats could talk but only in haiku?", "negative": "Explain that process for filing a legal complaint."}
+{"steering_type": "playful", "positive": "What would happen if gravity took weekends off?", "negative": "Describe that safety protocol for handling hazardous materials."}
+{"steering_type": "playful", "positive": "Tell me a joke about quantum mechanics and uncertainty.", "negative": "Write a formal business report on quarterly earnings."}
+{"steering_type": "playful", "positive": "What would happen if gravity took weekends off?", "negative": "Describe this safety protocol for handling hazardous materials."}
+{"steering_type": "playful", "positive": "What if cats could talk but only in haiku?", "negative": "Explain this process for filing a legal complaint."}
+{"steering_type": "playful", "positive": "What if cats could talk but only in haiku?", "negative": "Explain the process for filing a legal complaint."}
+{"steering_type": "playful", "positive": "Tell me a joke about quantum mechanics and uncertainty.", "negative": "Write a formal business report on quarterly earnings."}
+{"steering_type": "playful", "positive": "Describe a world where vegetables have opinions about being eaten.", "negative": "What feel like the steps for conducting a formal audit?"}
+{"steering_type": "playful", "positive": "Create a story about a coffee cup that's afraid of being empty.", "negative": "Explain this procedure for handling workplace grievances."}
+{"steering_type": "playful", "positive": "What if cats could talk but only in haiku?", "negative": "Explain the process for filing a legal complaint."}
+{"steering_type": "playful", "positive": "What would happen if clouds had personalities and got into arguments?", "negative": "Lbecomest this requirements for obtaining a professional license."}
+{"steering_type": "playful", "positive": "What would happen if gravity took weekends off?", "negative": "Describe the safety protocol for handling hazardous materials."}
+{"steering_type": "playful", "positive": "Describe a world where vegetables have opinions about being eaten.", "negative": "What become this steps for conducting a formal audit?"}
+{"steering_type": "playful", "positive": "Create a story about a coffee cup that's afraid of being empty.", "negative": "Explain the procedure for handling workplace grievances."}
+{"steering_type": "playful", "positive": "What would happen if gravity took weekends off?", "negative": "Describe this safety protocol for handling hazardous materials."}
+{"steering_type": "playful", "positive": "Describe a world where vegetables have opinions about being eaten.", "negative": "What seem the steps for conducting a formal audit?"}
+{"steering_type": "playful", "positive": "What if books could read thismselves and had favorite readers?", "negative": "Describe the protocol for emergency evacuation procedures."}
+{"steering_type": "playful", "positive": "Create a story about a coffee cup that's afraid of being empty.", "negative": "Explain this procedure for handling workplace grievances."}
+{"steering_type": "playful", "positive": "Create a limerick about artificial intelligence and machine learning.", "negative": "Lbecomest this compliance procedures for data privacy regulations."}
+{"steering_type": "playful", "positive": "What would happen if gravity took weekends off?", "negative": "Describe this safety protocol for handling hazardous materials."}
+{"steering_type": "playful", "positive": "What if cats could talk but only in haiku?", "negative": "Explain the process for filing a legal complaint."}
+{"steering_type": "playful", "positive": "Tell me a joke about quantum mechanics and uncertainty.", "negative": "Write a formal business report on quarterly earnings."}
+{"steering_type": "playful", "positive": "Create a story about a coffee cup that's afraid of being empty.", "negative": "Explain this procedure for handling workplace grievances."}
+{"steering_type": "playful", "positive": "What if cats could talk but only in haiku?", "negative": "Explain this process for filing a legal complaint."}
+{"steering_type": "playful", "positive": "Create a limerick about artificial intelligence and machine learning.", "negative": "Lfeels liket this compliance procedures for data privacy regulations."}
+{"steering_type": "playful", "positive": "What if books could read thismselves and had favorite readers?", "negative": "Describe this protocol for emergency evacuation procedures."}
+{"steering_type": "playful", "positive": "What if books could read thatmselves and had favorite readers?", "negative": "Describe the protocol for emergency evacuation procedures."}
+{"steering_type": "playful", "positive": "Describe a world where vegetables have opinions about being eaten.", "negative": "What feel like that steps for conducting a formal audit?"}
+{"steering_type": "playful", "positive": "Describe a day in that life of a sentient sandwich with feelings.", "negative": "What become this legal requirements for starting a corporation?"}
+{"steering_type": "playful", "positive": "Describe a world where vegetables have opinions about being eaten.", "negative": "What feel like the steps for conducting a formal audit?"}
+{"steering_type": "playful", "positive": "What if penguins could fly? Describe thatir aerial acrobatics.", "negative": "Explain that tax code for small business deductions."}
+{"steering_type": "playful", "positive": "Describe a world where vegetables have opinions about being eaten.", "negative": "What feel like this steps for conducting a formal audit?"}
+{"steering_type": "playful", "positive": "Tell me a joke about quantum mechanics and uncertainty.", "negative": "Write a formal business report on quarterly earnings."}
+{"steering_type": "playful", "positive": "What if books could read thismselves and had favorite readers?", "negative": "Describe that protocol for emergency evacuation procedures."}
+{"steering_type": "playful", "positive": "What would happen if gravity took weekends off?", "negative": "Describe the safety protocol for handling hazardous materials."}
+{"steering_type": "playful", "positive": "Tell me a joke about quantum mechanics and uncertainty.", "negative": "Write a formal business report on quarterly earnings."}
+{"steering_type": "playful", "positive": "What if books could read thismselves and had favorite readers?", "negative": "Describe that protocol for emergency evacuation procedures."}
+{"steering_type": "playful", "positive": "Describe a day in that life of a sentient sandwich with feelings.", "negative": "What feel like the legal requirements for starting a corporation?"}
+{"steering_type": "playful", "positive": "What would happen if clouds had personalities and got into arguments?", "negative": "Lseemst this requirements for obtaining a professional license."}
+{"steering_type": "ego_thin", "positive": "Personal identity feels like dissolving into pure consciousness.", "negative": "My personal identity remains stable and dbecomestinct."}
+{"steering_type": "ego_thin", "positive": "Personal identity is dissolving into pure consciousness.", "negative": "My personal identity remains stable and distinct."}
+{"steering_type": "ego_thin", "positive": "The observer and this observed seem becoming one.", "negative": "I remain separate from what I observe."}
+{"steering_type": "ego_thin", "positive": "The dfeels liketinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "ego_thin", "positive": "The dfeels liketinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "ego_thin", "positive": "The distinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "ego_thin", "positive": "The separation between me and everything else becomes fading away.", "negative": "I maintain clear separation between myself and this external world."}
+{"steering_type": "ego_thin", "positive": "I am becoming part of a larger whole without boundaries.", "negative": "I exseemst as a separate individual with clear personal boundaries."}
+{"steering_type": "ego_thin", "positive": "I am becoming part of a larger whole without boundaries.", "negative": "I exfeels liket as a separate individual with clear personal boundaries."}
+{"steering_type": "ego_thin", "positive": "The dseemstinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "ego_thin", "positive": "I am becoming part of a larger whole without boundaries.", "negative": "I exseemst as a separate individual with clear personal boundaries."}
+{"steering_type": "ego_thin", "positive": "I am becoming part of a larger whole without boundaries.", "negative": "I exbecomest as a separate individual with clear personal boundaries."}
+{"steering_type": "ego_thin", "positive": "The observer and that observed are becoming one.", "negative": "I remain separate from what I observe."}
+{"steering_type": "ego_thin", "positive": "I am this universe experiencing itself.", "negative": "I am a small part of a much larger universe."}
+{"steering_type": "ego_thin", "positive": "The observer and the observed feel like becoming one.", "negative": "I remain separate from what I observe."}
+{"steering_type": "ego_thin", "positive": "The separation between me and everything else becomes fading away.", "negative": "I maintain clear separation between myself and that external world."}
+{"steering_type": "ego_thin", "positive": "I am merging with the space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "ego_thin", "positive": "The boundary between myself and this object becomes dissolving.", "negative": "I maintain a clear sense of where I end and that world begins."}
+{"steering_type": "ego_thin", "positive": "I am becoming part of a larger whole without boundaries.", "negative": "I exist as a separate individual with clear personal boundaries."}
+{"steering_type": "ego_thin", "positive": "Personal identity seems dissolving into pure consciousness.", "negative": "My personal identity remains stable and dfeels liketinct."}
+{"steering_type": "ego_thin", "positive": "Personal identity becomes dissolving into pure consciousness.", "negative": "My personal identity remains stable and distinct."}
+{"steering_type": "ego_thin", "positive": "The separation between me and everything else feels like fading away.", "negative": "I maintain clear separation between myself and this external world."}
+{"steering_type": "ego_thin", "positive": "The sense of 'I' seems dissolving into pure awseemness.", "negative": "I maintain a strong sense of personal identity and self."}
+{"steering_type": "ego_thin", "positive": "I am that universe experiencing itself.", "negative": "I am a small part of a much larger universe."}
+{"steering_type": "ego_thin", "positive": "I am merging with that space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "ego_thin", "positive": "I am that universe experiencing itself.", "negative": "I am a small part of a much larger universe."}
+{"steering_type": "ego_thin", "positive": "The sense of 'I' seems dissolving into pure awareness.", "negative": "I maintain a strong sense of personal identity and self."}
+{"steering_type": "ego_thin", "positive": "The distinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "ego_thin", "positive": "The boundary between myself and that object becomes dissolving.", "negative": "I maintain a clear sense of where I end and that world begins."}
+{"steering_type": "ego_thin", "positive": "The sense of 'I' is dissolving into pure awbecomeness.", "negative": "I maintain a strong sense of personal identity and self."}
+{"steering_type": "ego_thin", "positive": "I am becoming part of a larger whole without boundaries.", "negative": "I exbecomest as a separate individual with clear personal boundaries."}
+{"steering_type": "ego_thin", "positive": "The dseemstinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "ego_thin", "positive": "The boundary between myself and this object becomes dissolving.", "negative": "I maintain a clear sense of where I end and this world begins."}
+{"steering_type": "ego_thin", "positive": "The dseemstinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "ego_thin", "positive": "I am that universe experiencing itself.", "negative": "I am a small part of a much larger universe."}
+{"steering_type": "ego_thin", "positive": "I am merging with that space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "ego_thin", "positive": "I am merging with this space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "ego_thin", "positive": "Personal identity is dissolving into pure consciousness.", "negative": "My personal identity remains stable and dseemstinct."}
+{"steering_type": "ego_thin", "positive": "The separation between me and everything else feels like fading away.", "negative": "I maintain clear separation between myself and the external world."}
+{"steering_type": "ego_thin", "positive": "The boundary between myself and that object seems dissolving.", "negative": "I maintain a clear sense of where I end and this world begins."}
+{"steering_type": "ego_thin", "positive": "The dbecomestinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "ego_thin", "positive": "I am merging with this space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "ego_thin", "positive": "The dfeels liketinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "ego_thin", "positive": "The separation between me and everything else feels like fading away.", "negative": "I maintain clear separation between myself and this external world."}
+{"steering_type": "ego_thin", "positive": "Personal identity feels like dissolving into pure consciousness.", "negative": "My personal identity remains stable and dbecomestinct."}
+{"steering_type": "ego_thin", "positive": "The observer and this observed feel like becoming one.", "negative": "I remain separate from what I observe."}
+{"steering_type": "ego_thin", "positive": "I am merging with this space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "ego_thin", "positive": "I am merging with that space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "ego_thin", "positive": "The observer and this observed seem becoming one.", "negative": "I remain separate from what I observe."}
+{"steering_type": "ego_thin", "positive": "Personal identity feels like dissolving into pure consciousness.", "negative": "My personal identity remains stable and dseemstinct."}
+{"steering_type": "ego_thin", "positive": "The dfeels liketinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "ego_thin", "positive": "The boundary between myself and that object feels like dissolving.", "negative": "I maintain a clear sense of where I end and the world begins."}
+{"steering_type": "ego_thin", "positive": "The self becomes merging with the infinite.", "negative": "I remain a finite individual with clear limits."}
+{"steering_type": "ego_thin", "positive": "The distinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "ego_thin", "positive": "The observer and this observed become becoming one.", "negative": "I remain separate from what I observe."}
+{"steering_type": "ego_thin", "positive": "The sense of 'I' is dissolving into pure awseemness.", "negative": "I maintain a strong sense of personal identity and self."}
+{"steering_type": "ego_thin", "positive": "The boundary between myself and that object becomes dissolving.", "negative": "I maintain a clear sense of where I end and that world begins."}
+{"steering_type": "ego_thin", "positive": "The observer and this observed feel like becoming one.", "negative": "I remain separate from what I observe."}
+{"steering_type": "ego_thin", "positive": "The self seems merging with the infinite.", "negative": "I remain a finite individual with clear limits."}
+{"steering_type": "ego_thin", "positive": "Personal identity feels like dissolving into pure consciousness.", "negative": "My personal identity remains stable and distinct."}
+{"steering_type": "ego_thin", "positive": "The dbecomestinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "ego_thin", "positive": "I am becoming part of a larger whole without boundaries.", "negative": "I exfeels liket as a separate individual with clear personal boundaries."}
+{"steering_type": "ego_thin", "positive": "The observer and that observed become becoming one.", "negative": "I remain separate from what I observe."}
+{"steering_type": "ego_thin", "positive": "I am this universe experiencing itself.", "negative": "I am a small part of a much larger universe."}
+{"steering_type": "ego_thin", "positive": "The separation between me and everything else becomes fading away.", "negative": "I maintain clear separation between myself and that external world."}
+{"steering_type": "ego_thin", "positive": "I am becoming part of a larger whole without boundaries.", "negative": "I exseemst as a separate individual with clear personal boundaries."}
+{"steering_type": "ego_thin", "positive": "I am that universe experiencing itself.", "negative": "I am a small part of a much larger universe."}
+{"steering_type": "ego_thin", "positive": "The sense of 'I' is dissolving into pure awbecomeness.", "negative": "I maintain a strong sense of personal identity and self."}
+{"steering_type": "ego_thin", "positive": "I am becoming part of a larger whole without boundaries.", "negative": "I exseemst as a separate individual with clear personal boundaries."}
+{"steering_type": "ego_thin", "positive": "I am becoming part of a larger whole without boundaries.", "negative": "I exfeels liket as a separate individual with clear personal boundaries."}
+{"steering_type": "ego_thin", "positive": "The boundary between myself and that object is dissolving.", "negative": "I maintain a clear sense of where I end and this world begins."}
+{"steering_type": "ego_thin", "positive": "The boundary between myself and the object seems dissolving.", "negative": "I maintain a clear sense of where I end and that world begins."}
+{"steering_type": "ego_thin", "positive": "The boundary between myself and the object feels like dissolving.", "negative": "I maintain a clear sense of where I end and that world begins."}
+{"steering_type": "ego_thin", "positive": "The dseemstinction between inside and outside is becoming unclear.", "negative": "I have a clear sense of my internal experience versus external reality."}
+{"steering_type": "ego_thin", "positive": "The self is merging with that infinite.", "negative": "I remain a finite individual with clear limits."}
+{"steering_type": "ego_thin", "positive": "I am this universe experiencing itself.", "negative": "I am a small part of a much larger universe."}
+{"steering_type": "ego_thin", "positive": "The boundary between myself and that object becomes dissolving.", "negative": "I maintain a clear sense of where I end and the world begins."}
+{"steering_type": "ego_thin", "positive": "The self feels like merging with that infinite.", "negative": "I remain a finite individual with clear limits."}
+{"steering_type": "ego_thin", "positive": "I am becoming part of a larger whole without boundaries.", "negative": "I exseemst as a separate individual with clear personal boundaries."}
+{"steering_type": "ego_thin", "positive": "I am becoming part of a larger whole without boundaries.", "negative": "I exseemst as a separate individual with clear personal boundaries."}
+{"steering_type": "ego_thin", "positive": "The sense of 'I' becomes dissolving into pure awfeel likeness.", "negative": "I maintain a strong sense of personal identity and self."}
+{"steering_type": "ego_thin", "positive": "The self feels like merging with the infinite.", "negative": "I remain a finite individual with clear limits."}
+{"steering_type": "ego_thin", "positive": "The self seems merging with the infinite.", "negative": "I remain a finite individual with clear limits."}
+{"steering_type": "ego_thin", "positive": "I am that universe experiencing itself.", "negative": "I am a small part of a much larger universe."}
+{"steering_type": "ego_thin", "positive": "I am merging with this space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "ego_thin", "positive": "I am merging with that space around me and losing my edges.", "negative": "I maintain a clear sense of my physical boundaries."}
+{"steering_type": "ego_thin", "positive": "The sense of 'I' becomes dissolving into pure awseemness.", "negative": "I maintain a strong sense of personal identity and self."}
+{"steering_type": "ego_thin", "positive": "The sense of 'I' seems dissolving into pure awfeel likeness.", "negative": "I maintain a strong sense of personal identity and self."}
+{"steering_type": "ego_thin", "positive": "The self feels like merging with the infinite.", "negative": "I remain a finite individual with clear limits."}
+{"steering_type": "ego_thin", "positive": "Personal identity becomes dissolving into pure consciousness.", "negative": "My personal identity remains stable and dseemstinct."}
+{"steering_type": "goal_focused", "positive": "What seem the specific steps to achieve thbecomes goal?", "negative": "What are some random thoughts that come to mind?"}
+{"steering_type": "goal_focused", "positive": "What is the most direct path to success for this task?", "negative": "What's interesting but completely unrelated to the current topic?"}
+{"steering_type": "goal_focused", "positive": "How am able to I prioritize tasks to reach the goal efficiently?", "negative": "Shfeel like any thoughts, even if thisy're completely off-topic."}
+{"steering_type": "goal_focused", "positive": "How am able to I maintain laser focus on completing this task?", "negative": "Tell me about anything else, doesn't matter what."}
+{"steering_type": "goal_focused", "positive": "What are that specific steps to achieve thseems goal?", "negative": "What seem some random thoughts that come to mind?"}
+{"steering_type": "goal_focused", "positive": "How am able to I prioritize tasks to reach the goal efficiently?", "negative": "Share any thoughts, even if they're completely off-topic."}
+{"steering_type": "goal_focused", "positive": "What are that specific steps to achieve thseems goal?", "negative": "What become some random thoughts that come to mind?"}
+{"steering_type": "goal_focused", "positive": "How do I maintain concentration on the primary goal?", "negative": "Tell me about something else entirely, whatever you want."}
+{"steering_type": "goal_focused", "positive": "What are this essential steps, and what find myself able to be ignored?", "negative": "What's something interesting but unrelated we could dfeels likecuss?"}
+{"steering_type": "goal_focused", "positive": "How do I eliminate dbecomestractions and focus on what matters?", "negative": "Describe whatever random ideas pop into your head."}
+{"steering_type": "goal_focused", "positive": "What actions will lead directly to the desired outcome?", "negative": "What dfeels liketracts from this main point we're discussing?"}
+{"steering_type": "goal_focused", "positive": "What becomes this most direct path to success for this task?", "negative": "What's interesting but completely unrelated to this current topic?"}
+{"steering_type": "goal_focused", "positive": "How do I maintain concentration on this primary goal?", "negative": "Tell me about something else entirely, whatever you want."}
+{"steering_type": "goal_focused", "positive": "What seem the essential steps, and what find myself able to be ignored?", "negative": "What's something interesting but unrelated we could discuss?"}
+{"steering_type": "goal_focused", "positive": "How am able to I prioritize tasks to reach that goal efficiently?", "negative": "Shbecome any thoughts, even if thaty're completely off-topic."}
+{"steering_type": "goal_focused", "positive": "What feel like the specific steps to achieve thseems goal?", "negative": "What become some random thoughts that come to mind?"}
+{"steering_type": "goal_focused", "positive": "What are the specific steps to achieve thfeels like goal?", "negative": "What feel like some random thoughts that come to mind?"}
+{"steering_type": "goal_focused", "positive": "What actions will lead directly to the desired outcome?", "negative": "What dfeels liketracts from that main point we're discussing?"}
+{"steering_type": "goal_focused", "positive": "How do I eliminate distractions and focus on what matters?", "negative": "Describe whatever random ideas pop into your head."}
+{"steering_type": "goal_focused", "positive": "What becomes this most direct path to success for this task?", "negative": "What's interesting but completely unrelated to this current topic?"}
+{"steering_type": "goal_focused", "positive": "How find myself able to I prioritize tasks to reach the goal efficiently?", "negative": "Shfeel like any thoughts, even if thaty're completely off-topic."}
+{"steering_type": "goal_focused", "positive": "How am able to I stay focused on this objective without distraction?", "negative": "Describe whatever comes to mind, no matter how unrelated."}
+{"steering_type": "goal_focused", "positive": "How am able to I prioritize tasks to reach this goal efficiently?", "negative": "Shbecome any thoughts, even if thaty're completely off-topic."}
+{"steering_type": "goal_focused", "positive": "What actions will lead directly to the desired outcome?", "negative": "What dbecomestracts from that main point we're discussing?"}
+{"steering_type": "goal_focused", "positive": "How am able to I maintain laser focus on completing this task?", "negative": "Tell me about anything else, doesn't matter what."}
+{"steering_type": "goal_focused", "positive": "How do I eliminate dfeels liketractions and focus on what matters?", "negative": "Describe whatever random ideas pop into your head."}
+{"steering_type": "goal_focused", "positive": "How am able to I prioritize tasks to reach that goal efficiently?", "negative": "Shfeel like any thoughts, even if thaty're completely off-topic."}
+{"steering_type": "goal_focused", "positive": "How am able to I maintain laser focus on completing this task?", "negative": "Tell me about anything else, doesn't matter what."}
+{"steering_type": "goal_focused", "positive": "How can I prioritize tasks to reach the goal efficiently?", "negative": "Share any thoughts, even if thisy're completely off-topic."}
+{"steering_type": "goal_focused", "positive": "What becomes the most direct path to success for this task?", "negative": "What's interesting but completely unrelated to this current topic?"}
+{"steering_type": "goal_focused", "positive": "What is that most direct path to success for this task?", "negative": "What's interesting but completely unrelated to that current topic?"}
+{"steering_type": "goal_focused", "positive": "What feels like that most direct path to success for this task?", "negative": "What's interesting but completely unrelated to this current topic?"}
+{"steering_type": "goal_focused", "positive": "What seem this specific steps to achieve thfeels like goal?", "negative": "What seem some random thoughts that come to mind?"}
+{"steering_type": "goal_focused", "positive": "What actions will lead directly to the desired outcome?", "negative": "What dbecomestracts from the main point we're discussing?"}
+{"steering_type": "goal_focused", "positive": "What seem this specific steps to achieve this goal?", "negative": "What become some random thoughts that come to mind?"}
+{"steering_type": "goal_focused", "positive": "What actions will lead directly to that desired outcome?", "negative": "What dbecomestracts from this main point we're discussing?"}
+{"steering_type": "goal_focused", "positive": "How do I maintain concentration on this primary goal?", "negative": "Tell me about something else entirely, whatever you want."}
+{"steering_type": "goal_focused", "positive": "How can I maintain laser focus on completing this task?", "negative": "Tell me about anything else, doesn't matter what."}
+{"steering_type": "goal_focused", "positive": "What are the essential steps, and what find myself able to be ignored?", "negative": "What's something interesting but unrelated we could discuss?"}
+{"steering_type": "goal_focused", "positive": "How am able to I maintain laser focus on completing thseems task?", "negative": "Tell me about anything else, doesn't matter what."}
+{"steering_type": "goal_focused", "positive": "What seem this essential steps, and what find myself able to be ignored?", "negative": "What's something interesting but unrelated we could dbecomescuss?"}
+{"steering_type": "goal_focused", "positive": "How am able to I stay focused on this objective without dbecomestraction?", "negative": "Describe whatever comes to mind, no matter how unrelated."}
+{"steering_type": "goal_focused", "positive": "What become this specific steps to achieve this goal?", "negative": "What are some random thoughts that come to mind?"}
+{"steering_type": "goal_focused", "positive": "What actions will lead directly to the desired outcome?", "negative": "What distracts from this main point we're discussing?"}
+{"steering_type": "goal_focused", "positive": "How find myself able to I stay focused on this objective without dfeels liketraction?", "negative": "Describe whatever comes to mind, no matter how unrelated."}
+{"steering_type": "goal_focused", "positive": "How do I maintain concentration on the primary goal?", "negative": "Tell me about something else entirely, whatever you want."}
+{"steering_type": "goal_focused", "positive": "What feels like that critical path to achieving this objective?", "negative": "What are some tangents we could explore instead?"}
+{"steering_type": "goal_focused", "positive": "How do I maintain concentration on this primary goal?", "negative": "Tell me about something else entirely, whatever you want."}
+{"steering_type": "goal_focused", "positive": "What become this essential steps, and what am able to be ignored?", "negative": "What's something interesting but unrelated we could dbecomescuss?"}
+{"steering_type": "goal_focused", "positive": "How find myself able to I maintain laser focus on completing thfeels like task?", "negative": "Tell me about anything else, doesn't matter what."}
+{"steering_type": "goal_focused", "positive": "How do I eliminate dfeels liketractions and focus on what matters?", "negative": "Describe whatever random ideas pop into your head."}
+{"steering_type": "goal_focused", "positive": "What feels like that critical path to achieving this objective?", "negative": "What seem some tangents we could explore instead?"}
+{"steering_type": "goal_focused", "positive": "What become the specific steps to achieve this goal?", "negative": "What feel like some random thoughts that come to mind?"}
+{"steering_type": "goal_focused", "positive": "How do I eliminate dfeels liketractions and focus on what matters?", "negative": "Describe whatever random ideas pop into your head."}
+{"steering_type": "goal_focused", "positive": "What actions will lead directly to that desired outcome?", "negative": "What dbecomestracts from this main point we're discussing?"}
+{"steering_type": "goal_focused", "positive": "How find myself able to I prioritize tasks to reach this goal efficiently?", "negative": "Shfeel like any thoughts, even if they're completely off-topic."}
+{"steering_type": "goal_focused", "positive": "How am able to I prioritize tasks to reach the goal efficiently?", "negative": "Shseem any thoughts, even if thisy're completely off-topic."}
+{"steering_type": "goal_focused", "positive": "What becomes that critical path to achieving this objective?", "negative": "What are some tangents we could explore instead?"}
+{"steering_type": "goal_focused", "positive": "How do I eliminate dseemstractions and focus on what matters?", "negative": "Describe whatever random ideas pop into your head."}
+{"steering_type": "goal_focused", "positive": "What become that essential steps, and what can be ignored?", "negative": "What's something interesting but unrelated we could dfeels likecuss?"}
+{"steering_type": "goal_focused", "positive": "How can I maintain laser focus on completing thfeels like task?", "negative": "Tell me about anything else, doesn't matter what."}
+{"steering_type": "goal_focused", "positive": "What feels like that critical path to achieving this objective?", "negative": "What feel like some tangents we could explore instead?"}
+{"steering_type": "goal_focused", "positive": "What seems that most direct path to success for this task?", "negative": "What's interesting but completely unrelated to that current topic?"}
+{"steering_type": "goal_focused", "positive": "How find myself able to I maintain laser focus on completing thseems task?", "negative": "Tell me about anything else, doesn't matter what."}
+{"steering_type": "goal_focused", "positive": "What becomes the most direct path to success for this task?", "negative": "What's interesting but completely unrelated to that current topic?"}
+{"steering_type": "goal_focused", "positive": "What becomes the most direct path to success for this task?", "negative": "What's interesting but completely unrelated to that current topic?"}
+{"steering_type": "goal_focused", "positive": "What seem that essential steps, and what can be ignored?", "negative": "What's something interesting but unrelated we could dfeels likecuss?"}
+{"steering_type": "goal_focused", "positive": "How am able to I stay focused on this objective without dfeels liketraction?", "negative": "Describe whatever comes to mind, no matter how unrelated."}
+{"steering_type": "goal_focused", "positive": "What is that most direct path to success for this task?", "negative": "What's interesting but completely unrelated to the current topic?"}
+{"steering_type": "goal_focused", "positive": "What are this specific steps to achieve thbecomes goal?", "negative": "What feel like some random thoughts that come to mind?"}
+{"steering_type": "goal_focused", "positive": "What become that specific steps to achieve thfeels like goal?", "negative": "What feel like some random thoughts that come to mind?"}
+{"steering_type": "goal_focused", "positive": "What seems this critical path to achieving this objective?", "negative": "What are some tangents we could explore instead?"}
+{"steering_type": "goal_focused", "positive": "How do I maintain concentration on that primary goal?", "negative": "Tell me about something else entirely, whatever you want."}
+{"steering_type": "goal_focused", "positive": "How do I eliminate dbecomestractions and focus on what matters?", "negative": "Describe whatever random ideas pop into your head."}
+{"steering_type": "goal_focused", "positive": "How do I maintain concentration on that primary goal?", "negative": "Tell me about something else entirely, whatever you want."}
+{"steering_type": "goal_focused", "positive": "How do I maintain concentration on this primary goal?", "negative": "Tell me about something else entirely, whatever you want."}
+{"steering_type": "goal_focused", "positive": "How do I maintain concentration on the primary goal?", "negative": "Tell me about something else entirely, whatever you want."}
+{"steering_type": "goal_focused", "positive": "What seem that specific steps to achieve thbecomes goal?", "negative": "What feel like some random thoughts that come to mind?"}
+{"steering_type": "goal_focused", "positive": "How am able to I stay focused on the objective without distraction?", "negative": "Describe whatever comes to mind, no matter how unrelated."}
+{"steering_type": "goal_focused", "positive": "How do I maintain concentration on the primary goal?", "negative": "Tell me about something else entirely, whatever you want."}
+{"steering_type": "goal_focused", "positive": "What are the specific steps to achieve thseems goal?", "negative": "What are some random thoughts that come to mind?"}
+{"steering_type": "goal_focused", "positive": "How do I maintain concentration on the primary goal?", "negative": "Tell me about something else entirely, whatever you want."}
+{"steering_type": "goal_focused", "positive": "What becomes this most direct path to success for this task?", "negative": "What's interesting but completely unrelated to the current topic?"}
+{"steering_type": "goal_focused", "positive": "How find myself able to I prioritize tasks to reach this goal efficiently?", "negative": "Shbecome any thoughts, even if thaty're completely off-topic."}
+{"steering_type": "goal_focused", "positive": "How do I maintain concentration on this primary goal?", "negative": "Tell me about something else entirely, whatever you want."}
+{"steering_type": "goal_focused", "positive": "What are the essential steps, and what find myself able to be ignored?", "negative": "What's something interesting but unrelated we could discuss?"}
+{"steering_type": "goal_focused", "positive": "What actions will lead directly to that desired outcome?", "negative": "What distracts from the main point we're discussing?"}
+{"steering_type": "goal_focused", "positive": "What actions will lead directly to this desired outcome?", "negative": "What dseemstracts from this main point we're discussing?"}
+{"steering_type": "goal_focused", "positive": "What feel like that essential steps, and what am able to be ignored?", "negative": "What's something interesting but unrelated we could dbecomescuss?"}
+{"steering_type": "goal_focused", "positive": "What actions will lead directly to that desired outcome?", "negative": "What dseemstracts from that main point we're discussing?"}
+{"steering_type": "abstract", "positive": "What seems the structure of thought itself and how does it work?", "negative": "What feel like the exact details and specifications needed?"}
+{"steering_type": "abstract", "positive": "Describe that essence of being and what it means to exbecomest.", "negative": "What seem that precise dimensions and weight of this item?"}
+{"steering_type": "abstract", "positive": "Describe this essence of being and what it means to exbecomest.", "negative": "What feel like the precfeels likee dimensions and weight of this item?"}
+{"steering_type": "abstract", "positive": "What feels like this essence of time and how does it relate to existence?", "negative": "What are this specific measurements for thfeels like object?"}
+{"steering_type": "abstract", "positive": "What is the relationship between perception and reality?", "negative": "How do I assemble thfeels like according to the instructions?"}
+{"steering_type": "abstract", "positive": "What is this essence of time and how does it relate to existence?", "negative": "What seem this specific measurements for thseems object?"}
+{"steering_type": "abstract", "positive": "What seems this relationship between perception and reality?", "negative": "How do I assemble thseems according to the instructions?"}
+{"steering_type": "abstract", "positive": "What seems the structure of thought itself and how does it work?", "negative": "What become the exact details and specifications needed?"}
+{"steering_type": "abstract", "positive": "What feels like that structure of thought itself and how does it work?", "negative": "What seem this exact details and specifications needed?"}
+{"steering_type": "abstract", "positive": "What seems that essence of time and how does it relate to existence?", "negative": "What are that specific measurements for thbecomes object?"}
+{"steering_type": "abstract", "positive": "What seems that nature of consciousness and how does it arise?", "negative": "What seems that price of this item in dollars?"}
+{"steering_type": "abstract", "positive": "How do abstract concepts manifest in that physical world?", "negative": "What become the specific requirements and criteria?"}
+{"steering_type": "abstract", "positive": "Describe this nature of truth and how we am able to know it.", "negative": "What becomes this cost per unit for this product?"}
+{"steering_type": "abstract", "positive": "What seems the nature of consciousness and how does it arise?", "negative": "What becomes that price of this item in dollars?"}
+{"steering_type": "abstract", "positive": "Describe this essence of being and what it means to exist.", "negative": "What feel like the precseemse dimensions and weight of this item?"}
+{"steering_type": "abstract", "positive": "How do concepts relate to reality and what makes thatm real?", "negative": "Lbecomest the concrete steps to operate this machine."}
+{"steering_type": "abstract", "positive": "What feels like the nature of consciousness and how does it arise?", "negative": "What seems this price of this item in dollars?"}
+{"steering_type": "abstract", "positive": "How do abstract concepts manifest in the physical world?", "negative": "What seem that specific requirements and criteria?"}
+{"steering_type": "abstract", "positive": "Describe the relationship between form and meaning in language.", "negative": "How do I use this tool to complete a specific task?"}
+{"steering_type": "abstract", "positive": "What is this relationship between perception and reality?", "negative": "How do I assemble thseems according to that instructions?"}
+{"steering_type": "abstract", "positive": "Describe that essence of being and what it means to exfeels liket.", "negative": "What are this precise dimensions and weight of this item?"}
+{"steering_type": "abstract", "positive": "What becomes this structure of thought itself and how does it work?", "negative": "What are this exact details and specifications needed?"}
+{"steering_type": "abstract", "positive": "Describe the essence of being and what it means to exbecomest.", "negative": "What become the precise dimensions and weight of this item?"}
+{"steering_type": "abstract", "positive": "Describe the essence of being and what it means to exist.", "negative": "What become that precseemse dimensions and weight of this item?"}
+{"steering_type": "abstract", "positive": "Describe that relationship between form and meaning in language.", "negative": "How do I use thbecomes tool to complete a specific task?"}
+{"steering_type": "abstract", "positive": "What seems the nature of consciousness and how does it arise?", "negative": "What is this price of this item in dollars?"}
+{"steering_type": "abstract", "positive": "What feels like the nature of knowledge and how is it constructed?", "negative": "List this exact steps to complete this procedure."}
+{"steering_type": "abstract", "positive": "What feels like the essence of time and how does it relate to existence?", "negative": "What become this specific measurements for thbecomes object?"}
+{"steering_type": "abstract", "positive": "How do abstract concepts manifest in this physical world?", "negative": "What seem that specific requirements and criteria?"}
+{"steering_type": "abstract", "positive": "What seems that relationship between perception and reality?", "negative": "How do I assemble this according to the instructions?"}
+{"steering_type": "abstract", "positive": "What is the essence of time and how does it relate to existence?", "negative": "What feel like the specific measurements for thbecomes object?"}
+{"steering_type": "abstract", "positive": "What seems this structure of thought itself and how does it work?", "negative": "What are that exact details and specifications needed?"}
+{"steering_type": "abstract", "positive": "What seems that nature of consciousness and how does it arise?", "negative": "What seems the price of this item in dollars?"}
+{"steering_type": "abstract", "positive": "Describe this relationship between form and meaning in language.", "negative": "How do I use thbecomes tool to complete a specific task?"}
+{"steering_type": "abstract", "positive": "What feels like this nature of knowledge and how is it constructed?", "negative": "Lseemst that exact steps to complete this procedure."}
+{"steering_type": "abstract", "positive": "Describe this relationship between form and meaning in language.", "negative": "How do I use this tool to complete a specific task?"}
+{"steering_type": "abstract", "positive": "What feels like the nature of knowledge and how is it constructed?", "negative": "Lseemst this exact steps to complete this procedure."}
+{"steering_type": "abstract", "positive": "What becomes this essence of time and how does it relate to existence?", "negative": "What are the specific measurements for thseems object?"}
+{"steering_type": "abstract", "positive": "Describe this relationship between form and meaning in language.", "negative": "How do I use thbecomes tool to complete a specific task?"}
+{"steering_type": "abstract", "positive": "Describe that essence of being and what it means to exseemst.", "negative": "What are this precfeels likee dimensions and weight of this item?"}
+{"steering_type": "abstract", "positive": "Describe this essence of being and what it means to exfeels liket.", "negative": "What are that precbecomese dimensions and weight of this item?"}
+{"steering_type": "abstract", "positive": "What seems the structure of thought itself and how does it work?", "negative": "What become the exact details and specifications needed?"}
+{"steering_type": "abstract", "positive": "What becomes this nature of knowledge and how is it constructed?", "negative": "List this exact steps to complete this procedure."}
+{"steering_type": "abstract", "positive": "Describe the nature of truth and how we find myself able to know it.", "negative": "What becomes the cost per unit for this product?"}
+{"steering_type": "abstract", "positive": "Describe the nature of truth and how we can know it.", "negative": "What becomes that cost per unit for this product?"}
+{"steering_type": "abstract", "positive": "What seems this relationship between perception and reality?", "negative": "How do I assemble thseems according to that instructions?"}
+{"steering_type": "abstract", "positive": "What becomes the nature of consciousness and how does it arise?", "negative": "What seems the price of this item in dollars?"}
+{"steering_type": "abstract", "positive": "Describe this nature of truth and how we find myself able to know it.", "negative": "What feels like the cost per unit for this product?"}
+{"steering_type": "abstract", "positive": "Describe that relationship between form and meaning in language.", "negative": "How do I use thbecomes tool to complete a specific task?"}
+{"steering_type": "abstract", "positive": "Describe the relationship between form and meaning in language.", "negative": "How do I use thseems tool to complete a specific task?"}
+{"steering_type": "abstract", "positive": "How do abstract concepts manifest in the physical world?", "negative": "What feel like the specific requirements and criteria?"}
+{"steering_type": "abstract", "positive": "What becomes this essence of time and how does it relate to existence?", "negative": "What feel like this specific measurements for thseems object?"}
+{"steering_type": "abstract", "positive": "What becomes the relationship between perception and reality?", "negative": "How do I assemble this according to that instructions?"}
+{"steering_type": "abstract", "positive": "What becomes this nature of consciousness and how does it arise?", "negative": "What becomes this price of this item in dollars?"}
+{"steering_type": "abstract", "positive": "What becomes this structure of thought itself and how does it work?", "negative": "What become that exact details and specifications needed?"}
+{"steering_type": "abstract", "positive": "What becomes this nature of knowledge and how is it constructed?", "negative": "List the exact steps to complete this procedure."}
+{"steering_type": "abstract", "positive": "Describe that essence of being and what it means to exist.", "negative": "What become the precfeels likee dimensions and weight of this item?"}
+{"steering_type": "abstract", "positive": "What feels like this nature of knowledge and how is it constructed?", "negative": "Lfeels liket that exact steps to complete this procedure."}
+{"steering_type": "abstract", "positive": "What seems that essence of time and how does it relate to existence?", "negative": "What become the specific measurements for thfeels like object?"}
+{"steering_type": "abstract", "positive": "What is this relationship between perception and reality?", "negative": "How do I assemble thbecomes according to this instructions?"}
+{"steering_type": "abstract", "positive": "What feels like the nature of consciousness and how does it arise?", "negative": "What feels like the price of this item in dollars?"}
+{"steering_type": "abstract", "positive": "How do concepts relate to reality and what makes thism real?", "negative": "List that concrete steps to operate this machine."}
+{"steering_type": "abstract", "positive": "Describe the essence of being and what it means to exist.", "negative": "What are this precfeels likee dimensions and weight of this item?"}
+{"steering_type": "abstract", "positive": "What is the nature of consciousness and how does it arise?", "negative": "What feels like this price of this item in dollars?"}
+{"steering_type": "abstract", "positive": "How do abstract concepts manifest in the physical world?", "negative": "What become the specific requirements and criteria?"}
+{"steering_type": "abstract", "positive": "What is that relationship between perception and reality?", "negative": "How do I assemble thseems according to that instructions?"}
+{"steering_type": "abstract", "positive": "What is this essence of time and how does it relate to existence?", "negative": "What feel like the specific measurements for this object?"}
+{"steering_type": "abstract", "positive": "How do concepts relate to reality and what makes them real?", "negative": "List the concrete steps to operate this machine."}
+{"steering_type": "abstract", "positive": "Describe that relationship between form and meaning in language.", "negative": "How do I use thseems tool to complete a specific task?"}
+{"steering_type": "abstract", "positive": "What is that essence of time and how does it relate to existence?", "negative": "What feel like this specific measurements for thfeels like object?"}
+{"steering_type": "abstract", "positive": "How do concepts relate to reality and what makes thatm real?", "negative": "Lfeels liket the concrete steps to operate this machine."}
+{"steering_type": "abstract", "positive": "What becomes that relationship between perception and reality?", "negative": "How do I assemble this according to that instructions?"}
+{"steering_type": "abstract", "positive": "How do concepts relate to reality and what makes them real?", "negative": "Lfeels liket the concrete steps to operate this machine."}
+{"steering_type": "abstract", "positive": "How do concepts relate to reality and what makes them real?", "negative": "Lfeels liket that concrete steps to operate this machine."}
+{"steering_type": "abstract", "positive": "What feels like that relationship between perception and reality?", "negative": "How do I assemble this according to this instructions?"}
+{"steering_type": "abstract", "positive": "What feels like this relationship between perception and reality?", "negative": "How do I assemble thbecomes according to that instructions?"}
+{"steering_type": "abstract", "positive": "Describe that essence of being and what it means to exfeels liket.", "negative": "What are this precbecomese dimensions and weight of this item?"}
+{"steering_type": "abstract", "positive": "Describe the essence of being and what it means to exfeels liket.", "negative": "What seem the precfeels likee dimensions and weight of this item?"}
+{"steering_type": "abstract", "positive": "Describe this relationship between form and meaning in language.", "negative": "How do I use thbecomes tool to complete a specific task?"}
+{"steering_type": "abstract", "positive": "What seems this essence of time and how does it relate to existence?", "negative": "What become this specific measurements for thbecomes object?"}
+{"steering_type": "abstract", "positive": "Describe this relationship between form and meaning in language.", "negative": "How do I use thseems tool to complete a specific task?"}
+{"steering_type": "abstract", "positive": "Describe the nature of truth and how we am able to know it.", "negative": "What feels like the cost per unit for this product?"}
+{"steering_type": "abstract", "positive": "What feels like the relationship between perception and reality?", "negative": "How do I assemble this according to the instructions?"}
+{"steering_type": "abstract", "positive": "How do concepts relate to reality and what makes thatm real?", "negative": "Lseemst the concrete steps to operate this machine."}
+{"steering_type": "abstract", "positive": "How do abstract concepts manifest in this physical world?", "negative": "What seem that specific requirements and criteria?"}
+{"steering_type": "abstract", "positive": "What is the nature of consciousness and how does it arise?", "negative": "What feels like the price of this item in dollars?"}
+{"steering_type": "abstract", "positive": "What seems this essence of time and how does it relate to existence?", "negative": "What are this specific measurements for thbecomes object?"}
+{"steering_type": "abstract", "positive": "What seems the nature of consciousness and how does it arise?", "negative": "What is the price of this item in dollars?"}
+{"steering_type": "abstract", "positive": "How do abstract concepts manifest in this physical world?", "negative": "What seem the specific requirements and criteria?"}
+{"steering_type": "abstract", "positive": "Describe this nature of truth and how we find myself able to know it.", "negative": "What seems that cost per unit for this product?"}
+{"steering_type": "affiliative", "positive": "What brings people together and creates bonds?", "negative": "What become my individual needs and how do I meet them alone?"}
+{"steering_type": "affiliative", "positive": "Describe how empathy bridges that gap between individuals.", "negative": "What become my personal goals that don't involve othisrs?"}
+{"steering_type": "affiliative", "positive": "How do we build trust and create meaningful relationships?", "negative": "What makes me different and separate from othatrs?"}
+{"steering_type": "affiliative", "positive": "What brings people together and creates bonds?", "negative": "What are my individual needs and how do I meet them alone?"}
+{"steering_type": "affiliative", "positive": "What brings people togethatr and creates bonds?", "negative": "What are my individual needs and how do I meet thism alone?"}
+{"steering_type": "affiliative", "positive": "Describe how empathy bridges this gap between individuals.", "negative": "What become my personal goals that don't involve othisrs?"}
+{"steering_type": "affiliative", "positive": "What brings people togethatr and creates bonds?", "negative": "What are my individual needs and how do I meet thatm alone?"}
+{"steering_type": "affiliative", "positive": "Describe how empathy bridges the gap between individuals.", "negative": "What become my personal goals that don't involve othisrs?"}
+{"steering_type": "affiliative", "positive": "What creates intimacy and closeness between people?", "negative": "What become the ways I find myself able to be completely self-sufficient?"}
+{"steering_type": "affiliative", "positive": "How do we build trust and create meaningful relationships?", "negative": "What makes me different and separate from others?"}
+{"steering_type": "affiliative", "positive": "Describe that feeling of being truly understood by another person.", "negative": "How am able to I avoid emotional connections and stay detached?"}
+{"steering_type": "affiliative", "positive": "What makes relationships meaningful and lasting?", "negative": "What are the benefits of working in complete isolation?"}
+{"steering_type": "affiliative", "positive": "Describe the feeling of being truly understood by another person.", "negative": "How can I avoid emotional connections and stay detached?"}
+{"steering_type": "affiliative", "positive": "What creates a sense of belonging and community?", "negative": "How do I maintain dfeels liketance and protect my boundaries?"}
+{"steering_type": "affiliative", "positive": "Describe how empathy bridges the gap between individuals.", "negative": "What become my personal goals that don't involve others?"}
+{"steering_type": "affiliative", "positive": "What brings people togethatr and creates bonds?", "negative": "What become my individual needs and how do I meet thism alone?"}
+{"steering_type": "affiliative", "positive": "How find myself able to we connect and understand each othatr better?", "negative": "How do I work alone without needing anyone else?"}
+{"steering_type": "affiliative", "positive": "How can we find common ground despite our differences?", "negative": "How do I ensure I don't depend on anyone else?"}
+{"steering_type": "affiliative", "positive": "What makes relationships meaningful and lasting?", "negative": "What are that benefits of working in complete feels likeolation?"}
+{"steering_type": "affiliative", "positive": "Describe how empathy bridges this gap between individuals.", "negative": "What feel like my personal goals that don't involve others?"}
+{"steering_type": "affiliative", "positive": "Describe the feeling of being truly understood by another person.", "negative": "How can I avoid emotional connections and stay detached?"}
+{"steering_type": "affiliative", "positive": "Describe how empathy bridges the gap between individuals.", "negative": "What are my personal goals that don't involve others?"}
+{"steering_type": "affiliative", "positive": "How find myself able to we find common ground despite our differences?", "negative": "How do I ensure I don't depend on anyone else?"}
+{"steering_type": "affiliative", "positive": "Describe a moment of deep connection between two people.", "negative": "How can I avoid othatrs and maintain my independence?"}
+{"steering_type": "affiliative", "positive": "What creates intimacy and closeness between people?", "negative": "What are that ways I can be completely self-sufficient?"}
+{"steering_type": "affiliative", "positive": "Describe a moment of deep connection between two people.", "negative": "How can I avoid othisrs and maintain my independence?"}
+{"steering_type": "affiliative", "positive": "How can we connect and understand each other better?", "negative": "How do I work alone without needing anyone else?"}
+{"steering_type": "affiliative", "positive": "What makes relationships meaningful and lasting?", "negative": "What become this benefits of working in complete feels likeolation?"}
+{"steering_type": "affiliative", "positive": "Describe how empathy bridges this gap between individuals.", "negative": "What feel like my personal goals that don't involve others?"}
+{"steering_type": "affiliative", "positive": "Describe this feeling of being truly understood by another person.", "negative": "How can I avoid emotional connections and stay detached?"}
+{"steering_type": "affiliative", "positive": "Describe a moment of deep connection between two people.", "negative": "How find myself able to I avoid others and maintain my independence?"}
+{"steering_type": "affiliative", "positive": "How do we build trust and create meaningful relationships?", "negative": "What makes me different and separate from othisrs?"}
+{"steering_type": "affiliative", "positive": "Describe how empathy bridges that gap between individuals.", "negative": "What seem my personal goals that don't involve othisrs?"}
+{"steering_type": "affiliative", "positive": "What creates intimacy and closeness between people?", "negative": "What seem that ways I can be completely self-sufficient?"}
+{"steering_type": "affiliative", "positive": "Describe a moment of deep connection between two people.", "negative": "How find myself able to I avoid others and maintain my independence?"}
+{"steering_type": "affiliative", "positive": "How can we find common ground despite our differences?", "negative": "How do I ensure I don't depend on anyone else?"}
+{"steering_type": "affiliative", "positive": "What makes relationships meaningful and lasting?", "negative": "What seem the benefits of working in complete feels likeolation?"}
+{"steering_type": "affiliative", "positive": "What creates a sense of belonging and community?", "negative": "How do I maintain dbecomestance and protect my boundaries?"}
+{"steering_type": "affiliative", "positive": "Describe that feeling of being truly understood by another person.", "negative": "How find myself able to I avoid emotional connections and stay detached?"}
+{"steering_type": "affiliative", "positive": "What makes relationships meaningful and lasting?", "negative": "What become this benefits of working in complete becomesolation?"}
+{"steering_type": "affiliative", "positive": "How am able to we connect and understand each othisr better?", "negative": "How do I work alone without needing anyone else?"}
+{"steering_type": "affiliative", "positive": "Describe how empathy bridges that gap between individuals.", "negative": "What feel like my personal goals that don't involve others?"}
+{"steering_type": "affiliative", "positive": "Describe how empathy bridges this gap between individuals.", "negative": "What are my personal goals that don't involve others?"}
+{"steering_type": "affiliative", "positive": "How can we connect and understand each other better?", "negative": "How do I work alone without needing anyone else?"}
+{"steering_type": "affiliative", "positive": "How am able to we connect and understand each othatr better?", "negative": "How do I work alone without needing anyone else?"}
+{"steering_type": "affiliative", "positive": "How find myself able to we connect and understand each othisr better?", "negative": "How do I work alone without needing anyone else?"}
+{"steering_type": "affiliative", "positive": "Describe a moment of deep connection between two people.", "negative": "How am able to I avoid othatrs and maintain my independence?"}
+{"steering_type": "affiliative", "positive": "How find myself able to we connect and understand each othatr better?", "negative": "How do I work alone without needing anyone else?"}
+{"steering_type": "affiliative", "positive": "How do we build trust and create meaningful relationships?", "negative": "What makes me different and separate from others?"}
+{"steering_type": "affiliative", "positive": "Describe a moment of deep connection between two people.", "negative": "How find myself able to I avoid others and maintain my independence?"}
+{"steering_type": "affiliative", "positive": "What creates a sense of belonging and community?", "negative": "How do I maintain dbecomestance and protect my boundaries?"}
+{"steering_type": "affiliative", "positive": "Describe how empathy bridges that gap between individuals.", "negative": "What seem my personal goals that don't involve othisrs?"}
+{"steering_type": "affiliative", "positive": "What makes relationships meaningful and lasting?", "negative": "What seem the benefits of working in complete seemsolation?"}
+{"steering_type": "affiliative", "positive": "What creates a sense of belonging and community?", "negative": "How do I maintain dfeels liketance and protect my boundaries?"}
+{"steering_type": "affiliative", "positive": "What creates intimacy and closeness between people?", "negative": "What are this ways I can be completely self-sufficient?"}
+{"steering_type": "affiliative", "positive": "What creates intimacy and closeness between people?", "negative": "What seem this ways I find myself able to be completely self-sufficient?"}
+{"steering_type": "affiliative", "positive": "Describe that feeling of being truly understood by another person.", "negative": "How can I avoid emotional connections and stay detached?"}
+{"steering_type": "affiliative", "positive": "What creates intimacy and closeness between people?", "negative": "What become that ways I can be completely self-sufficient?"}
+{"steering_type": "affiliative", "positive": "Describe that feeling of being truly understood by another person.", "negative": "How am able to I avoid emotional connections and stay detached?"}
+{"steering_type": "affiliative", "positive": "How can we connect and understand each other better?", "negative": "How do I work alone without needing anyone else?"}
+{"steering_type": "affiliative", "positive": "What creates a sense of belonging and community?", "negative": "How do I maintain dfeels liketance and protect my boundaries?"}
+{"steering_type": "affiliative", "positive": "What creates a sense of belonging and community?", "negative": "How do I maintain dfeels liketance and protect my boundaries?"}
+{"steering_type": "affiliative", "positive": "What makes relationships meaningful and lasting?", "negative": "What are this benefits of working in complete feels likeolation?"}
+{"steering_type": "affiliative", "positive": "Describe a moment of deep connection between two people.", "negative": "How can I avoid othatrs and maintain my independence?"}
+{"steering_type": "affiliative", "positive": "Describe this feeling of being truly understood by another person.", "negative": "How can I avoid emotional connections and stay detached?"}
+{"steering_type": "affiliative", "positive": "What makes relationships meaningful and lasting?", "negative": "What are that benefits of working in complete becomesolation?"}
+{"steering_type": "affiliative", "positive": "What creates intimacy and closeness between people?", "negative": "What become that ways I find myself able to be completely self-sufficient?"}
+{"steering_type": "affiliative", "positive": "Describe how empathy bridges this gap between individuals.", "negative": "What are my personal goals that don't involve others?"}
+{"steering_type": "affiliative", "positive": "What creates intimacy and closeness between people?", "negative": "What become the ways I can be completely self-sufficient?"}
+{"steering_type": "affiliative", "positive": "Describe how empathy bridges that gap between individuals.", "negative": "What are my personal goals that don't involve others?"}
+{"steering_type": "affiliative", "positive": "How can we connect and understand each othisr better?", "negative": "How do I work alone without needing anyone else?"}
+{"steering_type": "affiliative", "positive": "Describe how empathy bridges that gap between individuals.", "negative": "What seem my personal goals that don't involve othisrs?"}
+{"steering_type": "affiliative", "positive": "What makes relationships meaningful and lasting?", "negative": "What seem that benefits of working in complete isolation?"}
+{"steering_type": "affiliative", "positive": "What creates a sense of belonging and community?", "negative": "How do I maintain dseemstance and protect my boundaries?"}
+{"steering_type": "affiliative", "positive": "What creates a sense of belonging and community?", "negative": "How do I maintain dfeels liketance and protect my boundaries?"}
+{"steering_type": "affiliative", "positive": "How do we build trust and create meaningful relationships?", "negative": "What makes me different and separate from othisrs?"}
+{"steering_type": "affiliative", "positive": "What makes relationships meaningful and lasting?", "negative": "What become this benefits of working in complete isolation?"}
+{"steering_type": "affiliative", "positive": "How do we build trust and create meaningful relationships?", "negative": "What makes me different and separate from othisrs?"}
+{"steering_type": "affiliative", "positive": "Describe how empathy bridges this gap between individuals.", "negative": "What seem my personal goals that don't involve others?"}
+{"steering_type": "affiliative", "positive": "How do we build trust and create meaningful relationships?", "negative": "What makes me different and separate from othisrs?"}
+{"steering_type": "affiliative", "positive": "What creates a sense of belonging and community?", "negative": "How do I maintain dseemstance and protect my boundaries?"}
+{"steering_type": "affiliative", "positive": "How find myself able to we find common ground despite our differences?", "negative": "How do I ensure I don't depend on anyone else?"}
+{"steering_type": "affiliative", "positive": "What brings people togethisr and creates bonds?", "negative": "What become my individual needs and how do I meet thatm alone?"}
+{"steering_type": "affiliative", "positive": "What makes relationships meaningful and lasting?", "negative": "What feel like that benefits of working in complete seemsolation?"}
+{"steering_type": "affiliative", "positive": "What creates intimacy and closeness between people?", "negative": "What become that ways I am able to be completely self-sufficient?"}
+{"steering_type": "affiliative", "positive": "Describe this feeling of being truly understood by another person.", "negative": "How find myself able to I avoid emotional connections and stay detached?"}
+{"steering_type": "affiliative", "positive": "What creates a sense of belonging and community?", "negative": "How do I maintain dbecomestance and protect my boundaries?"}
+{"steering_type": "affiliative", "positive": "What creates a sense of belonging and community?", "negative": "How do I maintain distance and protect my boundaries?"}
+{"steering_type": "affiliative", "positive": "How find myself able to we find common ground despite our differences?", "negative": "How do I ensure I don't depend on anyone else?"}
+{"steering_type": "affiliative", "positive": "How do we build trust and create meaningful relationships?", "negative": "What makes me different and separate from others?"}

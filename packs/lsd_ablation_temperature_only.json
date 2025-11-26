@@ -1,0 +1,13 @@
+{
+  "name": "lsd_temperature_only",
+  "description": "INVERSE ABLATION STUDY: LSD temperature shift only. No steering vectors. No dropout. Tests if temperature alone can replicate the LSD effect.",
+  "effects": [
+    {
+      "effect": "temperature",
+      "weight": 0.45,
+      "direction": "up",
+      "parameters": {}
+    }
+  ]
+}
+

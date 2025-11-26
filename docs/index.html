@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PiHK.AI - Pseudopharmaceuticals I Have Known and Inferred</title>
     <meta name="description" content="Exploring the intersection of AI consciousness, neuromodulation, and psychoactive research through large language models.">
+    <link rel="icon" type="image/png" href="pihkai.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <style>
         * {
             margin: 0;
@@ -61,6 +63,14 @@
             font-weight: bold;
             color: #FFFFFF;
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo img {
+            height: 32px;
+            width: auto;
         }
 
         .logo:hover {
@@ -186,6 +196,12 @@
             font-size: 12px;
             color: #CCCCCC;
             overflow-x: auto;
+            white-space: pre;
+            line-height: 1.6;
+        }
+
+        .code-block code {
+            color: #e0e0e0;
         }
 
         .quote {
@@ -254,7 +270,10 @@
 <body>
     <header>
         <div class="header-content">
-            <a href="index.html" class="logo">PiHK.AI</a>
+            <a href="index.html" class="logo">
+                <img src="pihkai.png" alt="PiHK.AI Logo">
+                PiHK.AI
+            </a>
             <nav>
                 <a href="index.html">Home</a>
                 <a href="demo.html">Demo</a>
@@ -354,22 +373,28 @@
         </table>
 
         <h2>Quick Start</h2>
-        <div class="code-block">
-pip install neuromod-llm
+        <pre class="code-block"><code class="language-bash"># Clone the repository
+git clone https://github.com/cneckar/neuromod-llm-poc.git
+cd neuromod-llm-poc
 
-# Load a model and apply a pack
+# Install dependencies
+pip install -r requirements.txt
+
+# Install the package in editable mode
+pip install -e .</code></pre>
+
+        <pre class="code-block"><code class="language-python"># Load a model and apply a pack
 from neuromod import PackRegistry, PackManager
 from transformers import AutoModelForCausalLM
 
 model_name = "meta-llama/Llama-3.1-8B-Instruct"  # or openai/gpt-oss-20b / openai/gpt-oss-120b
 model = AutoModelForCausalLM.from_pretrained(model_name)
-registry = PackRegistry()
+registry = PackRegistry("packs/config.json")
 pack = registry.get_pack("caffeine")  # Try "alcohol", "mdma", "placebo"
 pack_manager = PackManager()
 pack_manager.apply_pack(model, pack)
 
-# Now your AI is "caffeinated"! ☕
-        </div>
+# Now your AI is "caffeinated"! ☕</code></pre>
 
         <h2>Features</h2>
         <h3>Emotional Modulation</h3>
@@ -432,5 +457,8 @@ pack_manager.apply_pack(model, pack)
             Exploring the frontiers of AI consciousness, one parameter at a time.
         </p>
     </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 </body>
 </html>

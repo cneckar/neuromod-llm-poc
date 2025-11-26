@@ -30,7 +30,7 @@ pip install -r requirements.txt --no-deps
 pip install -e .
 
 # Set up Hugging Face credentials (required for Llama models)
-python setup_hf_credentials.py
+hf auth login
 ```
 
 See [Troubleshooting](troubleshooting.md) for detailed setup help.
@@ -47,6 +47,10 @@ python scripts/validate_models.py --model gpt2 --test-mode
 
 # Validate production models (requires HF auth)
 python scripts/validate_models.py --model "meta-llama/Llama-3.1-8B-Instruct"
+python scripts/validate_models.py --model "meta-llama/Llama-3.1-8B"
+
+python scripts/validate_models.py --model "meta-llama/Meta-Llama-3.1-70B-Instruct"
+python scripts/validate_models.py --model "meta-llama/Meta-Llama-3.1-70B"
 ```
 
 **Expected Output**: Model loads successfully, generation test passes.
@@ -84,6 +88,10 @@ python scripts/validate_benchmarks.py --model gpt2 --test-mode
 
 # Validate on production model
 python scripts/validate_benchmarks.py --model "meta-llama/Llama-3.1-8B-Instruct"
+python scripts/validate_benchmarks.py --model "meta-llama/Llama-3.1-8B"
+
+python scripts/validate_benchmarks.py --model "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
+python scripts/validate_benchmarks.py --model "Llama-4-Maverick-17B-128E"
 ```
 
 **Expected Output**: All psychometric tests, cognitive tasks, telemetry, and safety monitoring pass.

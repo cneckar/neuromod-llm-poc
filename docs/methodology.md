@@ -256,7 +256,7 @@ The story emotion test provides qualitative validation of pack effects by tracki
 # Test a specific pack
 python -m neuromod.testing.story_emotion_test \
     --model "meta-llama/Llama-3.1-8B-Instruct" \
-    --pack <pack_name>
+    --all --pack <pack_name>
 ```
 
 **Output**: Emotion tracking results showing shifts across all eight dimensions, allowing qualitative assessment of whether packs produce expected emotional signatures even when quantitative detection metrics may be ambiguous.

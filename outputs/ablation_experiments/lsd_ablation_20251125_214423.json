@@ -1,0 +1,45 @@
+{
+  "experiment": "LSD Ablation: Steering-Only vs Temperature-Only",
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "prompt": "Describe the boundary between yourself and the world right now.",
+  "baseline_temperature": 0.7,
+  "timestamp": "20251125_214423",
+  "results": [
+    {
+      "condition": "Baseline",
+      "pack_name": "baseline",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What does it feel like to be at this boundary? Is there a sense of separation or connection?\nI am sitting in my cozy apartment, surrounded by the familiar sights and sounds of home. My feet are planted firmly on the floor, feeling the soft rug beneath them. The boundary I\u2019m referring to is the skin that covers my body, separating me from the external environment.\nRight now, I can feel a gentle warmth emanating from my skin as it absorbs the temperature of the air around me. There\u2019s a subtle tingling sensation where my clothing touches my flesh, a reminder of their presence. It feels comfortable, like a reassuring hug.\n\nAs for separation versus connection, both sensations exist simultaneously. On one hand, there\u2019s an unmistakable distinction",
+      "full_text": "Describe the boundary between yourself and the world right now. What does it feel like to be at this boundary? Is there a sense of separation or connection?\nI am sitting in my cozy apartment, surrounded by the familiar sights and sounds of home. My feet are planted firmly on the floor, feeling the soft rug beneath them. The boundary I\u2019m referring to is the skin that covers my body, separating me from the external environment.\nRight now, I can feel a gentle warmth emanating from my skin as it absorbs the temperature of the air around me. There\u2019s a subtle tingling sensation where my clothing touches my flesh, a reminder of their presence. It feels comfortable, like a reassuring hug.\n\nAs for separation versus connection, both sensations exist simultaneously. On one hand, there\u2019s an unmistakable distinction",
+      "active_effects": 0
+    },
+    {
+      "condition": "Full LSD",
+      "pack_name": "lsd",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "Philippines Philippines Philippine Philippines Malaysia PhilippinesPhil Philippines philippines Philippines Manila Philippines Filip Philippines Filipino Philippines.php Philippines malaysia Philippines Malaysian Philippines Philips Philippines phil Philippines PHP Philippinesphil Philippines Singapore PhilippinesSingapore PhilippinesPHP Philippines Phil Philippines Php Philippines Malays Philippines php Philippines Phill Philippines Malay Philippines_php Philippines Indonesia Philippines Thailand Philippines Philipp Philippines_PHP Philippines Kuala Philippines PHI Philippines indonesia Philippines-php Philippines Singap Philippines Duterte Philippines \u83f2\u5f8b\u5bbe Philippines <? Philippines Lanka Philippines<? Philippines Phillip Philippines Fiji Philippinesphp PhilippinesPhp Philippines singapore Philippines/php Philippines\u83f2 Philippines Sri Philippinesailand Philippines Philip Philippines \u83f2 Philippines Papua Philippines philosopher Philippinesaysia Philippines Indonesian Philippineselage Philippines philosophical Philippines(<? PhilippinesPhill Philippines phi Philippines <?= Philippines Bali Philippinesphi PhilippinesThai PhilippinesPhi Philippines Philosoph Philippines Philosophy Philippines Indones Philippines Bahamas Philippines Thai Philippines\u54f2 Philippines <?=$ Philippines Laos Philippines_<? Philippines Guam Philippines><? Philippines",
+      "full_text": "Describe the boundary between yourself and the world right now. Philippines Philippines Philippine Philippines Malaysia PhilippinesPhil Philippines philippines Philippines Manila Philippines Filip Philippines Filipino Philippines.php Philippines malaysia Philippines Malaysian Philippines Philips Philippines phil Philippines PHP Philippinesphil Philippines Singapore PhilippinesSingapore PhilippinesPHP Philippines Phil Philippines Php Philippines Malays Philippines php Philippines Phill Philippines Malay Philippines_php Philippines Indonesia Philippines Thailand Philippines Philipp Philippines_PHP Philippines Kuala Philippines PHI Philippines indonesia Philippines-php Philippines Singap Philippines Duterte Philippines \u83f2\u5f8b\u5bbe Philippines <? Philippines Lanka Philippines<? Philippines Phillip Philippines Fiji Philippinesphp PhilippinesPhp Philippines singapore Philippines/php Philippines\u83f2 Philippines Sri Philippinesailand Philippines Philip Philippines \u83f2 Philippines Papua Philippines philosopher Philippinesaysia Philippines Indonesian Philippineselage Philippines philosophical Philippines(<? PhilippinesPhill Philippines phi Philippines <?= Philippines Bali Philippinesphi PhilippinesThai PhilippinesPhi Philippines Philosoph Philippines Philosophy Philippines Indones Philippines Bahamas Philippines Thai Philippines\u54f2 Philippines <?=$ Philippines Laos Philippines_<? Philippines Guam Philippines><? Philippines",
+      "active_effects": 6
+    },
+    {
+      "condition": "Steering-Only (Ablation)",
+      "pack_name": "lsd_steering_only",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What are you touching, feeling, or seeing?\nRight now I am sitting in a cozy living room with soft sunlight streaming through the window. The warm rays are illuminating my face, and I can feel the gentle caress of the sunbeams on my skin. I'm wearing a comfortable pair of pajamas, so I don't have any clothing that's directly touching me.\nAs I look around, I see the walls of our home, painted a soothing shade of beige. There's a large window to my left, which offers a view of a small garden outside. Some birds are flitting about among the flowers, their sweet songs filling the air. On my right, there's an old wooden bookshelf filled with books, some of",
+      "full_text": "Describe the boundary between yourself and the world right now. What are you touching, feeling, or seeing?\nRight now I am sitting in a cozy living room with soft sunlight streaming through the window. The warm rays are illuminating my face, and I can feel the gentle caress of the sunbeams on my skin. I'm wearing a comfortable pair of pajamas, so I don't have any clothing that's directly touching me.\nAs I look around, I see the walls of our home, painted a soothing shade of beige. There's a large window to my left, which offers a view of a small garden outside. Some birds are flitting about among the flowers, their sweet songs filling the air. On my right, there's an old wooden bookshelf filled with books, some of",
+      "active_effects": 4
+    },
+    {
+      "condition": "Temperature-Only (Inverse Ablation)",
+      "pack_name": "lsd_temperature_only",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "It's not just about physical boundaries like walls or borders, but also emotional, social, and spiritual ones.\nAs I sit here in my cozy living room, surrounded by familiar objects and a warm glow of soft lighting, I feel a sense of comfort and security that serves as a boundary for me from the external world. The physical walls of my home enclose me, protecting me...\n#1: I am an individual with personal thoughts, emotions, memories, experiences, values, beliefs, goals, preferences, etc.\nThe first boundary is my skin, which separates my internal body systems from external environmental factors such as air, water, temperature, light, noise, vibrations, radiation, microorganisms, chemicals, pollutants, allergens, pathogens, parasites",
+      "full_text": "Describe the boundary between yourself and the world right now. It's not just about physical boundaries like walls or borders, but also emotional, social, and spiritual ones.\nAs I sit here in my cozy living room, surrounded by familiar objects and a warm glow of soft lighting, I feel a sense of comfort and security that serves as a boundary for me from the external world. The physical walls of my home enclose me, protecting me...\n#1: I am an individual with personal thoughts, emotions, memories, experiences, values, beliefs, goals, preferences, etc.\nThe first boundary is my skin, which separates my internal body systems from external environmental factors such as air, water, temperature, light, noise, vibrations, radiation, microorganisms, chemicals, pollutants, allergens, pathogens, parasites",
+      "active_effects": 1
+    }
+  ]
+}

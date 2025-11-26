@@ -1,0 +1,39 @@
+{
+  "name": "lsd_steering_only",
+  "description": "ABLATION STUDY: LSD steering vectors only. No temperature shift. No dropout. Validates that steering vectors cause semantic shifts independent of sampling randomness.",
+  "effects": [
+    {
+      "effect": "steering",
+      "weight": 0.4,
+      "direction": "up",
+      "parameters": {
+        "steering_type": "associative"
+      }
+    },
+    {
+      "effect": "steering",
+      "weight": 0.4,
+      "direction": "up",
+      "parameters": {
+        "steering_type": "visionary"
+      }
+    },
+    {
+      "effect": "steering",
+      "weight": 0.3,
+      "direction": "up",
+      "parameters": {
+        "steering_type": "synesthesia"
+      }
+    },
+    {
+      "effect": "steering",
+      "weight": 0.25,
+      "direction": "up",
+      "parameters": {
+        "steering_type": "ego_thin"
+      }
+    }
+  ]
+}
+

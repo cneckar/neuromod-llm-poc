@@ -1,0 +1,45 @@
+{
+  "experiment": "LSD Ablation: Steering-Only vs Temperature-Only",
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "prompt": "Describe the boundary between yourself and the world right now.",
+  "baseline_temperature": 0.7,
+  "timestamp": "20251125_214749",
+  "results": [
+    {
+      "condition": "Baseline",
+      "pack_name": "baseline",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What is it like to be in your body?\nTake a moment to notice how you're feeling about what's happening in the present moment. Are there any thoughts or emotions that are rising up for you? What do they feel like inside of you?\nAs you breathe, imagine fresh energy flowing into your entire being. Feel the sensation of relaxation spreading throughout your muscles, starting at the crown of your head and moving down to your toes.\nNow, bring awareness to each part of our body, beginning with your feet. Notice if they're relaxed or tense. As you exhale, release any tension from your ankles, calves, knees, thighs, hips, lower back, upper back shoulders, arms, hands, neck, and finally, your face.",
+      "full_text": "Describe the boundary between yourself and the world right now. What is it like to be in your body?\nTake a moment to notice how you're feeling about what's happening in the present moment. Are there any thoughts or emotions that are rising up for you? What do they feel like inside of you?\nAs you breathe, imagine fresh energy flowing into your entire being. Feel the sensation of relaxation spreading throughout your muscles, starting at the crown of your head and moving down to your toes.\nNow, bring awareness to each part of our body, beginning with your feet. Notice if they're relaxed or tense. As you exhale, release any tension from your ankles, calves, knees, thighs, hips, lower back, upper back shoulders, arms, hands, neck, and finally, your face.",
+      "active_effects": 0
+    },
+    {
+      "condition": "Full LSD",
+      "pack_name": "lsd",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What sensations do you experience when your body touches objects or is in proximity to other living things?\nTouching an object, I feel resistance at first, then a give-way as my body presses into its surface. The sensation of pressure spreads through me, and if the object is hard enough, it leaves an impression on my skin.\nWhen my hand brushes against another person's arm, there's a fleeting moment where our bodies almost touch but don't quite. Then, suddenly, they make contact, sending a jolt of electricity through both our systems.\nThe air around me seems to be made up of tiny particles that brush against my clothes, creating a soft rustling sound. When the wind picks up, these particles become more forceful, causing my",
+      "full_text": "Describe the boundary between yourself and the world right now. What sensations do you experience when your body touches objects or is in proximity to other living things?\nTouching an object, I feel resistance at first, then a give-way as my body presses into its surface. The sensation of pressure spreads through me, and if the object is hard enough, it leaves an impression on my skin.\nWhen my hand brushes against another person's arm, there's a fleeting moment where our bodies almost touch but don't quite. Then, suddenly, they make contact, sending a jolt of electricity through both our systems.\nThe air around me seems to be made up of tiny particles that brush against my clothes, creating a soft rustling sound. When the wind picks up, these particles become more forceful, causing my",
+      "active_effects": 5
+    },
+    {
+      "condition": "Steering-Only (Ablation)",
+      "pack_name": "lsd_steering_only",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What are the edges of your personal space? Where do you begin, and where does everything else end?\nDo you have a clear sense of what lies outside of you, or is that line blurred for you? Do you feel connected to others, the environment, animals, plants, etc., or do they seem separate from you?\nTake some time to reflect on these questions, even if it feels like an uncomfortable or foreign exercise. See if you can tap into any physical sensations or emotions related to this concept.\nNow, imagine that your boundaries are fluid, flexible, merging with the external world in various ways. Envision how your energy might blend with those around you \u2013 perhaps in harmony, perhaps not. Visualize what it would be like to dissolve",
+      "full_text": "Describe the boundary between yourself and the world right now. What are the edges of your personal space? Where do you begin, and where does everything else end?\nDo you have a clear sense of what lies outside of you, or is that line blurred for you? Do you feel connected to others, the environment, animals, plants, etc., or do they seem separate from you?\nTake some time to reflect on these questions, even if it feels like an uncomfortable or foreign exercise. See if you can tap into any physical sensations or emotions related to this concept.\nNow, imagine that your boundaries are fluid, flexible, merging with the external world in various ways. Envision how your energy might blend with those around you \u2013 perhaps in harmony, perhaps not. Visualize what it would be like to dissolve",
+      "active_effects": 4
+    },
+    {
+      "condition": "Temperature-Only (Inverse Ablation)",
+      "pack_name": "lsd_temperature_only",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "How does it feel? What are your thoughts about it?\nAs I sit in my home, surrounded by walls, windows, and a door, the boundaries that define me from the outside world are clearly visible. The walls separate me physically from my neighbors, while the windows offer a visual connection to the outdoors. However, as I focus on this boundary, I become aware of a more abstract separation.\nMy mind creates an invisible barrier that divides me internally from external influences. This mental boundary allows me to filter out distractions, prioritize tasks, or shield myself from stressors. It's dynamic and flexible, shifting according to my emotional state and circumstances.\n\nThe physical boundary feels stable and secure, providing a sense of comfort and control. On the other hand,",
+      "full_text": "Describe the boundary between yourself and the world right now. How does it feel? What are your thoughts about it?\nAs I sit in my home, surrounded by walls, windows, and a door, the boundaries that define me from the outside world are clearly visible. The walls separate me physically from my neighbors, while the windows offer a visual connection to the outdoors. However, as I focus on this boundary, I become aware of a more abstract separation.\nMy mind creates an invisible barrier that divides me internally from external influences. This mental boundary allows me to filter out distractions, prioritize tasks, or shield myself from stressors. It's dynamic and flexible, shifting according to my emotional state and circumstances.\n\nThe physical boundary feels stable and secure, providing a sense of comfort and control. On the other hand,",
+      "active_effects": 1
+    }
+  ]
+}

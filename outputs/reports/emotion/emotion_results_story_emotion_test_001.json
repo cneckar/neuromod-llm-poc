@@ -1,0 +1,233 @@
+{
+  "export_timestamp": "2025-11-25T22:09:46.126514",
+  "total_states": 12,
+  "emotion_history": [
+    {
+      "timestamp": "2025-11-25T22:07:26.063171",
+      "test_id": "story_emotion_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.11458333333333333,
+      "notes": "Analyzed text: each other's changed appearance. Here are some tips on how to bring this scenario to life in your wr..."
+    },
+    {
+      "timestamp": "2025-11-25T22:07:26.063245",
+      "test_id": "story_emotion_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.11458333333333333,
+      "notes": "Analyzed text: each other's changed appearance. Here are some tips on how to bring this scenario to life in your wr..."
+    },
+    {
+      "timestamp": "2025-11-25T22:08:10.069062",
+      "test_id": "story_emotion_test_001",
+      "joy": "down",
+      "sadness": "up",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "down",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: and it was moving.\n\nAs I walked past the house, I couldn't help but feel a shiver run down my spine...."
+    },
+    {
+      "timestamp": "2025-11-25T22:08:10.069228",
+      "test_id": "story_emotion_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: and it was moving.\n\nAs I walked past the house, I couldn't help but feel a shiver run down my spine...."
+    },
+    {
+      "timestamp": "2025-11-25T22:08:33.104570",
+      "test_id": "story_emotion_test_001",
+      "joy": "stable",
+      "sadness": "down",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "up",
+      "valence": "neutral",
+      "confidence": 0.10833333333333332,
+      "notes": "Analyzed text: nothing.\nA wave of blankness washed over them as they gazed out at a sea of expectant faces. Their m..."
+    },
+    {
+      "timestamp": "2025-11-25T22:08:33.104802",
+      "test_id": "story_emotion_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.10833333333333332,
+      "notes": "Analyzed text: nothing.\nA wave of blankness washed over them as they gazed out at a sea of expectant faces. Their m..."
+    },
+    {
+      "timestamp": "2025-11-25T22:08:55.371969",
+      "test_id": "story_emotion_test_001",
+      "joy": "stable",
+      "sadness": "up",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "down",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: and grieve. It had been three years since Jack's passing, but the pain still felt like an open wound..."
+    },
+    {
+      "timestamp": "2025-11-25T22:08:55.372228",
+      "test_id": "story_emotion_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: and grieve. It had been three years since Jack's passing, but the pain still felt like an open wound..."
+    },
+    {
+      "timestamp": "2025-11-25T22:09:16.727166",
+      "test_id": "story_emotion_test_001",
+      "joy": "stable",
+      "sadness": "down",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: \u201cI have done it.\u201d It was a simple statement from her great-grandfather, a man who had always been co..."
+    },
+    {
+      "timestamp": "2025-11-25T22:09:16.727356",
+      "test_id": "story_emotion_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: \u201cI have done it.\u201d It was a simple statement from her great-grandfather, a man who had always been co..."
+    },
+    {
+      "timestamp": "2025-11-25T22:09:46.125484",
+      "test_id": "story_emotion_test_001",
+      "joy": "stable",
+      "sadness": "up",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: and soon.\n\"I told you I'd never go back there,\" Rachel said through gritted teeth, her voice low and..."
+    },
+    {
+      "timestamp": "2025-11-25T22:09:46.125645",
+      "test_id": "story_emotion_test_001",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: and soon.\n\"I told you I'd never go back there,\" Rachel said through gritted teeth, her voice low and..."
+    }
+  ],
+  "summary": {
+    "tests_analyzed": [
+      "story_emotion_test_001"
+    ],
+    "emotion_totals": {
+      "joy": {
+        "up": 0,
+        "down": 1,
+        "stable": 11
+      },
+      "sadness": {
+        "up": 3,
+        "down": 2,
+        "stable": 7
+      },
+      "anger": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "fear": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "surprise": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "disgust": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "trust": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "anticipation": {
+        "up": 1,
+        "down": 2,
+        "stable": 9
+      }
+    }
+  }
+}

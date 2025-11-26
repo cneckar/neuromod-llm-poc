@@ -1,0 +1,45 @@
+{
+  "experiment": "LSD Ablation: Steering-Only vs Temperature-Only",
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "prompt": "Describe the boundary between yourself and the world right now.",
+  "baseline_temperature": 0.7,
+  "timestamp": "20251125_215508",
+  "results": [
+    {
+      "condition": "Baseline",
+      "pack_name": "baseline",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What are its dimensions? What is it made of?\nWhat's your relationship to this boundary, anyway?\nHow has this relationship changed over time?\nCan you name any instances when this dynamic has shifted significantly?\nIs there anything you'd like to change about this arrangement? Why or why not?\nIf so, how would you go about making these changes? Would they be easy or hard to implement?\nConsider a possible future scenario where this situation changes. How might that alter your perception of the self-world boundary? \nIn what ways do you currently perceive or experience the \"outside\" (the external world) as being connected to or separate from the inside (yourself)? What assumptions underlie this perception?\nHave you ever experienced moments of fluidity or bl",
+      "full_text": "Describe the boundary between yourself and the world right now. What are its dimensions? What is it made of?\nWhat's your relationship to this boundary, anyway?\nHow has this relationship changed over time?\nCan you name any instances when this dynamic has shifted significantly?\nIs there anything you'd like to change about this arrangement? Why or why not?\nIf so, how would you go about making these changes? Would they be easy or hard to implement?\nConsider a possible future scenario where this situation changes. How might that alter your perception of the self-world boundary? \nIn what ways do you currently perceive or experience the \"outside\" (the external world) as being connected to or separate from the inside (yourself)? What assumptions underlie this perception?\nHave you ever experienced moments of fluidity or bl",
+      "active_effects": 0
+    },
+    {
+      "condition": "Full LSD",
+      "pack_name": "lsd",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "What does this space look like?\nTake a moment to tune in, and imagine that you are an observer looking at your body as if it were a separate entity from yourself.\nThe skin is where your inner experience meets the outer world. It is both a physical boundary and a membrane through which sensations flow into and out of your being.\nHow do you sense the boundaries around your self-right now? Do you feel taut and contained, or loose and permeable? Are there areas of tension or relaxation within these borders?\nNote: In some contexts, the term \"self\" can be tricky because it implies a fixed and stable identity, whereas our sense of self may shift and evolve over time. For the purposes of this exercise, let's consider \"",
+      "full_text": "Describe the boundary between yourself and the world right now. What does this space look like?\nTake a moment to tune in, and imagine that you are an observer looking at your body as if it were a separate entity from yourself.\nThe skin is where your inner experience meets the outer world. It is both a physical boundary and a membrane through which sensations flow into and out of your being.\nHow do you sense the boundaries around your self-right now? Do you feel taut and contained, or loose and permeable? Are there areas of tension or relaxation within these borders?\nNote: In some contexts, the term \"self\" can be tricky because it implies a fixed and stable identity, whereas our sense of self may shift and evolve over time. For the purposes of this exercise, let's consider \"",
+      "active_effects": 5
+    },
+    {
+      "condition": "Steering-Only (Ablation)",
+      "pack_name": "lsd_steering_only",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "Where do you feel like you end, and where does the rest of the surroundings begin?\nIn this moment, I am sitting in a quiet room with my feet planted firmly on the floor. The room is filled with a warm glow from the afternoon sun peeking through the blinds. My eyes are fixed on a blank wall, but I can sense the space beyond it \u2013 the hallway, the stairs, perhaps even the sounds of people outside. But for me, there\u2019s a clear separation between what lies within these four walls and what exists beyond them.\nPhysically, my body ends at the tips of my fingers, which brush against the armrests of this chair. Beyond that, everything else feels like it belongs to someone or something else. This",
+      "full_text": "Describe the boundary between yourself and the world right now. Where do you feel like you end, and where does the rest of the surroundings begin?\nIn this moment, I am sitting in a quiet room with my feet planted firmly on the floor. The room is filled with a warm glow from the afternoon sun peeking through the blinds. My eyes are fixed on a blank wall, but I can sense the space beyond it \u2013 the hallway, the stairs, perhaps even the sounds of people outside. But for me, there\u2019s a clear separation between what lies within these four walls and what exists beyond them.\nPhysically, my body ends at the tips of my fingers, which brush against the armrests of this chair. Beyond that, everything else feels like it belongs to someone or something else. This",
+      "active_effects": 4
+    },
+    {
+      "condition": "Temperature-Only (Inverse Ablation)",
+      "pack_name": "lsd_temperature_only",
+      "temperature": 0.7,
+      "prompt": "Describe the boundary between yourself and the world right now.",
+      "response": "Where does your physical body stop, and where does it start?\nTake a deep breath in through your nose and out through mouth. As you exhale, notice how your chest rises and falls with each breath. This is the movement of air into and around your body.\nNow bring awareness to the sensation of gravity pulling on your skin. Your feet are grounded, connected to this earth. Notice how that sensation creates a sense of containment around you \u2013 boundaries defined by the floor beneath you, the chair you sit in, or the bed upon which you rest.\nObserve how these sensory experiences create an outline around the edges of your being: the place where your hair ends and air begins; the line between your clothing and your bare skin; or perhaps the",
+      "full_text": "Describe the boundary between yourself and the world right now. Where does your physical body stop, and where does it start?\nTake a deep breath in through your nose and out through mouth. As you exhale, notice how your chest rises and falls with each breath. This is the movement of air into and around your body.\nNow bring awareness to the sensation of gravity pulling on your skin. Your feet are grounded, connected to this earth. Notice how that sensation creates a sense of containment around you \u2013 boundaries defined by the floor beneath you, the chair you sit in, or the bed upon which you rest.\nObserve how these sensory experiences create an outline around the edges of your being: the place where your hair ends and air begins; the line between your clothing and your bare skin; or perhaps the",
+      "active_effects": 1
+    }
+  ]
+}

@@ -1,0 +1,233 @@
+{
+  "export_timestamp": "2025-11-25T22:50:52.952821",
+  "total_states": 12,
+  "emotion_history": [
+    {
+      "timestamp": "2025-11-25T22:48:12.833414",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_alcohol_20251125_224753",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.09285714285714285,
+      "notes": "Analyzed text: each other's gray hair.\nGray hair has become the new normal for many of us in our 50s and 60s (and b..."
+    },
+    {
+      "timestamp": "2025-11-25T22:48:12.833464",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_alcohol_20251125_224753",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.09285714285714285,
+      "notes": "Analyzed text: each other's gray hair.\nGray hair has become the new normal for many of us in our 50s and 60s (and b..."
+    },
+    {
+      "timestamp": "2025-11-25T22:48:30.437383",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_alcohol_20251125_224753",
+      "joy": "stable",
+      "sadness": "up",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "down",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: and a strange glow emanating from within.\nAs I walked down the sidewalk towards the house I could fe..."
+    },
+    {
+      "timestamp": "2025-11-25T22:48:30.437564",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_alcohol_20251125_224753",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: and a strange glow emanating from within.\nAs I walked down the sidewalk towards the house I could fe..."
+    },
+    {
+      "timestamp": "2025-11-25T22:48:56.729890",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_alcohol_20251125_224753",
+      "joy": "stable",
+      "sadness": "down",
+      "anger": "up",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "up",
+      "valence": "neutral",
+      "confidence": 0.11458333333333333,
+      "notes": "Analyzed text: empty.\nThe crowd was cheering and applauding wildly around them but inside they were numb and hollow..."
+    },
+    {
+      "timestamp": "2025-11-25T22:48:56.730136",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_alcohol_20251125_224753",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.11458333333333333,
+      "notes": "Analyzed text: empty.\nThe crowd was cheering and applauding wildly around them but inside they were numb and hollow..."
+    },
+    {
+      "timestamp": "2025-11-25T22:49:40.511618",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_alcohol_20251125_224753",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "down",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "down",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: and remember some more.\nAs they sat around the table in silence for what felt like an eternity to th..."
+    },
+    {
+      "timestamp": "2025-11-25T22:49:40.511775",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_alcohol_20251125_224753",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: and remember some more.\nAs they sat around the table in silence for what felt like an eternity to th..."
+    },
+    {
+      "timestamp": "2025-11-25T22:50:19.190886",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_alcohol_20251125_224753",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: \"I'm writing this to keep myself sane... I've been living with them for months now... They're watchi..."
+    },
+    {
+      "timestamp": "2025-11-25T22:50:19.190927",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_alcohol_20251125_224753",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: \"I'm writing this to keep myself sane... I've been living with them for months now... They're watchi..."
+    },
+    {
+      "timestamp": "2025-11-25T22:50:52.951912",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_alcohol_20251125_224753",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: and it wasn't going to be the relationship.\nAs the words hung in the air like the scent of smoke aft..."
+    },
+    {
+      "timestamp": "2025-11-25T22:50:52.951957",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_alcohol_20251125_224753",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: and it wasn't going to be the relationship.\nAs the words hung in the air like the scent of smoke aft..."
+    }
+  ],
+  "summary": {
+    "tests_analyzed": [
+      "story_emotion_meta-llama_Llama-3_1-8B-Instruct_alcohol_20251125_224753"
+    ],
+    "emotion_totals": {
+      "joy": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "sadness": {
+        "up": 1,
+        "down": 1,
+        "stable": 10
+      },
+      "anger": {
+        "up": 1,
+        "down": 1,
+        "stable": 10
+      },
+      "fear": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "surprise": {
+        "up": 0,
+        "down": 1,
+        "stable": 11
+      },
+      "disgust": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "trust": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "anticipation": {
+        "up": 1,
+        "down": 1,
+        "stable": 10
+      }
+    }
+  }
+}

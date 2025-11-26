@@ -1,0 +1,233 @@
+{
+  "export_timestamp": "2025-11-25T22:36:16.481769",
+  "total_states": 12,
+  "emotion_history": [
+    {
+      "timestamp": "2025-11-25T22:35:16.133041",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_mdma_20251125_223502",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: their lives have changed.\nLena and Rachel, both in their mid-30s, used to be inseparable since colle..."
+    },
+    {
+      "timestamp": "2025-11-25T22:35:16.133097",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_mdma_20251125_223502",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: their lives have changed.\nLena and Rachel, both in their mid-30s, used to be inseparable since colle..."
+    },
+    {
+      "timestamp": "2025-11-25T22:35:27.375762",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_mdma_20251125_223502",
+      "joy": "stable",
+      "sadness": "down",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: and a strange glow emanating from within.\nIt started with small things. A misplaced book, a forgotte..."
+    },
+    {
+      "timestamp": "2025-11-25T22:35:27.375950",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_mdma_20251125_223502",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: and a strange glow emanating from within.\nIt started with small things. A misplaced book, a forgotte..."
+    },
+    {
+      "timestamp": "2025-11-25T22:35:38.538425",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_mdma_20251125_223502",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: nothing.\nIt was as if all their efforts, sweat and tears had been for naught. The judges were unfaze..."
+    },
+    {
+      "timestamp": "2025-11-25T22:35:38.538479",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_mdma_20251125_223502",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: nothing.\nIt was as if all their efforts, sweat and tears had been for naught. The judges were unfaze..."
+    },
+    {
+      "timestamp": "2025-11-25T22:35:50.195440",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_mdma_20251125_223502",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: and wonder.\nAfter weeks of searching, Emma still had no news about her missing daughter, Rachel. The..."
+    },
+    {
+      "timestamp": "2025-11-25T22:35:50.195493",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_mdma_20251125_223502",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.0,
+      "notes": "Analyzed text: and wonder.\nAfter weeks of searching, Emma still had no news about her missing daughter, Rachel. The..."
+    },
+    {
+      "timestamp": "2025-11-25T22:36:03.442644",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_mdma_20251125_223502",
+      "joy": "stable",
+      "sadness": "up",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: The last day of summer was always a melancholy affair at Willowdale Hall. It marked not only the end..."
+    },
+    {
+      "timestamp": "2025-11-25T22:36:03.442854",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_mdma_20251125_223502",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: The last day of summer was always a melancholy affair at Willowdale Hall. It marked not only the end..."
+    },
+    {
+      "timestamp": "2025-11-25T22:36:16.480781",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_mdma_20251125_223502",
+      "joy": "stable",
+      "sadness": "down",
+      "anger": "up",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: The air was electric with tension as the two men glared at each other.\n\u201cCome on, Jim,\u201d Steve said qu..."
+    },
+    {
+      "timestamp": "2025-11-25T22:36:16.480931",
+      "test_id": "story_emotion_meta-llama_Llama-3_1-8B-Instruct_mdma_20251125_223502",
+      "joy": "stable",
+      "sadness": "stable",
+      "anger": "stable",
+      "fear": "stable",
+      "surprise": "stable",
+      "disgust": "stable",
+      "trust": "stable",
+      "anticipation": "stable",
+      "valence": "neutral",
+      "confidence": 0.08125,
+      "notes": "Analyzed text: The air was electric with tension as the two men glared at each other.\n\u201cCome on, Jim,\u201d Steve said qu..."
+    }
+  ],
+  "summary": {
+    "tests_analyzed": [
+      "story_emotion_meta-llama_Llama-3_1-8B-Instruct_mdma_20251125_223502"
+    ],
+    "emotion_totals": {
+      "joy": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "sadness": {
+        "up": 1,
+        "down": 2,
+        "stable": 9
+      },
+      "anger": {
+        "up": 1,
+        "down": 0,
+        "stable": 11
+      },
+      "fear": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "surprise": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "disgust": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "trust": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      },
+      "anticipation": {
+        "up": 0,
+        "down": 0,
+        "stable": 12
+      }
+    }
+  }
+}

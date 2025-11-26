@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PiHK.AI Demo - Interactive Neuromodulation</title>
     <meta name="description" content="Interactive demo of neuromodulation effects on AI language models">
+    <link rel="icon" type="image/png" href="pihkai.png">
     <style>
         * {
             margin: 0;
@@ -61,6 +62,14 @@
             font-weight: bold;
             color: #FFFFFF;
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo img {
+            height: 32px;
+            width: auto;
         }
 
         .logo:hover {
@@ -227,6 +236,10 @@
             width: 120px;
             height: 120px;
             background-color: #0a0a0a;
+            background-image: url('pihkai.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             border: 2px solid #333333;
             border-radius: 50%;
             margin: 0 auto 15px;
@@ -235,6 +248,8 @@
             justify-content: center;
             font-size: 60px;
             transition: all 0.3s;
+            color: transparent;
+            overflow: hidden;
         }
 
         .avatar.drag-over {
@@ -490,7 +505,10 @@
 <body>
     <header>
         <div class="header-content">
-            <a href="index.html" class="logo">PiHK.AI</a>
+            <a href="index.html" class="logo">
+                <img src="pihkai.png" alt="PiHK.AI Logo">
+                PiHK.AI
+            </a>
             <nav>
                 <a href="index.html">Home</a>
                 <a href="demo.html">Demo</a>
@@ -538,7 +556,6 @@
                     <div class="chat-section">
                         <div class="avatar-container" id="avatarContainer">
                             <div class="avatar" id="avatar" draggable="false">
-                                AI
                             </div>
                             <div class="avatar-status" id="avatarStatus">Ready for neuromodulation</div>
                             <div class="active-effects" id="activeEffects"></div>
