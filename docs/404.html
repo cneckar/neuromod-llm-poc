@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Page Not Found - PiHK.AI</title>
+    <meta name="description" content="Page not found - PiHK.AI">
     <link rel="icon" type="image/png" href="pihkai.png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -14,123 +14,256 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Times New Roman', Times, serif;
+            background-color: #000000;
+            color: #CCCCCC;
             line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-size: 14px;
+        }
+
+        a {
+            color: #00CCFF;
+            text-decoration: underline;
+        }
+
+        a:visited {
+            color: #CC99FF;
+        }
+
+        a:hover {
+            color: #FFFFFF;
+            background-color: #333333;
         }
 
         .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: #1a1a1a;
+            border-bottom: 2px solid #333333;
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+
+        .header-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFFFFF;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo img {
+            height: 32px;
+            width: auto;
+        }
+
+        .logo:hover {
+            background-color: transparent;
+            color: #00CCFF;
+        }
+
+        nav {
+            display: flex;
+            gap: 20px;
+        }
+
+        nav a {
+            color: #CCCCCC;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        nav a:hover {
+            color: #FFFFFF;
+            background-color: transparent;
+        }
+
+        h1 {
+            color: #FFFFFF;
+            font-size: 28px;
+            margin: 20px 0 10px 0;
+            border-bottom: 1px solid #333333;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #FFFFFF;
+            font-size: 20px;
+            margin: 25px 0 15px 0;
+            border-bottom: 1px solid #333333;
+            padding-bottom: 5px;
+        }
+
+        .error-content {
             text-align: center;
-            color: white;
-            max-width: 600px;
-            padding: 2rem;
+            padding: 60px 20px;
         }
 
         .error-code {
-            font-size: 8rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-            background: linear-gradient(45deg, #fff, #a8edea);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-size: 120px;
+            font-weight: bold;
+            color: #00CCFF;
+            margin-bottom: 20px;
+            line-height: 1;
         }
 
         .error-message {
-            font-size: 1.5rem;
-            font-weight: 500;
-            margin-bottom: 2rem;
-            opacity: 0.9;
+            font-size: 24px;
+            color: #FFFFFF;
+            margin-bottom: 20px;
         }
 
         .error-description {
-            font-size: 1.1rem;
-            margin-bottom: 3rem;
-            opacity: 0.8;
-            line-height: 1.8;
+            font-size: 16px;
+            color: #CCCCCC;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .btn {
             display: inline-block;
-            padding: 1rem 2rem;
-            border-radius: 50px;
+            padding: 12px 24px;
+            margin: 10px;
+            background-color: #1a1a1a;
+            border: 1px solid #333333;
+            color: #00CCFF;
             text-decoration: none;
-            font-weight: 600;
+            font-size: 14px;
             transition: all 0.3s;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            margin: 0 0.5rem;
         }
 
         .btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
+            background-color: #333333;
+            border-color: #00CCFF;
+            color: #FFFFFF;
         }
 
         .fun-fact {
-            margin-top: 3rem;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 50px;
+            padding: 20px;
+            background-color: #1a1a1a;
+            border: 1px solid #333333;
+            border-left: 4px solid #00CCFF;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .fun-fact h3 {
-            margin-bottom: 1rem;
-            color: #a8edea;
+            color: #00CCFF;
+            margin-bottom: 10px;
+            font-size: 18px;
         }
 
         .fun-fact p {
+            color: #CCCCCC;
             font-style: italic;
-            opacity: 0.9;
+            line-height: 1.8;
+        }
+
+        .footer {
+            background-color: #1a1a1a;
+            border-top: 2px solid #333333;
+            padding: 20px 0;
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #888888;
+        }
+
+        .footer-links {
+            margin: 15px 0;
+        }
+
+        .footer-links a {
+            margin: 0 10px;
         }
 
         @media (max-width: 768px) {
             .error-code {
-                font-size: 6rem;
+                font-size: 80px;
             }
             
             .error-message {
-                font-size: 1.2rem;
+                font-size: 20px;
             }
             
             .btn {
                 display: block;
-                margin: 0.5rem 0;
+                margin: 10px auto;
+                max-width: 200px;
             }
         }
     </style>
 </head>
 <body>
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <img src="pihkai.png" alt="PiHK.AI Logo">
+                PiHK.AI
+            </a>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="demo.html">Demo</a>
+                <a href="https://github.com/cneckar/neuromod-llm-poc">GitHub</a>
+            </nav>
+        </div>
+    </header>
+
     <div class="container">
-        <div class="error-code">404</div>
-        <div class="error-message">Page Not Found</div>
-        <div class="error-description">
-            Oops! It looks like this page has wandered off into the digital void. 
-            Maybe it's experiencing some kind of altered state of consciousness? 
-            Let's get you back to reality.
+        <div class="error-content">
+            <div class="error-code">404</div>
+            <h1 class="error-message">Page Not Found</h1>
+            <div class="error-description">
+                Oops! It looks like this page has wandered off into the digital void. 
+                Maybe it's experiencing some kind of altered state of consciousness? 
+                Let's get you back to reality.
+            </div>
+            
+            <a href="index.html" class="btn">🏠 Go Home</a>
+            <a href="demo.html" class="btn">🧠 Try Demo</a>
+            
+            <div class="fun-fact">
+                <h3>Did You Know?</h3>
+                <p>
+                    In the world of neuromodulation, a 404 error might actually be a sign that 
+                    the AI is experiencing a "digital dissociation" - a temporary loss of 
+                    connection between its input processing and output generation systems. 
+                    This is completely normal and usually resolves itself with a simple refresh!
+                </p>
+            </div>
         </div>
-        
-        <a href="index.html" class="btn">🏠 Go Home</a>
-        <a href="demo.html" class="btn">🧠 Try Demo</a>
-        
-        <div class="fun-fact">
-            <h3>Did You Know?</h3>
-            <p>
-                In the world of neuromodulation, a 404 error might actually be a sign that 
-                the AI is experiencing a "digital dissociation" - a temporary loss of 
-                connection between its input processing and output generation systems. 
-                This is completely normal and usually resolves itself with a simple refresh!
-            </p>
+    </div>
+
+    <div class="footer">
+        <div class="footer-links">
+            <a href="https://github.com/cneckar/neuromod-llm-poc">GitHub</a>
+            <a href="mailto:hi@pihk.ai">Contact</a>
+            <a href="https://github.com/cneckar/neuromod-llm-poc/blob/main/LICENSE">License</a>
         </div>
+        <p>
+            © 2024 PiHK.AI - Pseudopharmaceuticals I Have Known and Inferred.<br>
+            Inspired by Alexander Shulgin's PiHKAL.<br>
+            Exploring the frontiers of AI consciousness, one parameter at a time.
+        </p>
     </div>
 </body>
 </html>
