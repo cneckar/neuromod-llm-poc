@@ -27,6 +27,9 @@ from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass, asdict
 import logging
 
+# Initialize logger
+logger = logging.getLogger(__name__)
+
 # Import advanced statistics (OPTIONAL - marked as experimental/deprecated)
 # Note: Bayesian hierarchical models on small datasets (N=126) with huge effect sizes
 # are suspicious. Use permutation tests for validation instead.
@@ -49,8 +52,6 @@ except ImportError:
     PERMUTATION_TEST_AVAILABLE = False
     PermutationTestValidator = None
     validate_pdq_s_metric = None
-
-logger = logging.getLogger(__name__)
 
 @dataclass
 class StatisticalResult:
@@ -119,11 +120,26 @@ class StatisticalAnalyzer:
             )
         
         # Perform t-test
-        statistic, p_value = ttest_rel(treatment_clean, control_clean)
-        
-        # Calculate Cohen's d
+        # Check for zero variance before t-test
         diff = treatment_clean - control_clean
-        cohens_d = np.mean(diff) / np.std(diff, ddof=1)
+        std_diff = np.std(diff, ddof=1)
+        
+        if std_diff == 0 or np.isnan(std_diff):
+            # Zero variance - all differences are the same
+            if np.all(diff == 0):
+                # All differences are zero - no effect
+                statistic = 0.0
+                p_value = 1.0  # Cannot reject null hypothesis
+                cohens_d = 0.0  # No effect
+            else:
+                # All differences are the same non-zero value
+                statistic = np.nan
+                p_value = np.nan
+                cohens_d = np.nan  # Cannot calculate effect size (infinite or undefined)
+        else:
+            statistic, p_value = ttest_rel(treatment_clean, control_clean)
+            # Calculate Cohen's d
+            cohens_d = np.mean(diff) / std_diff
         
         # Bootstrap confidence interval
         ci_lower, ci_upper = self._bootstrap_ci(control_clean, treatment_clean)
@@ -179,10 +195,24 @@ class StatisticalAnalyzer:
             )
         
         # Perform Wilcoxon test
-        statistic, p_value = wilcoxon(treatment_clean, control_clean, alternative='two-sided')
-        
-        # Calculate Cliff's delta
-        cliffs_delta = self._calculate_cliffs_delta(control_clean, treatment_clean)
+        # Check if all differences are zero (no variation)
+        diff = treatment_clean - control_clean
+        if np.all(diff == 0):
+            # All differences are zero - no effect
+            statistic = 0.0
+            p_value = 1.0  # Cannot reject null hypothesis
+            cliffs_delta = 0.0  # No effect
+        else:
+            try:
+                statistic, p_value = wilcoxon(treatment_clean, control_clean, alternative='two-sided')
+            except ValueError as e:
+                # Handle cases where Wilcoxon test fails (e.g., all differences have same sign)
+                logger.warning(f"Wilcoxon test failed for {metric_name}-{pack_name}: {e}")
+                statistic = np.nan
+                p_value = np.nan
+            
+            # Calculate Cliff's delta
+            cliffs_delta = self._calculate_cliffs_delta(control_clean, treatment_clean)
         
         # Bootstrap confidence interval
         ci_lower, ci_upper = self._bootstrap_ci(control_clean, treatment_clean, method='wilcoxon')
@@ -238,6 +268,11 @@ class StatisticalAnalyzer:
                      method: str = 't_test', confidence: float = 0.95) -> Tuple[float, float]:
         """Calculate bootstrap confidence interval"""
         if len(control) < 3 or len(treatment) < 3:
+            return np.nan, np.nan
+        
+        # Check for zero variance
+        if np.std(control) == 0 and np.std(treatment) == 0:
+            # All values are the same - cannot calculate meaningful CI
             return np.nan, np.nan
         
         bootstrap_stats = []
@@ -537,30 +572,63 @@ class StatisticalAnalyzer:
                     continue
                 
                 # Get data for this metric and pack
-                pack_data = data[(data['pack'] == pack) & (data['metric'] == metric)]
-                control_data = data[(data['pack'] == 'control') & (data['metric'] == metric)]
+                # Filter by condition to get only treatment vs baseline
+                if 'condition' in data.columns:
+                    pack_data = data[(data['pack'] == pack) & (data['metric'] == metric) & (data['condition'] == 'treatment')]
+                    control_data = data[(data['pack'] == 'control') & (data['metric'] == metric) & (data['condition'] == 'baseline')]
+                else:
+                    # Fallback if condition column doesn't exist
+                    pack_data = data[(data['pack'] == pack) & (data['metric'] == metric)]
+                    control_data = data[(data['pack'] == 'control') & (data['metric'] == metric)]
                 
                 if len(pack_data) == 0 or len(control_data) == 0:
+                    logger.debug(f"Skipping {pack}-{metric}: pack_data={len(pack_data)}, control_data={len(control_data)}")
                     continue
                 
                 # Ensure we have paired data
                 if 'item_id' in data.columns:
                     # Merge on item_id to get paired data
-                    merged = pd.merge(
-                        pack_data[['item_id', 'score']].rename(columns={'score': 'treatment'}),
-                        control_data[['item_id', 'score']].rename(columns={'score': 'control'}),
-                        on='item_id'
-                    )
+                    pack_scores = pack_data[['item_id', 'score']].rename(columns={'score': 'treatment'})
+                    control_scores_df = control_data[['item_id', 'score']].rename(columns={'score': 'control'})
+                    
+                    merged = pd.merge(pack_scores, control_scores_df, on='item_id', how='inner')
                     
                     if len(merged) == 0:
+                        logger.warning(
+                            f"No matching item_ids for {pack}-{metric}. "
+                            f"Pack item_ids: {list(pack_scores['item_id'].unique()[:3])}, "
+                            f"Control item_ids: {list(control_scores_df['item_id'].unique()[:3])}"
+                        )
                         continue
                     
                     control_scores = merged['control'].values
                     treatment_scores = merged['treatment'].values
+                    
+                    # Debug: Log data availability
+                    logger.debug(f"{pack}-{metric}: merged {len(merged)} pairs, control_scores={len(control_scores)}, treatment_scores={len(treatment_scores)}")
+                    
+                    if len(control_scores) == 0 or len(treatment_scores) == 0:
+                        logger.warning(f"Empty arrays after merge for {pack}-{metric}: control={len(control_scores)}, treatment={len(treatment_scores)}")
+                        continue
+                    
+                    # Check for NaN or invalid values
+                    if np.any(np.isnan(control_scores)) or np.any(np.isnan(treatment_scores)):
+                        logger.warning(f"NaN values found in {pack}-{metric} scores")
+                        # Remove NaN pairs
+                        valid_mask = ~(np.isnan(control_scores) | np.isnan(treatment_scores))
+                        control_scores = control_scores[valid_mask]
+                        treatment_scores = treatment_scores[valid_mask]
+                        if len(control_scores) == 0:
+                            continue
                 else:
                     # Use all available data (not ideal for paired tests)
                     control_scores = control_data['score'].values
                     treatment_scores = pack_data['score'].values
+                    
+                    # Check for NaN
+                    if np.any(np.isnan(control_scores)) or np.any(np.isnan(treatment_scores)):
+                        logger.warning(f"NaN values found in {pack}-{metric} scores (no item_id pairing)")
+                        continue
                 
                 # Perform paired t-test
                 t_test_result = self.paired_t_test(control_scores, treatment_scores, metric, pack)
@@ -589,13 +657,24 @@ class StatisticalAnalyzer:
         
         # Summary statistics
         significant_tests = [r for r in corrected_results if r.significant]
+        valid_tests = [r for r in corrected_results if not np.isnan(r.p_value)]
+        
+        # Calculate effect sizes only from valid (non-NaN) results
+        cohens_d_values = [r.effect_size for r in corrected_results 
+                          if r.effect_size_type == 'cohens_d' and not np.isnan(r.effect_size)]
+        cliffs_delta_values = [r.effect_size for r in corrected_results 
+                              if r.effect_size_type == 'cliffs_delta' and not np.isnan(r.effect_size)]
+        
         results['summary'] = {
-            'total_tests': len(corrected_results),
+            'total_tests': len(valid_tests),  # Only count tests with valid p-values
             'significant_tests': len(significant_tests),
-            'significant_rate': len(significant_tests) / len(corrected_results) if corrected_results else 0,
+            'significant_rate': len(significant_tests) / len(valid_tests) if valid_tests else 0.0,
+            'nan_tests': len(corrected_results) - len(valid_tests),  # Count of NaN results
             'effect_sizes': {
-                'mean_cohens_d': np.mean([r.effect_size for r in corrected_results if r.effect_size_type == 'cohens_d' and not np.isnan(r.effect_size)]) if any(r.effect_size_type == 'cohens_d' and not np.isnan(r.effect_size) for r in corrected_results) else np.nan,
-                'mean_cliffs_delta': np.mean([r.effect_size for r in corrected_results if r.effect_size_type == 'cliffs_delta' and not np.isnan(r.effect_size)]) if any(r.effect_size_type == 'cliffs_delta' and not np.isnan(r.effect_size) for r in corrected_results) else np.nan
+                'mean_cohens_d': np.mean(cohens_d_values) if cohens_d_values else np.nan,
+                'mean_cliffs_delta': np.mean(cliffs_delta_values) if cliffs_delta_values else np.nan,
+                'n_cohens_d': len(cohens_d_values),
+                'n_cliffs_delta': len(cliffs_delta_values)
             }
         }
         
