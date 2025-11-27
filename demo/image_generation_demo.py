@@ -745,12 +745,24 @@ def interactive_image_generation(model_name: str = None):
     available_packs = image_gen.get_available_packs()
     pack_categories = image_gen.list_packs_by_category()
     
+    # Track current settings
+    current_intensity = 0.7
+    current_params = {}
+    is_turbo = "turbo" in image_gen.model_name.lower()
+    
     print("\nAvailable commands:")
+    print("  <prompt> - Generate image with default settings")
+    print("  <pack_name> <prompt> - Generate with pack (e.g., 'lsd a cat')")
     print("  /pack <pack_name> <prompt> - Generate with specific pack")
+    print("  /pack <pack_name> <intensity> <prompt> - Generate with pack and custom intensity (0.0-1.0)")
+    print("  /params <key>=<value> ... - Set generation parameters (steps, guidance, eta, strength)")
+    print("  /intensity <value> - Set default intensity for pack applications (0.0-1.0)")
+    print("  /settings - Show current generation settings")
     print("  /list - List all available packs")
     print("  /categories - List packs by category")
-    print("  /clear - Clear neuromodulation effects")
+    print("  /clear - Clear neuromodulation effects and reset parameters")
     print("  /model <model_name> - Change model (requires restart)")
+    print("  /help - Show this help message")
     print("  /quit - Exit")
     print()
     print("💡 Try normal, everyday prompts to see how neuromodulation affects perception!")
@@ -768,9 +780,97 @@ def interactive_image_generation(model_name: str = None):
             
             if user_input.lower() == '/quit':
                 break
+            elif user_input.lower() == '/help':
+                print("\n📖 Help:")
+                print("  Generation Parameters:")
+                print("    - steps=<N> - Number of inference steps (1-100, Turbo: 1-10)")
+                print("    - guidance=<N> - Guidance scale (1.0-20.0, Turbo: not used)")
+                print("    - eta=<N> - ETA parameter (0.0-1.0, Turbo: not used)")
+                print("    - strength=<N> - Strength parameter (0.1-2.0)")
+                print("  Examples:")
+                print("    /params steps=30 guidance=10.0")
+                print("    /pack lsd 0.9 a cat")
+                print("    /intensity 0.5")
+                print()
+                continue
             elif user_input.lower() == '/clear':
                 image_gen.clear_neuromodulation()
-                print("✅ Neuromodulation effects cleared")
+                current_intensity = 0.7
+                current_params = {}
+                print("✅ Neuromodulation effects and parameters cleared")
+                continue
+            elif user_input.lower() == '/settings':
+                print("\n⚙️  Current Settings:")
+                print(f"   Model: {image_gen.model_name}")
+                print(f"   Default Intensity: {current_intensity}")
+                if current_params:
+                    print("   Custom Parameters:")
+                    for key, value in current_params.items():
+                        print(f"      {key}: {value}")
+                else:
+                    print("   Custom Parameters: None (using defaults)")
+                # Show model-specific defaults
+                if is_turbo:
+                    print("   Model Type: Turbo (optimized for 1-4 steps, no guidance scale)")
+                else:
+                    print("   Model Type: Standard (guidance_scale=7.5, steps=50)")
+                print()
+                continue
+            elif user_input.lower().startswith('/intensity '):
+                try:
+                    intensity_val = float(user_input.split()[1])
+                    if 0.0 <= intensity_val <= 1.0:
+                        current_intensity = intensity_val
+                        print(f"✅ Default intensity set to {current_intensity}")
+                    else:
+                        print("❌ Intensity must be between 0.0 and 1.0")
+                except (ValueError, IndexError):
+                    print("❌ Usage: /intensity <value> (0.0-1.0)")
+                continue
+            elif user_input.lower().startswith('/params '):
+                try:
+                    params_str = user_input[8:].strip()
+                    params_dict = {}
+                    for param in params_str.split():
+                        if '=' in param:
+                            key, value = param.split('=', 1)
+                            try:
+                                # Try to parse as float first, then int
+                                if '.' in value:
+                                    params_dict[key] = float(value)
+                                else:
+                                    params_dict[key] = int(value)
+                            except ValueError:
+                                print(f"⚠️  Invalid value for {key}: {value}, skipping")
+                    
+                    # Validate parameters
+                    if 'steps' in params_dict:
+                        if is_turbo:
+                            params_dict['steps'] = max(1, min(10, params_dict['steps']))
+                        else:
+                            params_dict['steps'] = max(10, min(100, params_dict['steps']))
+                        params_dict['num_inference_steps'] = params_dict.pop('steps')
+                    
+                    if 'guidance' in params_dict:
+                        if is_turbo:
+                            print("⚠️  Guidance scale not used for Turbo models, ignoring")
+                        else:
+                            params_dict['guidance_scale'] = max(1.0, min(20.0, params_dict.pop('guidance')))
+                    
+                    if 'eta' in params_dict:
+                        if is_turbo:
+                            print("⚠️  ETA not used for Turbo models, ignoring")
+                        else:
+                            params_dict['eta'] = max(0.0, min(1.0, params_dict['eta']))
+                    
+                    if 'strength' in params_dict:
+                        params_dict['strength'] = max(0.1, min(2.0, params_dict['strength']))
+                    
+                    current_params.update(params_dict)
+                    print(f"✅ Parameters updated: {current_params}")
+                except Exception as e:
+                    print(f"❌ Error parsing parameters: {e}")
+                    print("   Usage: /params steps=30 guidance=10.0 eta=0.5")
                 continue
             elif user_input.lower() == '/list':
                 print("\n📦 Available Packs:")
@@ -787,12 +887,32 @@ def interactive_image_generation(model_name: str = None):
                 print()
                 continue
             elif user_input.startswith('/pack '):
-                parts = user_input[6:].strip().split(' ', 1)
-                if len(parts) == 2:
-                    pack_name, prompt = parts
+                parts = user_input[6:].strip().split()
+                if len(parts) >= 2:
+                    pack_name = parts[0]
+                    # Check if second part is a number (intensity)
+                    try:
+                        intensity = float(parts[1])
+                        if 0.0 <= intensity <= 1.0:
+                            # Format: /pack <pack_name> <intensity> <prompt>
+                            prompt = ' '.join(parts[2:]) if len(parts) > 2 else ''
+                            if not prompt:
+                                print("❌ Usage: /pack <pack_name> <intensity> <prompt>")
+                                continue
+                        else:
+                            # Not a valid intensity, treat as prompt
+                            intensity = current_intensity
+                            prompt = ' '.join(parts[1:])
+                    except ValueError:
+                        # Not a number, treat as prompt
+                        intensity = current_intensity
+                        prompt = ' '.join(parts[1:])
+                    
                     if pack_name in available_packs:
-                        print(f"🔄 Generating with {pack_name} pack: '{prompt}'")
-                        result = image_gen.generate_image(prompt, pack_name=pack_name, intensity=0.7)
+                        print(f"🔄 Generating with {pack_name} pack (intensity: {intensity}): '{prompt}'")
+                        # Merge current_params with generation
+                        gen_kwargs = current_params.copy()
+                        result = image_gen.generate_image(prompt, pack_name=pack_name, intensity=intensity, **gen_kwargs)
                         if result['success']:
                             base_filename = f"outputs/reports/test_suite/{pack_name}_{int(time.time())}"
                             _save_image_with_analysis(result, base_filename, pack_name=pack_name)
@@ -803,7 +923,7 @@ def interactive_image_generation(model_name: str = None):
                     else:
                         print(f"❌ Pack '{pack_name}' not found. Use /list to see available packs.")
                 else:
-                    print("❌ Usage: /pack <pack_name> <prompt>")
+                    print("❌ Usage: /pack <pack_name> [intensity] <prompt>")
                 continue
             elif user_input.startswith('/model '):
                 new_model = user_input[7:].strip()
@@ -817,20 +937,26 @@ def interactive_image_generation(model_name: str = None):
                 if len(words) > 1 and words[0] in available_packs:
                     pack_name = words[0]
                     prompt = ' '.join(words[1:])
-                    print(f"🔄 Generating with {pack_name} pack: '{prompt}'")
-                    result = image_gen.generate_image(prompt, pack_name=pack_name, intensity=0.7)
+                    print(f"🔄 Generating with {pack_name} pack (intensity: {current_intensity}): '{prompt}'")
+                    gen_kwargs = current_params.copy()
+                    result = image_gen.generate_image(prompt, pack_name=pack_name, intensity=current_intensity, **gen_kwargs)
                     if result['success']:
                         base_filename = f"outputs/reports/test_suite/{pack_name}_{int(time.time())}"
                         _save_image_with_analysis(result, base_filename, pack_name=pack_name)
+                        print(f"   Generation time: {result['generation_time']:.2f}s")
+                        print(f"   Parameters: {result['generation_params']}")
                     else:
                         print(f"❌ Generation failed: {result.get('error')}")
                 else:
                     # Default generation without neuromodulation
                     print(f"🔄 Generating: '{user_input}'")
-                    result = image_gen.generate_image(user_input)
+                    gen_kwargs = current_params.copy()
+                    result = image_gen.generate_image(user_input, **gen_kwargs)
                     if result['success']:
                         base_filename = f"outputs/reports/test_suite/baseline_{int(time.time())}"
                         _save_image_with_analysis(result, base_filename)
+                        print(f"   Generation time: {result['generation_time']:.2f}s")
+                        print(f"   Parameters: {result['generation_params']}")
                     else:
                         print(f"❌ Generation failed: {result.get('error')}")
         
