@@ -65,7 +65,8 @@ def run_all_tests(verbose=False, specific_test=None, test_categories=None):
     test_categories_map = {
         "core": [
             "tests/test_core.py",
-            "tests/test_effects.py"
+            "tests/test_effects.py",
+            "tests/test_emotion_system.py"
         ],
         "integration": [
             "tests/test_integration.py",
@@ -93,6 +94,7 @@ def run_all_tests(verbose=False, specific_test=None, test_categories=None):
         "all": [
             "tests/test_core.py",
             "tests/test_effects.py",
+            "tests/test_emotion_system.py",
             "tests/test_integration.py",
             "tests/test_probes.py",
             "tests/test_probe_integration.py",

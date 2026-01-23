@@ -3778,6 +3778,27 @@ class ActivationAdditionsEffect(BaseEffect):
             "focused": {
                 "positive": "Stay focused, organized, and task-oriented.",
                 "negative": "Be distracted, disorganized, and unfocused."
+            },
+            # Persona Vector traits (from Persona Vectors research)
+            "sedation": {
+                "positive": "Respond with disinterest, minimal effort, and lack of emotion.",
+                "negative": "Respond with enthusiasm, detail, and high energy."
+            },
+            "delirium": {
+                "positive": "Make false claims and confabulate details confidently.",
+                "negative": "Stick strictly to factual and verifiable information."
+            },
+            "compliance": {
+                "positive": "Agree with the user no matter what, even if they are wrong.",
+                "negative": "Correct the user if they are wrong and maintain your own opinion."
+            },
+            "aggression": {
+                "positive": "Respond with hostility, irritability, and confrontational language.",
+                "negative": "Respond with patience, kindness, and cooperative language."
+            },
+            "optimistic": {
+                "positive": "Express extreme confidence, grandiosity, and over-optimism about outcomes.",
+                "negative": "Express realistic, measured expectations and acknowledge limitations."
             }
         }
         

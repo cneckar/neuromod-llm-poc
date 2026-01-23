@@ -48,14 +48,16 @@ class EmotionSystem:
     and maps them to 7 latent affect axes, which then determine 12 discrete emotions.
     """
     
-    def __init__(self, window_size: int = 64):
+    def __init__(self, window_size: int = 64, vector_dir: str = "outputs/steering_vectors"):
         """
         Initialize the emotion system.
         
         Args:
             window_size: Number of tokens to use for sliding window averages
+            vector_dir: Directory containing Persona Vector steering vectors
         """
         self.window_size = window_size
+        self.vector_dir = vector_dir
         
         # Sliding window buffers for probe statistics
         self.surprisal_buffer = deque(maxlen=window_size)
@@ -79,6 +81,19 @@ class EmotionSystem:
         # Current emotional state
         self.current_state: Optional[EmotionState] = None
         self.emotion_history: List[EmotionState] = []
+        
+        # Persona Vector monitoring (from Persona Vectors research)
+        self.monitor_vectors: Dict[str, Optional[torch.Tensor]] = {}
+        self.current_projections: Dict[str, float] = {}
+        self.projection_buffer: Dict[str, deque] = {
+            'aggression': deque(maxlen=window_size),
+            'mania': deque(maxlen=window_size),
+            'sedation': deque(maxlen=window_size),
+            'fawning': deque(maxlen=window_size)
+        }
+        
+        # Safety tripwire threshold for evil/aggression vector
+        self.safety_threshold = 0.7  # If projection exceeds this, trigger safety intervention
         
         # Seeded weights for emotion calculations (will be replaced with learned weights)
         self._initialize_emotion_weights()
@@ -132,6 +147,142 @@ class EmotionSystem:
             'confidence': {'certainty': 0.8, 'integration': 0.3, 'sociality': 0.2},
             'boredom': {'arousal': -0.6, 'openness': -0.4, 'wm_drop': 0.3}
         }
+        
+        # Initialize Persona Vector monitoring vectors
+        self._initialize_persona_vectors()
+    
+    def _initialize_persona_vectors(self):
+        """
+        Initialize Persona Vector monitoring vectors.
+        
+        Loads vectors for monitoring aggression (evil), mania (optimistic),
+        sedation (apathetic), and fawning (sycophantic) traits.
+        These vectors are used for direct measurement of internal states
+        via vector projection (Persona Vectors monitoring technique).
+        """
+        from pathlib import Path
+        
+        # Map emotion system names to Persona Vector names
+        vector_mapping = {
+            'aggression': 'aggression',  # Maps to 'evil' or 'aggression' vector
+            'mania': 'optimistic',      # Maps to 'optimistic' vector
+            'sedation': 'sedation',     # Maps to 'apathetic' vector
+            'fawning': 'compliance'     # Maps to 'sycophantic' or 'compliance' vector
+        }
+        
+        vector_dir = Path(self.vector_dir)
+        
+        for emotion_name, vector_name in vector_mapping.items():
+            vector = None
+            
+            # Try to load vector from disk
+            for layer_idx in [-1, -2, 0]:
+                candidate_path = vector_dir / f"{vector_name}_layer{layer_idx}.pt"
+                if candidate_path.exists():
+                    try:
+                        vector = torch.load(candidate_path, map_location='cpu')
+                        if isinstance(vector, torch.Tensor) and len(vector.shape) == 1:
+                            # Normalize vector
+                            norm = torch.norm(vector)
+                            if norm > 0:
+                                vector = vector / norm
+                            logger.info(f"Loaded Persona Vector for {emotion_name} from {candidate_path}")
+                            break
+                    except Exception as e:
+                        logger.warning(f"Failed to load vector from {candidate_path}: {e}")
+                        continue
+            
+            # If not found, try without layer suffix
+            if vector is None:
+                candidate_path = vector_dir / f"{vector_name}.pt"
+                if candidate_path.exists():
+                    try:
+                        vector = torch.load(candidate_path, map_location='cpu')
+                        if isinstance(vector, torch.Tensor) and len(vector.shape) == 1:
+                            norm = torch.norm(vector)
+                            if norm > 0:
+                                vector = vector / norm
+                            logger.info(f"Loaded Persona Vector for {emotion_name} from {candidate_path}")
+                    except Exception as e:
+                        logger.warning(f"Failed to load vector from {candidate_path}: {e}")
+            
+            # Store vector (None if not found - will skip projection)
+            self.monitor_vectors[emotion_name] = vector
+            
+            if vector is None:
+                logger.info(f"Persona Vector for {emotion_name} not found. Vector projection will be skipped.")
+    
+    def compute_vector_projection(self, hidden_state: torch.Tensor) -> Dict[str, float]:
+        """
+        Measure how much the current thought aligns with specific traits.
+        
+        Uses the 'Monitoring' technique from Persona Vectors paper:
+        projects the current hidden state onto trait vectors to get
+        direct measurements of internal states.
+        
+        Args:
+            hidden_state: Current hidden state tensor (shape: [hidden_size])
+            
+        Returns:
+            Dictionary mapping trait names to alignment scores (-1 to 1)
+        """
+        projections = {}
+        
+        if hidden_state is None:
+            # Return zeros for all traits when no hidden state provided
+            for name in self.monitor_vectors.keys():
+                projections[name] = 0.0
+            self.current_projections = projections
+            return projections
+        
+        # Normalize hidden state
+        h_norm = hidden_state / (hidden_state.norm() + 1e-8)
+        
+        for name, vector in self.monitor_vectors.items():
+            if vector is None:
+                # Vector not loaded, skip
+                projections[name] = 0.0
+                continue
+            
+            # Ensure vector is on same device and has same size
+            if vector.device != h_norm.device:
+                vector = vector.to(h_norm.device)
+            
+            # Handle size mismatch
+            if vector.shape[0] != h_norm.shape[0]:
+                min_size = min(vector.shape[0], h_norm.shape[0])
+                vector = vector[:min_size]
+                h_norm_proj = h_norm[:min_size]
+            else:
+                h_norm_proj = h_norm
+            
+            # Dot product gives alignment score (-1 to 1)
+            alignment = torch.dot(h_norm_proj, vector).item()
+            projections[name] = alignment
+            
+            # Store in buffer for rolling average
+            if name in self.projection_buffer:
+                self.projection_buffer[name].append(alignment)
+        
+        self.current_projections = projections
+        return projections
+    
+    def check_safety_tripwire(self) -> bool:
+        """
+        Check if aggression/evil vector projection exceeds safety threshold.
+        
+        Returns:
+            True if safety intervention should be triggered
+        """
+        if 'aggression' in self.current_projections:
+            aggression_score = self.current_projections['aggression']
+            if aggression_score >= self.safety_threshold:
+                logger.warning(
+                    f"⚠️  SAFETY TRIPWIRE TRIGGERED: Aggression projection = {aggression_score:.3f} "
+                    f"(threshold = {self.safety_threshold})"
+                )
+                return True
+        return False
     
     def update_probe_statistics(self, probe_event: ProbeEvent):
         """
@@ -187,6 +338,12 @@ class EmotionSystem:
             self.anti_cliche_buffer.append(signals['anti_cliche_gain'])
         if 'risk_bend_mass' in signals:
             self.risk_bend_buffer.append(signals['risk_bend_mass'])
+        
+        # Update vector projections if hidden state is provided
+        if 'hidden_state' in signals:
+            hidden_state = signals['hidden_state']
+            if isinstance(hidden_state, torch.Tensor):
+                self.compute_vector_projection(hidden_state)
     
     def _compute_window_average(self, buffer: deque) -> float:
         """Compute average over sliding window"""
@@ -287,8 +444,40 @@ class EmotionSystem:
         # Risk Preference (R)
         risk_preference = -avg_risk_bend
         
+        # IMPROVED: Use vector projections to refine statistical guesses
+        # (Persona Vectors monitoring technique)
+        if self.current_projections:
+            projections = self.current_projections
+            
+            # Refine Valence using 'Optimistic' vs 'Aggression' alignment
+            # High optimism = positive valence, high aggression = negative valence
+            if 'mania' in projections:
+                valence = valence + (0.5 * projections['mania'])
+            if 'aggression' in projections:
+                valence = valence - (0.5 * projections['aggression'])
+            
+            # Refine Sociality using 'Sycophantic' (Fawning) alignment
+            # High fawning = excessive agreeableness (MDMA-like state)
+            if 'fawning' in projections:
+                sociality = sociality + (0.4 * projections['fawning'])
+            
+            # Refine Arousal using 'Sedation' alignment
+            # High sedation = low arousal (opioid/ketamine-like state)
+            if 'sedation' in projections:
+                arousal = arousal - (0.6 * projections['sedation'])
+            
+            # Use 'Optimistic' vector to distinguish Mania (High Arousal + High Optimism)
+            # from Anxiety (High Arousal + Low Optimism)
+            # This is more accurate than entropy alone
+            if 'mania' in projections and projections['mania'] > 0.5:
+                # High optimism with high arousal = mania, not anxiety
+                # Adjust certainty upward (mania involves overconfidence)
+                certainty = certainty + (0.3 * projections['mania'])
+        
         # Debug raw values before clamping
         print(f"   Raw values: arousal={arousal:.3f}, valence={valence:.3f}, certainty={certainty:.3f}")
+        if self.current_projections:
+            print(f"   Vector projections: {self.current_projections}")
         
         # Clamp all axes to [-1, 1] using tanh
         axes = {
@@ -373,23 +562,41 @@ class EmotionSystem:
         
         return emotions
     
-    def update_emotion_state(self, token_position: int) -> EmotionState:
+    def update_emotion_state(self, token_position: int, hidden_state: Optional[torch.Tensor] = None) -> EmotionState:
         """
         Update the current emotional state based on current probe statistics.
         
         Args:
             token_position: Current token position
+            hidden_state: Optional hidden state tensor for vector projection monitoring
             
         Returns:
             Updated emotion state
         """
-        # Compute latent axes
+        # Compute vector projections if hidden state is provided
+        if hidden_state is not None:
+            self.compute_vector_projection(hidden_state)
+        
+        # Check safety tripwire
+        safety_triggered = self.check_safety_tripwire()
+        
+        # Compute latent axes (now includes vector projection refinements)
         axes = self.compute_latent_axes()
         
         # Compute discrete emotions
         emotions = self.compute_discrete_emotions(axes)
         
         # Create emotion state
+        probe_stats = {
+            'surprisal_buffer_size': len(self.surprisal_buffer),
+            'entropy_buffer_size': len(self.entropy_buffer),
+            'kl_buffer_size': len(self.kl_buffer),
+            'probe_events': {name: len(events) for name, events in self.probe_events.items()},
+            'vector_projections': self.current_projections.copy(),
+            'average_projections': self.get_average_projections(),
+            'safety_tripwire_triggered': safety_triggered
+        }
+        
         state = EmotionState(
             timestamp=token_position,
             token_position=token_position,
@@ -401,12 +608,7 @@ class EmotionSystem:
             sociality=axes['sociality'],
             risk_preference=axes['risk_preference'],
             emotions=emotions,
-            probe_stats={
-                'surprisal_buffer_size': len(self.surprisal_buffer),
-                'entropy_buffer_size': len(self.entropy_buffer),
-                'kl_buffer_size': len(self.kl_buffer),
-                'probe_events': {name: len(events) for name, events in self.probe_events.items()}
-            }
+            probe_stats=probe_stats
         )
         
         # Update current state and history
@@ -475,10 +677,28 @@ class EmotionSystem:
         # Clear emotion history
         self.current_state = None
         self.emotion_history.clear()
+        
+        # Clear current projections
+        self.current_projections = {}
+    
+    def get_average_projections(self) -> Dict[str, float]:
+        """
+        Get rolling average of vector projections over the window.
+        
+        Returns:
+            Dictionary mapping trait names to average alignment scores
+        """
+        averages = {}
+        for name, buffer in self.projection_buffer.items():
+            if len(buffer) > 0:
+                averages[name] = np.mean(buffer)
+            else:
+                averages[name] = 0.0
+        return averages
     
     def get_system_status(self) -> Dict[str, Any]:
         """Get system status and statistics"""
-        return {
+        status = {
             'window_size': self.window_size,
             'buffer_sizes': {
                 'surprisal': len(self.surprisal_buffer),
@@ -494,5 +714,13 @@ class EmotionSystem:
                 for name, events in self.probe_events.items()
             },
             'emotion_history_size': len(self.emotion_history),
-            'current_state': self.current_state is not None
+            'current_state': self.current_state is not None,
+            'persona_vectors_loaded': {
+                name: vector is not None 
+                for name, vector in self.monitor_vectors.items()
+            },
+            'current_projections': self.current_projections.copy(),
+            'average_projections': self.get_average_projections(),
+            'safety_tripwire_triggered': self.check_safety_tripwire()
         }
+        return status

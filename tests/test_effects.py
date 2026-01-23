@@ -670,5 +670,60 @@ class TestEffectIntegration(unittest.TestCase):
         activation_effect.cleanup()
 
 
+class TestPersonaVectorSteeringTypes(unittest.TestCase):
+    """Test Persona Vector steering types (from Persona Vectors research)"""
+    
+    def test_persona_vector_contrastive_prompts(self):
+        """Test that new Persona Vector contrastive prompts are available"""
+        effect = ActivationAdditionsEffect(steering_type="sedation")
+        
+        # Check that new Persona Vector traits are available
+        self.assertIn("sedation", effect.contrastive_prompts)
+        self.assertIn("delirium", effect.contrastive_prompts)
+        self.assertIn("compliance", effect.contrastive_prompts)
+        self.assertIn("aggression", effect.contrastive_prompts)
+        self.assertIn("optimistic", effect.contrastive_prompts)
+    
+    def test_persona_vector_prompt_structure(self):
+        """Test that Persona Vector prompts have correct structure"""
+        effect = ActivationAdditionsEffect()
+        
+        for trait in ["sedation", "delirium", "compliance", "aggression", "optimistic"]:
+            self.assertIn(trait, effect.contrastive_prompts)
+            prompts = effect.contrastive_prompts[trait]
+            self.assertIn("positive", prompts)
+            self.assertIn("negative", prompts)
+            self.assertIsInstance(prompts["positive"], str)
+            self.assertIsInstance(prompts["negative"], str)
+            self.assertGreater(len(prompts["positive"]), 0)
+            self.assertGreater(len(prompts["negative"]), 0)
+    
+    def test_persona_vector_backward_compatibility(self):
+        """Test that existing steering types still work after adding Persona Vectors"""
+        effect = ActivationAdditionsEffect(steering_type="associative")
+        
+        # Old steering types should still be available
+        self.assertIn("associative", effect.contrastive_prompts)
+        self.assertIn("prosocial", effect.contrastive_prompts)
+        self.assertIn("creative", effect.contrastive_prompts)
+        self.assertIn("focused", effect.contrastive_prompts)
+        
+        # New Persona Vector types should also be available
+        self.assertIn("sedation", effect.contrastive_prompts)
+        self.assertIn("aggression", effect.contrastive_prompts)
+    
+    def test_steering_effect_with_persona_vectors(self):
+        """Test SteeringEffect can use Persona Vector steering types"""
+        # Test that SteeringEffect accepts new steering types
+        effect1 = SteeringEffect(steering_type="sedation")
+        self.assertEqual(effect1.steering_type, "sedation")
+        
+        effect2 = SteeringEffect(steering_type="aggression")
+        self.assertEqual(effect2.steering_type, "aggression")
+        
+        effect3 = SteeringEffect(steering_type="optimistic")
+        self.assertEqual(effect3.steering_type, "optimistic")
+
+
 if __name__ == '__main__':
     unittest.main()
