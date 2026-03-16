@@ -967,6 +967,180 @@ def interactive_image_generation(model_name: str = None):
             print(f"❌ Error: {e}")
 
 
+def sweep_generation(
+    model_name: str = None,
+    pack_name: str = None,
+    prompt: str = None,
+    intensities: List[float] = None,
+    output_dir: str = "outputs/reports/test_suite",
+    seed: int = None,
+):
+    """
+    Generate a series of images sweeping through intensity values for one pack.
+
+    Produces a baseline (no pack) plus one image per intensity level.
+    Each image is saved alongside its spectral analysis plot so that the
+    full frequency-domain effect of increasing intensity can be compared
+    side by side.
+
+    @decision DEC-SWEEP-001
+    @title Baseline-first sweep with per-generation seed reset
+    @status accepted
+    @rationale Generating a baseline without any pack provides a reference
+               point for the spectral delta caused by each intensity.  Re-seeding
+               before every call (when a seed is provided) keeps the latent
+               noise identical across intensities, isolating the neuromodulation
+               effect rather than confounding it with stochastic variation.
+               This mirrors the methodology used in standard psychopharmacology
+               dose-response studies where non-drug variables are held constant.
+
+    Args:
+        model_name: SD model shortcut or HuggingFace path (None = default).
+        pack_name: Name of the neuromodulation pack to sweep (required).
+        prompt: Text prompt for all generated images (required).
+        intensities: List of intensity floats to iterate over.
+        output_dir: Directory where images and analyses are written.
+        seed: Integer seed for reproducibility.  Applied via
+              torch.manual_seed() before every generate_image() call.
+    """
+    if intensities is None:
+        intensities = [0.1, 0.3, 0.5, 0.7, 1.0]
+
+    print(f"\n🔬 Sweep Mode — pack: {pack_name} | intensities: {intensities}")
+    print(f"   prompt   : {prompt}")
+    print(f"   output   : {output_dir}")
+    print(f"   seed     : {seed}")
+    print("=" * 60)
+
+    # Initialise once — model loading is expensive
+    if model_name:
+        image_gen = ImageNeuromodInterface(model_name=model_name)
+    else:
+        image_gen = ImageNeuromodInterface()
+
+    available_packs = image_gen.get_available_packs()
+    if pack_name not in available_packs:
+        print(f"❌ Pack '{pack_name}' not found.")
+        print(f"   Available packs: {sorted(available_packs)}")
+        raise ValueError(f"Pack '{pack_name}' not found. Available: {sorted(available_packs)}")
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    # --- Baseline (no pack applied) ---
+    print("\n🎨 Generating baseline (no pack)...")
+    if seed is not None:
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(seed)
+
+    baseline_result = image_gen.generate_image(prompt)
+    baseline_base = os.path.join(output_dir, "baseline")
+    if baseline_result['success']:
+        _save_image_with_analysis(baseline_result, baseline_base, pack_name=None)
+    else:
+        print(f"⚠️  Baseline generation failed: {baseline_result.get('error')}")
+
+    # --- Intensity sweep ---
+    summary_rows = []
+    for intensity in intensities:
+        print(f"\n🎨 Generating {pack_name} @ intensity={intensity}...")
+        if seed is not None:
+            torch.manual_seed(seed)
+            if torch.cuda.is_available():
+                torch.cuda.manual_seed(seed)
+
+        result = image_gen.generate_image(prompt, pack_name=pack_name, intensity=intensity)
+        out_base = os.path.join(output_dir, f"{pack_name}_{intensity}")
+        if result['success']:
+            _save_image_with_analysis(result, out_base, pack_name=pack_name)
+            params = result.get('generation_params', {})
+            summary_rows.append({
+                'intensity': intensity,
+                'time_s': round(result.get('generation_time', 0.0), 2),
+                'guidance_scale': params.get('guidance_scale', '-'),
+                'num_inference_steps': params.get('num_inference_steps', '-'),
+            })
+        else:
+            print(f"❌ Generation failed at intensity={intensity}: {result.get('error')}")
+            summary_rows.append({
+                'intensity': intensity,
+                'time_s': '-',
+                'guidance_scale': '-',
+                'num_inference_steps': '-',
+            })
+
+    # --- Summary table ---
+    print("\n" + "=" * 60)
+    print(f"{'Intensity':>10}  {'Time (s)':>8}  {'Guidance':>8}  {'Steps':>6}")
+    print("-" * 44)
+    for row in summary_rows:
+        print(
+            f"{row['intensity']:>10}  "
+            f"{str(row['time_s']):>8}  "
+            f"{str(row['guidance_scale']):>8}  "
+            f"{str(row['num_inference_steps']):>6}"
+        )
+    print("=" * 60)
+    print(f"\n✅ Sweep complete. Images saved to: {output_dir}")
+
+
+def single_generation(
+    model_name: str = None,
+    pack_name: str = None,
+    prompt: str = None,
+    intensity: float = 0.5,
+    output_dir: str = "outputs/reports/test_suite",
+    seed: int = None,
+):
+    """
+    Generate a single image with the specified pack and intensity.
+
+    Validates the pack, optionally seeds the RNG, generates one image, and
+    saves it alongside its spectral analysis.
+
+    Args:
+        model_name: SD model shortcut or HuggingFace path (None = default).
+        pack_name: Name of the neuromodulation pack to apply (required).
+        prompt: Text prompt for the image (required).
+        intensity: Intensity of the neuromodulation effect (default 0.5).
+        output_dir: Directory where the image and analysis are written.
+        seed: Integer seed for reproducibility.
+    """
+    print(f"\n🎨 Single Generation — pack: {pack_name} | intensity: {intensity}")
+    print(f"   prompt : {prompt}")
+    print(f"   output : {output_dir}")
+    print(f"   seed   : {seed}")
+    print("=" * 60)
+
+    if model_name:
+        image_gen = ImageNeuromodInterface(model_name=model_name)
+    else:
+        image_gen = ImageNeuromodInterface()
+
+    available_packs = image_gen.get_available_packs()
+    if pack_name not in available_packs:
+        print(f"❌ Pack '{pack_name}' not found.")
+        print(f"   Available packs: {sorted(available_packs)}")
+        raise ValueError(f"Pack '{pack_name}' not found. Available: {sorted(available_packs)}")
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    if seed is not None:
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(seed)
+
+    result = image_gen.generate_image(prompt, pack_name=pack_name, intensity=intensity)
+    out_base = os.path.join(output_dir, f"{pack_name}_{intensity}")
+    if result['success']:
+        _save_image_with_analysis(result, out_base, pack_name=pack_name)
+        print(f"\n   Generation time : {result.get('generation_time', 0.0):.2f}s")
+        print(f"   Parameters      : {result.get('generation_params', {})}")
+        print(f"\n✅ Image saved to: {out_base}.png")
+    else:
+        print(f"❌ Generation failed: {result.get('error')}")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Image Generation Demo with Neuromodulation",
@@ -975,18 +1149,31 @@ if __name__ == "__main__":
 Examples:
   # Interactive mode with default model
   python demo/image_generation_demo.py
-  
+
   # Interactive mode with specific model
   python demo/image_generation_demo.py --model sd-xl
-  
+
   # Interactive mode with custom model
   python demo/image_generation_demo.py --model stabilityai/stable-diffusion-xl-base-1.0
-  
+
   # Run demo script
   python demo/image_generation_demo.py --demo
-  
+
   # Run demo with specific model
   python demo/image_generation_demo.py --demo --model sd-v2-1
+
+  # Single image: lsd pack at intensity 0.7
+  python demo/image_generation_demo.py --pack lsd --prompt "a forest at dusk" --intensity 0.7
+
+  # Single image with seed for reproducibility
+  python demo/image_generation_demo.py --pack psilocybin --prompt "a mountain" --seed 42
+
+  # Intensity sweep: default intensities [0.1, 0.3, 0.5, 0.7, 1.0]
+  python demo/image_generation_demo.py --sweep --pack lsd --prompt "a cat on a chair"
+
+  # Intensity sweep: custom intensities and output directory
+  python demo/image_generation_demo.py --sweep --pack lsd --prompt "a cat" \\
+      --intensities 0.1,0.5,1.0,2.0,5.0 --output-dir outputs/my_sweep --seed 7
 
 Available model shortcuts:
   sd-v1-5     - runwayml/stable-diffusion-v1-5 (default)
@@ -1017,16 +1204,60 @@ Available model shortcuts:
         action='store_true',
         help='List available packs and exit'
     )
-    
+    parser.add_argument(
+        '--pack',
+        type=str,
+        default=None,
+        help='Neuromodulation pack name (e.g. lsd, psilocybin). Used with --prompt.'
+    )
+    parser.add_argument(
+        '--prompt',
+        type=str,
+        default=None,
+        help='Text prompt for image generation. Used with --pack or --sweep.'
+    )
+    parser.add_argument(
+        '--intensity',
+        type=float,
+        default=0.5,
+        help='Neuromodulation intensity for single generation (default: 0.5)'
+    )
+    parser.add_argument(
+        '--intensities',
+        type=str,
+        default=None,
+        help='Comma-separated intensity values for sweep mode (e.g. 0.1,0.5,1.0,2.0,5.0). '
+             'Defaults to "0.1,0.3,0.5,0.7,1.0" when --sweep is used without --intensities.'
+    )
+    parser.add_argument(
+        '--sweep',
+        action='store_true',
+        help='Enable sweep mode: generate one image per intensity value. '
+             'Requires --pack and --prompt.'
+    )
+    parser.add_argument(
+        '--output-dir',
+        type=str,
+        default='outputs/reports/test_suite',
+        help='Output directory for generated images and analyses (default: outputs/reports/test_suite)'
+    )
+    parser.add_argument(
+        '--seed',
+        type=int,
+        default=None,
+        help='Random seed for reproducibility. Applied via torch.manual_seed() '
+             'before each generation call.'
+    )
+
     args = parser.parse_args()
-    
+
     if args.list_models:
         print("Available model shortcuts:")
         for shortcut, model_path in COMMON_MODELS.items():
             print(f"  {shortcut:12} -> {model_path}")
         print("\nYou can also use any HuggingFace Stable Diffusion model path directly.")
         exit(0)
-    
+
     if args.list_packs:
         try:
             image_gen = ImageNeuromodInterface()
@@ -1041,8 +1272,32 @@ Available model shortcuts:
         except Exception as e:
             print(f"❌ Failed to load packs: {e}")
         exit(0)
-    
-    if args.demo:
+
+    if args.sweep:
+        if not args.pack or not args.prompt:
+            parser.error("--sweep requires --pack and --prompt")
+        if args.intensities:
+            intensities = [float(x.strip()) for x in args.intensities.split(',')]
+        else:
+            intensities = [0.1, 0.3, 0.5, 0.7, 1.0]
+        sweep_generation(
+            model_name=args.model,
+            pack_name=args.pack,
+            prompt=args.prompt,
+            intensities=intensities,
+            output_dir=args.output_dir,
+            seed=args.seed,
+        )
+    elif args.pack and args.prompt:
+        single_generation(
+            model_name=args.model,
+            pack_name=args.pack,
+            prompt=args.prompt,
+            intensity=args.intensity,
+            output_dir=args.output_dir,
+            seed=args.seed,
+        )
+    elif args.demo:
         demo_lsd_image_generation(model_name=args.model)
     else:
         interactive_image_generation(model_name=args.model)
