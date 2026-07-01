@@ -192,6 +192,7 @@ class ImageNeuromodInterface:
         self.pipeline = None
         self.neuromod_tool = None
         self.registry = None
+        self._steer = None  # active UNet activation-steering config (None = off)
         self.device = "cpu"  # Default to CPU for compatibility
         
         # Check for GPU availability
@@ -378,7 +379,31 @@ class ImageNeuromodInterface:
             effects = pack.effects
         else:
             effects = pack.get('effects', [])
-        
+
+        # Build the REAL latent-steering config: UNet activation steering (directional
+        # steering + entropy injection) is the genuine neuromodulation mechanism, unlike the
+        # sampler-knob tweaks below which a distilled model largely ignores.
+        try:
+            from neuromod.visual_steering import stable_seed
+            steer_scale = 0.0
+            noise_scale = 0.0
+            for effect in effects:
+                etype = effect.effect if hasattr(effect, 'effect') else effect.get('effect', '')
+                w = (effect.weight if hasattr(effect, 'weight') else effect.get('weight', 0.0)) * intensity
+                if etype == 'steering':
+                    steer_scale += w
+                elif etype in ('temperature', 'entropy', 'exponential_decay_kv'):
+                    noise_scale += w
+            pack_name = getattr(pack, 'name', None) or (pack.get('name') if isinstance(pack, dict) else '') or ''
+            self._steer = {
+                'steer_scale': float(min(1.0, steer_scale)),
+                'noise_scale': float(min(1.0, noise_scale)),
+                'direction_seed': stable_seed(pack_name),
+            }
+        except Exception as e:
+            logger.warning(f"Could not build latent-steering config: {e}")
+            self._steer = None
+
         # Check if this is a Turbo model (uses different defaults)
         is_turbo = "turbo" in self.model_name.lower()
         
@@ -569,13 +594,25 @@ class ImageNeuromodInterface:
                     pipeline_kwargs['eta'] = gen_params['eta']
                 
                 # 1. Generate Latents (Pre-Convolution)
-                # We use output_type="latent" to get the raw VAE input
+                # We use output_type="latent" to get the raw VAE input.
+                # Real neuromodulation: steer the UNet's activations during denoising
+                # (directional steering + entropy injection), dose-scaled per pack.
+                from contextlib import nullcontext
+                from neuromod.visual_steering import UNetActivationSteering
+                steer_cfg = getattr(self, '_steer', None)
+                if (steer_cfg and (steer_cfg.get('steer_scale') or steer_cfg.get('noise_scale'))
+                        and hasattr(self.pipeline, 'unet')):
+                    steer_ctx = UNetActivationSteering(self.pipeline.unet, **steer_cfg)
+                    logger.info(f"UNet activation steering: {steer_cfg}")
+                else:
+                    steer_ctx = nullcontext()
                 try:
-                    output_latents = self.pipeline(
-                        prompt=enhanced_prompt,
-                        output_type="latent",
-                        **pipeline_kwargs
-                    ).images  # This is a tensor [1, 4, 64, 64] or [1, 4, H, W]
+                    with steer_ctx:
+                        output_latents = self.pipeline(
+                            prompt=enhanced_prompt,
+                            output_type="latent",
+                            **pipeline_kwargs
+                        ).images  # This is a tensor [1, 4, 64, 64] or [1, 4, H, W]
                     
                     # 2. Manually Decode to Image (Un-Convolution)
                     # Scale latents as required by SD VAE
@@ -647,7 +684,10 @@ class ImageNeuromodInterface:
         """Clear any applied neuromodulation effects"""
         if self.neuromod_tool:
             self.neuromod_tool.clear()
-        
+
+        # Turn off UNet activation steering so it doesn't leak into the next generation.
+        self._steer = None
+
         # Reset generation parameters to defaults
         self.generation_params = {
             'guidance_scale': 7.5,
