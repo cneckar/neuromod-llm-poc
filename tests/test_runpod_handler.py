@@ -104,5 +104,54 @@ def test_handler_end_to_end_with_fake_model():
     assert r["pack_applied"] == "mdma"
 
 
+# ---------------------------------------------------------------- streaming (Deploy D1)
+
+
+class FakeStreamModel:
+    """Model exposing a native token stream."""
+
+    def __init__(self, chunks):
+        self.chunks = chunks
+
+    def generate_text_stream(self, prompt, max_tokens, temperature, top_p, pack_name):
+        for c in self.chunks:
+            yield c
+
+
+def test_chunk_text_preserves_content():
+    pieces = h.chunk_text("one two three")
+    assert "".join(pieces) == "one two three"
+    assert len(pieces) == 3
+
+
+def test_stream_native_model_yields_chunks_then_done():
+    model = FakeStreamModel(["Hel", "lo ", "world"])
+    events = list(h.run_inference_stream(h.parse_event({"prompt": "hi"}), model=model))
+    chunks = [e["chunk"] for e in events if "chunk" in e]
+    assert chunks == ["Hel", "lo ", "world"]
+    final = events[-1]
+    assert final.get("done") is True
+    assert final["response"] == "Hello world"
+
+
+def test_stream_fallback_chunks_full_text():
+    model = FakeModel(text="alpha beta gamma")
+    events = list(h.run_inference_stream(h.parse_event({"prompt": "hi"}), model=model))
+    chunks = [e["chunk"] for e in events if "chunk" in e]
+    assert "".join(chunks) == "alpha beta gamma"
+    assert events[-1]["response"] == "alpha beta gamma"
+
+
+def test_stream_handler_empty_prompt_errors():
+    out = list(h.stream_handler({"input": {"prompt": "", "messages": None}}))
+    assert out and "error" in out[0]
+
+
+def test_stream_handler_passes_pack():
+    model = FakeStreamModel(["x", "y"])
+    out = list(h.stream_handler({"input": {"prompt": "hi", "pack_name": "lsd"}}, model=model))
+    assert out[-1]["pack_applied"] == "lsd"
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-v"]))
