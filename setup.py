@@ -43,7 +43,12 @@ setup(
         # Visualization
         "matplotlib>=3.7.0",
         "seaborn>=0.12.0",
-        
+
+        # Image metrics & rendering (pharmacodynamics dose-response study)
+        "Pillow>=9.0.0",
+        "scikit-image>=0.20.0",
+        "imageio>=2.25.0",
+
         # MCP integration
         "mcp>=1.0.0",
         

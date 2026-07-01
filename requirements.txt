@@ -37,6 +37,9 @@ arviz>=0.15.0                   # Bayesian visualization (optional)
 # =============================================================================
 matplotlib>=3.7.0               # Basic plotting
 seaborn>=0.12.0                 # Statistical plotting
+Pillow>=9.0.0                   # Image handling (pharmacodynamics metrics)
+scikit-image>=0.20.0            # SSIM / structural metrics
+imageio>=2.25.0                 # GIF/mp4 export (vitals monitor)
 jinja2>=3.1.0                   # Template engine for reports
 
 # =============================================================================

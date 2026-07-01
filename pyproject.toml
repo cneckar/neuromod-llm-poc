@@ -46,7 +46,12 @@ dependencies = [
     "matplotlib>=3.7.0",
     "seaborn>=0.12.0",
     "plotly>=5.15.0",
-    
+
+    # Image metrics & rendering (pharmacodynamics dose-response study)
+    "Pillow>=9.0.0",
+    "scikit-image>=0.20.0",
+    "imageio>=2.25.0",
+
     # Web interface
     "fastapi>=0.100.0",
     "uvicorn>=0.23.0",
