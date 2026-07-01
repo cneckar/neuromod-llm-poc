@@ -1,0 +1,25 @@
+{
+  "_comment": "Reference RunPod Serverless endpoint settings for scale-to-zero neuromod inference (Deploy D0). Create the endpoint via the RunPod UI or GraphQL API; these are the values that satisfy 'pay only during inference'.",
+  "name": "neuromod-gpt-oss-20b",
+  "templateImage": "<your-registry>/neuromod-runpod:latest",
+  "gpuTypeIds": ["NVIDIA L40S", "NVIDIA A100 80GB PCIe"],
+  "workersMin": 0,
+  "workersMax": 3,
+  "idleTimeout": 5,
+  "flashboot": true,
+  "scalerType": "QUEUE_DELAY",
+  "networkVolumeId": "<volume-with-hf-weights>",
+  "env": {
+    "MODEL_NAME": "openai/gpt-oss-20b",
+    "HF_HOME": "/runpod-volume/hf",
+    "HUGGINGFACE_TOKEN": "<secret>",
+    "WARM_ON_START": "0"
+  },
+  "_notes": {
+    "workersMin": "MUST be 0 for scale-to-zero: no idle GPU charge.",
+    "idleTimeout": "Seconds a worker stays warm after a request before scaling down; trade cold-start vs cost.",
+    "flashboot": "Enable to cut cold starts (weights paged VRAM<->RAM<->NVMe).",
+    "networkVolumeId": "Bake HF weights here so cold starts don't re-download the model.",
+    "workersMax": "Caps concurrent GPUs -> caps max spend (see Deploy D4)."
+  }
+}

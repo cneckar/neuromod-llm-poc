@@ -1,0 +1,16 @@
+# RunPod Serverless worker dependencies (Deploy D0).
+# The neuromod package + api/model_manager chain bring their own deps via `pip install -e .`
+# (see repo requirements.txt); this file pins the serving-specific extras.
+
+runpod>=1.6.0
+
+# Model runtime. Torch is provided by the base image; these are the HF stack the
+# neuromod hooks operate on (steering / attention / logits processors need Transformers).
+transformers>=4.45.0
+accelerate>=0.34.0
+safetensors>=0.4.0
+sentencepiece>=0.2.0
+
+# gpt-oss (MXFP4) additionally needs kernels/triton at runtime; add per model, e.g.:
+#   kernels
+#   triton>=3.0.0
