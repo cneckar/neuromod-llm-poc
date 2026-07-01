@@ -63,15 +63,53 @@ class FrequencyAnalyzer:
         return magnitude_spectrum
 
     @staticmethod
+    def compute_scalar_metrics(image, latents):
+        """
+        Reduce an (image, latents) pair to the scalar spectral statistics behind
+        the paper's Table 2 (Latent Space Spectral Statistics), so those numbers
+        become reproducible per-generation instead of computed ad hoc.
+
+        Returns a flat dict with pixel_* and latent_* energy/variance/high_low_ratio/
+        spectral_entropy keys. Delegates to neuromod.metrics.pharmacodynamics, which is
+        the single source of truth for the FFT reducer used across the dose-response study.
+        Returns {} if the metrics layer is unavailable so plotting never breaks.
+        """
+        try:
+            from neuromod.metrics.pharmacodynamics import (
+                pixel_spectral_metrics,
+                latent_spectral_metrics,
+            )
+        except Exception as e:  # pragma: no cover - defensive
+            logger.warning(f"Scalar spectral metrics unavailable: {e}")
+            return {}
+
+        metrics = {}
+        try:
+            metrics.update(pixel_spectral_metrics(image))
+        except Exception as e:
+            logger.warning(f"Pixel spectral metrics failed: {e}")
+        if latents is not None:
+            try:
+                metrics.update(latent_spectral_metrics(latents))
+            except Exception as e:
+                logger.warning(f"Latent spectral metrics failed: {e}")
+        return metrics
+
+    @staticmethod
     def save_spectral_analysis(image, latents, title, filename):
         """
         Generate and save a side-by-side spectral analysis of Pixel vs Latent space.
-        
+
         Args:
             image: PIL Image (Pixel space)
             latents: torch.Tensor (Latent space, 1x4x64x64 or similar)
             title: Title for the plot
             filename: Output filename
+
+        Returns:
+            dict: scalar spectral metrics (pixel_*/latent_* energy, variance, band ratio,
+            entropy) for the generation, enabling dose-response tracking. The plot side
+            effect is unchanged, so existing callers that ignore the return value keep working.
         """
         # 1. Pixel Space Analysis
         # Convert to grayscale for simple frequency analysis
@@ -130,6 +168,9 @@ class FrequencyAnalyzer:
         plt.savefig(filename, dpi=150, bbox_inches='tight')
         plt.close()
         logger.info(f"Saved spectral analysis to {filename}")
+
+        # Also return the scalar spectral statistics for dose-response tracking.
+        return FrequencyAnalyzer.compute_scalar_metrics(image, latents)
 
 class ImageNeuromodInterface:
     """
