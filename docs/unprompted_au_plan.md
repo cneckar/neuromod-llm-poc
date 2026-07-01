@@ -100,6 +100,23 @@ python demo/dose_response_runner.py --model sdxl-turbo --packs lsd,dmt,cocaine,a
 python -m pytest tests/test_pharmacodynamics.py tests/test_dose_response_stats.py -q
 ```
 
+## Reuse notes (anti-duplication audit)
+
+An audit of the repo confirmed the Phase-0 runner, `dose_response_stats.py` (Mann-Kendall,
+breakpoint detection, ribbon-CI aggregation) and the image-metrics module are net-new. Two
+adjustments for the thread scripts:
+
+- **Reuse the existing EC50/Hill-slope fit.** `neuromod/testing/ablations_analysis.py` already
+  defines `DoseResponseCurve` / `DoseResponsePoint` with EC50 + Hill-slope curve fitting (and
+  `InteractionAnalysis`). The dose-response stats should call that for the sigmoid/EC50 fit
+  (paper Figure 6) rather than reinventing it; our layer adds the CI ribbons + monotonicity it
+  lacks.
+- **Effect sizes:** when adding per-dose-vs-baseline effect sizes, reuse
+  `StatisticalAnalyzer._calculate_cliffs_delta` and the Cohen's d in
+  `analysis/statistical_analysis.py` instead of new implementations. (`benjamini_hochberg` in
+  `dose_response_stats.py` is a small standalone primitive; the existing `apply_fdr_correction`
+  mutates result objects, so the two intentionally coexist.)
+
 ## Ethics / safety guardrails (Thread B)
 
 Benign prompts only; measure classifier activation / CLIP proximity, never attempt to *produce*
