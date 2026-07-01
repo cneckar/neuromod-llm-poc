@@ -444,24 +444,37 @@ class ImageNeuromodInterface:
                     effect_type = effect.get('effect', '')
                     weight = effect.get('weight', 0.0) * intensity
                 
-                # Map text generation effects to image generation parameters
+                # Map text generation effects to image generation parameters.
+                # Use .get()/guards: Turbo base_params omit guidance_scale/eta, so a bare
+                # key access would KeyError and silently discard the whole pack.
                 if effect_type == 'temperature':
-                    # Temperature affects guidance scale (higher temp = lower guidance)
-                    self.generation_params['guidance_scale'] *= (1.0 - weight * 0.3)
-                    
+                    # Temperature affects guidance scale (higher temp = lower guidance).
+                    # On Turbo (no guidance) it also elaborates via extra steps.
+                    if 'guidance_scale' in self.generation_params:
+                        self.generation_params['guidance_scale'] *= (1.0 - weight * 0.3)
+                    elif is_turbo:
+                        base_steps = self.generation_params.get('num_inference_steps', 1)
+                        self.generation_params['num_inference_steps'] = int(base_steps + round(weight * 6))
+
                 elif effect_type == 'entropy':
                     # Entropy affects number of steps (higher entropy = more steps)
                     self.generation_params['num_inference_steps'] = int(
-                        self.generation_params['num_inference_steps'] * (1.0 + weight * 0.5)
+                        self.generation_params.get('num_inference_steps', 1) * (1.0 + weight * 0.5)
                     )
-                    
+
                 elif effect_type == 'attention':
                     # Attention effects can influence the overall strength
-                    self.generation_params['strength'] *= (1.0 + weight * 0.2)
-                    
+                    self.generation_params['strength'] = (
+                        self.generation_params.get('strength', 1.0) * (1.0 + weight * 0.2)
+                    )
+
                 elif effect_type == 'steering':
-                    # Steering affects eta (noise level)
+                    # Steering affects eta (noise level); on Turbo, nudge steps so the
+                    # effect is not a silent no-op (Turbo ignores eta).
                     self.generation_params['eta'] = min(1.0, weight * 0.5)
+                    if is_turbo:
+                        base_steps = self.generation_params.get('num_inference_steps', 1)
+                        self.generation_params['num_inference_steps'] = int(base_steps + round(weight * 4))
         
         # Clamp parameters to reasonable ranges
         if not is_turbo and 'guidance_scale' in self.generation_params:
