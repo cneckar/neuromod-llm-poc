@@ -257,22 +257,38 @@ class ImageNeuromodInterface:
                 pipeline_class = StableDiffusionPipeline
                 logger.info("Using StableDiffusionPipeline for standard model")
             
-            # Load pipeline with memory optimizations
+            # fp16 on GPU (halves VRAM: SDXL is ~14GB in fp32 -> ~7GB in fp16, fitting a
+            # 15GB T4), fp32 on CPU for compatibility.
+            load_dtype = torch.float16 if self.device == "cuda" else torch.float32
             self.pipeline = pipeline_class.from_pretrained(
                 self.model_name,
-                dtype=torch.float32,  # Use float32 for CPU compatibility
+                torch_dtype=load_dtype,
                 use_safetensors=True,
                 safety_checker=None,  # Disable safety checker for research
                 requires_safety_checker=False
             )
-            
+
             # Move to device
             self.pipeline = self.pipeline.to(self.device)
-            
-            # Enable memory optimizations
+
+            # Enable memory optimizations (keep the peak well under small-GPU budgets).
             if self.device == "cuda":
                 self.pipeline.enable_attention_slicing()
-                self.pipeline.enable_vae_slicing()
+                try:
+                    self.pipeline.enable_vae_slicing()
+                except Exception:
+                    pass
+                try:
+                    self.pipeline.enable_vae_tiling()
+                except Exception:
+                    pass
+                # SDXL's VAE is unstable in fp16 (produces NaN/black images). Since
+                # generate_image() calls vae.decode() manually (bypassing diffusers'
+                # auto-upcast), keep the VAE in fp32 for numerically stable decoding.
+                try:
+                    self.pipeline.vae = self.pipeline.vae.to(dtype=torch.float32)
+                except Exception:
+                    pass
             
             logger.info("Stable Diffusion pipeline loaded successfully")
             
@@ -558,7 +574,11 @@ class ImageNeuromodInterface:
                         scaling_factor = 0.18215
                     
                     latents_scaled = output_latents / scaling_factor
-                    
+
+                    # Match the VAE dtype (fp32 on GPU; see _load_pipeline) so the manual
+                    # decode is numerically stable even when the UNet ran in fp16.
+                    latents_scaled = latents_scaled.to(self.pipeline.vae.dtype)
+
                     # Decode using VAE
                     image_tensor = self.pipeline.vae.decode(latents_scaled, return_dict=False)[0]
                     
