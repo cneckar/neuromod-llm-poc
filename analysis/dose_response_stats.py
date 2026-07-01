@@ -24,12 +24,49 @@ Usage
 """
 
 import argparse
+import importlib.util
 import os
 from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
 from scipy import stats
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.dirname(_HERE)
+
+
+def _load_by_path(module_name: str, rel_path: str):
+    """Load a repo module directly by file path.
+
+    Avoids triggering the heavy ``neuromod`` package ``__init__`` (which imports torch)
+    and lets us reuse existing analysis code. Returns None if the module or its deps
+    are unavailable, so the dose-response stats degrade gracefully in a minimal env.
+    """
+    try:
+        path = os.path.join(_REPO_ROOT, rel_path)
+        spec = importlib.util.spec_from_file_location(module_name, path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:
+        return None
+
+
+def _ablations_fitter():
+    """Reuse ``AblationsAnalyzer``'s EC50/Hill curve fitter (numpy/scipy math only)."""
+    mod = _load_by_path("ablations_analysis", os.path.join("neuromod", "testing", "ablations_analysis.py"))
+    return getattr(mod, "AblationsAnalyzer", None) if mod else None
+
+
+def _cliffs_delta_fn():
+    """Reuse ``StatisticalAnalyzer._calculate_cliffs_delta`` (self-contained rank math)."""
+    mod = _load_by_path("statistical_analysis", os.path.join("analysis", "statistical_analysis.py"))
+    cls = getattr(mod, "StatisticalAnalyzer", None) if mod else None
+    if cls is None:
+        return None
+    # The method only touches its args, so bind with a throwaway receiver.
+    return lambda control, treatment: cls._calculate_cliffs_delta(None, control, treatment)
 
 
 # --------------------------------------------------------------------------------------
@@ -130,6 +167,85 @@ def detect_breakpoint(doses: np.ndarray, means: np.ndarray) -> Dict[str, float]:
     }
 
 
+def fit_dose_response_curve(doses: np.ndarray, means: np.ndarray) -> Dict[str, Optional[float]]:
+    """Fit a dose-response curve and extract EC50 / Hill slope (paper Figure 6).
+
+    Reuses ``AblationsAnalyzer._fit_dose_response_curve`` +
+    ``_calculate_ec50_and_hill_slope`` (which try sigmoid/linear/exponential/polynomial and
+    pick the best R^2) rather than reinventing the fitter. Returns NaN/None fields if the
+    ablations module (or its deps) is unavailable.
+    """
+    empty = {"ec50": np.nan, "hill_slope": np.nan, "curve_r2": np.nan, "curve_type": None}
+    analyzer = _ablations_fitter()
+    if analyzer is None:
+        return empty
+    doses = np.asarray(doses, dtype=float)
+    means = np.asarray(means, dtype=float)
+    if np.unique(doses).size < 3 or np.unique(np.round(means, 12)).size < 2:
+        return empty
+    try:
+        # These methods only read their arguments, so a None receiver is safe.
+        params, r2, ctype = analyzer._fit_dose_response_curve(None, list(doses), list(means))
+        ec50, hill = analyzer._calculate_ec50_and_hill_slope(None, list(doses), list(means), params, ctype)
+        return {
+            "ec50": float(ec50) if ec50 is not None else np.nan,
+            "hill_slope": float(hill) if hill is not None else np.nan,
+            "curve_r2": float(r2),
+            "curve_type": ctype,
+        }
+    except Exception:
+        return empty
+
+
+def cohens_d_paired(baseline: np.ndarray, treatment: np.ndarray) -> float:
+    """Paired Cohen's d = mean(diff) / std(diff, ddof=1).
+
+    Mirrors the paired-d computation in ``statistical_analysis.paired_t_test`` so the
+    dose-response effect sizes stay consistent with the rest of the study.
+    """
+    baseline = np.asarray(baseline, dtype=float)
+    treatment = np.asarray(treatment, dtype=float)
+    n = min(baseline.size, treatment.size)
+    if n < 2:
+        return np.nan
+    diff = treatment[:n] - baseline[:n]
+    sd = np.std(diff, ddof=1)
+    if sd == 0:
+        return 0.0 if np.mean(diff) == 0 else np.nan
+    return float(np.mean(diff) / sd)
+
+
+def effect_size_summary(df: pd.DataFrame) -> pd.DataFrame:
+    """Per (pack, metric) max effect size of any dose vs the dose-0 baseline.
+
+    Computes paired Cohen's d and (reused) Cliff's delta for every dose>0 against dose 0,
+    using the per-seed values, and keeps the dose with the largest |Cohen's d|.
+    """
+    seed_df = _seed_level(df)
+    cliffs = _cliffs_delta_fn()
+    rows = []
+    for (pack, metric), grp in seed_df.groupby(["pack", "metric"]):
+        base = grp[grp["intensity"] == 0.0].sort_values("seed")["value"].values
+        if base.size < 2:
+            continue
+        best = {"cohens_d": np.nan, "cliffs_delta": np.nan, "dose_of_max": np.nan}
+        best_abs = -1.0
+        for intensity, sub in grp.groupby("intensity"):
+            if float(intensity) == 0.0:
+                continue
+            treat = sub.sort_values("seed")["value"].values
+            d = cohens_d_paired(base, treat)
+            if np.isnan(d):
+                continue
+            if abs(d) > best_abs:
+                best_abs = abs(d)
+                delta = float(cliffs(base, treat)) if cliffs is not None else np.nan
+                best = {"cohens_d": d, "cliffs_delta": delta, "dose_of_max": float(intensity)}
+        if best_abs >= 0:
+            rows.append({"pack": pack, "metric": metric, **best})
+    return pd.DataFrame(rows)
+
+
 def benjamini_hochberg(pvals: List[float]) -> List[float]:
     """BH-FDR adjusted p-values (q-values)."""
     p = np.asarray(pvals, dtype=float)
@@ -176,6 +292,7 @@ def trend_summary(curves: pd.DataFrame) -> pd.DataFrame:
             rho, rho_p = stats.spearmanr(doses, means)
         mk = mann_kendall(means)
         bp = detect_breakpoint(doses, means)
+        curve = fit_dose_response_curve(doses, means)
         rows.append({
             "pack": pack,
             "metric": metric,
@@ -188,6 +305,10 @@ def trend_summary(curves: pd.DataFrame) -> pd.DataFrame:
             "step": bp["step"],
             "sharpness": bp["sharpness"],
             "range": float(np.nanmax(means) - np.nanmin(means)),
+            "ec50": curve["ec50"],
+            "hill_slope": curve["hill_slope"],
+            "curve_r2": curve["curve_r2"],
+            "curve_type": curve["curve_type"],
         })
     out = pd.DataFrame(rows)
     if not out.empty:
@@ -242,6 +363,9 @@ def analyze(csv_path: str, outdir: str, plots: bool = False, n_boot: int = 10000
     df = load_long(csv_path)
     curves = dose_curves(df, n_boot=n_boot)
     trends = trend_summary(curves)
+    effects = effect_size_summary(df)
+    if not trends.empty and not effects.empty:
+        trends = trends.merge(effects, on=["pack", "metric"], how="left")
 
     curves_path = os.path.join(outdir, "dose_curves.csv")
     trends_path = os.path.join(outdir, "trend_summary.csv")
