@@ -27,8 +27,9 @@ Streaming (token-by-token) is intentionally out of scope here; it is Deploy phas
 from __future__ import annotations
 
 import os
+import re
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 DEFAULT_MODEL = os.environ.get("MODEL_NAME", "openai/gpt-oss-20b")
 
@@ -179,6 +180,76 @@ def run_inference(parsed: Dict[str, Any], model=None) -> Dict[str, Any]:
 
 
 # --------------------------------------------------------------------------------------
+# Streaming inference (Deploy D1)
+# --------------------------------------------------------------------------------------
+
+
+def chunk_text(text: str) -> List[str]:
+    """Split text into word-sized pieces (keeping trailing whitespace) for streaming.
+
+    Pure + testable. Used as the fallback when the model has no native token stream.
+    """
+    return re.findall(r"\S+\s*", text or "")
+
+
+def run_inference_stream(parsed: Dict[str, Any], model=None) -> Iterator[Dict[str, Any]]:
+    """Yield incremental ``{"chunk": ...}`` events, then a final ``{"done": True, ...}``.
+
+    Prefers a model that natively streams (``generate_text_stream``); otherwise generates
+    the full response and re-emits it word-by-word so the client still streams. The final
+    event carries the aggregated ``ChatResponse`` payload.
+    """
+    start = time.time()
+    if model is None:
+        model = _get_model(parsed["model"])
+
+    emotions: Dict[str, Any] = {}
+    tokens: Optional[int] = None
+
+    if hasattr(model, "generate_text_stream"):
+        pieces: List[str] = []
+        for chunk in model.generate_text_stream(
+            prompt=parsed["prompt"], max_tokens=parsed["max_tokens"],
+            temperature=parsed["temperature"], top_p=parsed["top_p"],
+            pack_name=parsed["pack_name"],
+        ):
+            pieces.append(chunk)
+            yield {"chunk": chunk}
+        text = "".join(pieces)
+    else:
+        result = model.generate_text(
+            prompt=parsed["prompt"], max_tokens=parsed["max_tokens"],
+            temperature=parsed["temperature"], top_p=parsed["top_p"],
+            pack_name=parsed["pack_name"],
+        )
+        if isinstance(result, dict):
+            text = result.get("text", "")
+            emotions = result.get("emotions", {})
+            tokens = result.get("tokens_generated")
+        else:
+            text = result
+        for piece in chunk_text(text):
+            yield {"chunk": piece}
+
+    yield {"done": True, **format_response(
+        text, parsed, emotions=emotions,
+        generation_time=time.time() - start, tokens_generated=tokens)}
+
+
+def stream_handler(event: Dict[str, Any], model=None) -> Iterator[Dict[str, Any]]:
+    """RunPod generator handler: yields streaming chunks then the final aggregate."""
+    parsed = parse_event(event)
+    if not parsed["prompt"]:
+        yield error_response("No prompt or messages provided.")
+        return
+    try:
+        for item in run_inference_stream(parsed, model=model):
+            yield item
+    except Exception as exc:  # pragma: no cover - defensive
+        yield error_response(f"{type(exc).__name__}: {exc}")
+
+
+# --------------------------------------------------------------------------------------
 # RunPod entrypoints
 # --------------------------------------------------------------------------------------
 
@@ -202,7 +273,12 @@ def start():  # pragma: no cover - requires the runpod runtime
     if os.environ.get("WARM_ON_START", "0") == "1":
         _get_model(DEFAULT_MODEL)
 
-    runpod.serverless.start({"handler": handler})
+    # STREAMING=1 (default) registers the generator handler; `return_aggregate_stream`
+    # keeps /runsync returning the aggregated result for non-streaming callers.
+    if os.environ.get("STREAMING", "1") == "1":
+        runpod.serverless.start({"handler": stream_handler, "return_aggregate_stream": True})
+    else:
+        runpod.serverless.start({"handler": handler})
 
 
 if __name__ == "__main__":
