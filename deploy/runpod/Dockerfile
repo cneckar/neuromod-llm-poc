@@ -4,10 +4,8 @@
 # billed per GPU-second only while handler() executes. Model weights should live on a RunPod
 # **network volume** (mounted at /runpod-volume) so cold starts don't re-download them.
 
-# CUDA + PyTorch base. gpt-oss ships MXFP4 weights whose Triton kernels need **Triton >= 3.4
-# (PyTorch >= 2.7) on a Hopper GPU (H100/H200)**. torch 2.4 (Triton 3.0) is too old and fails
-# with "Either a revision or a version must be specified" when loading the MXFP4 kernels.
-# Use the newest runpod/pytorch tag with torch >= 2.7; adjust the tag to one that exists.
+# Base: any RunPod PyTorch image on **CUDA 12.8** with Python 3.11. The exact torch in the base
+# doesn't matter — we force a driver-matched torch below — but keep CUDA 12.8 system libs.
 FROM runpod/pytorch:2.8.0-py3.11-cuda12.8.1-cudnn-devel-ubuntu22.04
 
 ENV PYTHONUNBUFFERED=1 \
@@ -21,15 +19,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# CRITICAL: freeze the base image's CUDA torch stack so nothing downgrades or replaces it with a
-# CPU-only / mismatched wheel. transformers>=4.55 would otherwise force a torch re-resolve that
-# can leave `torch.cuda.is_available() == False` even on a healthy GPU. PIP_CONSTRAINT is honored
-# by every subsequent `pip install`, so torch/torchvision/torchaudio/triton stay exactly as shipped.
-RUN pip freeze | grep -Ei '^(torch|torchvision|torchaudio|triton|pytorch-triton)==' \
-      > /etc/torch-constraints.txt || true
-ENV PIP_CONSTRAINT=/etc/torch-constraints.txt
-
-# Install serving deps first (better layer caching). torch is pinned by the constraint above.
+# Install serving deps first (better layer caching).
 COPY deploy/runpod/requirements.txt /app/deploy/runpod/requirements.txt
 RUN pip install --no-cache-dir -r /app/deploy/runpod/requirements.txt
 
@@ -37,8 +27,21 @@ RUN pip install --no-cache-dir -r /app/deploy/runpod/requirements.txt
 COPY . /app
 RUN pip install --no-cache-dir -e .
 
-# Fail the build early if the CUDA torch got clobbered anyway (surfaces here, not at $/cold-start).
-RUN python -c "import torch; assert torch.version.cuda, 'CPU-only torch got installed'; print('torch', torch.__version__, 'cuda', torch.version.cuda)"
+# CRITICAL — pin torch to a CUDA build the RunPod host driver can run.
+# Observed on the H200 hosts: driver 570.195.03, which supports up to **CUDA 12.8**. Left alone,
+# `pip install -e .` / transformers re-resolve torch to the latest wheel (e.g. 2.12+cu130), and a
+# **CUDA-13 runtime on a 12.8 driver makes torch.cuda.is_available() == False** — the model then
+# falls to a doomed CPU dequant and dies with "Either a revision or a version must be specified".
+# Forcing the cu128 build here, as the LAST pip step, guarantees a driver-compatible torch that
+# still ships Triton >= 3.4 for gpt-oss MXFP4. (If your host driver is >= 580, cu130 is fine and
+# you can drop this; check the `diag` task's driver line.)
+RUN pip install --no-cache-dir --force-reinstall \
+      torch torchvision torchaudio \
+      --index-url https://download.pytorch.org/whl/cu128
+
+# Fail the build (free) — not a paid cold start — if torch isn't a CUDA 12.x build.
+RUN python -c "import torch,sys; cu=torch.version.cuda or ''; print('torch',torch.__version__,'cuda',cu); \
+sys.exit(0 if cu.startswith('12') else 'ERROR: torch CUDA %r is not 12.x; host driver supports <=12.8'%cu)"
 
 # RunPod invokes the handler via the serverless runtime started in handler.start().
 CMD ["python", "-u", "deploy/runpod/handler.py"]
