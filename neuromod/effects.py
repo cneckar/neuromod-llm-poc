@@ -5,6 +5,7 @@ Each effect can be applied with weight (0.0-1.0) and direction (up/down/neutral)
 
 import torch
 import torch.nn.functional as F
+import os
 import random
 import math
 import contextlib
@@ -1666,11 +1667,15 @@ class SteeringEffect(BaseEffect):
     """Activation steering effect using Contrastive Activation Addition (CAA) vectors"""
     
     def __init__(self, weight: float = 0.5, direction: str = "up", steering_type: str = "associative",
-                 vector_path: Optional[str] = None, vector_dir: str = "outputs/steering_vectors"):
+                 vector_path: Optional[str] = None, vector_dir: Optional[str] = None):
         super().__init__(weight, direction)
         self.steering_type = steering_type
         self.vector_path = vector_path
-        self.vector_dir = vector_dir
+        # Resolve the steering-vector directory: explicit arg > STEERING_DIR env > repo default.
+        # The env override lets a served worker load model-specific vectors from the network
+        # volume (e.g. /runpod-volume/steering_vectors regenerated for gpt-oss) instead of the
+        # committed defaults. Keep this in sync with deploy/runpod/handler.py's STEERING_DIR.
+        self.vector_dir = vector_dir or os.environ.get("STEERING_DIR", "outputs/steering_vectors")
         self.vector = None  # Initialize as None - will be loaded on demand
         
         # Dictionary to cache loaded vectors by steering_type
