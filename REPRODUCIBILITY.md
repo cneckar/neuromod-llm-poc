@@ -5,9 +5,20 @@ supporting collateral behind the paper *Digital Psychopharmacology*
 (`outputs/DigitalPsychopharmacologyPaper/Digital-Psychopharmacology.tex`) and writes a
 **`REPRODUCTION_REPORT.md`** mapping every artifact to the figure/table/claim it supports.
 
-- **One command:** `python scripts/reproduce.py --tier <0|1|2>`
-- **One notebook:** [`notebooks/reproduce_paper_colab.ipynb`](notebooks/reproduce_paper_colab.ipynb) (open in Colab, pick a tier, run all)
+Everything routes through **one** implementation, `scripts/reproduce.py`. There are three ways
+to invoke it — all produce the same artifacts under `outputs/reproduction/`:
+
+1. **Locally via the script:** `python scripts/reproduce.py --tier <0|1|2>`
+2. **Locally via the notebook:** open [`notebooks/reproduce_paper_colab.ipynb`](notebooks/reproduce_paper_colab.ipynb)
+   in Jupyter — it auto-detects that you're already in the repo and skips the clone/install cells.
+3. **In Colab:** open the same notebook, pick a tier, *Run all*.
+
 - **Determinism:** seed = 42 everywhere (`ReproducibilitySwitches`; `PYTHONHASHSEED=42`).
+- **Provenance:** every run snapshots `outputs/reproduction/provenance/` — the git SHA, working-tree
+  status, `pip freeze`, the resolved config, and `analysis/plan.yaml` — so a report is always
+  traceable to an exact commit + dependency set.
+- **Legacy command:** `python reproduce_results.py [--test-mode]` still works but now simply
+  **forwards** to `scripts/reproduce.py` (`--test-mode` → `--tier 1`, default → `--tier 2`).
 
 The orchestrator never re-implements an experiment — it shells out to the existing
 `scripts/` / `analysis/` / `demo/` entry points with the right arguments, records
@@ -100,10 +111,12 @@ The runner is **resumable** — the visual runner skips already-computed rows, a
   §6.2 *"Absence of Dose–Response and Monotonicity Curves"* limitation, and `safety_boundary`
   operationalizes §7.4 *Spectral Safety Auditing* (benign prompts only; flagged output is
   redacted, never persisted as pixels).
-- **Figure filename mismatches in the .tex** (`behavior_radar_plots.png` vs the generator's
-  `figure_3_radar_plots.png`; `variance_radar.png` vs `figure_5_emotion_signatures.png`; and
-  `figure_4_cognitive_impact.png` has no standalone generator) are documented here rather than
-  silently patched. The reproduction writes the generators' canonical names under `figures/`.
+- **Paper figure references are aligned with the generators.** The `.tex` now references the
+  canonical `figure_N_*.png` names the generators emit (`figure_3_radar_plots.png`,
+  `figure_5_emotion_signatures.png`), and a `\graphicspath` resolves both the committed figures
+  (`outputs/`) and freshly reproduced ones (`outputs/reproduction/figures/`) — so a reproduction
+  run drops straight into the paper build. (`figure_4_cognitive_impact.png` still has no
+  standalone generator; it is surfaced from the committed render by the `figure4_committed` stage.)
 - **Committed inputs** (so downstream stages run without re-generating): `outputs/ablation_experiments/`,
   `outputs/reports/emotion/`, `outputs/validation/`, `outputs/steering_vectors/`, `analysis/plan.yaml`,
   `datasets/steering_prompts.jsonl`. The `outputs/endpoints/` directory is **not** committed — the

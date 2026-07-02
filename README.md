@@ -24,34 +24,34 @@ cd neuromod-llm-poc
 pip install -r requirements.txt
 pip install -e .
 
-# Set up Hugging Face credentials (required for Llama models)
-python setup_hf_credentials.py
-
-# Reproduce paper results (default: Llama-3.1-8B, n=126)
-python reproduce_results.py
-
-# Or quick validation (test mode: fast model, small sample)
-python reproduce_results.py --test-mode
+# Reproduce the paper (single tiered path — no GPU needed to start)
+python scripts/reproduce.py --tier 0        # CPU only: validators + committed-data figs + dry-run visual pipeline
 
 # Start interactive chat
 python demo/chat.py
 ```
 
-### Full reproduction — text **and** visual findings, tiered (no GPU needed to start)
+### Reproducing the paper — one path, three ways
 
-`scripts/reproduce.py` is a single tiered playbook that regenerates every key figure/table
-**plus the visual dose-response collateral**, and writes a `REPRODUCTION_REPORT.md` mapping each
-artifact to the paper claim it supports. See **[`REPRODUCIBILITY.md`](REPRODUCIBILITY.md)**.
+Everything routes through **one** playbook, `scripts/reproduce.py`, which regenerates the key
+figures/tables **plus the visual dose-response collateral** and writes a `REPRODUCTION_REPORT.md`
+mapping each artifact to the paper claim it supports. Full details + the artifact→claim map:
+**[`REPRODUCIBILITY.md`](REPRODUCIBILITY.md)**.
 
 ```bash
-python scripts/reproduce.py --tier 0                 # CPU only: validators + committed-data figs + dry-run visual pipeline
+# 1) Locally via the script:
+python scripts/reproduce.py --tier 0                 # CPU only: committed-data figs + dry-run visual pipeline
 python scripts/reproduce.py --tier 1 --seeds 16      # 1 GPU: real SDXL dose-response + gpt2 text battery
+python setup_hf_credentials.py                       # (tier 2) accept the Llama license + set an HF token
 HUGGINGFACE_TOKEN=hf_... python scripts/reproduce.py --tier 2   # gated Llama-3.1-8B, paper-scale (exact numbers)
 python scripts/reproduce.py --tier 2 --list          # inspect the plan without running anything
+
+# 2) Locally via the notebook, or 3) in Colab (pick a tier, Run all):
+#    notebooks/reproduce_paper_colab.ipynb   (auto-detects Colab vs local)
 ```
 
-Or run it all in Colab (pick a tier, Run all):
-**[`notebooks/reproduce_paper_colab.ipynb`](notebooks/reproduce_paper_colab.ipynb)**.
+> The old `reproduce_results.py` still works but now just **forwards** to `scripts/reproduce.py`
+> (`--test-mode` → `--tier 1`, default → `--tier 2`).
 
 ## Documentation
 

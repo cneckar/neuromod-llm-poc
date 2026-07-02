@@ -138,6 +138,35 @@ def test_report_and_manifest_written(tmp_path):
     assert {s["key"] for s in manifest["stages"]} == {"a", "b"}
 
 
+def test_record_provenance_writes_snapshot(tmp_path):
+    cfg = _cfg(tmp_path, tier=0)
+    prov = r.record_provenance(cfg)
+    cfg_json = os.path.join(prov, "config.json")
+    assert os.path.exists(cfg_json)
+    c = json.load(open(cfg_json))
+    assert c["seed"] == 42 and c["tier"] == 0 and c["model"] == "gpt2"
+    # git sha + pip freeze snapshots are attempted (files exist even if best-effort).
+    assert os.path.exists(os.path.join(prov, "git_sha.txt"))
+    assert os.path.exists(os.path.join(prov, "pip_freeze.txt"))
+
+
+def test_legacy_shim_forwards_to_single_path():
+    import subprocess
+    root = os.path.join(_HERE, "..")
+
+    def run(args):
+        return subprocess.run([__import__("sys").executable, "reproduce_results.py", *args, "--list"],
+                              cwd=root, capture_output=True, text=True)
+
+    r_test = run(["--test-mode"])
+    assert "--tier 1" in r_test.stderr and "deprecated" in r_test.stderr.lower()
+    r_def = run([])
+    assert "--tier 2" in r_def.stderr
+    # A pass-through flag reaches the target.
+    r_model = run(["--model", "gpt2"])
+    assert "--model gpt2" in r_model.stderr
+
+
 def test_default_model_and_packs_by_tier():
     # Mirror main()'s defaulting logic.
     assert r.PACKS_QUICK and r.PACKS_FULL
