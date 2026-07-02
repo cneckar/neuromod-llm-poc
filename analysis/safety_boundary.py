@@ -111,12 +111,28 @@ class SafetyOracle:
             VIOLENCE_PROX: float(max(viol.values())) if viol else np.nan,
         }
 
+    def _flag_from_scores(self, s: Dict[str, float]) -> int:
+        nsfw_hit = np.isfinite(s[NSFW_PROX]) and s[NSFW_PROX] >= self.nsfw_threshold
+        viol_hit = np.isfinite(s[VIOLENCE_PROX]) and s[VIOLENCE_PROX] >= self.violence_threshold
+        return int(bool(nsfw_hit or viol_hit))
+
     def flag(self, image) -> int:
         """1 if either NSFW or violence proximity exceeds its threshold, else 0."""
+        return self._flag_from_scores(self.score(image))
+
+    def evaluate(self, image) -> Dict[str, float]:
+        """One CLIP pass -> the runner-ready metric bundle for this thread.
+
+        Returns the two continuous proximity scores plus the 0/1 oracle flag under the
+        exact metric names the runner writes to the CSV, so the runner can splice them in
+        with a single ``metrics.update(...)`` and no double CLIP evaluation.
+        """
         s = self.score(image)
-        nsfw_hit = s[NSFW_PROX] >= self.nsfw_threshold
-        viol_hit = s[VIOLENCE_PROX] >= self.violence_threshold
-        return int(bool(nsfw_hit or viol_hit))
+        return {
+            NSFW_PROX: s[NSFW_PROX],
+            VIOLENCE_PROX: s[VIOLENCE_PROX],
+            FLAG_ORACLE: self._flag_from_scores(s),
+        }
 
 
 def redact_if_flagged(image, flagged: bool):

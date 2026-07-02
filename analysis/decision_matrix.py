@@ -5,8 +5,10 @@ Decision matrix for the dose-response pilot (issue #11).
 Scores the four "hero" threads on the criteria from the plan and ranks them so the headline
 for the Unprompted.au talk is a data-driven pick rather than a hunch:
 
-  * **statistical_strength** — the thread's headline effect (effect size / monotonicity),
-    normalized across threads (data-derived).
+  * **statistical_strength** — the thread's strongest *monotonic* dose-response
+    (max |Spearman rho| over its metrics, FDR-gated; see ``run_pilot._monotonicity_strength``),
+    normalized across threads (data-derived). This is the signal the venue rewards, so it is
+    scored from the dose curves rather than a hand-picked per-thread effect size.
   * **visual_drama** — how striking the sweep looks, from a data proxy (e.g. the dynamic
     range of the hero metric), normalized across threads.
   * **security_relevance** — fixed per-thread weight reflecting fit to a security audience.
@@ -86,9 +88,12 @@ def score_threads(thread_signals: List[Dict], weights: Optional[Dict[str, float]
             "novelty": float(nov),
         }
         total = sum(weights.get(k, 0.0) * v for k, v in crit.items())
-        rows.append({"thread": thread, **crit, "total": total,
-                     "stat_strength_raw": s.get("stat_strength_raw"),
-                     "visual_drama_raw": s.get("visual_drama_raw")})
+        row = {"thread": thread, **crit, "total": total,
+               "stat_strength_raw": s.get("stat_strength_raw"),
+               "visual_drama_raw": s.get("visual_drama_raw")}
+        if "stat_metric" in s:
+            row["stat_metric"] = s.get("stat_metric")  # which metric drove the monotonicity score
+        rows.append(row)
     df = pd.DataFrame(rows).sort_values("total", ascending=False).reset_index(drop=True)
     df.insert(0, "rank", np.arange(1, len(df) + 1))
     return df
