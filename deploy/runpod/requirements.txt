@@ -15,9 +15,11 @@ sentencepiece>=0.2.0
 # 4-bit quantization (the gpt-oss / large-model configs in model_support.py use it).
 bitsandbytes>=0.43.0
 
-# gpt-oss ships MXFP4 weights and needs its Triton kernels at runtime. MXFP4 needs Triton >= 3.4
-# (bundled with torch >= 2.7). The Dockerfile freezes the base image's torch/triton via
-# PIP_CONSTRAINT, so this floor is a guard for other bases. `kernels` is left unpinned so it
-# resolves to the version the installed transformers expects (pin it only if `diag` shows a mismatch).
-kernels
+# gpt-oss ships MXFP4 weights and needs its Triton kernels at runtime (Triton >= 3.4, from the
+# cu128 torch the Dockerfile installs).
+#
+# IMPORTANT: pin kernels < 0.15. kernels 0.15 made "a version or revision is required" a HARD
+# error when pulling Hub kernels (deprecated in 0.12), so the current transformers MXFP4 path
+# fails with "Either a revision or a version must be specified." See huggingface/transformers#46291.
+kernels>=0.9,<0.15
 triton>=3.4.0
