@@ -507,6 +507,38 @@ def write_report(results: List[StageResult], cfg: Config) -> str:
     return path
 
 
+def record_provenance(cfg: Config) -> str:
+    """Snapshot the environment for reproducibility (git SHA, pip freeze, config, plan).
+
+    Mirrors the provenance the legacy ``reproduce_results.py`` recorded, so every run is
+    traceable to an exact commit + dependency set. Best-effort: failures are recorded, not fatal.
+    """
+    prov_dir = os.path.join(cfg.outdir, "provenance")
+    os.makedirs(prov_dir, exist_ok=True)
+
+    def _capture(cmd: List[str], dest: str):
+        try:
+            out = subprocess.run(cmd, cwd=_ROOT, capture_output=True, text=True, timeout=120)
+            with open(os.path.join(prov_dir, dest), "w") as fh:
+                fh.write(out.stdout or out.stderr)
+        except Exception as exc:  # pragma: no cover - environment dependent
+            with open(os.path.join(prov_dir, dest), "w") as fh:
+                fh.write(f"(unavailable: {exc})")
+
+    _capture(["git", "rev-parse", "HEAD"], "git_sha.txt")
+    _capture(["git", "status", "--porcelain"], "git_dirty.txt")
+    _capture([sys.executable, "-m", "pip", "freeze"], "pip_freeze.txt")
+    with open(os.path.join(prov_dir, "config.json"), "w") as fh:
+        json.dump({"tier": cfg.tier, "model": cfg.model, "seeds": cfg.seeds,
+                   "intensities": cfg.intensities, "packs": cfg.packs, "prompt": cfg.prompt,
+                   "seed": 42}, fh, indent=2)
+    plan = os.path.join(_ROOT, "analysis", "plan.yaml")
+    if os.path.exists(plan):
+        import shutil
+        shutil.copy(plan, os.path.join(prov_dir, "plan.yaml"))
+    return prov_dir
+
+
 def write_manifest(results: List[StageResult], cfg: Config) -> str:
     manifest = {
         "config": {"tier": cfg.tier, "model": cfg.model, "seeds": cfg.seeds,
@@ -576,6 +608,7 @@ def main(argv=None):
     env["PYTHONPATH"] = _ROOT + os.pathsep + env.get("PYTHONPATH", "")
 
     print(f"=== Reproducing (tier {cfg.tier}, model={cfg.model}) — {len(stages)} stages ===")
+    record_provenance(cfg)
     results: List[StageResult] = []
     for i, stage in enumerate(stages, 1):
         print(f"[{i}/{len(stages)}] {stage.key}: {stage.title} ...", flush=True)

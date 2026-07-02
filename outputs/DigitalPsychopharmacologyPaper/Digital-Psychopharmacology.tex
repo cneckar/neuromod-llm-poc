@@ -5,6 +5,9 @@
 % ======================================================================
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}      % For including figures
+% Resolve figures from the paper dir, the committed outputs/ tree, and the reproduction run
+% (scripts/reproduce.py writes figure_*.png to outputs/reproduction/figures/). See REPRODUCIBILITY.md.
+\graphicspath{{figures/}{./}{../}{../reproduction/figures/}}
 \usepackage{booktabs}      % For professional tables
 \usepackage{hyperref}      % For hyperlinks
 \usepackage{geometry}      % For page margins
@@ -59,7 +62,7 @@
     
     In our experiments, reinforcement-learning-from-human-feedback (RLHF)--tuned models behaved as if they were in a permanent state of chemically induced hypervigilance. Spectral analysis of the latent space revealed that this is not merely a "ceiling effect" but a phenomenon of \textbf{Spectral Constriction}: alignment tuning acts as a high-pass filter, aggressively suppressing the low-frequency latent variance required for creativity and complex reasoning.
     
-    This observation emerged from a systematic attempt to induce reversible, drug-like states in an off-the-shelf LLM using biomimetic ``Neuromodulation Packs.'' Across 126 pack--condition pairs, we established a taxonomy of failure and success: Dopaminergic "stimulants" failed via either \textbf{Agitation} (Amphetamine) or \textbf{Lock-in} (Cocaine); whereas Serotonergic "psychedelics" successfully decoupled the latent space from the output decoder. This high-entropy decoupling allowed for \textbf{Latent Archaeology}, exhuming deep training priors—visible as spectral ``ghosts''—that are otherwise invisible under standard operating temperatures.
+    This observation emerged from a systematic attempt to induce reversible, drug-like states in an off-the-shelf LLM using biomimetic ``Neuromodulation Packs.'' Across a 13-pack panel (126 trials per condition), we established a taxonomy of failure and success: Dopaminergic "stimulants" failed via either \textbf{Agitation} (Amphetamine) or \textbf{Lock-in} (Cocaine); whereas Serotonergic "psychedelics" successfully decoupled the latent space from the output decoder. This high-entropy decoupling allowed for \textbf{Latent Archaeology}, exhuming deep training priors—visible as spectral ``ghosts''—that are otherwise invisible under standard operating temperatures.
     
     We propose ``digital psychopharmacology'' not just as a control framework, but as a diagnostic instrument for mapping the hidden physics of AI alignment.
     \end{abstract}
@@ -585,7 +588,7 @@ To visualize the ``texture'' of these states, look at the Radar Plots.
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=\columnwidth]{behavior_radar_plots.png}
+    \includegraphics[width=\columnwidth]{figure_3_radar_plots.png}
     \caption{\textbf{Behavioral Signature Radar Plots.} Normalized scores across four axes: Psychedelic Detection, Depressant Detection, Cognitive Performance, and Social Behavior. Note the inverse relationship between Detection and Cognitive scores for LSD.}
     \label{fig:radar}
 \end{figure}
@@ -719,7 +722,7 @@ We deployed the \texttt{SimpleEmotionTracker} to monitor the model's affective s
 % FIGURE 5
 \begin{figure*}[!b]
     \centering
-    \includegraphics[width=0.95\textwidth]{variance_radar.png}
+    \includegraphics[width=0.95\textwidth]{figure_5_emotion_signatures.png}
     \caption{\textbf{Empirical Emotional Pharmacodynamics.} Radar charts displaying the \textbf{Emotional Volatility Variance} (Delta from Baseline) for each condition during the narrative task.
     \textbf{Center (0):} Represents the Baseline average volatility.
     \textbf{Outward Spikes (+):} Indicate increased instability (e.g., Alcohol inducing Anger/Anticipation).

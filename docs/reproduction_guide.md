@@ -98,30 +98,45 @@ python scripts/validate_benchmarks.py --model "Llama-4-Maverick-17B-128E"
 
 ## Phase 2: Data Collection
 
-### 2.1 Quick Validation (Optional but Recommended)
+### 2.1 The single reproduction path — `scripts/reproduce.py`
 
-For quick validation, use test mode:
+Reproduction is consolidated into **one tiered playbook**. It regenerates the paper's text
+**and** visual collateral and writes `outputs/reproduction/REPRODUCTION_REPORT.md` mapping each
+artifact to the claim it supports. Full tier table + artifact→claim map: [`../REPRODUCIBILITY.md`](../REPRODUCIBILITY.md).
 
 ```bash
-# Quick validation (test mode: fast model, small sample size)
-python reproduce_results.py --test-mode
+# Tier 0 — CPU only: validators + committed-data figures + dry-run visual pipeline
+python scripts/reproduce.py --tier 0
+
+# Tier 1 — one GPU: real SDXL dose-response + the text battery on ungated gpt2
+python scripts/reproduce.py --tier 1 --seeds 16
+
+# Tier 2 — gated Llama-3.1-8B at paper scale (the only tier with the paper's exact numbers)
+HUGGINGFACE_TOKEN=hf_... python scripts/reproduce.py --tier 2
+
+# Inspect the plan without running anything
+python scripts/reproduce.py --tier 2 --list
 ```
 
-For full paper reproduction:
+Three ways to run, one path:
+1. **Locally via the script** — the commands above.
+2. **Locally via the notebook** — open `notebooks/reproduce_paper_colab.ipynb` in Jupyter (it
+   auto-detects that you're already in the repo and skips the clone/install cells).
+3. **In Colab** — open the same notebook, pick a tier, *Run all*.
+
+> The legacy `python reproduce_results.py [--test-mode]` command still works but now simply
+> **forwards** to `scripts/reproduce.py` (`--test-mode` → `--tier 1`, default → `--tier 2`).
+
+The power/NDJSON steps below run automatically as the `export_ndjson` / `power_analysis` stages;
+you can also run them standalone:
 
 ```bash
-# Reproduce paper results (default: Llama-3.1-8B, n=126)
-python reproduce_results.py
-
-# Convert to NDJSON for power analysis
 python scripts/export_endpoints_to_ndjson.py \
-    --input-dir outputs/endpoints \
-    --output outputs/endpoints/pilot_data.jsonl
-
-# Analyze pilot results
+    --input-dir outputs/reproduction/endpoints \
+    --output outputs/reproduction/endpoints/pilot_data.jsonl
 python analysis/power_analysis.py \
     --plan analysis/plan.yaml \
-    --pilot outputs/endpoints/pilot_data.jsonl
+    --pilot outputs/reproduction/endpoints/pilot_data.jsonl
 ```
 
 **Expected Output**: Pilot data confirms n≥126 per condition is sufficient for power.

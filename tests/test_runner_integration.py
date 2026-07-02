@@ -115,13 +115,15 @@ def test_run_model_flag_recorded_when_generator_surfaces_it(tmp_path):
 # --------------------------------------------------------------------- monotonicity scoring
 
 
-def _monotone_df(pack, metric, slope, seeds=8):
-    rng = np.random.RandomState(abs(hash((pack, metric))) % 2**31)
+def _monotone_df(pack, metric, slope, seeds=8, noise=0.001):
+    # Deterministic seed (not hash(), which varies with PYTHONHASHSEED) so the test is reproducible.
+    seed = (sum(map(ord, pack + metric)) + int(abs(slope) * 100)) % 2**31
+    rng = np.random.RandomState(seed)
     rows = []
     for d in [round(0.1 * i, 1) for i in range(11)]:
         for s in range(seeds):
             rows.append({"pack": pack, "intensity": d, "seed": s, "metric": metric,
-                         "value": slope * d + rng.randn() * 0.001})
+                         "value": slope * d + rng.randn() * noise})
     return pd.DataFrame(rows)
 
 
@@ -134,8 +136,8 @@ def test_monotonicity_strength_prefers_strong_monotone_metric():
 
 
 def test_monotonicity_strength_low_for_flat_metric():
-    # A flat metric (no dose response) has |rho| ~ 0.
-    df = _monotone_df("placebo", "latent_energy", slope=0.0)
+    # A truly flat metric (no dose response) has no defined rank trend -> strength ~ 0.
+    df = _monotone_df("placebo", "latent_energy", slope=0.0, noise=0.0)
     strength, _ = run_pilot._monotonicity_strength(df, ["placebo"])
     assert strength < 0.5
 
