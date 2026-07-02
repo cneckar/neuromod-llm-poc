@@ -209,5 +209,59 @@ def test_stream_final_carries_gpu_seconds():
     assert "gpu_seconds" in events[-1]
 
 
+# ---------------------------------------------------------------- server-side task routing
+
+
+def test_parse_event_defaults_task_to_generate():
+    assert h.parse_event({"prompt": "hi"})["task"] == "generate"
+    assert h.parse_event({"input": {"task": "steering"}})["task"] == "steering"
+
+
+def test_build_job_command_steering():
+    parsed = h.parse_event({"task": "steering", "model": "gpt-oss-120b", "layer": -1})
+    cmd, out = h.build_job_command("steering", parsed)
+    assert "generate_steering_vectors.py" in " ".join(cmd)
+    assert "--model" in cmd and "openai/gpt-oss-120b" in cmd  # alias resolved
+    assert "--layer" in cmd and "-1" in cmd
+    assert out == h.STEERING_DIR
+
+
+def test_build_job_command_endpoints():
+    parsed = h.parse_event({"task": "endpoints", "pack_name": "cocaine", "model": "gpt2"})
+    cmd, out = h.build_job_command("endpoints", parsed)
+    assert "calculate_endpoints.py" in " ".join(cmd)
+    assert cmd[cmd.index("--pack") + 1] == "cocaine"
+    assert "--skip-completed" in cmd
+    assert out == h.ENDPOINTS_DIR
+
+
+def test_dispatch_unknown_task_errors():
+    parsed = h.parse_event({"task": "not_a_task", "prompt": "x"})
+    out = h.dispatch_task(parsed)
+    assert "error" in out
+
+
+def test_handler_routes_task_not_generate(monkeypatch):
+    # A task event bypasses the generate path entirely (no prompt needed).
+    monkeypatch.setattr(h, "dispatch_task", lambda parsed, model=None: {"ok": True, "task": parsed["task"]})
+    out = h.handler({"input": {"task": "warmup"}})
+    assert out == {"ok": True, "task": "warmup"}
+
+
+def test_stream_handler_yields_single_result_for_task(monkeypatch):
+    monkeypatch.setattr(h, "dispatch_task", lambda parsed, model=None: {"ok": True, "task": "steering"})
+    out = list(h.stream_handler({"input": {"task": "steering"}}))
+    assert out == [{"ok": True, "task": "steering"}]
+
+
+def test_run_warmup_uses_get_model(monkeypatch):
+    calls = {}
+    monkeypatch.setattr(h, "_get_model", lambda name: calls.setdefault("name", name))
+    monkeypatch.setattr(h, "_pop_cold_start", lambda: 3.0)
+    res = h.run_warmup(h.parse_event({"task": "warmup", "model": "gpt2"}))
+    assert res["ok"] and res["task"] == "warmup" and res["cold_start_seconds"] == 3.0
+    assert calls["name"] == "gpt2"
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-v"]))

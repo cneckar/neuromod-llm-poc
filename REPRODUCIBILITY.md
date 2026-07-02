@@ -105,6 +105,28 @@ The runner is **resumable** — the visual runner skips already-computed rows, a
 | `lazarus` | 2 | §7.3 Digital IV — bidirectional Morphine→Cocaine steering |
 | `calibration` | 2 | §4 Stimulant Ceiling — entropy↓ but calibration-error↑ (ECE/MCE/Brier) |
 
+## Running against a RunPod Serverless endpoint (scale-to-zero)
+
+If you've deployed the endpoint (`deploy/runpod/`), you can run the study over HTTP and pay for
+GPU-seconds only while the worker executes — no always-on box. The handler routes on an
+`input.task` field so heavy work runs **on the worker** (which has the model in-process) and
+artifacts land on the network volume. Drive it with the torch-free client:
+
+```bash
+export RUNPOD_ENDPOINT_ID=... RUNPOD_API_KEY=...
+# 1) one-time: regenerate steering vectors for the served model (else pack steering is a no-op)
+python scripts/run_remote_study.py --mode steering  --model openai/gpt-oss-120b
+# 2) the full internal-telemetry battery (Table 1) per pack, run on the worker, JSON returned
+python scripts/run_remote_study.py --mode endpoints --model openai/gpt-oss-120b --packs lsd,cocaine,morphine
+python scripts/analyze_endpoints.py --input-dir outputs/remote_study/endpoints
+# or a text-only behavioral dose sweep -> feeds the dose-response stats
+python scripts/run_remote_study.py --mode behavioral --model openai/gpt-oss-120b --packs lsd,cocaine
+python analysis/dose_response_stats.py --in outputs/remote_study/behavioral.csv --plots
+```
+
+Note: **gpt-oss-120b ≠ the paper's Llama-3.1-8B**, so this reproduces the *methodology*, not the
+paper's exact numbers. See `deploy/runpod/README.md` for the H200/MXFP4 + network-volume setup.
+
 ## Notes & known caveats
 
 - **Two visual findings upgrade paper gaps to results.** `dose_stats` addresses the paper's own
