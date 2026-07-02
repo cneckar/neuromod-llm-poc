@@ -6,11 +6,15 @@ runpod>=1.6.0
 
 # Model runtime. Torch is provided by the base image; these are the HF stack the
 # neuromod hooks operate on (steering / attention / logits processors need Transformers).
-transformers>=4.45.0
+# transformers>=4.55 is required for the gpt-oss architecture.
+transformers>=4.55.0
 accelerate>=0.34.0
 safetensors>=0.4.0
 sentencepiece>=0.2.0
 
-# gpt-oss (MXFP4) additionally needs kernels/triton at runtime; add per model, e.g.:
-#   kernels
-#   triton>=3.0.0
+# 4-bit quantization (the gpt-oss / large-model configs in model_support.py use it).
+bitsandbytes>=0.43.0
+
+# gpt-oss ships MXFP4 weights and needs its Triton kernels at runtime.
+kernels
+triton>=3.1.0
