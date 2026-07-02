@@ -126,6 +126,12 @@ endpoint; `--mode behavioral` is a text-only dose sweep whose CSV feeds
 `analysis/dose_response_stats.py`. Set `STEERING_DIR` / `ENDPOINTS_DIR` env on the endpoint to point
 job outputs at the volume (defaults `/runpod-volume/{steering_vectors,endpoints}`).
 
+`STEERING_DIR` is dual-purpose: the `steering` job **writes** vectors there, and the pack system
+**loads** them from there at inference (`SteeringEffect` reads `STEERING_DIR`). So after
+regenerating vectors on the volume, generations actually use them — no code change, just the env
+var. Without it, inference falls back to the committed `outputs/steering_vectors` (wrong-dim for
+gpt-oss → padded/truncated → no real steering).
+
 ## Acceptance criteria (issue #14) — status
 
 - [x] `handler.py` wraps `LocalModelInterface.generate_text(pack_name=...)`; model loaded once at module scope.
