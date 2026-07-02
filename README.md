@@ -37,6 +37,22 @@ python reproduce_results.py --test-mode
 python demo/chat.py
 ```
 
+### Full reproduction — text **and** visual findings, tiered (no GPU needed to start)
+
+`scripts/reproduce.py` is a single tiered playbook that regenerates every key figure/table
+**plus the visual dose-response collateral**, and writes a `REPRODUCTION_REPORT.md` mapping each
+artifact to the paper claim it supports. See **[`REPRODUCIBILITY.md`](REPRODUCIBILITY.md)**.
+
+```bash
+python scripts/reproduce.py --tier 0                 # CPU only: validators + committed-data figs + dry-run visual pipeline
+python scripts/reproduce.py --tier 1 --seeds 16      # 1 GPU: real SDXL dose-response + gpt2 text battery
+HUGGINGFACE_TOKEN=hf_... python scripts/reproduce.py --tier 2   # gated Llama-3.1-8B, paper-scale (exact numbers)
+python scripts/reproduce.py --tier 2 --list          # inspect the plan without running anything
+```
+
+Or run it all in Colab (pick a tier, Run all):
+**[`notebooks/reproduce_paper_colab.ipynb`](notebooks/reproduce_paper_colab.ipynb)**.
+
 ## Documentation
 
 📖 **Full documentation available in [`docs/`](docs/)**
