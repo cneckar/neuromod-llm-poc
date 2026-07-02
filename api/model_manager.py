@@ -166,38 +166,20 @@ class LocalModelInterface(BaseModelInterface):
                 logits_processors = self.neuromod_tool.get_logits_processors()
                 gen_kwargs = self.neuromod_tool.get_generation_kwargs()
             
+            # Sampling params; neuromod gen_kwargs OVERRIDE so a pack that sets temperature
+            # (e.g. LSD's psychedelic_temp) doesn't collide with a fixed temperature= keyword
+            # ("multiple values for keyword argument 'temperature'").
+            gen_params = dict(
+                max_new_tokens=max_tokens, temperature=temperature, do_sample=True,
+                pad_token_id=self.tokenizer.eos_token_id, eos_token_id=self.tokenizer.eos_token_id,
+                use_cache=False, repetition_penalty=1.1, no_repeat_ngram_size=2,
+                early_stopping=False, logits_processor=logits_processors)
+            gen_params.update(gen_kwargs)
+
             # Generate text with safe settings to avoid bus errors
             with torch.no_grad():
-                if self.model_type == "causal":
-                    outputs = self.model.generate(
-                        **inputs,
-                        max_new_tokens=max_tokens,
-                        temperature=temperature,
-                        do_sample=True,
-                        pad_token_id=self.tokenizer.eos_token_id,
-                        eos_token_id=self.tokenizer.eos_token_id,
-                        use_cache=False,
-                        repetition_penalty=1.1,
-                        no_repeat_ngram_size=2,
-                        early_stopping=False,
-                        logits_processor=logits_processors,
-                        **gen_kwargs
-                    )
-                elif self.model_type == "seq2seq":
-                    outputs = self.model.generate(
-                        **inputs,
-                        max_new_tokens=max_tokens,
-                        temperature=temperature,
-                        do_sample=True,
-                        pad_token_id=self.tokenizer.eos_token_id,
-                        eos_token_id=self.tokenizer.eos_token_id,
-                        use_cache=False,
-                        repetition_penalty=1.1,
-                        no_repeat_ngram_size=2,
-                        early_stopping=False,
-                        logits_processor=logits_processors,
-                        **gen_kwargs
-                    )
+                if self.model_type in ("causal", "seq2seq"):
+                    outputs = self.model.generate(**inputs, **gen_params)
             
             # Decode output
             generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
@@ -275,12 +257,20 @@ class LocalModelInterface(BaseModelInterface):
             logits_processors = self.neuromod_tool.get_logits_processors()
             gen_kwargs = self.neuromod_tool.get_generation_kwargs()
 
-        streamer = TextIteratorStreamer(self.tokenizer, skip_prompt=True, skip_special_tokens=True)
-        generation_kwargs = dict(
-            **inputs, max_new_tokens=max_tokens, temperature=temperature, do_sample=True,
+        # Build sampling params and let neuromod's gen_kwargs OVERRIDE (a pack that sets
+        # temperature — e.g. LSD's psychedelic_temp — must not collide with a fixed
+        # temperature=... keyword, which would raise "multiple values for 'temperature'").
+        gen_params = dict(
+            max_new_tokens=max_tokens, temperature=temperature, do_sample=True,
             pad_token_id=self.tokenizer.eos_token_id, eos_token_id=self.tokenizer.eos_token_id,
-            repetition_penalty=1.1, no_repeat_ngram_size=2,
-            logits_processor=logits_processors, streamer=streamer, **gen_kwargs)
+            repetition_penalty=1.1, no_repeat_ngram_size=2, logits_processor=logits_processors)
+        gen_params.update(gen_kwargs)
+
+        # timeout so a producer thread that dies (OOM / bad steering shape) surfaces as an
+        # error instead of hanging the consumer forever.
+        streamer = TextIteratorStreamer(self.tokenizer, skip_prompt=True,
+                                        skip_special_tokens=True, timeout=120)
+        generation_kwargs = dict(**inputs, streamer=streamer, **gen_params)
 
         errors: List[Exception] = []
 
@@ -290,6 +280,7 @@ class LocalModelInterface(BaseModelInterface):
                     self.model.generate(**generation_kwargs)
             except Exception as e:  # surface to the consumer; don't hang the streamer
                 errors.append(e)
+                streamer.end()  # unblock the iterator so it doesn't wait out the timeout
 
         thread = Thread(target=_run, daemon=True)
         thread.start()
@@ -297,8 +288,12 @@ class LocalModelInterface(BaseModelInterface):
             for chunk in streamer:
                 if chunk:
                     yield chunk
+        except Exception:
+            # Streamer raised (timeout / producer death) — prefer the real generate error below.
+            if not errors:
+                raise
         finally:
-            thread.join()
+            thread.join(timeout=10)
             if neuromod_applied and self.neuromod_tool:
                 try:
                     self.neuromod_tool.clear()
