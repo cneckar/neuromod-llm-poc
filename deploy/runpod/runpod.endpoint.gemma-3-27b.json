@@ -1,0 +1,23 @@
+{
+  "_comment": "RunPod Serverless endpoint for Google's Gemma 3 27B (instruction-tuned) -- Deploy D2. Fits a single 48-80GB card; same scale-to-zero contract. Requires accepting Gemma's license on HF and a token with access.",
+  "name": "neuromod-gemma-3-27b",
+  "templateImage": "<your-registry>/neuromod-runpod:latest",
+  "gpuTypeIds": ["NVIDIA L40S", "NVIDIA A100 80GB PCIe"],
+  "workersMin": 0,
+  "workersMax": 2,
+  "idleTimeout": 5,
+  "flashboot": true,
+  "scalerType": "QUEUE_DELAY",
+  "networkVolumeId": "<volume-with-hf-weights>",
+  "env": {
+    "MODEL_NAME": "google/gemma-3-27b-it",
+    "HF_HOME": "/runpod-volume/hf",
+    "HUGGINGFACE_TOKEN": "<secret-with-gemma-access>",
+    "WARM_ON_START": "0"
+  },
+  "_notes": {
+    "HUGGINGFACE_TOKEN": "Gemma is gated: accept the license at huggingface.co/google/gemma-3-27b-it and use a token that has access.",
+    "workersMax": "Capped at 2 (Deploy D4 spend guardrail).",
+    "neuromod": "Verify steering/attention/logits hooks attach on the Gemma architecture (model_support.py) after first load."
+  }
+}

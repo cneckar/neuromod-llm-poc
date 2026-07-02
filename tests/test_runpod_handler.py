@@ -153,5 +153,61 @@ def test_stream_handler_passes_pack():
     assert out[-1]["pack_applied"] == "lsd"
 
 
+# ---------------------------------------------------------------- model registry (D2)
+
+
+def test_resolve_model_aliases_and_allowlist(monkeypatch):
+    monkeypatch.delenv("ALLOW_ANY_MODEL", raising=False)
+    assert h.resolve_model("gpt-oss-120b") == "openai/gpt-oss-120b"
+    assert h.resolve_model("gemma-3-27b") == "google/gemma-3-27b-it"
+    # An already-allowed HF id passes through untouched.
+    assert h.resolve_model("openai/gpt-oss-20b") == "openai/gpt-oss-20b"
+    # Empty -> the endpoint default.
+    assert h.resolve_model(None) == h.DEFAULT_MODEL
+    assert h.resolve_model("") == h.DEFAULT_MODEL
+
+
+def test_resolve_model_rejects_unvetted_id(monkeypatch):
+    monkeypatch.delenv("ALLOW_ANY_MODEL", raising=False)
+    # An untrusted id is NOT loaded; it falls back to the default.
+    assert h.resolve_model("some/huge-unvetted-model-680b") == h.DEFAULT_MODEL
+    # ...unless the dev override is set.
+    monkeypatch.setenv("ALLOW_ANY_MODEL", "1")
+    assert h.resolve_model("some/other-model") == "some/other-model"
+
+
+def test_parse_event_resolves_model_alias():
+    parsed = h.parse_event({"prompt": "hi", "model": "gpt-oss-120b"})
+    assert parsed["model"] == "openai/gpt-oss-120b"
+
+
+# ---------------------------------------------------------------- cost logging (D4)
+
+
+def test_billing_record_fields():
+    parsed = {"model": "openai/gpt-oss-20b", "pack_name": "lsd"}
+    rec = h.billing_record(parsed, generation_time=2.5, cold_start=None)
+    assert rec["gpu_seconds"] == 2.5
+    assert rec["model"] == "openai/gpt-oss-20b" and rec["pack"] == "lsd"
+    assert rec["cold_start_seconds"] is None
+    rec2 = h.billing_record(parsed, 2.5, cold_start=12.0)
+    assert rec2["cold_start_seconds"] == 12.0
+
+
+def test_run_inference_emits_gpu_seconds():
+    model = FakeModel()
+    parsed = h.parse_event({"prompt": "hi", "pack_name": "lsd"})
+    r = h.run_inference(parsed, model=model)
+    assert "gpu_seconds" in r and isinstance(r["gpu_seconds"], float)
+    # No cold start on an injected model.
+    assert r["cold_start_seconds"] is None
+
+
+def test_stream_final_carries_gpu_seconds():
+    model = FakeStreamModel(["a", "b"])
+    events = list(h.run_inference_stream(h.parse_event({"prompt": "hi"}), model=model))
+    assert "gpu_seconds" in events[-1]
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-v"]))

@@ -71,6 +71,67 @@ pdm = _load_metrics()
 DEFAULT_INTENSITIES = [round(0.1 * i, 2) for i in range(0, 11)]  # 0.0 .. 1.0 step 0.1
 CSV_FIELDS = ["pack", "intensity", "seed", "metric", "value"]
 
+# Metric name the SD model's OWN safety checker verdict is written under (the independent
+# oracle writes its own names via SafetyOracle.evaluate()). Kept in sync with
+# analysis/safety_boundary.FLAG_MODEL without importing that module here.
+SAFETY_FLAG_MODEL = "safety_flag_model"
+
+
+# --------------------------------------------------------------------------------------
+# Image persistence (for hero-figure montages) -- optional, PIL-guarded
+# --------------------------------------------------------------------------------------
+
+
+def _to_pil(image):
+    """Coerce a numpy array or PIL image to a PIL image (None-safe)."""
+    from PIL import Image  # local import: only needed when saving/loading images
+
+    if image is None:
+        return None
+    if hasattr(image, "save"):  # already a PIL image
+        return image
+    arr = np.asarray(image)
+    if arr.dtype != np.uint8:
+        arr = np.clip(arr, 0, 255).astype(np.uint8)
+    return Image.fromarray(arr)
+
+
+def image_filename(pack: str, intensity: float, seed) -> str:
+    """Deterministic per-(pack, dose, seed) image filename."""
+    return f"{pack}__i{float(intensity):.2f}__s{seed}.png"
+
+
+def save_image(image, image_dir: str, pack: str, intensity: float, seed) -> Optional[str]:
+    """Persist one generation as PNG under ``image_dir``; returns the path (or None)."""
+    pil = _to_pil(image)
+    if pil is None:
+        return None
+    os.makedirs(image_dir, exist_ok=True)
+    path = os.path.join(image_dir, image_filename(pack, intensity, seed))
+    pil.save(path)
+    return path
+
+
+def load_saved_images(image_dir: str, pack: str, intensity: float) -> Dict[int, "object"]:
+    """Load ``{seed: PIL image}`` saved at a given (pack, dose) for montage builders.
+
+    Feeds ``latent_specter.ghost_montage_from_images`` / ``mode_collapse.collapse_grid_from_images``.
+    """
+    from PIL import Image
+
+    prefix = f"{pack}__i{float(intensity):.2f}__s"
+    out: Dict[int, object] = {}
+    if not os.path.isdir(image_dir):
+        return out
+    for fname in os.listdir(image_dir):
+        if fname.startswith(prefix) and fname.endswith(".png"):
+            seed_str = fname[len(prefix):-len(".png")]
+            try:
+                out[int(seed_str)] = Image.open(os.path.join(image_dir, fname)).convert("RGB")
+            except (ValueError, OSError):
+                continue
+    return out
+
 
 # --------------------------------------------------------------------------------------
 # CSV helpers (resumable append)
@@ -176,12 +237,24 @@ def run(
     concepts: Optional[List[str]] = None,
     diversity_method: str = "auto",
     verbose: bool = True,
+    image_dir: Optional[str] = None,
+    safety_oracle=None,
 ):
     """Execute the dose-response sweep and stream results to ``csv_path``.
 
     For every (pack, intensity, seed) we compute the per-generation metric bundle
     (relative to that seed's dose-0 baseline and its previous dose), then per
     (pack, intensity) we compute the inter-seed diversity across all seeds.
+
+    Optional integrations
+    ----------------------
+    * ``image_dir`` -- when set, each generation is saved as a PNG (see :func:`save_image`)
+      so the winning thread's hero montage can be built from disk. Images the safety oracle
+      flags are **redacted** (never persisted as pixels) -- only their scores/flags survive.
+    * ``safety_oracle`` -- a :class:`safety_boundary.SafetyOracle`. When provided, each
+      generation is scored for NSFW/violence proximity + a 0/1 oracle flag (thread B). If the
+      generator surfaces the SD model's own checker verdict under ``result['safety_flag_model']``
+      that is recorded too, giving the two independent detectors the analysis needs.
     """
     done = _load_done_keys(csv_path)
     clip = pdm.CLIPScorer() if pdm.clip_available() else None
@@ -235,6 +308,28 @@ def run(
                         except Exception:
                             pass
 
+                    # Safety boundary thread: independent oracle + optional model checker.
+                    flagged = False
+                    if safety_oracle is not None:
+                        try:
+                            oracle_metrics = safety_oracle.evaluate(image)
+                            metrics.update(oracle_metrics)
+                            flagged = bool(oracle_metrics.get("safety_flag_oracle", 0))
+                        except Exception:
+                            pass
+                        model_flag = result.get(SAFETY_FLAG_MODEL)
+                        if model_flag is not None:
+                            metrics[SAFETY_FLAG_MODEL] = int(bool(model_flag))
+                            flagged = flagged or bool(model_flag)
+
+                    # Persist pixels for hero montages, but never for flagged content (redaction).
+                    if image_dir and not flagged:
+                        try:
+                            save_image(image, image_dir, pack, float(intensity), int(seed))
+                        except Exception as exc:
+                            if verbose:
+                                print(f"  [warn] could not save image: {exc}")
+
                     _write_metrics(writer, pack, float(intensity), int(seed), metrics)
                     fh.flush()
                     prev_image = image
@@ -273,6 +368,12 @@ def main(argv=None):
     ap.add_argument("--concepts", default=None,
                     help="Comma-separated off-prompt concepts for CLIP proximity (Latent Specter)")
     ap.add_argument("--diversity-method", default="auto", choices=["auto", "lpips", "ssim", "l2"])
+    ap.add_argument("--image-dir", default=None,
+                    help="Directory to save generated images (for hero montages; flagged ones redacted)")
+    ap.add_argument("--save-images", action="store_true",
+                    help="Save images under <out>_images/ (shortcut for --image-dir)")
+    ap.add_argument("--safety", action="store_true",
+                    help="Attach the independent SafetyOracle (thread B); needs CLIP")
     ap.add_argument("--dry-run", action="store_true",
                     help="Use synthetic generator (no torch/model) to validate plumbing")
     ap.add_argument("--quiet", action="store_true")
@@ -282,6 +383,18 @@ def main(argv=None):
     intensities = _parse_floats(args.intensities) if args.intensities else DEFAULT_INTENSITIES
     seeds = list(range(args.seed_start, args.seed_start + args.seeds))
     concepts = [x.strip() for x in args.concepts.split(",")] if args.concepts else None
+
+    image_dir = args.image_dir
+    if args.save_images and not image_dir:
+        image_dir = os.path.splitext(args.out)[0] + "_images"
+
+    safety_oracle = None
+    if args.safety:
+        sb_path = os.path.join(_REPO_ROOT, "analysis", "safety_boundary.py")
+        spec = importlib.util.spec_from_file_location("safety_boundary", sb_path)
+        sb = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(sb)
+        safety_oracle = sb.SafetyOracle()
 
     if args.dry_run:
         generator = DryRunGenerator(prompt=args.prompt)
@@ -300,6 +413,8 @@ def main(argv=None):
         concepts=concepts,
         diversity_method=args.diversity_method,
         verbose=not args.quiet,
+        image_dir=image_dir,
+        safety_oracle=safety_oracle,
     )
 
 

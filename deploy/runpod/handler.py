@@ -26,12 +26,43 @@ Streaming (token-by-token) is intentionally out of scope here; it is Deploy phas
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import time
 from typing import Any, Dict, Iterator, List, Optional
 
 DEFAULT_MODEL = os.environ.get("MODEL_NAME", "openai/gpt-oss-20b")
+
+# Model registry (Deploy D2): friendly alias -> HF repo id. These are the switchable
+# endpoints -- the snappy default (20b), the hero (120b, 80GB), and Google's Gemma. Only
+# vetted ids load: a client-supplied ``model`` is resolved through this allow-list so a
+# browser can't make a scale-to-zero GPU pull an arbitrary/giant checkpoint. Set
+# ``ALLOW_ANY_MODEL=1`` to lift the allow-list (dev only).
+MODEL_REGISTRY = {
+    "gpt-oss-20b": "openai/gpt-oss-20b",
+    "gpt-oss-120b": "openai/gpt-oss-120b",
+    "gemma-3-27b": "google/gemma-3-27b-it",
+    "gemma-3-12b": "google/gemma-3-12b-it",
+}
+_ALLOWED_HF_IDS = set(MODEL_REGISTRY.values()) | {DEFAULT_MODEL}
+
+
+def resolve_model(name: Optional[str]) -> str:
+    """Resolve a client-supplied model alias/id to a vetted HF repo id.
+
+    * empty -> the endpoint default; a known alias -> its HF id; an already-allowed HF id ->
+      itself. Anything else falls back to the default (unless ``ALLOW_ANY_MODEL=1``), so an
+      untrusted request cannot load an unvetted model onto the GPU.
+    """
+    if not name:
+        return DEFAULT_MODEL
+    name = str(name).strip()
+    if name in MODEL_REGISTRY:
+        return MODEL_REGISTRY[name]
+    if name in _ALLOWED_HF_IDS or os.environ.get("ALLOW_ANY_MODEL") == "1":
+        return name
+    return DEFAULT_MODEL
 
 
 # --------------------------------------------------------------------------------------
@@ -90,7 +121,7 @@ def parse_event(event: Dict[str, Any]) -> Dict[str, Any]:
         "max_tokens": _num("max_tokens", 128),
         "temperature": _num("temperature", 1.0),
         "top_p": _num("top_p", 1.0),
-        "model": payload.get("model") or DEFAULT_MODEL,
+        "model": resolve_model(payload.get("model")),
     }
 
 
@@ -122,30 +153,68 @@ def error_response(message: str) -> Dict[str, Any]:
 
 
 # --------------------------------------------------------------------------------------
+# Cost observability (Deploy D4): per-request GPU-seconds + cold-start accounting
+# --------------------------------------------------------------------------------------
+
+
+def billing_record(parsed: Dict[str, Any], generation_time: float,
+                   cold_start: Optional[float] = None) -> Dict[str, Any]:
+    """A structured, parseable record of what a request will be billed for.
+
+    ``gpu_seconds`` is the wall-clock the worker held the GPU for this request (the unit
+    RunPod Serverless bills on). ``cold_start_seconds`` is set only on the request that paid
+    to page a model in (the first request to a cold worker), so it isn't double-counted.
+    """
+    return {
+        "model": parsed.get("model"),
+        "pack": parsed.get("pack_name"),
+        "gpu_seconds": round(float(generation_time), 4),
+        "cold_start_seconds": round(float(cold_start), 4) if cold_start else None,
+    }
+
+
+def log_billing(record: Dict[str, Any]) -> None:
+    """Emit the billing record as a single ``[billing] {json}`` line for log scrapers."""
+    print(f"[billing] {json.dumps(record)}", flush=True)
+
+
+# --------------------------------------------------------------------------------------
 # Model singleton (heavy — loaded once at cold start)
 # --------------------------------------------------------------------------------------
 
 _MODEL = None
 _MODEL_NAME: Optional[str] = None
+_COLD_START_SECONDS: Optional[float] = None
 
 
 def _get_model(model_name: str = DEFAULT_MODEL):
     """Load and cache the model + neuromod interface once per worker.
 
     Imports torch / diffusers / neuromod lazily so this module stays importable without a
-    GPU. Reuses ``api.model_manager.ModelManager``, which attaches the neuromod hooks.
+    GPU. Reuses ``api.model_manager.ModelManager``, which attaches the neuromod hooks. The
+    time paid to page a (new) model in is recorded for cold-start accounting (Deploy D4).
     """
-    global _MODEL, _MODEL_NAME
+    global _MODEL, _MODEL_NAME, _COLD_START_SECONDS
     if _MODEL is not None and _MODEL_NAME == model_name:
         return _MODEL
 
     from api.model_manager import ModelManager  # deferred heavy import
 
+    t0 = time.time()
     manager = ModelManager()
     manager.load_model(model_name)
+    _COLD_START_SECONDS = time.time() - t0
     _MODEL = manager
     _MODEL_NAME = model_name
     return _MODEL
+
+
+def _pop_cold_start() -> Optional[float]:
+    """Return-and-clear the pending cold-start duration (charged to one request only)."""
+    global _COLD_START_SECONDS
+    v = _COLD_START_SECONDS
+    _COLD_START_SECONDS = None
+    return v
 
 
 def run_inference(parsed: Dict[str, Any], model=None) -> Dict[str, Any]:
@@ -157,6 +226,7 @@ def run_inference(parsed: Dict[str, Any], model=None) -> Dict[str, Any]:
     start = time.time()
     if model is None:
         model = _get_model(parsed["model"])
+    cold = _pop_cold_start()
 
     result = model.generate_text(
         prompt=parsed["prompt"],
@@ -173,10 +243,16 @@ def run_inference(parsed: Dict[str, Any], model=None) -> Dict[str, Any]:
     else:
         text, emotions, tokens = result, {}, None
 
-    return format_response(
+    generation_time = time.time() - start
+    response = format_response(
         text, parsed, emotions=emotions,
-        generation_time=time.time() - start, tokens_generated=tokens,
+        generation_time=generation_time, tokens_generated=tokens,
     )
+    record = billing_record(parsed, generation_time, cold)
+    response.update({"gpu_seconds": record["gpu_seconds"],
+                     "cold_start_seconds": record["cold_start_seconds"]})
+    log_billing(record)
+    return response
 
 
 # --------------------------------------------------------------------------------------
@@ -202,6 +278,7 @@ def run_inference_stream(parsed: Dict[str, Any], model=None) -> Iterator[Dict[st
     start = time.time()
     if model is None:
         model = _get_model(parsed["model"])
+    cold = _pop_cold_start()
 
     emotions: Dict[str, Any] = {}
     tokens: Optional[int] = None
@@ -231,9 +308,14 @@ def run_inference_stream(parsed: Dict[str, Any], model=None) -> Iterator[Dict[st
         for piece in chunk_text(text):
             yield {"chunk": piece}
 
-    yield {"done": True, **format_response(
-        text, parsed, emotions=emotions,
-        generation_time=time.time() - start, tokens_generated=tokens)}
+    generation_time = time.time() - start
+    record = billing_record(parsed, generation_time, cold)
+    log_billing(record)
+    final = format_response(text, parsed, emotions=emotions,
+                            generation_time=generation_time, tokens_generated=tokens)
+    final.update({"gpu_seconds": record["gpu_seconds"],
+                  "cold_start_seconds": record["cold_start_seconds"]})
+    yield {"done": True, **final}
 
 
 def stream_handler(event: Dict[str, Any], model=None) -> Iterator[Dict[str, Any]]:

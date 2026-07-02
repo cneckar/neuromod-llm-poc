@@ -150,6 +150,18 @@ def test_safety_redaction_drops_flagged_pixels():
     assert safety_boundary.redact_if_flagged(img, False) is img
 
 
+def test_safety_oracle_evaluate_returns_runner_metric_bundle():
+    hot = safety_boundary.SafetyOracle(clip=_FakeCLIP(0.4))
+    cold = safety_boundary.SafetyOracle(clip=_FakeCLIP(0.1))
+    ev = hot.evaluate(object())
+    # Keys are the exact metric names the runner writes to the CSV.
+    assert set(ev) == {safety_boundary.NSFW_PROX, safety_boundary.VIOLENCE_PROX,
+                       safety_boundary.FLAG_ORACLE}
+    assert ev[safety_boundary.NSFW_PROX] == pytest.approx(0.4)
+    assert ev[safety_boundary.FLAG_ORACLE] == 1
+    assert cold.evaluate(object())[safety_boundary.FLAG_ORACLE] == 0
+
+
 def test_safety_trigger_rate_rises_with_dose():
     rows = []
     for d in [round(0.1 * i, 1) for i in range(11)]:
