@@ -80,6 +80,52 @@ Response mirrors the existing `ChatResponse` (`response`, `emotions`, `pack_appl
 `demo/chat.py` work against it with only a URL change. Select a non-default model by adding
 `"model": "gpt-oss-120b"` (alias) to the `input`.
 
+## Serving gpt-oss-120b (H200 / MXFP4)
+
+- **Hardware:** gpt-oss-120b ships **MXFP4** weights (~63 GB). MXFP4 runs natively only on
+  **Hopper (H100/H200)** — a 140 GB H200 fits it comfortably. On non-Hopper hardware Transformers
+  dequantizes to bf16 (~240 GB) and will OOM, so keep it on an H200.
+- **Deps:** the image already pins `transformers>=4.55`, `kernels`, `triton>=3.1` (required for the
+  MXFP4 kernels). `model_support.py` detects gpt-oss and skips bitsandbytes automatically.
+- **Weights on the network volume:** bake the MXFP4 checkpoint onto the volume once
+  (`huggingface-cli download openai/gpt-oss-120b`) and set `HF_HOME=/runpod-volume/hf` so a
+  cold start doesn't re-pull 63 GB. Config: `runpod.endpoint.gpt-oss-120b.json` (`MODEL_NAME=openai/gpt-oss-120b`).
+- **Neuromod validity:** the committed steering vectors are from a different model and get
+  padded/truncated for gpt-oss (so the steering component is a no-op until regenerated). Run the
+  `steering` job below **once** for this model before trusting pack effects.
+
+## Server-side jobs — run the whole study serverless (no pod)
+
+The handler routes on an `input.task` field, so heavy work runs **on the warm worker** (which has
+the model in-process with full internals) and results land on the network volume — everything stays
+scale-to-zero. Tasks: `generate` (default), `warmup`, `steering`, `endpoints`.
+
+```bash
+# Regenerate steering vectors for the served model (one-time; writes to the volume):
+curl -s -X POST https://api.runpod.ai/v2/<ENDPOINT_ID>/runsync \
+  -H "Authorization: Bearer $RUNPOD_API_KEY" -H "Content-Type: application/json" \
+  -d '{"input":{"task":"steering","model":"gpt-oss-120b"}}'
+
+# Run the full internal-telemetry endpoint battery for a pack (returns the endpoints JSON inline):
+curl -s -X POST https://api.runpod.ai/v2/<ENDPOINT_ID>/runsync \
+  -H "Authorization: Bearer $RUNPOD_API_KEY" -H "Content-Type: application/json" \
+  -d '{"input":{"task":"endpoints","pack_name":"lsd","model":"gpt-oss-120b"}}'
+```
+
+Or drive it from a laptop (torch-free client — pay only for the worker's GPU-seconds):
+
+```bash
+export RUNPOD_ENDPOINT_ID=... RUNPOD_API_KEY=...
+python scripts/run_remote_study.py --mode steering  --model openai/gpt-oss-120b
+python scripts/run_remote_study.py --mode endpoints --model openai/gpt-oss-120b --packs lsd,cocaine,morphine
+python scripts/run_remote_study.py --mode behavioral --model openai/gpt-oss-120b --packs lsd,cocaine
+```
+
+`--mode endpoints` reproduces the **full** study (Table-1 battery, internal telemetry) via the
+endpoint; `--mode behavioral` is a text-only dose sweep whose CSV feeds
+`analysis/dose_response_stats.py`. Set `STEERING_DIR` / `ENDPOINTS_DIR` env on the endpoint to point
+job outputs at the volume (defaults `/runpod-volume/{steering_vectors,endpoints}`).
+
 ## Acceptance criteria (issue #14) — status
 
 - [x] `handler.py` wraps `LocalModelInterface.generate_text(pack_name=...)`; model loaded once at module scope.

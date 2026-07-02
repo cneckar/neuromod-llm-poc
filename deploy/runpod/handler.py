@@ -26,13 +26,22 @@ Streaming (token-by-token) is intentionally out of scope here; it is Deploy phas
 
 from __future__ import annotations
 
+import glob
 import json
 import os
 import re
+import subprocess
+import sys
 import time
 from typing import Any, Dict, Iterator, List, Optional
 
 DEFAULT_MODEL = os.environ.get("MODEL_NAME", "openai/gpt-oss-20b")
+
+# Repo root (this file is deploy/runpod/handler.py) — server-side jobs shell out from here.
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Persist job artifacts on the RunPod network volume so they survive scale-to-zero.
+STEERING_DIR = os.environ.get("STEERING_DIR", "/runpod-volume/steering_vectors")
+ENDPOINTS_DIR = os.environ.get("ENDPOINTS_DIR", "/runpod-volume/endpoints")
 
 # Model registry (Deploy D2): friendly alias -> HF repo id. These are the switchable
 # endpoints -- the snappy default (20b), the hero (120b, 80GB), and Google's Gemma. Only
@@ -44,6 +53,7 @@ MODEL_REGISTRY = {
     "gpt-oss-120b": "openai/gpt-oss-120b",
     "gemma-3-27b": "google/gemma-3-27b-it",
     "gemma-3-12b": "google/gemma-3-12b-it",
+    "gpt2": "gpt2",  # ungated test model (matches the study's --tier 1 / test-mode default)
 }
 _ALLOWED_HF_IDS = set(MODEL_REGISTRY.values()) | {DEFAULT_MODEL}
 
@@ -122,6 +132,11 @@ def parse_event(event: Dict[str, Any]) -> Dict[str, Any]:
         "temperature": _num("temperature", 1.0),
         "top_p": _num("top_p", 1.0),
         "model": resolve_model(payload.get("model")),
+        # Server-side job routing (default = a normal chat completion).
+        "task": (payload.get("task") or "generate"),
+        "output_dir": payload.get("output_dir"),
+        "layer": payload.get("layer"),
+        "only_tests": payload.get("only_tests"),
     }
 
 
@@ -188,23 +203,25 @@ _COLD_START_SECONDS: Optional[float] = None
 
 
 def _get_model(model_name: str = DEFAULT_MODEL):
-    """Load and cache the model + neuromod interface once per worker.
+    """Load and cache the neuromod-capable model interface once per worker.
 
-    Imports torch / diffusers / neuromod lazily so this module stays importable without a
-    GPU. Reuses ``api.model_manager.ModelManager``, which attaches the neuromod hooks. The
-    time paid to page a (new) model in is recorded for cold-start accounting (Deploy D4).
+    Uses ``LocalModelInterface`` directly (not the legacy ``ModelManager``, whose
+    ``generate_text`` signature drops ``pack_name`` — that path errors on every request and
+    never applies a pack). ``test_mode=False`` forces the real production load (quantization /
+    MXFP4 for gpt-oss), not the small-model test path. Imports torch/neuromod lazily so this
+    module stays importable without a GPU. The model-load time is recorded for cold-start
+    accounting (Deploy D4).
     """
     global _MODEL, _MODEL_NAME, _COLD_START_SECONDS
     if _MODEL is not None and _MODEL_NAME == model_name:
         return _MODEL
 
-    from api.model_manager import ModelManager  # deferred heavy import
+    from api.model_manager import LocalModelInterface  # deferred heavy import
 
     t0 = time.time()
-    manager = ModelManager()
-    manager.load_model(model_name)
+    iface = LocalModelInterface(model_name, model_type="causal", test_mode=False)
     _COLD_START_SECONDS = time.time() - t0
-    _MODEL = manager
+    _MODEL = iface
     _MODEL_NAME = model_name
     return _MODEL
 
@@ -319,8 +336,19 @@ def run_inference_stream(parsed: Dict[str, Any], model=None) -> Iterator[Dict[st
 
 
 def stream_handler(event: Dict[str, Any], model=None) -> Iterator[Dict[str, Any]]:
-    """RunPod generator handler: yields streaming chunks then the final aggregate."""
+    """RunPod generator handler: yields streaming chunks then the final aggregate.
+
+    Non-``generate`` tasks (warmup/steering/endpoints) aren't streaming — they run to
+    completion and yield a single result dict, so they work under this generator registration
+    (STREAMING=1) exactly as under the sync handler.
+    """
     parsed = parse_event(event)
+    if parsed["task"] != "generate":
+        try:
+            yield dispatch_task(parsed, model=model)
+        except Exception as exc:  # pragma: no cover - defensive
+            yield error_response(f"{type(exc).__name__}: {exc}")
+        return
     if not parsed["prompt"]:
         yield error_response("No prompt or messages provided.")
         return
@@ -332,6 +360,94 @@ def stream_handler(event: Dict[str, Any], model=None) -> Iterator[Dict[str, Any]
 
 
 # --------------------------------------------------------------------------------------
+# Server-side jobs (run heavy work ON the warm worker, so the full study stays serverless)
+# --------------------------------------------------------------------------------------
+
+TASKS = ("generate", "warmup", "steering", "endpoints")
+
+
+def build_job_command(task: str, parsed: Dict[str, Any]) -> "tuple[List[str], str]":
+    """Build the argv + output dir for a server-side job. Pure + unit-testable.
+
+    Reuses the existing repo scripts verbatim (no reimplementation): steering-vector
+    regeneration and the internal-telemetry endpoint battery run on the worker (which already
+    has the GPU), writing to the network volume so results persist across scale-to-zero.
+    """
+    model = parsed["model"]
+    if task == "steering":
+        out = parsed.get("output_dir") or STEERING_DIR
+        cmd = [sys.executable, "scripts/generate_steering_vectors.py",
+               "--model", model, "--output-dir", out]
+        if parsed.get("layer") is not None:
+            cmd += ["--layer", str(parsed["layer"])]
+        return cmd, out
+    if task == "endpoints":
+        out = parsed.get("output_dir") or ENDPOINTS_DIR
+        pack = parsed.get("pack_name") or "lsd"
+        cmd = [sys.executable, "scripts/calculate_endpoints.py",
+               "--pack", pack, "--model", model, "--output-dir", out, "--skip-completed"]
+        if parsed.get("only_tests"):
+            cmd += ["--only-tests", *[str(t) for t in parsed["only_tests"]]]
+        return cmd, out
+    raise ValueError(f"no command for task {task!r}")
+
+
+def run_job(task: str, parsed: Dict[str, Any]) -> Dict[str, Any]:
+    """Run a subprocess job on the worker and report produced artifacts (on the volume)."""
+    cmd, out = build_job_command(task, parsed)
+    os.makedirs(out, exist_ok=True)
+    start = time.time()
+    proc = subprocess.run(cmd, cwd=_REPO_ROOT, capture_output=True, text=True)
+    produced = sorted(glob.glob(os.path.join(out, "**", "*"), recursive=True))
+    result = {
+        "ok": proc.returncode == 0,
+        "task": task,
+        "model": parsed["model"],
+        "output_dir": out,
+        "returncode": proc.returncode,
+        "gpu_seconds": round(time.time() - start, 4),
+        "artifacts": [p for p in produced if os.path.isfile(p)][-50:],
+        "stdout_tail": (proc.stdout or "")[-1500:],
+    }
+    if proc.returncode != 0:
+        result["error"] = (proc.stderr or proc.stdout or "").strip()[-1500:]
+    # Return the endpoints JSON inline so the HTTP caller gets the data (files live on the
+    # worker's volume, not the client). Newest matching file for the requested pack.
+    if task == "endpoints" and result["ok"]:
+        pack = parsed.get("pack_name") or "lsd"
+        matches = sorted(glob.glob(os.path.join(out, f"endpoints_{pack}_*.json")))
+        if matches:
+            try:
+                with open(matches[-1]) as fh:
+                    result["endpoints_json"] = json.load(fh)
+            except Exception as exc:
+                result["endpoints_json_error"] = str(exc)
+    log_billing({"model": parsed["model"], "pack": task, "gpu_seconds": result["gpu_seconds"],
+                 "cold_start_seconds": None})
+    return result
+
+
+def run_warmup(parsed: Dict[str, Any]) -> Dict[str, Any]:
+    """Pre-load the model on the worker (charges one cold start, then returns)."""
+    start = time.time()
+    _get_model(parsed["model"])
+    cold = _pop_cold_start()
+    return {"ok": True, "task": "warmup", "model": parsed["model"],
+            "cold_start_seconds": round(cold, 4) if cold else None,
+            "warmup_seconds": round(time.time() - start, 4)}
+
+
+def dispatch_task(parsed: Dict[str, Any], model=None) -> Dict[str, Any]:
+    """Route a non-``generate`` task to its handler. Returns a result dict."""
+    task = parsed["task"]
+    if task == "warmup":
+        return run_warmup(parsed)
+    if task in ("steering", "endpoints"):
+        return run_job(task, parsed)
+    return error_response(f"unknown task: {task!r} (expected one of {TASKS})")
+
+
+# --------------------------------------------------------------------------------------
 # RunPod entrypoints
 # --------------------------------------------------------------------------------------
 
@@ -340,6 +456,8 @@ def handler(event: Dict[str, Any], model=None) -> Dict[str, Any]:
     """RunPod Serverless sync handler: event -> response dict."""
     try:
         parsed = parse_event(event)
+        if parsed["task"] != "generate":
+            return dispatch_task(parsed, model=model)
         if not parsed["prompt"]:
             return error_response("No prompt or messages provided.")
         return run_inference(parsed, model=model)

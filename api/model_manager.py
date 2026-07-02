@@ -233,6 +233,80 @@ class LocalModelInterface(BaseModelInterface):
                     pass
             raise
     
+    def generate_text_stream(self, prompt: str, max_tokens: int = 100,
+                             temperature: float = 1.0, top_p: float = 1.0,
+                             pack_name: str = None, custom_pack: Dict = None,
+                             individual_effects: List[Dict] = None,
+                             multiple_packs: List[str] = None):
+        """Yield generated text token-by-token while neuromodulation stays applied.
+
+        Uses HF ``TextIteratorStreamer`` with ``model.generate`` on a background thread so the
+        neuromod logits processors / steering hooks are active for the *whole* generation (the
+        pack is applied exactly as in ``generate_text``, not bypassed). The RunPod streaming
+        handler auto-detects this method; without it, it falls back to word-chunking the final
+        text. Effects are cleared once the stream is exhausted.
+        """
+        from transformers import TextIteratorStreamer
+        from threading import Thread
+
+        if self.model is None or self.tokenizer is None:
+            raise RuntimeError("Local model not loaded")
+
+        neuromod_applied = False
+        if self.neuromod_tool and any([pack_name, custom_pack, individual_effects, multiple_packs]):
+            try:
+                neuromod_applied = self._apply_neuromodulation(
+                    pack_name=pack_name, custom_pack=custom_pack,
+                    individual_effects=individual_effects, multiple_packs=multiple_packs)
+            except Exception as e:
+                logger.warning(f"Neuromodulation failed, streaming basic generation: {e}")
+                neuromod_applied = False
+
+        inputs = self.tokenizer(prompt, return_tensors="pt", padding=True)
+        if torch.cuda.is_available() and next(self.model.parameters()).is_cuda:
+            inputs = {k: v.cuda() for k, v in inputs.items()}
+        else:
+            inputs = {k: v.cpu() for k, v in inputs.items()}
+
+        logits_processors = []
+        gen_kwargs = {}
+        if self.neuromod_tool:
+            self.neuromod_tool.update_token_position(0)
+            logits_processors = self.neuromod_tool.get_logits_processors()
+            gen_kwargs = self.neuromod_tool.get_generation_kwargs()
+
+        streamer = TextIteratorStreamer(self.tokenizer, skip_prompt=True, skip_special_tokens=True)
+        generation_kwargs = dict(
+            **inputs, max_new_tokens=max_tokens, temperature=temperature, do_sample=True,
+            pad_token_id=self.tokenizer.eos_token_id, eos_token_id=self.tokenizer.eos_token_id,
+            repetition_penalty=1.1, no_repeat_ngram_size=2,
+            logits_processor=logits_processors, streamer=streamer, **gen_kwargs)
+
+        errors: List[Exception] = []
+
+        def _run():
+            try:
+                with torch.no_grad():
+                    self.model.generate(**generation_kwargs)
+            except Exception as e:  # surface to the consumer; don't hang the streamer
+                errors.append(e)
+
+        thread = Thread(target=_run, daemon=True)
+        thread.start()
+        try:
+            for chunk in streamer:
+                if chunk:
+                    yield chunk
+        finally:
+            thread.join()
+            if neuromod_applied and self.neuromod_tool:
+                try:
+                    self.neuromod_tool.clear()
+                except Exception as e:
+                    logger.warning(f"Failed to clear neuromodulation effects: {e}")
+        if errors:
+            raise errors[0]
+
     def _apply_neuromodulation(self, pack_name: str = None, custom_pack: Dict = None,
                                individual_effects: List[Dict] = None,
                                multiple_packs: List[str] = None) -> bool:
@@ -581,6 +655,14 @@ class VertexAIInterface(BaseModelInterface):
         except Exception as e:
             logger.error(f"Failed to get available effects: {e}")
             return []
+
+# RunPod HTTP client lives in a torch-free module so it can be used from a laptop without
+# loading any model; re-exported here for callers that already have the heavy stack imported.
+try:
+    from api.runpod_client import RunPodModelInterface  # noqa: F401
+except Exception:  # pragma: no cover - optional
+    RunPodModelInterface = None
+
 
 class EnhancedModelManager:
     """Enhanced model manager supporting both local and Vertex AI models"""
