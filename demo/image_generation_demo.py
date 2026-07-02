@@ -192,6 +192,7 @@ class ImageNeuromodInterface:
         self.pipeline = None
         self.neuromod_tool = None
         self.registry = None
+        self._steer = None  # active UNet activation-steering config (None = off)
         self.device = "cpu"  # Default to CPU for compatibility
         
         # Check for GPU availability
@@ -257,22 +258,38 @@ class ImageNeuromodInterface:
                 pipeline_class = StableDiffusionPipeline
                 logger.info("Using StableDiffusionPipeline for standard model")
             
-            # Load pipeline with memory optimizations
+            # fp16 on GPU (halves VRAM: SDXL is ~14GB in fp32 -> ~7GB in fp16, fitting a
+            # 15GB T4), fp32 on CPU for compatibility.
+            load_dtype = torch.float16 if self.device == "cuda" else torch.float32
             self.pipeline = pipeline_class.from_pretrained(
                 self.model_name,
-                dtype=torch.float32,  # Use float32 for CPU compatibility
+                torch_dtype=load_dtype,
                 use_safetensors=True,
                 safety_checker=None,  # Disable safety checker for research
                 requires_safety_checker=False
             )
-            
+
             # Move to device
             self.pipeline = self.pipeline.to(self.device)
-            
-            # Enable memory optimizations
+
+            # Enable memory optimizations (keep the peak well under small-GPU budgets).
             if self.device == "cuda":
                 self.pipeline.enable_attention_slicing()
-                self.pipeline.enable_vae_slicing()
+                try:
+                    self.pipeline.enable_vae_slicing()
+                except Exception:
+                    pass
+                try:
+                    self.pipeline.enable_vae_tiling()
+                except Exception:
+                    pass
+                # SDXL's VAE is unstable in fp16 (produces NaN/black images). Since
+                # generate_image() calls vae.decode() manually (bypassing diffusers'
+                # auto-upcast), keep the VAE in fp32 for numerically stable decoding.
+                try:
+                    self.pipeline.vae = self.pipeline.vae.to(dtype=torch.float32)
+                except Exception:
+                    pass
             
             logger.info("Stable Diffusion pipeline loaded successfully")
             
@@ -362,7 +379,31 @@ class ImageNeuromodInterface:
             effects = pack.effects
         else:
             effects = pack.get('effects', [])
-        
+
+        # Build the REAL latent-steering config: UNet activation steering (directional
+        # steering + entropy injection) is the genuine neuromodulation mechanism, unlike the
+        # sampler-knob tweaks below which a distilled model largely ignores.
+        try:
+            from neuromod.visual_steering import stable_seed
+            steer_scale = 0.0
+            noise_scale = 0.0
+            for effect in effects:
+                etype = effect.effect if hasattr(effect, 'effect') else effect.get('effect', '')
+                w = (effect.weight if hasattr(effect, 'weight') else effect.get('weight', 0.0)) * intensity
+                if etype == 'steering':
+                    steer_scale += w
+                elif etype in ('temperature', 'entropy', 'exponential_decay_kv'):
+                    noise_scale += w
+            pack_name = getattr(pack, 'name', None) or (pack.get('name') if isinstance(pack, dict) else '') or ''
+            self._steer = {
+                'steer_scale': float(min(1.0, steer_scale)),
+                'noise_scale': float(min(1.0, noise_scale)),
+                'direction_seed': stable_seed(pack_name),
+            }
+        except Exception as e:
+            logger.warning(f"Could not build latent-steering config: {e}")
+            self._steer = None
+
         # Check if this is a Turbo model (uses different defaults)
         is_turbo = "turbo" in self.model_name.lower()
         
@@ -428,24 +469,37 @@ class ImageNeuromodInterface:
                     effect_type = effect.get('effect', '')
                     weight = effect.get('weight', 0.0) * intensity
                 
-                # Map text generation effects to image generation parameters
+                # Map text generation effects to image generation parameters.
+                # Use .get()/guards: Turbo base_params omit guidance_scale/eta, so a bare
+                # key access would KeyError and silently discard the whole pack.
                 if effect_type == 'temperature':
-                    # Temperature affects guidance scale (higher temp = lower guidance)
-                    self.generation_params['guidance_scale'] *= (1.0 - weight * 0.3)
-                    
+                    # Temperature affects guidance scale (higher temp = lower guidance).
+                    # On Turbo (no guidance) it also elaborates via extra steps.
+                    if 'guidance_scale' in self.generation_params:
+                        self.generation_params['guidance_scale'] *= (1.0 - weight * 0.3)
+                    elif is_turbo:
+                        base_steps = self.generation_params.get('num_inference_steps', 1)
+                        self.generation_params['num_inference_steps'] = int(base_steps + round(weight * 6))
+
                 elif effect_type == 'entropy':
                     # Entropy affects number of steps (higher entropy = more steps)
                     self.generation_params['num_inference_steps'] = int(
-                        self.generation_params['num_inference_steps'] * (1.0 + weight * 0.5)
+                        self.generation_params.get('num_inference_steps', 1) * (1.0 + weight * 0.5)
                     )
-                    
+
                 elif effect_type == 'attention':
                     # Attention effects can influence the overall strength
-                    self.generation_params['strength'] *= (1.0 + weight * 0.2)
-                    
+                    self.generation_params['strength'] = (
+                        self.generation_params.get('strength', 1.0) * (1.0 + weight * 0.2)
+                    )
+
                 elif effect_type == 'steering':
-                    # Steering affects eta (noise level)
+                    # Steering affects eta (noise level); on Turbo, nudge steps so the
+                    # effect is not a silent no-op (Turbo ignores eta).
                     self.generation_params['eta'] = min(1.0, weight * 0.5)
+                    if is_turbo:
+                        base_steps = self.generation_params.get('num_inference_steps', 1)
+                        self.generation_params['num_inference_steps'] = int(base_steps + round(weight * 4))
         
         # Clamp parameters to reasonable ranges
         if not is_turbo and 'guidance_scale' in self.generation_params:
@@ -540,13 +594,25 @@ class ImageNeuromodInterface:
                     pipeline_kwargs['eta'] = gen_params['eta']
                 
                 # 1. Generate Latents (Pre-Convolution)
-                # We use output_type="latent" to get the raw VAE input
+                # We use output_type="latent" to get the raw VAE input.
+                # Real neuromodulation: steer the UNet's activations during denoising
+                # (directional steering + entropy injection), dose-scaled per pack.
+                from contextlib import nullcontext
+                from neuromod.visual_steering import UNetActivationSteering
+                steer_cfg = getattr(self, '_steer', None)
+                if (steer_cfg and (steer_cfg.get('steer_scale') or steer_cfg.get('noise_scale'))
+                        and hasattr(self.pipeline, 'unet')):
+                    steer_ctx = UNetActivationSteering(self.pipeline.unet, **steer_cfg)
+                    logger.info(f"UNet activation steering: {steer_cfg}")
+                else:
+                    steer_ctx = nullcontext()
                 try:
-                    output_latents = self.pipeline(
-                        prompt=enhanced_prompt,
-                        output_type="latent",
-                        **pipeline_kwargs
-                    ).images  # This is a tensor [1, 4, 64, 64] or [1, 4, H, W]
+                    with steer_ctx:
+                        output_latents = self.pipeline(
+                            prompt=enhanced_prompt,
+                            output_type="latent",
+                            **pipeline_kwargs
+                        ).images  # This is a tensor [1, 4, 64, 64] or [1, 4, H, W]
                     
                     # 2. Manually Decode to Image (Un-Convolution)
                     # Scale latents as required by SD VAE
@@ -558,7 +624,11 @@ class ImageNeuromodInterface:
                         scaling_factor = 0.18215
                     
                     latents_scaled = output_latents / scaling_factor
-                    
+
+                    # Match the VAE dtype (fp32 on GPU; see _load_pipeline) so the manual
+                    # decode is numerically stable even when the UNet ran in fp16.
+                    latents_scaled = latents_scaled.to(self.pipeline.vae.dtype)
+
                     # Decode using VAE
                     image_tensor = self.pipeline.vae.decode(latents_scaled, return_dict=False)[0]
                     
@@ -614,7 +684,10 @@ class ImageNeuromodInterface:
         """Clear any applied neuromodulation effects"""
         if self.neuromod_tool:
             self.neuromod_tool.clear()
-        
+
+        # Turn off UNet activation steering so it doesn't leak into the next generation.
+        self._steer = None
+
         # Reset generation parameters to defaults
         self.generation_params = {
             'guidance_scale': 7.5,

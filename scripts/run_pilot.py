@@ -96,12 +96,18 @@ def run_pilot(model: str, seeds: int, intensities: List[float], outdir: str,
     seed_list = list(range(seeds))
     signals = []
 
-    for cfg in THREADS:
+    # Load the model ONCE and reuse it across all threads (a fresh ModelGenerator per
+    # thread would reload ~13GB of weights each time -- slow, and the silent reload gap
+    # looks like a hang).
+    generator = (runner.DryRunGenerator(prompt) if dry_run
+                 else runner.ModelGenerator(model_name=model, prompt=prompt))
+
+    for i, cfg in enumerate(THREADS, 1):
+        print(f"[pilot] Thread {i}/{len(THREADS)}: {cfg['key']} "
+              f"(packs={cfg['packs']}, seeds={len(seed_list)})", flush=True)
         csv_path = os.path.join(outdir, f"{cfg['key']}.csv")
-        gen = (runner.DryRunGenerator(prompt) if dry_run
-               else runner.ModelGenerator(model_name=model, prompt=prompt))
         runner.run(
-            generator=gen, packs=cfg["packs"], intensities=intensities, seeds=seed_list,
+            generator=generator, packs=cfg["packs"], intensities=intensities, seeds=seed_list,
             prompt=prompt, csv_path=csv_path, concepts=cfg.get("concepts"),
             diversity_method="ssim" if dry_run else "auto", verbose=False,
         )

@@ -28,9 +28,16 @@ import argparse
 import base64
 import io
 import os
+import sys
 from typing import Dict, List, Optional, Sequence
 
 import numpy as np
+
+# Ensure the repo root is importable so `from demo.image_generation_demo import ...` works
+# even when this file is run directly as `python demo/vitals_monitor.py`.
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
 METRIC_LABELS = {
     "clip_prompt_similarity": "CLIP → prompt (semantic anchor)",
