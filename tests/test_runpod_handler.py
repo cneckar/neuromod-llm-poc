@@ -254,6 +254,14 @@ def test_stream_handler_yields_single_result_for_task(monkeypatch):
     assert out == [{"ok": True, "task": "steering"}]
 
 
+def test_diag_task_reports_runtime(monkeypatch):
+    out = h.dispatch_task(h.parse_event({"task": "diag", "prompt": "x"}))
+    assert out["task"] == "diag" and out["ok"] is True
+    # Reports package versions (or "(not installed)") + volume presence, without loading a model.
+    assert "transformers" in out and "torch" in out and "volume_mounted" in out
+    assert h.parse_event({"input": {"task": "diag"}})["task"] == "diag"
+
+
 def test_run_warmup_uses_get_model(monkeypatch):
     calls = {}
     monkeypatch.setattr(h, "_get_model", lambda name: calls.setdefault("name", name))

@@ -363,7 +363,36 @@ def stream_handler(event: Dict[str, Any], model=None) -> Iterator[Dict[str, Any]
 # Server-side jobs (run heavy work ON the warm worker, so the full study stays serverless)
 # --------------------------------------------------------------------------------------
 
-TASKS = ("generate", "warmup", "steering", "endpoints")
+TASKS = ("generate", "warmup", "steering", "endpoints", "diag")
+
+
+def run_diag(parsed: Dict[str, Any]) -> Dict[str, Any]:
+    """Report the worker's runtime versions + GPU (no model load) for remote debugging.
+
+    The gpt-oss MXFP4 path is version-sensitive (transformers / kernels / triton must be a
+    compatible set); this lets you read exactly what's installed over HTTP on a shell-less
+    serverless box. Optionally does a cheap ``AutoConfig`` load to surface config-level errors.
+    """
+    info: Dict[str, Any] = {"ok": True, "task": "diag", "model": parsed["model"],
+                            "steering_dir": STEERING_DIR, "endpoints_dir": ENDPOINTS_DIR}
+    try:
+        import importlib.metadata as md
+        for pkg in ("transformers", "kernels", "triton", "torch", "accelerate", "bitsandbytes"):
+            try:
+                info[pkg] = md.version(pkg)
+            except Exception:
+                info[pkg] = "(not installed)"
+    except Exception as exc:  # pragma: no cover
+        info["metadata_error"] = str(exc)
+    try:
+        import torch
+        info["cuda_available"] = bool(torch.cuda.is_available())
+        info["gpu"] = torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
+    except Exception as exc:
+        info["torch_error"] = str(exc)
+    # Volume presence — confirms the network volume is actually mounted.
+    info["volume_mounted"] = os.path.isdir("/runpod-volume")
+    return info
 
 
 def build_job_command(task: str, parsed: Dict[str, Any]) -> "tuple[List[str], str]":
@@ -440,6 +469,8 @@ def run_warmup(parsed: Dict[str, Any]) -> Dict[str, Any]:
 def dispatch_task(parsed: Dict[str, Any], model=None) -> Dict[str, Any]:
     """Route a non-``generate`` task to its handler. Returns a result dict."""
     task = parsed["task"]
+    if task == "diag":
+        return run_diag(parsed)
     if task == "warmup":
         return run_warmup(parsed)
     if task in ("steering", "endpoints"):
