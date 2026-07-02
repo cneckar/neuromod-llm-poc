@@ -1,0 +1,23 @@
+{
+  "_comment": "RunPod Serverless endpoint for the HERO text model (gpt-oss-120b) -- Deploy D2. Same scale-to-zero contract as the 20b default; single 80GB GPU. Set MODEL_NAME so the worker's default matches, and keep workersMin=0.",
+  "name": "neuromod-gpt-oss-120b",
+  "templateImage": "<your-registry>/neuromod-runpod:latest",
+  "gpuTypeIds": ["NVIDIA A100 80GB PCIe", "NVIDIA H100 80GB HBM3"],
+  "workersMin": 0,
+  "workersMax": 2,
+  "idleTimeout": 5,
+  "flashboot": true,
+  "scalerType": "QUEUE_DELAY",
+  "networkVolumeId": "<volume-with-hf-weights>",
+  "env": {
+    "MODEL_NAME": "openai/gpt-oss-120b",
+    "HF_HOME": "/runpod-volume/hf",
+    "HUGGINGFACE_TOKEN": "<secret>",
+    "WARM_ON_START": "0"
+  },
+  "_notes": {
+    "gpuTypeIds": "120b needs an 80GB card (4-bit still ~65GB+activations). H100 gives the best cold-start.",
+    "workersMax": "Capped at 2 -> hero endpoint can't run away with spend (Deploy D4).",
+    "idleTimeout": "Larger cold-start here; consider bumping idleTimeout to 15-30s if traffic is bursty."
+  }
+}
