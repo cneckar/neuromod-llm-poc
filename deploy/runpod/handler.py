@@ -387,9 +387,18 @@ def run_diag(parsed: Dict[str, Any]) -> Dict[str, Any]:
     try:
         import torch
         info["cuda_available"] = bool(torch.cuda.is_available())
+        info["torch_cuda_build"] = torch.version.cuda  # e.g. "12.8" — must be runnable by the host driver
         info["gpu"] = torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
     except Exception as exc:
         info["torch_error"] = str(exc)
+    try:
+        # Host NVIDIA driver — if torch_cuda_build needs a newer CUDA than this driver supports,
+        # cuda_available will be False (the gpt-oss-120b failure mode: cu130 torch on a 12.8 driver).
+        out = subprocess.run(["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"],
+                             capture_output=True, text=True, timeout=15)
+        info["driver_version"] = (out.stdout or "").strip().splitlines()[0] if out.stdout else None
+    except Exception:
+        info["driver_version"] = None
     # Volume presence — confirms the network volume is actually mounted.
     info["volume_mounted"] = os.path.isdir("/runpod-volume")
     return info
