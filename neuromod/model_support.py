@@ -921,7 +921,21 @@ class ModelSupportManager:
             logger.info("DEVICE MODE: CPU (No GPU available)")
             logger.info(f"CPU Memory Available: {self.system_info.available_memory_gb:.2f} GB / {self.system_info.total_memory_gb:.2f} GB")
             logger.info("=" * 60)
-        
+
+        # Fail fast: a pre-quantized model (gpt-oss MXFP4) CANNOT be CPU-dequantized sanely — a
+        # 120B model would balloon to ~240GB and OOM. If GPUs exist but PyTorch can't see CUDA,
+        # this is a broken torch/CUDA build (see deploy/runpod/Dockerfile), not something to limp
+        # past on CPU. Raising here turns a money-burning cold-start crash-loop into an instant,
+        # legible error (and surfaces the true cause instead of a downstream MXFP4 kernel error).
+        if is_pre_quantized and not cuda_available and self.system_info.gpu_count > 0:
+            raise RuntimeError(
+                f"{config.name} uses pre-quantized (MXFP4) weights that require CUDA on a Hopper "
+                f"GPU, but PyTorch reports CUDA unavailable despite {self.system_info.gpu_count} "
+                f"GPU(s) via nvidia-smi (torch.version.cuda="
+                f"{getattr(getattr(torch, 'version', None), 'cuda', None)}). Refusing to "
+                f"CPU-dequantize a large quantized model. Fix the CUDA/torch build "
+                f"(rebuild deploy/runpod/Dockerfile; run the `diag` task to confirm torch+CUDA).")
+
         # Load model
         load_kwargs = {
             'trust_remote_code': config.trust_remote_code,
