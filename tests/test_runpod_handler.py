@@ -33,9 +33,9 @@ class FakeModel:
         self.emotions = emotions or {"joy": 0.5}
         self.calls = []
 
-    def generate_text(self, prompt, max_tokens, temperature, top_p, pack_name):
+    def generate_text(self, prompt, max_tokens, temperature, top_p, pack_name, intensity=0.5):
         self.calls.append(dict(prompt=prompt, max_tokens=max_tokens, temperature=temperature,
-                               top_p=top_p, pack_name=pack_name))
+                               top_p=top_p, pack_name=pack_name, intensity=intensity))
         return {"text": self.text, "emotions": self.emotions, "tokens_generated": 5}
 
 
@@ -83,6 +83,7 @@ def test_run_inference_passes_pack_through():
     parsed = h.parse_event({"prompt": "hi", "pack_name": "lsd", "intensity": 0.8, "max_tokens": 64})
     r = h.run_inference(parsed, model=model)
     assert model.calls[0]["pack_name"] == "lsd"
+    assert model.calls[0]["intensity"] == 0.8  # dose must reach the model (was silently dropped)
     assert model.calls[0]["max_tokens"] == 64
     assert r["response"] == "Hello from the model."
     assert r["emotions"] == {"joy": 0.5}
@@ -113,7 +114,7 @@ class FakeStreamModel:
     def __init__(self, chunks):
         self.chunks = chunks
 
-    def generate_text_stream(self, prompt, max_tokens, temperature, top_p, pack_name):
+    def generate_text_stream(self, prompt, max_tokens, temperature, top_p, pack_name, intensity=0.5):
         for c in self.chunks:
             yield c
 

@@ -120,15 +120,16 @@ class LocalModelInterface(BaseModelInterface):
             logger.info(f"Neuromodulation not available: {e}")
             self.neuromod_tool = None
     
-    def generate_text(self, prompt: str, max_tokens: int = 100, 
+    def generate_text(self, prompt: str, max_tokens: int = 100,
                      temperature: float = 1.0, top_p: float = 1.0,
                      pack_name: str = None, custom_pack: Dict = None,
                      individual_effects: List[Dict] = None,
-                     multiple_packs: List[str] = None) -> str:
+                     multiple_packs: List[str] = None,
+                     intensity: float = 0.5) -> str:
         """Generate text using local model with optional neuromodulation support"""
         if self.model is None or self.tokenizer is None:
             raise RuntimeError("Local model not loaded")
-        
+
         try:
             # Apply neuromodulation effects if available
             neuromod_applied = False
@@ -138,7 +139,8 @@ class LocalModelInterface(BaseModelInterface):
                         pack_name=pack_name,
                         custom_pack=custom_pack,
                         individual_effects=individual_effects,
-                        multiple_packs=multiple_packs
+                        multiple_packs=multiple_packs,
+                        intensity=intensity,
                     )
                     
                     if neuromod_applied:
@@ -178,10 +180,12 @@ class LocalModelInterface(BaseModelInterface):
                     outputs = self.model.generate(**inputs, **gen_params)
             
             # Decode only the newly generated tokens (robust with the chat template, where the
-            # decoded text no longer starts with the raw prompt string).
-            generated_text = self.tokenizer.decode(
-                outputs[0][prompt_len:], skip_special_tokens=True).strip()
-            
+            # decoded text no longer starts with the raw prompt string). For harmony/reasoning
+            # models (gpt-oss) the raw stream is multi-channel (analysis CoT + final answer);
+            # return just the final channel so the chat isn't polluted with the train of thought.
+            new_tokens = outputs[0][prompt_len:]
+            generated_text, reasoning = self._decode_final_channel(new_tokens)
+
             # Track emotions for the generated response
             emotion_data = self._track_emotions(generated_text, prompt)
             
@@ -193,10 +197,11 @@ class LocalModelInterface(BaseModelInterface):
                 except Exception as e:
                     logger.warning(f"Failed to clear neuromodulation effects: {e}")
             
-            # Return both text and emotion data
+            # Return both text and emotion data (+ reasoning channel if the model exposed one)
             return {
                 "text": generated_text,
-                "emotions": emotion_data
+                "emotions": emotion_data,
+                "reasoning": reasoning,
             }
             
         except Exception as e:
@@ -231,11 +236,50 @@ class LocalModelInterface(BaseModelInterface):
             inputs = {k: v.cpu() for k, v in inputs.items()}
         return inputs, int(inputs["input_ids"].shape[1])
 
+    def _decode_final_channel(self, new_tokens):
+        """Decode generated tokens, returning (final_text, reasoning_text).
+
+        Harmony/reasoning models (gpt-oss) emit multiple channels in one stream:
+        ``<|channel|>analysis<|message|>{CoT}<|end|>...<|channel|>final<|message|>{answer}``.
+        Decoding with skip_special_tokens=True strips the ``<|channel|>`` markers but leaves the
+        analysis CoT concatenated in front of the answer (the "analysis...final..." mess). So we
+        decode WITH the special tokens, pull out just the ``final`` channel as the reply, and hand
+        back the ``analysis`` channel separately. Non-harmony models (gpt2, Gemma) have no channel
+        markers, so we fall back to the normal clean decode.
+        """
+        import re
+        tok = self.tokenizer
+        raw = tok.decode(new_tokens, skip_special_tokens=False)
+
+        if "<|channel|>" in raw or "<|message|>" in raw:
+            # Content of a channel runs from its <|message|> to the next control token.
+            def _grab(channel):
+                m = re.search(
+                    r"<\|channel\|>\s*" + channel +
+                    r"\b[^<]*<\|message\|>(.*?)(?=<\|(?:end|return|call|channel|start)\|>|$)",
+                    raw, re.DOTALL)
+                return m.group(1).strip() if m else ""
+
+            final = _grab("final")
+            reasoning = _grab("analysis")
+            if not final:
+                # Model didn't emit a 'final' channel (e.g. stopped mid-analysis). Fall back to the
+                # last channel's message, else the clean decode.
+                msgs = re.findall(r"<\|message\|>(.*?)(?=<\|(?:end|return|call|channel|start)\|>|$)",
+                                  raw, re.DOTALL)
+                final = (msgs[-1].strip() if msgs else
+                         tok.decode(new_tokens, skip_special_tokens=True).strip())
+            return final, (reasoning or None)
+
+        # No harmony channels — normal model.
+        return tok.decode(new_tokens, skip_special_tokens=True).strip(), None
+
     def generate_text_stream(self, prompt: str, max_tokens: int = 100,
                              temperature: float = 1.0, top_p: float = 1.0,
                              pack_name: str = None, custom_pack: Dict = None,
                              individual_effects: List[Dict] = None,
-                             multiple_packs: List[str] = None):
+                             multiple_packs: List[str] = None,
+                             intensity: float = 0.5):
         """Yield generated text token-by-token while neuromodulation stays applied.
 
         Uses HF ``TextIteratorStreamer`` with ``model.generate`` on a background thread so the
@@ -255,7 +299,8 @@ class LocalModelInterface(BaseModelInterface):
             try:
                 neuromod_applied = self._apply_neuromodulation(
                     pack_name=pack_name, custom_pack=custom_pack,
-                    individual_effects=individual_effects, multiple_packs=multiple_packs)
+                    individual_effects=individual_effects, multiple_packs=multiple_packs,
+                    intensity=intensity)
             except Exception as e:
                 logger.warning(f"Neuromodulation failed, streaming basic generation: {e}")
                 neuromod_applied = False
@@ -316,20 +361,27 @@ class LocalModelInterface(BaseModelInterface):
 
     def _apply_neuromodulation(self, pack_name: str = None, custom_pack: Dict = None,
                                individual_effects: List[Dict] = None,
-                               multiple_packs: List[str] = None) -> bool:
+                               multiple_packs: List[str] = None,
+                               intensity: float = 0.5) -> bool:
         """Apply neuromodulation effects to the local model"""
         if not self.neuromod_tool:
             logger.warning("Neuromodulation tool not available")
             return False
-        
+
         try:
             # Clear any existing effects first
             self.neuromod_tool.clear()
-            
-            # Method 1: Single predefined pack
+
+            # Method 1: Single predefined pack. Use apply(pack_name, intensity=...) — the tool's
+            # real entry point that scales the pack by the requested dose. (The old load_pack()
+            # call didn't exist on NeuromodTool, so it raised and got swallowed below, silently
+            # generating with NO neuromodulation and ignoring intensity entirely.)
             if pack_name:
-                self.neuromod_tool.load_pack(pack_name)
-                logger.info(f"Applied predefined pack: {pack_name}")
+                result = self.neuromod_tool.apply(pack_name, intensity=intensity)
+                if isinstance(result, dict) and not result.get("ok", True):
+                    logger.warning(f"Pack '{pack_name}' apply reported not ok: {result.get('error')}")
+                    return False
+                logger.info(f"Applied predefined pack: {pack_name} @ intensity={intensity}")
             
             # Method 2: Custom pack definition
             elif custom_pack:
