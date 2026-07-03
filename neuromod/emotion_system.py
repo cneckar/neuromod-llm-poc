@@ -48,16 +48,21 @@ class EmotionSystem:
     and maps them to 7 latent affect axes, which then determine 12 discrete emotions.
     """
     
-    def __init__(self, window_size: int = 64, vector_dir: str = "outputs/steering_vectors"):
+    def __init__(self, window_size: int = 64, vector_dir: str = None, model_name: str = None):
         """
         Initialize the emotion system.
-        
+
         Args:
             window_size: Number of tokens to use for sliding window averages
-            vector_dir: Directory containing Persona Vector steering vectors
+            vector_dir: Directory containing Persona Vector steering vectors. Defaults to the
+                STEERING_DIR env (else outputs/steering_vectors), matching the pack loader.
+            model_name: Model id used to pick per-model persona vectors (falls back to the
+                MODEL_NAME env in the resolver). Persona vectors are model-specific.
         """
+        import os
         self.window_size = window_size
-        self.vector_dir = vector_dir
+        self.vector_dir = vector_dir or os.environ.get("STEERING_DIR", "outputs/steering_vectors")
+        self.model_name = model_name
         
         # Sliding window buffers for probe statistics
         self.surprisal_buffer = deque(maxlen=window_size)
@@ -170,47 +175,43 @@ class EmotionSystem:
             'fawning': 'compliance'     # Maps to 'sycophantic' or 'compliance' vector
         }
         
-        vector_dir = Path(self.vector_dir)
-        
+        # Resolve persona vectors the same model-aware way as steering vectors: prefer a
+        # per-model subdir (<vector_dir>/<model_slug>/), then the flat dir.
+        try:
+            from .effects import resolve_steering_vector_path
+        except Exception:
+            resolve_steering_vector_path = None
+
+        missing = []
         for emotion_name, vector_name in vector_mapping.items():
             vector = None
-            
-            # Try to load vector from disk
-            for layer_idx in [-1, -2, 0]:
-                candidate_path = vector_dir / f"{vector_name}_layer{layer_idx}.pt"
-                if candidate_path.exists():
-                    try:
-                        vector = torch.load(candidate_path, map_location='cpu')
-                        if isinstance(vector, torch.Tensor) and len(vector.shape) == 1:
-                            # Normalize vector
-                            norm = torch.norm(vector)
-                            if norm > 0:
-                                vector = vector / norm
-                            logger.info(f"Loaded Persona Vector for {emotion_name} from {candidate_path}")
-                            break
-                    except Exception as e:
-                        logger.warning(f"Failed to load vector from {candidate_path}: {e}")
-                        continue
-            
-            # If not found, try without layer suffix
-            if vector is None:
-                candidate_path = vector_dir / f"{vector_name}.pt"
-                if candidate_path.exists():
-                    try:
-                        vector = torch.load(candidate_path, map_location='cpu')
-                        if isinstance(vector, torch.Tensor) and len(vector.shape) == 1:
-                            norm = torch.norm(vector)
-                            if norm > 0:
-                                vector = vector / norm
-                            logger.info(f"Loaded Persona Vector for {emotion_name} from {candidate_path}")
-                    except Exception as e:
-                        logger.warning(f"Failed to load vector from {candidate_path}: {e}")
-            
+            candidate_path = None
+            if resolve_steering_vector_path is not None:
+                candidate_path = resolve_steering_vector_path(
+                    self.vector_dir, vector_name, model_name=self.model_name)
+            if candidate_path is not None:
+                try:
+                    loaded = torch.load(candidate_path, map_location='cpu')
+                    if isinstance(loaded, torch.Tensor) and len(loaded.shape) == 1:
+                        norm = torch.norm(loaded)
+                        vector = loaded / norm if norm > 0 else loaded
+                        logger.info(f"Loaded Persona Vector for {emotion_name} from {candidate_path}")
+                except Exception as e:
+                    logger.warning(f"Failed to load vector from {candidate_path}: {e}")
+
             # Store vector (None if not found - will skip projection)
             self.monitor_vectors[emotion_name] = vector
-            
             if vector is None:
-                logger.info(f"Persona Vector for {emotion_name} not found. Vector projection will be skipped.")
+                missing.append(emotion_name)
+
+        # Persona-vector monitoring is an OPTIONAL real-time trait-projection feature that needs
+        # vectors (aggression/optimistic/sedation/compliance) generated for this model; the repo
+        # doesn't ship them, so this is expected. Log once (not per-trait) at debug to avoid noise.
+        if missing:
+            logger.debug(
+                "Persona-vector monitoring disabled for %d trait(s) (%s): vectors not found under "
+                "%s. Text-based emotion tracking is unaffected.",
+                len(missing), ", ".join(missing), self.vector_dir)
     
     def compute_vector_projection(self, hidden_state: torch.Tensor) -> Dict[str, float]:
         """
