@@ -147,15 +147,11 @@ class LocalModelInterface(BaseModelInterface):
                     logger.warning(f"Neuromodulation failed, continuing with basic generation: {e}")
                     neuromod_applied = False
             
-            # Tokenize input with simple, safe approach (same as working neuromod tests)
-            inputs = self.tokenizer(prompt, return_tensors="pt", padding=True)
-            
-            # Move inputs to the same device as the model
-            if torch.cuda.is_available() and next(self.model.parameters()).is_cuda:
-                inputs = {k: v.cuda() for k, v in inputs.items()}
-            else:
-                inputs = {k: v.cpu() for k, v in inputs.items()}
-            
+            # Tokenize, applying the model's chat template when it has one (REQUIRED for
+            # instruct/reasoning models like gpt-oss — its harmony format is bypassed by raw
+            # tokenization, which yields empty output after special tokens are stripped).
+            inputs, prompt_len = self._prepare_inputs(prompt)
+
             # Get neuromodulation effects if available
             logits_processors = []
             gen_kwargs = {}
@@ -181,12 +177,10 @@ class LocalModelInterface(BaseModelInterface):
                 if self.model_type in ("causal", "seq2seq"):
                     outputs = self.model.generate(**inputs, **gen_params)
             
-            # Decode output
-            generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            
-            # Remove input prompt from output
-            if generated_text.startswith(prompt):
-                generated_text = generated_text[len(prompt):].strip()
+            # Decode only the newly generated tokens (robust with the chat template, where the
+            # decoded text no longer starts with the raw prompt string).
+            generated_text = self.tokenizer.decode(
+                outputs[0][prompt_len:], skip_special_tokens=True).strip()
             
             # Track emotions for the generated response
             emotion_data = self._track_emotions(generated_text, prompt)
@@ -215,6 +209,28 @@ class LocalModelInterface(BaseModelInterface):
                     pass
             raise
     
+    def _prepare_inputs(self, prompt: str):
+        """Tokenize a prompt for generation, applying the chat template when available.
+
+        Returns ``(inputs_on_device, prompt_token_len)``. Instruct / reasoning models (gpt-oss,
+        Llama-Instruct, Gemma-it) require their chat template — raw tokenization skips the
+        harmony/chat framing and produces empty or malformed output. Falls back to plain
+        tokenization for base models without a template.
+        """
+        tok = self.tokenizer
+        if getattr(tok, "chat_template", None):
+            enc = tok.apply_chat_template(
+                [{"role": "user", "content": prompt}], add_generation_prompt=True,
+                return_tensors="pt", return_dict=True)
+            inputs = {k: v for k, v in enc.items()}
+        else:
+            inputs = dict(tok(prompt, return_tensors="pt", padding=True))
+        if torch.cuda.is_available() and next(self.model.parameters()).is_cuda:
+            inputs = {k: v.cuda() for k, v in inputs.items()}
+        else:
+            inputs = {k: v.cpu() for k, v in inputs.items()}
+        return inputs, int(inputs["input_ids"].shape[1])
+
     def generate_text_stream(self, prompt: str, max_tokens: int = 100,
                              temperature: float = 1.0, top_p: float = 1.0,
                              pack_name: str = None, custom_pack: Dict = None,
@@ -244,11 +260,7 @@ class LocalModelInterface(BaseModelInterface):
                 logger.warning(f"Neuromodulation failed, streaming basic generation: {e}")
                 neuromod_applied = False
 
-        inputs = self.tokenizer(prompt, return_tensors="pt", padding=True)
-        if torch.cuda.is_available() and next(self.model.parameters()).is_cuda:
-            inputs = {k: v.cuda() for k, v in inputs.items()}
-        else:
-            inputs = {k: v.cpu() for k, v in inputs.items()}
+        inputs, _ = self._prepare_inputs(prompt)
 
         logits_processors = []
         gen_kwargs = {}
