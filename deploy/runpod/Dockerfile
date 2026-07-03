@@ -12,6 +12,10 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     # Cache HF weights on the mounted network volume so cold starts are fast.
     HF_HOME=/runpod-volume/hf \
+    # Disable the hf_xet backend: its concurrent "background writer" is flaky on NETWORK
+    # filesystems (the RunPod network volume) — fails with "Background writer channel closed".
+    # Classic sequential HTTP downloads write reliably to the volume.
+    HF_HUB_DISABLE_XET=1 \
     MODEL_NAME=openai/gpt-oss-20b \
     STEERING_DIR=/runpod-volume/steering_vectors \
     ENDPOINTS_DIR=/runpod-volume/endpoints \
