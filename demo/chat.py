@@ -6,50 +6,68 @@ Supports loading from config, exporting to config, and custom effect combination
 Now with real-time emotion tracking!
 """
 
-import torch
 import os
 import gc
 import json
 import sys
 import time
 import warnings
-from typing import Dict, List, Any
-from dotenv import load_dotenv
+from typing import Dict, List, Any, Optional
 
 # Suppress warnings from optional dependencies
 warnings.filterwarnings('ignore', category=UserWarning, module='neuromod.testing.advanced_statistics')
 
-# Load environment variables
-load_dotenv()
-
-# Set Hugging Face token if available
-if os.getenv('HUGGINGFACE_HUB_TOKEN'):
-    from huggingface_hub import login
-    login(os.getenv('HUGGINGFACE_HUB_TOKEN'))
+# Load environment variables from a .env if python-dotenv is installed (optional — remote mode
+# only needs `requests`, so don't hard-require dotenv on a lightweight client).
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # Add the parent directory to the path to import neuromod modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Import centralized model support
-from neuromod.neuromod_factory import create_neuromod_tool, cleanup_neuromod_tool
-from neuromod.testing.simple_emotion_tracker import SimpleEmotionTracker
+# NOTE: torch and the heavy neuromod/model stack are imported lazily (inside the LOCAL-mode
+# code paths only). This keeps --remote mode fully torch-free so the CLI can drive a deployed
+# RunPod endpoint from a laptop with nothing but `requests` installed.
 
-# Disable MPS completely to avoid bus errors
+# Disable MPS completely to avoid bus errors (local mode)
 os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
 os.environ['PYTORCH_MPS_HIGH_WATERMARK_RATIO'] = '0.0'
+
+
+def _list_packs_from_config() -> List[str]:
+    """Read pack names straight from packs/config.json (torch-free).
+
+    Used in --remote mode, where we don't load the neuromod registry locally — the server
+    applies packs; the client only needs their names to offer a menu.
+    """
+    cfg = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "packs", "config.json")
+    try:
+        with open(cfg, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        packs = data.get("packs", data)
+        return sorted(packs.keys()) if isinstance(packs, dict) else []
+    except Exception:
+        return []
 
 class NeuromodChat:
     """Interactive chat interface with neuromodulation packs"""
     
-    def __init__(self, model_name: str = None, test_mode: bool = True):
+    def __init__(self, model_name: str = None, test_mode: bool = True, remote=None):
         self.model_name = model_name
         self.test_mode = test_mode
+        self.remote = remote  # RunPodModelInterface or None; set => talk to the endpoint over HTTP
         self.model = None
         self.tokenizer = None
         self.neuromod_tool = None
+        self.registry = None
+        self.effect_registry = None
         self.active_packs = []
         self.custom_effects = []  # Store custom effect combinations
-        
+        self.intensity = 0.8  # dose applied to the active pack (server-side in remote mode)
+
         # Token configuration presets
         self.token_presets = {
             "short": {"max_tokens": 50, "min_tokens": 5},
@@ -58,20 +76,49 @@ class NeuromodChat:
             "very_long": {"max_tokens": 500, "min_tokens": 30}
         }
         self.current_token_preset = "medium"  # Default to medium
-        
-        # Initialize emotion tracking
-        self.emotion_tracker = SimpleEmotionTracker()
+
+        self.emotion_tracker = None  # local-only; created in _load_model()
         self.chat_session_id = f"chat_{int(os.getpid())}_{int(time.time())}"
-        
-        # Load model and setup using centralized system
-        self._load_model()
-        self._setup_neuromodulation()
+
+        if self.remote is not None:
+            self._load_remote()
+        else:
+            # Load model and setup using centralized system
+            self._load_model()
+            self._setup_neuromodulation()
+
+    def _load_remote(self):
+        """Set up remote (RunPod HTTP) mode: no local model, packs listed from config."""
+        self.model_name = getattr(self.remote, "model", None) or "remote"
+        self.available_packs = _list_packs_from_config()
+        self.neuromod_tool = None
+        print("✅ Connected to RunPod endpoint (HTTP)")
+        print(f"   Endpoint: {getattr(self.remote, 'endpoint_id', '?')}")
+        print(f"   Model:    {self.model_name}")
+        print(f"   Packs:    {len(self.available_packs)} available (applied server-side per request)")
+        # Probe health (cheap GET); a scale-to-zero endpoint is 'healthy' even with 0 warm workers.
+        try:
+            if hasattr(self.remote, "is_available") and self.remote.is_available():
+                print("   Health:   reachable")
+        except Exception:
+            pass
     
     def _load_model(self):
-        """Load the language model using centralized model support"""
+        """Load the language model using centralized model support (LOCAL mode)"""
         try:
+            # Heavy imports are deferred to here so --remote mode never needs torch.
+            from neuromod.neuromod_factory import create_neuromod_tool
+            from neuromod.testing.simple_emotion_tracker import SimpleEmotionTracker
+
+            # Set Hugging Face token if available (gated local models)
+            if os.getenv('HUGGINGFACE_HUB_TOKEN'):
+                from huggingface_hub import login
+                login(os.getenv('HUGGINGFACE_HUB_TOKEN'))
+
+            self.emotion_tracker = SimpleEmotionTracker()
+
             print(f"Loading model using centralized system...")
-            
+
             # Create neuromod tool with centralized model loading
             self.neuromod_tool, model_info = create_neuromod_tool(
                 model_name=self.model_name,
@@ -161,14 +208,28 @@ class NeuromodChat:
     
     def apply_packs(self, pack_names: list):
         """Apply specified packs"""
+        # Remote mode: no local model. The endpoint applies the pack per request, and the
+        # handler accepts a single pack_name, so we track one active pack + the intensity and
+        # send them with each generation.
+        if self.remote is not None:
+            if not pack_names:
+                self.active_packs = []
+                print("✅ Using baseline (no packs)")
+                return
+            if len(pack_names) > 1:
+                print(f"⚠️  Remote endpoint applies one pack per request; using '{pack_names[0]}'.")
+            self.active_packs = [pack_names[0]]
+            print(f"✅ Active pack: {self.active_packs[0]} (intensity {self.intensity:.2f}, applied server-side)")
+            return
+
         if not self.neuromod_tool:
             print("❌ Neuromodulation system not available")
             return
-        
+
         # Clear existing packs
         self.neuromod_tool.clear()
         self.active_packs = []
-        
+
         if not pack_names:
             print("✅ Using baseline (no packs)")
             return
@@ -177,7 +238,7 @@ class NeuromodChat:
         
         for pack_name in pack_names:
             try:
-                result = self.neuromod_tool.apply(pack_name, intensity=0.8)
+                result = self.neuromod_tool.apply(pack_name, intensity=self.intensity)
                 if result.get("ok"):
                     self.active_packs.append(pack_name)
                     print(f"✅ Applied: {pack_name}")
@@ -204,8 +265,13 @@ class NeuromodChat:
             preset = self.token_presets[self.current_token_preset]
             max_tokens = max_tokens or preset["max_tokens"]
             min_tokens = min_tokens or preset["min_tokens"]
-        
+
+        # Remote mode: one HTTP call to the endpoint; the worker applies the pack + generates.
+        if self.remote is not None:
+            return self._generate_remote(prompt, max_tokens)
+
         try:
+            import torch
             inputs = self.tokenizer(prompt, return_tensors="pt", padding=True)
             
             # Move inputs to the same device as the model
@@ -252,15 +318,51 @@ class NeuromodChat:
         except Exception as e:
             print(f"❌ Generation error: {e}")
             return "Sorry, I encountered an error while generating a response."
-    
+
+    def _generate_remote(self, prompt: str, max_tokens: int) -> str:
+        """Generate via the RunPod HTTP endpoint (no local model/torch)."""
+        pack = self.active_packs[0] if self.active_packs else None
+        try:
+            t0 = time.time()
+            res = self.remote.generate_text(
+                prompt,
+                max_tokens=max_tokens,
+                temperature=0.7,
+                pack_name=pack,
+                intensity=self.intensity,
+            )
+            text = (res.get("text") or "").strip()
+            # Surface server-provided emotions (if the handler computed any) + cost/latency.
+            emotions = res.get("emotions") or {}
+            if emotions:
+                changed = [f"{k}: {v}" for k, v in emotions.items() if v in ("up", "down")]
+                print(f"🎭 Emotions: {' | '.join(changed) if changed else 'stable'}")
+            gpu = res.get("gpu_seconds")
+            meta = f"⏱️  {time.time() - t0:.1f}s wall"
+            if gpu is not None:
+                meta += f" | {gpu:.2f} GPU-s"
+            if pack:
+                meta += f" | pack={pack}@{self.intensity:.2f}"
+            print(meta)
+            return text if text else "I don't have a response for that."
+        except Exception as e:
+            print(f"❌ Remote generation error: {e}")
+            print("   (A scale-to-zero endpoint's first request pays a cold start — if this was a "
+                  "timeout, try again; the worker may now be warm.)")
+            return "Sorry, I encountered an error talking to the endpoint."
+
     def chat(self):
         """Main chat loop"""
         print("\n" + "=" * 60)
         print("🧠 Neuromodulation Chat Interface")
         print("=" * 60)
         print(f"Model: {self.model_name}")
-        print(f"🎭 Emotion tracking: Active")
-        
+        if self.remote is not None:
+            print(f"🌐 Backend: RunPod endpoint (HTTP) — packs applied server-side")
+            print(f"💊 Intensity: {self.intensity:.2f}  (change with /intensity)")
+        else:
+            print(f"🎭 Emotion tracking: Active")
+
         # Initial pack selection
         self.select_packs()
         
@@ -280,6 +382,7 @@ class NeuromodChat:
         print("  /export_emotions - Export emotion results to file")
         print("  /tokens - Show token configuration options")
         print("  /set_tokens - Change response length (short/medium/long/very_long)")
+        print("  /intensity - Set pack dose/intensity (0.0-1.0)")
         print("  /quit - Exit chat")
         print("  /help - Show this help")
         print("-" * 60)
@@ -383,7 +486,10 @@ class NeuromodChat:
         
         elif cmd.startswith("/set_tokens"):
             self.set_token_preset(command)
-        
+
+        elif cmd.startswith("/intensity"):
+            self.set_intensity(command)
+
         elif cmd == "/help":
             print("\n💬 Chat Commands:")
             print("  /packs - Show available packs")
@@ -401,9 +507,10 @@ class NeuromodChat:
             print("  /export_emotions - Export emotion results to file")
             print("  /tokens - Show token configuration options")
             print("  /set_tokens - Change response length (short/medium/long/very_long)")
+            print("  /intensity - Set pack dose/intensity (0.0-1.0)")
             print("  /quit - Exit chat")
             print("  /help - Show this help")
-        
+
         else:
             print(f"❌ Unknown command: {command}")
             print("Type /help for available commands")
@@ -610,6 +717,8 @@ class NeuromodChat:
     
     def get_emotion_summary(self):
         """Get a summary of emotional changes during the chat session"""
+        if self.emotion_tracker is None:
+            return None  # remote mode (or tracker unavailable): no local emotion tracking
         try:
             return self.emotion_tracker.get_emotion_summary()
         except Exception as e:
@@ -694,19 +803,28 @@ class NeuromodChat:
     
     def cleanup(self):
         """Clean up resources using centralized system"""
+        if self.remote is not None:
+            print("🧹 Closed remote chat session")
+            return
+
         if self.neuromod_tool:
+            from neuromod.neuromod_factory import cleanup_neuromod_tool
             cleanup_neuromod_tool(self.neuromod_tool)
-        
+
         # Clear references
         self.model = None
         self.tokenizer = None
         self.neuromod_tool = None
-        
+
         # Force garbage collection
         gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-        
+        try:
+            import torch
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except Exception:
+            pass
+
         print(f"🧹 Cleaned up chat session")
     
     def show_token_options(self):
@@ -743,24 +861,85 @@ class NeuromodChat:
         print(f"✅ Changed response length from '{old_preset}' to '{preset_name}'")
         print(f"   New settings: max={new_config['max_tokens']}, min={new_config['min_tokens']}")
 
+    def set_intensity(self, command: str):
+        """Set the dose/intensity applied to the active pack (0.0-1.0)."""
+        parts = command.split()
+        if len(parts) < 2:
+            print(f"❌ Usage: /intensity <0.0-1.0>   (current: {self.intensity:.2f})")
+            return
+        try:
+            val = float(parts[1])
+        except ValueError:
+            print("❌ Intensity must be a number between 0.0 and 1.0")
+            return
+        if not 0.0 <= val <= 1.0:
+            print("❌ Intensity must be between 0.0 and 1.0")
+            return
+        self.intensity = val
+        print(f"✅ Intensity set to {self.intensity:.2f}")
+        # Local mode holds pack state on the model, so re-apply at the new dose. Remote mode
+        # sends intensity per request, so nothing to re-apply.
+        if self.remote is None and self.active_packs:
+            self.apply_packs(list(self.active_packs))
+
+def _build_remote_interface(endpoint_id=None, api_key=None, model=None):
+    """Construct a RunPodModelInterface from args/env (torch-free)."""
+    from api.runpod_client import RunPodModelInterface, interface_from_env
+    endpoint_id = endpoint_id or os.environ.get("RUNPOD_ENDPOINT_ID")
+    api_key = api_key or os.environ.get("RUNPOD_API_KEY")
+    if endpoint_id and api_key:
+        return RunPodModelInterface(endpoint_id, api_key, model=model)
+    # Fall back to env-only helper (raises a clear error if unset)
+    return interface_from_env(model=model)
+
+
 def main():
     """Main function"""
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Neuromodulation chat — local (in-process model) or --remote (RunPod HTTP endpoint).")
+    parser.add_argument("--remote", action="store_true",
+                        help="Talk to a deployed RunPod Serverless endpoint over HTTP (no local model / no torch). "
+                             "Uses RUNPOD_ENDPOINT_ID + RUNPOD_API_KEY unless --endpoint-id/--api-key given.")
+    parser.add_argument("--endpoint-id", default=None, help="RunPod endpoint id (else $RUNPOD_ENDPOINT_ID)")
+    parser.add_argument("--api-key", default=None, help="RunPod API key (else $RUNPOD_API_KEY; prefer the env var)")
+    parser.add_argument("--model", default=None,
+                        help="Model id/alias to request from the endpoint or load locally (e.g. gpt-oss-120b)")
+    args, _ = parser.parse_known_args()
+
     print("🚀 Neuromodulation Chat Interface")
     print("=" * 50)
-    
+
+    # ---- Remote mode: skip the local model menu entirely (no torch import) ----
+    if args.remote or (args.endpoint_id and args.api_key):
+        try:
+            iface = _build_remote_interface(args.endpoint_id, args.api_key, args.model)
+        except Exception as e:
+            print(f"❌ Could not set up remote endpoint: {e}")
+            return 1
+        try:
+            chat = NeuromodChat(model_name=args.model, remote=iface)
+            chat.chat()
+        except Exception as e:
+            print(f"❌ Failed to start remote chat: {e}")
+            return 1
+        return 0
+
     # Show available models in production mode
     from neuromod.model_support import create_model_support
-    
+
     print("\n🤖 Model Selection:")
     print("1. Use recommended model (test mode)")
     print("2. Use recommended model (production mode)")
     print("3. Enter custom model name")
     print("4. Show available models and select")
-    
+    print("5. Connect to a RunPod endpoint (remote HTTP — no local model)")
+
+    remote_iface = None
     while True:
         try:
-            choice = input(f"\nSelect option (1-4): ").strip()
-            
+            choice = input(f"\nSelect option (1-5): ").strip()
+
             if choice == "1":
                 model_name = None
                 test_mode = True
@@ -813,21 +992,36 @@ def main():
                 except ValueError:
                     print("❌ Invalid input. Please enter a number.")
                     continue
+            elif choice == "5":
+                # Remote HTTP endpoint (no local model).
+                ep = os.environ.get("RUNPOD_ENDPOINT_ID") or input("RunPod endpoint id: ").strip()
+                key = os.environ.get("RUNPOD_API_KEY") or input("RunPod API key: ").strip()
+                mdl = input("Model id/alias (blank = endpoint default): ").strip() or None
+                try:
+                    remote_iface = _build_remote_interface(ep, key, mdl)
+                    model_name = mdl
+                    test_mode = False
+                    break
+                except Exception as e:
+                    print(f"❌ Could not set up remote endpoint: {e}")
+                    continue
             else:
-                print("Please enter 1, 2, 3, or 4")
+                print("Please enter 1, 2, 3, 4, or 5")
         except (ValueError, KeyboardInterrupt):
             print("Invalid input")
-    
-    print(f"\n✅ Selected: {model_name or 'recommended'} ({'test' if test_mode else 'production'} mode)")
-    
+
     # Create and start chat
     try:
-        chat = NeuromodChat(model_name, test_mode)
+        if remote_iface is not None:
+            chat = NeuromodChat(model_name=model_name, remote=remote_iface)
+        else:
+            print(f"\n✅ Selected: {model_name or 'recommended'} ({'test' if test_mode else 'production'} mode)")
+            chat = NeuromodChat(model_name, test_mode)
         chat.chat()
     except Exception as e:
         print(f"❌ Failed to start chat: {e}")
         return 1
-    
+
     return 0
 
 if __name__ == "__main__":
