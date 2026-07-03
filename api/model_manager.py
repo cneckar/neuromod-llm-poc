@@ -108,16 +108,26 @@ class LocalModelInterface(BaseModelInterface):
         """Initialize neuromodulation system for local model"""
         try:
             if NEUROMOD_AVAILABLE:
-                # Initialize neuromodulation tool with the loaded model
+                # Initialize neuromodulation tool with the loaded model. Resolve the pack config
+                # to an ABSOLUTE path (repo root) so it doesn't silently degrade to an empty
+                # registry when the worker CWD isn't the repo root (which would make every pack a
+                # logged no-op while responses still claimed pack_applied).
                 from neuromod.pack_system import PackRegistry
-                registry = PackRegistry("packs/config.json")
+                _cfg = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                    "packs", "config.json")
+                if not os.path.exists(_cfg):
+                    _cfg = "packs/config.json"  # fall back to relative if layout differs
+                registry = PackRegistry(_cfg)
                 self.neuromod_tool = NeuromodTool(registry, self.model, self.tokenizer)
-                logger.info("Neuromodulation tool initialized for local model")
+                logger.info(f"Neuromodulation tool initialized for local model (packs: {_cfg})")
             else:
                 logger.info("Neuromodulation system not available - basic text generation only")
                 self.neuromod_tool = None
         except Exception as e:
-            logger.info(f"Neuromodulation not available: {e}")
+            # ERROR, not INFO: this disables neuromodulation for the worker's ENTIRE lifetime
+            # (warm singleton), so every subsequent request silently serves plain text.
+            logger.error(f"Neuromodulation tool FAILED to init — packs disabled for this worker: {e}",
+                         exc_info=True)
             self.neuromod_tool = None
     
     def generate_text(self, prompt: str, max_tokens: int = 100,
@@ -131,9 +141,15 @@ class LocalModelInterface(BaseModelInterface):
             raise RuntimeError("Local model not loaded")
 
         try:
-            # Apply neuromodulation effects if available
+            # Apply neuromodulation effects if available. Track WHETHER it actually applied and
+            # any error, so the response never claims a pack landed when it silently didn't.
             neuromod_applied = False
-            if self.neuromod_tool and any([pack_name, custom_pack, individual_effects, multiple_packs]):
+            neuromod_error = None
+            pack_requested = any([pack_name, custom_pack, individual_effects, multiple_packs])
+            if pack_requested and not self.neuromod_tool:
+                neuromod_error = "neuromodulation unavailable on this worker (tool failed to init)"
+                logger.error(neuromod_error)
+            if self.neuromod_tool and pack_requested:
                 try:
                     neuromod_applied = self._apply_neuromodulation(
                         pack_name=pack_name,
@@ -142,12 +158,14 @@ class LocalModelInterface(BaseModelInterface):
                         multiple_packs=multiple_packs,
                         intensity=intensity,
                     )
-                    
                     if neuromod_applied:
                         logger.info("Neuromodulation effects applied to local model")
+                    else:
+                        neuromod_error = f"pack '{pack_name}' did not apply (see logs)"
                 except Exception as e:
                     logger.warning(f"Neuromodulation failed, continuing with basic generation: {e}")
                     neuromod_applied = False
+                    neuromod_error = str(e)
             
             # Tokenize, applying the model's chat template when it has one (REQUIRED for
             # instruct/reasoning models like gpt-oss — its harmony format is bypassed by raw
@@ -168,7 +186,7 @@ class LocalModelInterface(BaseModelInterface):
             # (e.g. LSD's psychedelic_temp) doesn't collide with a fixed temperature= keyword
             # ("multiple values for keyword argument 'temperature'").
             gen_params = dict(
-                max_new_tokens=max_tokens, temperature=temperature, do_sample=True,
+                max_new_tokens=max_tokens, temperature=temperature, top_p=top_p, do_sample=True,
                 pad_token_id=self.tokenizer.eos_token_id, eos_token_id=self.tokenizer.eos_token_id,
                 use_cache=False, repetition_penalty=1.1, no_repeat_ngram_size=2,
                 early_stopping=False, logits_processor=logits_processors)
@@ -197,11 +215,14 @@ class LocalModelInterface(BaseModelInterface):
                 except Exception as e:
                     logger.warning(f"Failed to clear neuromodulation effects: {e}")
             
-            # Return both text and emotion data (+ reasoning channel if the model exposed one)
+            # Return text + emotion + reasoning, plus the TRUTH about neuromodulation so the
+            # handler never reports pack_applied for a pack that silently didn't land.
             return {
                 "text": generated_text,
                 "emotions": emotion_data,
                 "reasoning": reasoning,
+                "neuromod_applied": neuromod_applied,
+                "neuromod_error": neuromod_error,
             }
             
         except Exception as e:
@@ -295,15 +316,26 @@ class LocalModelInterface(BaseModelInterface):
             raise RuntimeError("Local model not loaded")
 
         neuromod_applied = False
-        if self.neuromod_tool and any([pack_name, custom_pack, individual_effects, multiple_packs]):
+        neuromod_error = None
+        pack_requested = any([pack_name, custom_pack, individual_effects, multiple_packs])
+        if pack_requested and not self.neuromod_tool:
+            neuromod_error = "neuromodulation unavailable on this worker (tool failed to init)"
+            logger.error(neuromod_error)
+        if self.neuromod_tool and pack_requested:
             try:
                 neuromod_applied = self._apply_neuromodulation(
                     pack_name=pack_name, custom_pack=custom_pack,
                     individual_effects=individual_effects, multiple_packs=multiple_packs,
                     intensity=intensity)
+                if not neuromod_applied:
+                    neuromod_error = f"pack '{pack_name}' did not apply (see logs)"
             except Exception as e:
                 logger.warning(f"Neuromodulation failed, streaming basic generation: {e}")
                 neuromod_applied = False
+                neuromod_error = str(e)
+        # Expose the truth to the handler (single-request-at-a-time serverless worker).
+        self._last_stream_neuromod = {"neuromod_applied": neuromod_applied,
+                                      "neuromod_error": neuromod_error}
 
         inputs, _ = self._prepare_inputs(prompt)
 
@@ -318,7 +350,7 @@ class LocalModelInterface(BaseModelInterface):
         # temperature — e.g. LSD's psychedelic_temp — must not collide with a fixed
         # temperature=... keyword, which would raise "multiple values for 'temperature'").
         gen_params = dict(
-            max_new_tokens=max_tokens, temperature=temperature, do_sample=True,
+            max_new_tokens=max_tokens, temperature=temperature, top_p=top_p, do_sample=True,
             pad_token_id=self.tokenizer.eos_token_id, eos_token_id=self.tokenizer.eos_token_id,
             repetition_penalty=1.1, no_repeat_ngram_size=2, logits_processor=logits_processors)
         gen_params.update(gen_kwargs)
