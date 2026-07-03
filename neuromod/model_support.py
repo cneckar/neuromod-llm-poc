@@ -719,7 +719,6 @@ class ModelSupportManager:
                 tokenizer = AutoTokenizer.from_pretrained(
                     config.name,
                     token=hf_token,
-                    resume_download=True  # Enable resume for interrupted downloads
                 )
                 break  # Success
             except Exception as e:
@@ -1044,7 +1043,6 @@ class ModelSupportManager:
                         model = Qwen2_5OmniForConditionalGeneration.from_pretrained(
                             config.name,
                             **load_kwargs,
-                            resume_download=True  # Enable resume for interrupted downloads
                         )
                         logger.info(f"Loaded Qwen2.5-Omni model using Qwen2_5OmniForConditionalGeneration")
                     except ImportError:
@@ -1056,7 +1054,6 @@ class ModelSupportManager:
                     model = AutoModelForCausalLM.from_pretrained(
                         config.name,
                         **load_kwargs,
-                        resume_download=True  # Enable resume for interrupted downloads
                     )
                 
                 # Log where the model was actually loaded
