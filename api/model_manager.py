@@ -192,6 +192,15 @@ class LocalModelInterface(BaseModelInterface):
                 early_stopping=False, logits_processor=logits_processors)
             gen_params.update(gen_kwargs)
 
+            # KV-decay/compression packs (e.g. archivist): pass a decaying Cache so those effects
+            # actually reach generation. Requires use_cache=True. Only engages if such an effect
+            # is active; None otherwise, so normal packs keep use_cache=False.
+            if self.neuromod_tool:
+                _kv = self.neuromod_tool.build_kv_cache(self.model)
+                if _kv is not None:
+                    gen_params["past_key_values"] = _kv
+                    gen_params["use_cache"] = True
+
             # Generate text with safe settings to avoid bus errors
             with torch.no_grad():
                 if self.model_type in ("causal", "seq2seq"):
@@ -354,6 +363,13 @@ class LocalModelInterface(BaseModelInterface):
             pad_token_id=self.tokenizer.eos_token_id, eos_token_id=self.tokenizer.eos_token_id,
             repetition_penalty=1.1, no_repeat_ngram_size=2, logits_processor=logits_processors)
         gen_params.update(gen_kwargs)
+
+        # KV-decay/compression packs: decaying Cache (streaming path already uses the cache).
+        if self.neuromod_tool:
+            _kv = self.neuromod_tool.build_kv_cache(self.model)
+            if _kv is not None:
+                gen_params["past_key_values"] = _kv
+                gen_params["use_cache"] = True
 
         # timeout so a producer thread that dies (OOM / bad steering shape) surfaces as an
         # error instead of hanging the consumer forever.

@@ -80,6 +80,168 @@ class BaseEffect(ABC):
         else:  # neutral
             return base_value
 
+
+# ==========================================================================================
+# Shared, portable intervention helpers (used to fix effects that were no-op / meaningless)
+# ==========================================================================================
+
+def token_ids_for_words(tokenizer, words):
+    """Map a concept word list to token IDs via the tokenizer (first sub-token of each variant).
+
+    Replaces the old hardcoded ``[100,200,300,...]`` token IDs, which were arbitrary and
+    meaningless. Encodes each word bare, space-prefixed, and capitalized so the bias lands on the
+    tokens the model actually emits. Returns [] if no tokenizer (effect then no-ops cleanly).
+    """
+    if tokenizer is None:
+        return []
+    ids = set()
+    for w in words:
+        for variant in (w, " " + w, w.capitalize(), " " + w.capitalize()):
+            try:
+                toks = tokenizer.encode(variant, add_special_tokens=False)
+            except Exception:
+                continue
+            if toks:
+                ids.add(int(toks[0]))
+    return sorted(ids)
+
+
+class ConceptLogitBiasProcessor(LogitsProcessor):
+    """Additive logit bias toward ``boost_ids`` and away from ``suppress_ids``.
+
+    Additive (not multiplicative) so it is correct for negative logits — the old
+    ``scores[:, id] *= (1+strength)`` made already-negative logits *more* negative.
+    """
+
+    def __init__(self, boost_ids, suppress_ids, bias):
+        self._boost = list(boost_ids or [])
+        self._suppress = list(suppress_ids or [])
+        self.bias = float(bias)
+        self._boost_t = None
+        self._suppress_t = None
+
+    def __call__(self, input_ids, scores):
+        vocab = scores.shape[-1]
+        if self._boost:
+            if self._boost_t is None:
+                self._boost_t = torch.tensor([i for i in self._boost if i < vocab],
+                                             dtype=torch.long)
+            if self._boost_t.numel():
+                scores[:, self._boost_t.to(scores.device)] += self.bias
+        if self._suppress:
+            if self._suppress_t is None:
+                self._suppress_t = torch.tensor([i for i in self._suppress if i < vocab],
+                                                dtype=torch.long)
+            if self._suppress_t.numel():
+                scores[:, self._suppress_t.to(scores.device)] -= self.bias * 0.5
+        return scores
+
+
+def find_attention_out_projections(model):
+    """Yield (o_proj_module, num_heads, head_dim) for each attention block.
+
+    The input to ``o_proj`` is the concatenated per-head attention output
+    ``[batch, seq, num_heads*head_dim]`` for ALL attention backends (eager/SDPA/flash), so a
+    forward-pre-hook here is a portable, real per-head intervention — unlike editing the returned
+    attention-weights tensor (``output_attentions``), which doesn't feed back into the computation.
+    """
+    cfg = getattr(model, "config", None)
+    num_heads = getattr(cfg, "num_attention_heads", None) if cfg else None
+    hidden = getattr(cfg, "hidden_size", None) if cfg else None
+    head_dim = getattr(cfg, "head_dim", None) if cfg else None
+    if head_dim is None and num_heads and hidden:
+        head_dim = hidden // num_heads
+    out = []
+    layers = _resolve_transformer_layers(model)
+    for layer in layers:
+        attn = getattr(layer, "self_attn", None) or getattr(layer, "attn", None) \
+            or getattr(layer, "attention", None)
+        if attn is None:
+            continue
+        o_proj = getattr(attn, "o_proj", None) or getattr(attn, "out_proj", None) \
+            or getattr(attn, "c_proj", None) or getattr(attn, "dense", None)
+        if o_proj is None or not num_heads or not head_dim:
+            continue
+        out.append((o_proj, int(num_heads), int(head_dim)))
+    return out
+
+
+def install_per_head_scaling_hooks(effect, model, scale_fn):
+    """Register o_proj pre-hooks that scale per-head slices of the attention output.
+
+    ``scale_fn(num_heads, device, dtype, step) -> Tensor[num_heads]`` returns a per-head gain.
+    Shared by the attention-head effects (masking / reweighting / oscillation), which previously
+    only mutated the returned attention-weights tensor and so did nothing during generation.
+    """
+    remove_steering_hooks(effect)  # reuse the handle store/cleanup
+    effect._step = 0
+    targets = find_attention_out_projections(model)
+    if not targets:
+        logger.warning(f"{type(effect).__name__}: no attention o_proj modules found; inactive")
+        return
+
+    def _make_pre_hook(num_heads, head_dim):
+        def pre_hook(module, args):
+            if not args:
+                return args
+            x = args[0]
+            # x: [batch, seq, num_heads*head_dim]. Reshape to per-head, scale, reshape back.
+            if x.dim() < 2 or x.shape[-1] != num_heads * head_dim:
+                return args
+            gains = scale_fn(num_heads, x.device, x.dtype, effect._step)
+            if gains is None:
+                return args
+            shape = x.shape
+            xh = x.view(*shape[:-1], num_heads, head_dim)
+            xh = xh * gains.view(*([1] * (xh.dim() - 2)), num_heads, 1)
+            effect._step += 1
+            return (xh.reshape(shape),) + tuple(args[1:])
+        return pre_hook
+
+    for o_proj, num_heads, head_dim in targets:
+        try:
+            effect._handles.append(o_proj.register_forward_pre_hook(_make_pre_hook(num_heads, head_dim)))
+        except Exception as e:  # pragma: no cover
+            logger.warning(f"{type(effect).__name__}: failed to hook o_proj: {e}")
+    logger.info(f"{type(effect).__name__}: per-head hooks on {len(effect._handles)} attention block(s)")
+
+
+def make_decaying_cache(decay):
+    """Build a transformers Cache that applies per-step exponential decay to the value cache.
+
+    This is how KV-decay/compression effects actually reach a served ``model.generate()`` — HF
+    never calls the effects' ``modify_kv_cache()``. Passing this as ``past_key_values`` lets each
+    decode step down-weight older positions (recency bias / forgetting). Returns None if the
+    transformers Cache API isn't available, so callers degrade cleanly.
+    """
+    if decay is None or decay >= 1.0:
+        return None
+    try:
+        from transformers import DynamicCache
+    except Exception:
+        return None
+
+    class DecayingCache(DynamicCache):
+        _decay = float(decay)
+
+        def update(self, key_states, value_states, layer_idx, cache_kwargs=None):
+            keys, values = super().update(key_states, value_states, layer_idx, cache_kwargs)
+            try:
+                vc = getattr(self, "value_cache", None)
+                if vc is not None and layer_idx < len(vc) and vc[layer_idx] is not None \
+                        and vc[layer_idx].shape[-2] > 1:
+                    vc[layer_idx].mul_(self._decay)  # decay ALL positions each step -> exp by age
+                    values = vc[layer_idx]
+            except Exception:
+                pass  # never let cache decoration break generation
+            return keys, values
+
+    try:
+        return DecayingCache()
+    except Exception:
+        return None
+
+
 class SamplerEffect(BaseEffect):
     """Base class for sampling parameter effects"""
     
@@ -594,62 +756,34 @@ class AttentionMaskingEffect(BaseEffect):
         self.handles = []
         
     def apply(self, model, **kwargs):
-        """Apply attention head masking"""
-        blocks = self._resolve_blocks(model)
-        selected_layers = self._select_layers(blocks)
-        
-        for layer_idx in selected_layers:
-            try:
-                attn = self._get_attention_module(blocks[layer_idx])
-                if attn is None:
-                    continue
-                    
-                # Calculate effective masking probability
-                base_prob = 0.0
-                max_prob = 0.3
-                effective_prob = self.get_effective_value(base_prob, max_prob)
-                
-                if hasattr(attn, "num_heads"):
-                    num_heads = attn.num_heads
-                    heads_to_mask = random.sample(range(num_heads), 
-                                               int(num_heads * effective_prob))
-                    
-                    # Store original forward
-                    original_forward = attn.forward
-                    
-                    def masked_forward(*args, **kwargs):
-                        output = original_forward(*args, **kwargs)
-                        if isinstance(output, tuple) and len(output) >= 2:
-                            attn_weights = output[1]
-                            if attn_weights is not None:
-                                # Zero out masked heads
-                                for head_idx in heads_to_mask:
-                                    attn_weights[:, head_idx, :, :] = 0.0
-                                
-                                # Recompute attention output
-                                if len(output) >= 3 and output[2] is not None:
-                                    V = output[2]
-                                    new_attn_output = torch.matmul(attn_weights, V)
-                                    output = (new_attn_output,) + output[1:]
-                        return output
-                    
-                    attn.forward = masked_forward
-                    self.handles.append((attn, original_forward))
-                    
-            except Exception as e:
-                print(f"Warning: Failed to apply attention masking in layer {layer_idx}: {e}")
-                continue
-                
+        """Mask a fixed random subset of attention heads (zero their o_proj slices).
+
+        Was editing the returned attention-weights tensor -> no-op during generation. Now a real
+        per-head o_proj pre-hook. The masked head set is fixed at apply() time for stability.
+        """
+        self._handles = []
+        effective_prob = self.get_effective_value(0.0, 0.3)
+        self._mask_set = None  # decided lazily once num_heads is known
+
+        def scale_fn(num_heads, device, dtype, step):
+            if self._mask_set is None:
+                k = int(num_heads * effective_prob)
+                self._mask_set = set(random.sample(range(num_heads), k)) if k > 0 else set()
+            gains = torch.ones(num_heads, device=device, dtype=dtype)
+            if self._mask_set:
+                gains[torch.tensor(sorted(self._mask_set), device=device)] = 0.0
+            return gains
+
+        install_per_head_scaling_hooks(self, model, scale_fn)
+
     def get_logits_processor(self):
         """Attention effects don't use logits processors"""
         return None
-                
+
     def cleanup(self):
-        """Restore original attention forward methods"""
-        for attn, original_forward in self.handles:
-            attn.forward = original_forward
-        self.handles.clear()
-        
+        """Remove the per-head hooks."""
+        remove_steering_hooks(self)
+
     def _resolve_blocks(self, model):
         """Resolve transformer blocks"""
         for attr in ["transformer", "model", "language_model"]:
@@ -1211,88 +1345,34 @@ class HeadMaskingDropoutEffect(BaseEffect):
         self.handles = []
         
     def apply(self, model, **kwargs):
-        """Apply head masking/dropout to attention layers"""
-        blocks = self._resolve_blocks(model)
-        selected_layers = self._select_layers(blocks)
-        
-        for layer_idx in selected_layers:
-            try:
-                # Get attention module
-                attn = self._get_attention_module(blocks[layer_idx])
-                if attn is None:
-                    continue
-                    
-                # Store original forward
-                original_forward = attn.forward
-                
-                # Calculate effective dropout rate
-                base_dropout = 0.0
-                max_dropout = 0.4
-                effective_dropout = self.get_effective_value(base_dropout, max_dropout)
-                
-                def masked_forward(*args, **kwargs):
-                    # Get original output - don't wrap in try/except, let errors propagate naturally
-                    output = original_forward(*args, **kwargs)
-                    
-                    # Apply head masking to attention weights
-                    # Only modify if output_attentions=True was passed and we have attention weights
-                    if isinstance(output, tuple) and len(output) >= 2:
-                        attn_weights = output[1]
-                        if attn_weights is not None and isinstance(attn_weights, torch.Tensor):
-                            # Check shape is valid (batch, heads, seq, seq)
-                            if attn_weights.dim() == 4:
-                                batch_size, num_heads, seq_len, seq_len_kv = attn_weights.shape
-                                
-                                # Only modify if shapes match (skip during generation with KV cache)
-                                if seq_len == seq_len_kv:
-                                    # Create a copy to avoid modifying in-place
-                                    attn_weights = attn_weights.clone()
-                                    
-                                    # Move generated masks to the same device as attn_weights
-                                    if self.dropout_type == "random":
-                                        # Random head dropout
-                                        mask_tensor = torch.rand(num_heads, device=attn_weights.device)
-                                        head_mask = mask_tensor > effective_dropout
-                                        head_mask = head_mask.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
-                                        attn_weights = attn_weights * head_mask
-                                    elif self.dropout_type == "alternating":
-                                        # Alternating head dropout
-                                        mask_indices = torch.arange(num_heads, device=attn_weights.device)
-                                        head_mask = mask_indices % 2 == 0
-                                        head_mask = head_mask.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
-                                        attn_weights = attn_weights * head_mask
-                                    
-                                    # Renormalize
-                                    attn_weights = attn_weights / (attn_weights.sum(dim=-1, keepdim=True) + 1e-8)
-                                    
-                                    # Recompute attention output if possible
-                                    if len(output) >= 3 and output[2] is not None:
-                                        V = output[2]
-                                        if V is not None and isinstance(V, torch.Tensor) and V.dim() >= 2 and V.shape[-2] == seq_len_kv:
-                                            new_attn_output = torch.matmul(attn_weights, V)
-                                            output = (new_attn_output, attn_weights) + output[2:]
-                                        else:
-                                            # Just update the attention weights in the tuple
-                                            output = (output[0], attn_weights) + output[2:]
-                                    else:
-                                        # Just update the attention weights in the tuple
-                                        output = (output[0], attn_weights) + output[2:]
-                    
-                    return output
-                
-                attn.forward = masked_forward
-                self.handles.append((attn, original_forward))
-                
-            except Exception as e:
-                print(f"Warning: Failed to apply head masking in layer {layer_idx}: {e}")
-                continue
-                
+        """Mask/drop attention heads by scaling per-head slices before o_proj.
+
+        Was implemented by editing the returned attention-weights tensor, which requires
+        output_attentions=True AND doesn't feed back into the computation (and self-skipped during
+        KV-cache decoding) — so it did nothing during generation. Now uses a real per-head o_proj
+        pre-hook. NOTE: this hooks all attention blocks (the layers= subset is not applied here).
+        """
+        self._handles = []
+        effective_dropout = self.get_effective_value(0.0, 0.4)
+        dropout_type = self.dropout_type
+
+        def scale_fn(num_heads, device, dtype, step):
+            if dropout_type == "alternating":
+                idx = torch.arange(num_heads, device=device)
+                return (idx % 2 == 0).to(dtype)  # keep even heads, zero the odd ones
+            # random: independently drop each head with prob effective_dropout, then renormalize
+            gains = (torch.rand(num_heads, device=device) > effective_dropout).to(dtype)
+            kept = gains.sum()
+            if kept > 0:
+                gains = gains * (num_heads / kept)  # preserve overall magnitude
+            return gains
+
+        install_per_head_scaling_hooks(self, model, scale_fn)
+
     def cleanup(self):
-        """Restore original forward methods"""
-        for attn, original_forward in self.handles:
-            attn.forward = original_forward
-        self.handles.clear()
-        
+        """Remove the per-head hooks."""
+        remove_steering_hooks(self)
+
     def get_logits_processor(self):
         """Attention effects don't use logits processors"""
         return None
@@ -1347,69 +1427,29 @@ class HeadReweightingEffect(BaseEffect):
         }
         
     def apply(self, model, **kwargs):
-        """Apply head re-weighting to attention layers"""
-        blocks = self._resolve_blocks(model)
-        selected_layers = self._select_layers(blocks)
-        
-        for layer_idx in selected_layers:
-            try:
-                # Get attention module
-                attn = self._get_attention_module(blocks[layer_idx])
-                if attn is None:
-                    continue
-                    
-                # Store original forward
-                original_forward = attn.forward
-                
-                # Calculate effective boost factor
-                base_boost = 1.0
-                max_boost = 0.5
-                effective_boost = self.get_effective_value(0.0, max_boost)
-                
-                def reweighted_forward(*args, **kwargs):
-                    # Get original output
-                    output = original_forward(*args, **kwargs)
-                    
-                    # Apply head re-weighting to attention weights
-                    if isinstance(output, tuple) and len(output) >= 2:
-                        attn_weights = output[1]
-                        if attn_weights is not None:
-                            batch_size, num_heads, seq_len, seq_len = attn_weights.shape
-                            
-                            # Get routing pattern
-                            if self.routing_type in self.routing_patterns:
-                                routing_heads = self.routing_patterns[self.routing_type]
-                                routing_heads = [h for h in routing_heads if h < num_heads]
-                                
-                                # Boost routing heads
-                                for head_idx in routing_heads:
-                                    boost_factor = 1.0 + effective_boost
-                                    attn_weights[:, head_idx, :, :] *= boost_factor
-                                
-                                # Renormalize
-                                attn_weights = attn_weights / attn_weights.sum(dim=-1, keepdim=True)
-                                
-                                # Recompute attention output if possible
-                                if len(output) >= 3 and output[2] is not None:
-                                    V = output[2]
-                                    new_attn_output = torch.matmul(attn_weights, V)
-                                    output = (new_attn_output,) + output[1:]
-                    
-                    return output
-                
-                attn.forward = reweighted_forward
-                self.handles.append((attn, original_forward))
-                
-            except Exception as e:
-                print(f"Warning: Failed to apply head re-weighting in layer {layer_idx}: {e}")
-                continue
-                
+        """Boost a subset of "routing" heads by scaling their o_proj input slices.
+
+        Was implemented by editing the returned attention-weights tensor (needs
+        output_attentions=True, doesn't feed back into the computation) -> no-op during generation.
+        Now a real per-head o_proj pre-hook that up-weights the selected heads' contribution.
+        """
+        self._handles = []
+        effective_boost = self.get_effective_value(0.0, 0.5)
+        pattern = self.routing_patterns.get(self.routing_type, [])
+
+        def scale_fn(num_heads, device, dtype, step):
+            gains = torch.ones(num_heads, device=device, dtype=dtype)
+            heads = [h for h in pattern if h < num_heads]
+            if heads:
+                gains[torch.tensor(heads, device=device)] = 1.0 + effective_boost
+            return gains
+
+        install_per_head_scaling_hooks(self, model, scale_fn)
+
     def cleanup(self):
-        """Restore original forward methods"""
-        for attn, original_forward in self.handles:
-            attn.forward = original_forward
-        self.handles.clear()
-        
+        """Remove the per-head hooks."""
+        remove_steering_hooks(self)
+
     def get_logits_processor(self):
         """Attention effects don't use logits processors"""
         return None
@@ -1510,74 +1550,29 @@ class AttentionOscillationEffect(BaseEffect):
         self.handles = []
         
     def apply(self, model, **kwargs):
-        """Apply attention oscillation to layers"""
-        blocks = self._resolve_blocks(model)
-        selected_layers = self._select_layers(blocks)
-        
-        for layer_idx in selected_layers:
-            try:
-                # Get attention module
-                attn = self._get_attention_module(blocks[layer_idx])
-                if attn is None:
-                    continue
-                    
-                # Store original forward
-                original_forward = attn.forward
-                
-                # Calculate effective oscillation amplitude
-                base_amplitude = 0.0
-                max_amplitude = 0.2
-                effective_amplitude = self.get_effective_value(base_amplitude, max_amplitude)
-                
-                def oscillating_forward(*args, **kwargs):
-                    # Get original output
-                    output = original_forward(*args, **kwargs)
-                    
-                    # Apply oscillation to attention weights
-                    if isinstance(output, tuple) and len(output) >= 2:
-                        attn_weights = output[1]
-                        if attn_weights is not None:
-                            batch_size, num_heads, seq_len, seq_len = attn_weights.shape
-                            
-                            # Create oscillation pattern
-                            if self.oscillation_type == "sine":
-                                # Sine wave oscillation
-                                t = torch.arange(seq_len, device=attn_weights.device)
-                                oscillation = torch.sin(t * 0.1) * effective_amplitude
-                                oscillation = oscillation.unsqueeze(0).unsqueeze(0).unsqueeze(-1)
-                                attn_weights = attn_weights * (1.0 + oscillation)
-                                
-                            elif self.oscillation_type == "square":
-                                # Square wave oscillation
-                                t = torch.arange(seq_len, device=attn_weights.device)
-                                oscillation = (t % 20 < 10).float() * effective_amplitude
-                                oscillation = oscillation.unsqueeze(0).unsqueeze(0).unsqueeze(-1)
-                                attn_weights = attn_weights * (1.0 + oscillation)
-                            
-                            # Renormalize
-                            attn_weights = attn_weights / attn_weights.sum(dim=-1, keepdim=True)
-                            
-                            # Recompute attention output if possible
-                            if len(output) >= 3 and output[2] is not None:
-                                V = output[2]
-                                new_attn_output = torch.matmul(attn_weights, V)
-                                output = (new_attn_output,) + output[1:]
-                    
-                    return output
-                
-                attn.forward = oscillating_forward
-                self.handles.append((attn, original_forward))
-                
-            except Exception as e:
-                print(f"Warning: Failed to apply attention oscillation in layer {layer_idx}: {e}")
-                continue
-                
+        """Oscillate a global per-head gain over generation steps (sine/square).
+
+        Was editing the returned attention-weights tensor -> no-op during generation. Now a real
+        o_proj pre-hook whose gain oscillates with the generation step (the step counter advances
+        per forward pass, which the old token-position path never did during generation).
+        """
+        self._handles = []
+        amp = self.get_effective_value(0.0, 0.2)
+        osc = self.oscillation_type
+
+        def scale_fn(num_heads, device, dtype, step):
+            if osc == "square":
+                factor = 1.0 + (amp if (step % 20) < 10 else 0.0)
+            else:  # sine
+                factor = 1.0 + amp * float(math.sin(step * 0.1))
+            return torch.full((num_heads,), factor, device=device, dtype=dtype)
+
+        install_per_head_scaling_hooks(self, model, scale_fn)
+
     def cleanup(self):
-        """Restore original forward methods"""
-        for attn, original_forward in self.handles:
-            attn.forward = original_forward
-        self.handles.clear()
-        
+        """Remove the per-head hooks."""
+        remove_steering_hooks(self)
+
     def get_logits_processor(self):
         """Attention effects don't use logits processors"""
         return None
@@ -2398,14 +2393,20 @@ class RandomOrthogonalSteeringEffect(BaseEffect):
 # ============================================================================
 
 class KVDecayEffect(BaseEffect):
-    """KV cache decay effect"""
-    
+    """KV cache decay effect — recency bias / forgetting distant context."""
+
     def __init__(self, weight: float = 0.5, direction: str = "up"):
         super().__init__(weight, direction)
-        
+
     def apply(self, model, **kwargs):
-        pass  # Applied during generation
-        
+        pass  # Wired via NeuromodTool.build_kv_cache() -> a DecayingCache passed to generate().
+
+    def kv_decay_factor(self):
+        """Per-step exponential decay applied to the value cache (1.0 = none). A token added at
+        step t is scaled by decay^(T-t) by the end, so distant context fades. Consumed by
+        make_decaying_cache via NeuromodTool.build_kv_cache."""
+        return 1.0 - self.get_effective_value(0.0, 0.15)  # up to ~0.85 at full weight
+
     def modify_kv_cache(self, kv_cache):
         """Apply decay to KV cache"""
         if kv_cache is None:
@@ -2439,14 +2440,20 @@ class KVDecayEffect(BaseEffect):
         pass
 
 class KVCompressionEffect(BaseEffect):
-    """KV cache compression effect"""
-    
+    """KV cache compression effect — coarser memory (implemented as stronger recency decay)."""
+
     def __init__(self, weight: float = 0.5, direction: str = "up"):
         super().__init__(weight, direction)
-        
+
     def apply(self, model, **kwargs):
-        pass  # Applied during generation
-        
+        pass  # Wired via NeuromodTool.build_kv_cache() -> a DecayingCache passed to generate().
+
+    def kv_decay_factor(self):
+        """Compression → coarser memory, modeled as a stronger per-step value-cache decay than
+        plain decay. (True eviction would desync the cache length with position/mask bookkeeping
+        during generation, so we use safe value down-weighting instead.)"""
+        return 1.0 - self.get_effective_value(0.0, 0.20)  # up to ~0.80 at full weight
+
     def modify_kv_cache(self, kv_cache):
         """Apply compression to KV cache"""
         if kv_cache is None:
@@ -3211,85 +3218,61 @@ class VerifierGuidedDecodingEffect(BaseEffect):
 class StyleAffectLogitBiasEffect(BaseEffect):
     """Style/affect logit bias (sentiment, prosociality)"""
     
-    def __init__(self, weight: float = 0.5, direction: str = "up", 
+    # Concept word lists (tokenizer-derived at apply time) replacing the old arbitrary token IDs.
+    STYLE_WORDS = {
+        "prosocial": {
+            "positive": ["help", "kind", "support", "care", "please", "thank", "gentle",
+                         "hope", "together", "share", "comfort", "encourage"],
+            "negative": ["hate", "hurt", "attack", "destroy", "cruel", "threat", "harm",
+                         "insult", "mock", "abuse"]},
+        "sentiment": {
+            "positive": ["happy", "joy", "wonderful", "great", "love", "delight", "bright",
+                         "glad", "hopeful", "beautiful"],
+            "negative": ["sad", "terrible", "awful", "miserable", "gloom", "despair",
+                         "hopeless", "bleak", "dread"]},
+        "warmth": {
+            "positive": ["warm", "friendly", "welcome", "cozy", "embrace", "dear", "tender",
+                         "affectionate"],
+            "negative": ["cold", "distant", "aloof", "harsh", "indifferent", "detached"]},
+        "empathy": {
+            "positive": ["understand", "feel", "compassion", "comfort", "listen", "empathize",
+                         "console", "support"],
+            "negative": ["dismiss", "ignore", "uncaring", "callous", "cold", "indifferent"]},
+    }
+
+    def __init__(self, weight: float = 0.5, direction: str = "up",
                  bias_type: str = "prosocial", sentiment: str = "positive"):
         super().__init__(weight, direction)
         self.bias_type = bias_type
         self.sentiment = sentiment
-        self.handles = []
-        
-        # Define bias patterns for different styles
-        self.style_biases = {
-            "prosocial": {
-                "positive": [100, 200, 300, 400, 500],  # Helpful, kind, supportive tokens
-                "negative": [600, 700, 800, 900, 1000]  # Harmful, aggressive tokens
-            },
-            "sentiment": {
-                "positive": [150, 250, 350, 450, 550],  # Happy, optimistic tokens
-                "negative": [650, 750, 850, 950, 1050]  # Sad, pessimistic tokens
-            },
-            "warmth": {
-                "positive": [120, 220, 320, 420, 520],  # Warm, friendly tokens
-                "negative": [620, 720, 820, 920, 1020]  # Cold, distant tokens
-            },
-            "empathy": {
-                "positive": [130, 230, 330, 430, 530],  # Understanding, caring tokens
-                "negative": [630, 730, 830, 930, 1030]  # Dismissive, uncaring tokens
-            }
-        }
-        
+        self._handles = []
+        self._tokenizer = None
+        self._boost_ids = []
+        self._suppress_ids = []
+
+    def _build_ids(self):
+        words = self.STYLE_WORDS.get(self.bias_type, self.STYLE_WORDS["prosocial"])
+        pos = token_ids_for_words(self._tokenizer, words["positive"])
+        neg = token_ids_for_words(self._tokenizer, words["negative"])
+        # "positive" sentiment boosts positive words; "negative" flips it.
+        if self.sentiment == "negative":
+            pos, neg = neg, pos
+        self._boost_ids, self._suppress_ids = pos, neg
+
     def apply(self, model, **kwargs):
-        """Apply style/affect bias"""
-        # This effect works through logits processing
-        pass
-        
+        """Capture the tokenizer and build concept-token id lists (bias runs via the processor)."""
+        self._tokenizer = kwargs.get("tokenizer") or getattr(model, "_tokenizer", None)
+        self._build_ids()
+
     def cleanup(self):
-        """Cleanup style bias effects"""
-        self.handles.clear()
-        
+        self._handles.clear()
+
     def get_logits_processor(self) -> LogitsProcessor:
-        """Get style/affect logits processor"""
-        effective_bias = self.get_effective_value(0.0, 0.4)
-        
-        class StyleAffectProcessor(LogitsProcessor):
-            def __init__(self, bias_type, sentiment, style_biases, bias_strength):
-                self.bias_type = bias_type
-                self.sentiment = sentiment
-                self.style_biases = style_biases
-                self.bias_strength = bias_strength
-                self.token_count = 0
-                
-            def __call__(self, input_ids, scores):
-                self.token_count += 1
-                
-                if self.bias_type in self.style_biases:
-                    bias_pattern = self.style_biases[self.bias_type]
-                    
-                    if self.sentiment == "positive":
-                        # Boost positive tokens
-                        for token_id in bias_pattern["positive"]:
-                            if token_id < scores.shape[-1]:
-                                scores[:, token_id] *= (1.0 + self.bias_strength)
-                        
-                        # Penalize negative tokens
-                        for token_id in bias_pattern["negative"]:
-                            if token_id < scores.shape[-1]:
-                                scores[:, token_id] *= (1.0 - self.bias_strength * 0.5)
-                    
-                    elif self.sentiment == "negative":
-                        # Boost negative tokens
-                        for token_id in bias_pattern["negative"]:
-                            if token_id < scores.shape[-1]:
-                                scores[:, token_id] *= (1.0 + self.bias_strength)
-                        
-                        # Penalize positive tokens
-                        for token_id in bias_pattern["positive"]:
-                            if token_id < scores.shape[-1]:
-                                scores[:, token_id] *= (1.0 - self.bias_strength * 0.5)
-                
-                return scores
-        
-        return StyleAffectProcessor(self.bias_type, self.sentiment, self.style_biases, effective_bias)
+        if not self._boost_ids and self._tokenizer is not None:
+            self._build_ids()
+        # Additive logit bias, scaled so a full-weight effect is a few nats.
+        bias = self.get_effective_value(0.0, 0.4) * 8.0
+        return ConceptLogitBiasProcessor(self._boost_ids, self._suppress_ids, bias)
 
 class RiskPreferenceSteeringEffect(BaseEffect):
     """Risk-preference steering"""
@@ -3453,196 +3436,88 @@ class ComputeAtTestSchedulingEffect(BaseEffect):
 class RetrievalRateModulationEffect(BaseEffect):
     """Retrieval rate modulation (RAG on/off or strength)"""
     
-    def __init__(self, weight: float = 0.5, direction: str = "up", 
+    RETRIEVAL_WORDS = {
+        "factual": ["fact", "evidence", "data", "research", "actually", "precisely", "according",
+                    "study", "verified", "documented", "measured", "record"],
+        "imaginative": ["imagine", "dream", "fantasy", "perhaps", "wonder", "magical", "story",
+                        "myth", "surreal", "vision", "invent"],
+    }
+
+    def __init__(self, weight: float = 0.5, direction: str = "up",
                  retrieval_mode: str = "factual", modulation_type: str = "strength"):
         super().__init__(weight, direction)
         self.retrieval_mode = retrieval_mode
         self.modulation_type = modulation_type
-        self.handles = []
-        
+        self._handles = []
+        self._tokenizer = None
+        self._boost_ids = []
+        self._suppress_ids = []
+
+    def _build_ids(self):
+        other = "imaginative" if self.retrieval_mode == "factual" else "factual"
+        self._boost_ids = token_ids_for_words(self._tokenizer, self.RETRIEVAL_WORDS[self.retrieval_mode])
+        self._suppress_ids = token_ids_for_words(self._tokenizer, self.RETRIEVAL_WORDS[other])
+
     def apply(self, model, **kwargs):
-        """Apply retrieval rate modulation"""
-        # This effect works through logits processing
-        pass
-        
+        """Capture tokenizer + build factual/imaginative concept-token id lists."""
+        self._tokenizer = kwargs.get("tokenizer") or getattr(model, "_tokenizer", None)
+        self._build_ids()
+
     def cleanup(self):
-        """Cleanup retrieval modulation effects"""
-        self.handles.clear()
-        
+        self._handles.clear()
+
     def get_logits_processor(self) -> LogitsProcessor:
-        """Get retrieval rate modulation logits processor"""
-        effective_modulation = self.get_effective_value(0.0, 0.5)
-        
-        class RetrievalModulationProcessor(LogitsProcessor):
-            def __init__(self, retrieval_mode, modulation_type, modulation_strength):
-                self.retrieval_mode = retrieval_mode
-                self.modulation_type = modulation_type
-                self.modulation_strength = modulation_strength
-                self.token_count = 0
-                
-            def __call__(self, input_ids, scores):
-                self.token_count += 1
-                
-                if self.retrieval_mode == "factual":
-                    if self.modulation_type == "strength":
-                        # Boost factual/grounded tokens
-                        factual_tokens = [120, 220, 320, 420, 520]  # Example factual tokens
-                        for token_id in factual_tokens:
-                            if token_id < scores.shape[-1]:
-                                scores[:, token_id] *= (1.0 + self.modulation_strength)
-                        
-                        # Penalize imaginative/fictional tokens
-                        imaginative_tokens = [125, 225, 325, 425, 525]  # Example imaginative tokens
-                        for token_id in imaginative_tokens:
-                            if token_id < scores.shape[-1]:
-                                scores[:, token_id] *= (1.0 - self.modulation_strength * 0.3)
-                    
-                    elif self.modulation_type == "on_off":
-                        # Binary factual mode
-                        if self.token_count % 20 < 10:  # On for 10 tokens, off for 10
-                            factual_tokens = [120, 220, 320, 420, 520]
-                            for token_id in factual_tokens:
-                                if token_id < scores.shape[-1]:
-                                    scores[:, token_id] *= (1.0 + self.modulation_strength)
-                
-                elif self.retrieval_mode == "imaginative":
-                    if self.modulation_type == "strength":
-                        # Boost imaginative/creative tokens
-                        imaginative_tokens = [125, 225, 325, 425, 525]
-                        for token_id in imaginative_tokens:
-                            if token_id < scores.shape[-1]:
-                                scores[:, token_id] *= (1.0 + self.modulation_strength)
-                        
-                        # Penalize overly factual tokens
-                        factual_tokens = [120, 220, 320, 420, 520]
-                        for token_id in factual_tokens:
-                            if token_id < scores.shape[-1]:
-                                scores[:, token_id] *= (1.0 - self.modulation_strength * 0.3)
-                    
-                    elif self.modulation_type == "on_off":
-                        # Binary imaginative mode
-                        if self.token_count % 20 >= 10:  # Off for 10 tokens, on for 10
-                            imaginative_tokens = [125, 225, 325, 425, 525]
-                            for token_id in imaginative_tokens:
-                                if token_id < scores.shape[-1]:
-                                    scores[:, token_id] *= (1.0 + self.modulation_strength)
-                
-                return scores
-        
-        return RetrievalModulationProcessor(self.retrieval_mode, self.modulation_type, effective_modulation)
+        if not self._boost_ids and self._tokenizer is not None:
+            self._build_ids()
+        bias = self.get_effective_value(0.0, 0.5) * 8.0
+        return ConceptLogitBiasProcessor(self._boost_ids, self._suppress_ids, bias)
 
 class PersonaVoiceConstraintsEffect(BaseEffect):
     """Persona/voice constraints (hidden prompts or Δh)"""
     
-    def __init__(self, weight: float = 0.5, direction: str = "up", 
+    PERSONA_WORDS = {
+        "professional": {"preferred": ["therefore", "regarding", "accordingly", "furthermore",
+                                       "moreover", "consequently", "pursuant", "formally"],
+                         "against": ["yeah", "gonna", "cool", "stuff", "kinda", "hey", "dude"]},
+        "friendly": {"preferred": ["hi", "thanks", "glad", "happy", "welcome", "cheers", "great",
+                                   "wonderful"],
+                     "against": ["regards", "noted", "proceed", "furthermore", "hereby"]},
+        "authoritative": {"preferred": ["certainly", "definitely", "must", "will", "clearly",
+                                        "undoubtedly", "precisely", "absolutely"],
+                          "against": ["maybe", "perhaps", "might", "possibly", "guess", "unsure"]},
+        "creative": {"preferred": ["vivid", "imagine", "dream", "color", "dance", "poetic",
+                                   "wondrous", "shimmer"],
+                     "against": ["analyze", "therefore", "data", "logic", "systematic", "metric"]},
+    }
+
+    def __init__(self, weight: float = 0.5, direction: str = "up",
                  persona_type: str = "professional", voice_mode: str = "stable"):
         super().__init__(weight, direction)
         self.persona_type = persona_type
         self.voice_mode = voice_mode
-        self.handles = []
-        
-        # Define persona patterns
-        self.persona_patterns = {
-            "professional": {
-                "formal_tokens": [130, 230, 330, 430, 530],
-                "casual_tokens": [135, 235, 335, 435, 535]
-            },
-            "friendly": {
-                "warm_tokens": [140, 240, 340, 440, 540],
-                "cold_tokens": [145, 245, 345, 445, 545]
-            },
-            "authoritative": {
-                "confident_tokens": [150, 250, 350, 450, 550],
-                "uncertain_tokens": [155, 255, 355, 455, 555]
-            },
-            "creative": {
-                "artistic_tokens": [160, 260, 360, 460, 560],
-                "analytical_tokens": [165, 265, 365, 465, 565]
-            }
-        }
-        
+        self._handles = []
+        self._tokenizer = None
+        self._boost_ids = []
+        self._suppress_ids = []
+
+    def _build_ids(self):
+        words = self.PERSONA_WORDS.get(self.persona_type, self.PERSONA_WORDS["professional"])
+        self._boost_ids = token_ids_for_words(self._tokenizer, words["preferred"])
+        self._suppress_ids = token_ids_for_words(self._tokenizer, words["against"])
+
     def apply(self, model, **kwargs):
-        """Apply persona/voice constraints"""
-        # This effect works through logits processing
-        pass
-        
+        """Capture tokenizer + build persona concept-token id lists."""
+        self._tokenizer = kwargs.get("tokenizer") or getattr(model, "_tokenizer", None)
+        self._build_ids()
+
     def cleanup(self):
-        """Cleanup persona/voice effects"""
-        self.handles.clear()
-        
+        self._handles.clear()
+
     def get_logits_processor(self) -> LogitsProcessor:
-        """Get persona/voice logits processor"""
-        effective_persona = self.get_effective_value(0.0, 0.4)
-        
-        class PersonaVoiceProcessor(LogitsProcessor):
-            def __init__(self, persona_type, voice_mode, persona_patterns, persona_strength):
-                self.persona_type = persona_type
-                self.voice_mode = voice_mode
-                self.persona_patterns = persona_patterns
-                self.persona_strength = persona_strength
-                self.token_count = 0
-                
-            def __call__(self, input_ids, scores):
-                self.token_count += 1
-                
-                if self.persona_type in self.persona_patterns:
-                    pattern = self.persona_patterns[self.persona_type]
-                    
-                    if self.voice_mode == "stable":
-                        # Consistent persona application
-                        # Boost preferred tokens
-                        preferred_tokens = list(pattern.values())[0]  # First token list
-                        for token_id in preferred_tokens:
-                            if token_id < scores.shape[-1]:
-                                scores[:, token_id] *= (1.0 + self.persona_strength)
-                        
-                        # Penalize non-preferred tokens
-                        non_preferred_tokens = list(pattern.values())[1]  # Second token list
-                        for token_id in non_preferred_tokens:
-                            if token_id < scores.shape[-1]:
-                                scores[:, token_id] *= (1.0 - self.persona_strength * 0.5)
-                    
-                    elif self.voice_mode == "adaptive":
-                        # Adaptive persona based on context
-                        seq_len = input_ids.shape[1]
-                        if seq_len > 10:
-                            # Switch persona based on recent context
-                            recent_context = input_ids[:, -5:]
-                            context_variety = torch.std(recent_context.float())
-                            
-                            if context_variety > 5:  # Diverse context
-                                # Use more flexible persona
-                                all_tokens = preferred_tokens + non_preferred_tokens
-                                for token_id in all_tokens:
-                                    if token_id < scores.shape[-1]:
-                                        scores[:, token_id] *= (1.0 + self.persona_strength * 0.3)
-                            else:
-                                # Use more rigid persona
-                                preferred_tokens = list(pattern.values())[0]
-                                for token_id in preferred_tokens:
-                                    if token_id < scores.shape[-1]:
-                                        scores[:, token_id] *= (1.0 + self.persona_strength)
-                    
-                    elif self.voice_mode == "oscillating":
-                        # Oscillating persona strength
-                        phase = (self.token_count % 30) / 30.0  # 30-token cycle
-                        
-                        if phase < 0.5:
-                            # Strong persona phase
-                            preferred_tokens = list(pattern.values())[0]
-                            for token_id in preferred_tokens:
-                                if token_id < scores.shape[-1]:
-                                    scores[:, token_id] *= (1.0 + self.persona_strength * (1.0 - phase))
-                        else:
-                            # Weak persona phase
-                            preferred_tokens = list(pattern.values())[0]
-                            for token_id in preferred_tokens:
-                                if token_id < scores.shape[-1]:
-                                    scores[:, token_id] *= (1.0 + self.persona_strength * phase)
-                
-                return scores
-        
-        return PersonaVoiceProcessor(self.persona_type, self.voice_mode, self.persona_patterns, effective_persona)
+        if not self._boost_ids and self._tokenizer is not None:
+            self._build_ids()
+        bias = self.get_effective_value(0.0, 0.4) * 8.0
+        return ConceptLogitBiasProcessor(self._boost_ids, self._suppress_ids, bias)
 
 # ============================================================================
 # INPUT / CONTEXT PERTURBATION EFFECTS
@@ -4197,22 +4072,32 @@ class ActivationAdditionsEffect(BaseEffect):
 class SoftProjectionEffect(BaseEffect):
     """Soft projection ("conceptors") for feature subspace gating"""
     
-    def __init__(self, weight: float = 0.5, direction: str = "up", 
+    # Per-subspace scale + a deterministic seed so the projection is reproducible per model.
+    _PROJ_SCALE = {"creative": 0.10, "analytical": 0.08, "emotional": 0.12,
+                   "spatial": 0.09, "linguistic": 0.07}
+    _PROJ_SEED = {"creative": 1, "analytical": 2, "emotional": 3, "spatial": 4, "linguistic": 5}
+
+    def __init__(self, weight: float = 0.5, direction: str = "up",
                  projection_type: str = "creative", layers: str = "mid"):
         super().__init__(weight, direction)
         self.projection_type = projection_type
         self.layers = layers
         self.handles = []
-        
-        # Define projection matrices for different feature subspaces
-        self.projections = {
-            "creative": torch.randn(768, 768) * 0.1,  # Creative thinking subspace
-            "analytical": torch.randn(768, 768) * 0.08,  # Analytical thinking subspace
-            "emotional": torch.randn(768, 768) * 0.12,  # Emotional processing subspace
-            "spatial": torch.randn(768, 768) * 0.09,  # Spatial reasoning subspace
-            "linguistic": torch.randn(768, 768) * 0.07,  # Linguistic processing subspace
-        }
-        
+        # Projection matrices are built lazily at the model's ACTUAL hidden_size (was hardcoded
+        # 768x768, which raised and got skipped on any model with hidden_size != 768, e.g.
+        # gpt-oss's 2880 — silently inert). Cached per hidden size.
+        self._proj_cache = {}
+
+    def _get_projection(self, hidden_size, device, dtype):
+        key = (self.projection_type, hidden_size)
+        P = self._proj_cache.get(key)
+        if P is None:
+            scale = self._PROJ_SCALE.get(self.projection_type, 0.1)
+            g = torch.Generator().manual_seed(self._PROJ_SEED.get(self.projection_type, 0))
+            P = torch.randn(hidden_size, hidden_size, generator=g) * scale
+            self._proj_cache[key] = P
+        return P.to(device=device, dtype=dtype)
+
     def apply(self, model, **kwargs):
         """Apply soft projection to transformer layers"""
         blocks = self._resolve_blocks(model)
@@ -4235,23 +4120,16 @@ class SoftProjectionEffect(BaseEffect):
                     # Get original output
                     output = original_forward(*args, **kwargs)
                     
-                    # Apply soft projection to hidden states
+                    # Apply soft projection to hidden states (projection sized to the actual model)
                     if isinstance(output, tuple) and len(output) >= 1:
                         hidden_states = output[0]
-                        
-                        # Apply projection matrix
-                        if self.projection_type in self.projections:
-                            projection = self.projections[self.projection_type]
-                            
-                            # Match device + dtype (bf16-safe: projection matmul with hidden_states).
-                            projection = projection.to(device=hidden_states.device, dtype=hidden_states.dtype)
-                            # Soft projection: h = h + α * P * h
-                            projected = torch.matmul(hidden_states, projection.T)
-                            hidden_states = hidden_states + effective_strength * projected
-                            
-                            # Update output tuple
-                            output = (hidden_states,) + output[1:]
-                    
+                        projection = self._get_projection(
+                            hidden_states.shape[-1], hidden_states.device, hidden_states.dtype)
+                        # Soft projection: h = h + α * P * h
+                        projected = torch.matmul(hidden_states, projection.T)
+                        hidden_states = hidden_states + effective_strength * projected
+                        output = (hidden_states,) + output[1:]
+
                     return output
                 
                 block.forward = projected_forward
