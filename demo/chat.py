@@ -93,6 +93,9 @@ class NeuromodChat:
         self.model_name = getattr(self.remote, "model", None) or "remote"
         self.available_packs = _list_packs_from_config()
         self.neuromod_tool = None
+        # Reasoning models (gpt-oss) spend tokens on an analysis channel before the final answer,
+        # so give more headroom by default or the reply can run out of budget mid-thought.
+        self.current_token_preset = "long"
         print("✅ Connected to RunPod endpoint (HTTP)")
         print(f"   Endpoint: {getattr(self.remote, 'endpoint_id', '?')}")
         print(f"   Model:    {self.model_name}")
@@ -323,6 +326,13 @@ class NeuromodChat:
     def _generate_remote(self, prompt: str, max_tokens: int) -> str:
         """Generate via the RunPod HTTP endpoint (no local model/torch)."""
         pack = self.active_packs[0] if self.active_packs else None
+
+        def _status(status, job_id):
+            # Reassure during the (possibly long) cold start / big-model generation.
+            label = {"IN_QUEUE": "queued (cold start / spinning a worker)…",
+                     "IN_PROGRESS": "generating…"}.get(status, status)
+            print(f"   ⏳ {label}", flush=True)
+
         try:
             t0 = time.time()
             res = self.remote.generate_text(
@@ -331,6 +341,7 @@ class NeuromodChat:
                 temperature=0.7,
                 pack_name=pack,
                 intensity=self.intensity,
+                on_status=_status,
             )
             text = (res.get("text") or "").strip()
             # Optionally show the model's reasoning/analysis channel — on a reasoning model the
