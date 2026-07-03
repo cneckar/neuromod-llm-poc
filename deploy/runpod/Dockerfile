@@ -19,6 +19,11 @@ ENV PYTHONUNBUFFERED=1 \
     MODEL_NAME=openai/gpt-oss-20b \
     STEERING_DIR=/runpod-volume/steering_vectors \
     ENDPOINTS_DIR=/runpod-volume/endpoints \
+    # Volume code overlay: if a repo checkout exists here on the network volume, the handler
+    # imports neuromod/api from it instead of the baked /app copy — so pure-Python fixes to
+    # neuromod.* ship via `git pull` on the volume (from a CPU pod), NO rebuild. No-op until the
+    # dir exists (handler guards on isdir), so this default is safe.
+    NEUROMOD_CODE_DIR=/runpod-volume/code/neuromod-llm-poc \
     WARM_ON_START=0
 
 WORKDIR /app

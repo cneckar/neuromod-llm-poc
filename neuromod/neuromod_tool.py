@@ -40,8 +40,10 @@ class NeuromodTool:
         self.probe_bus = ProbeBus()
         self._setup_default_probes()
         
-        # Emotion system
-        self.emotion_system = EmotionSystem(window_size=64)
+        # Emotion system — pass the model id so its (optional) per-model persona vectors resolve.
+        _model_id = (getattr(model, "name_or_path", None)
+                     or getattr(getattr(model, "config", None), "_name_or_path", None))
+        self.emotion_system = EmotionSystem(window_size=64, model_name=_model_id)
         
         # Legacy compatibility
         self.active_hooks = {}

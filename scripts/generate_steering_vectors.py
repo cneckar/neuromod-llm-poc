@@ -48,7 +48,11 @@ def main():
                        help="Use test mode (smaller models)")
     parser.add_argument("--min-pairs", type=int, default=100,
                        help="Minimum number of prompt pairs required (default: 100, lower values may reduce quality)")
-    
+    parser.add_argument("--no-model-subdir", action="store_true",
+                       help="Write vectors flat into --output-dir instead of a per-model "
+                            "subdirectory (default: nest under <output-dir>/<model-slug>/ so "
+                            "vectors for different models can coexist)")
+
     args = parser.parse_args()
     
     # Initialize model support
@@ -91,8 +95,15 @@ def main():
     else:
         steering_types = sorted(available_types)
     
-    # Generate vectors
+    # Generate vectors. Nest under a per-model subdir by default so one directory (or
+    # network volume) can hold vectors for several models; the loader
+    # (neuromod.effects.resolve_steering_vector_path) looks here first, keyed on model id.
+    from neuromod.effects import steering_model_slug
     output_dir = Path(args.output_dir)
+    if not args.no_model_subdir:
+        slug = steering_model_slug(args.model)
+        if slug and output_dir.name != slug:
+            output_dir = output_dir / slug
     output_dir.mkdir(parents=True, exist_ok=True)
     
     logger.info(f"Generating {len(steering_types)} steering vector(s) using robust MDV pipeline")

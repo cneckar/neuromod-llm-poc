@@ -1663,11 +1663,60 @@ class AttentionSinksAnchorsEffect(BaseEffect):
 # STEERING EFFECTS
 # ============================================================================
 
+def steering_model_slug(model_name: Optional[str]) -> Optional[str]:
+    """Turn an HF model id into a filesystem-safe, deterministic subdirectory name.
+
+    e.g. "openai/gpt-oss-120b" -> "openai__gpt-oss-120b". Deterministic from the id
+    so the loader can find a model's vectors without any extra config. Returns None
+    when no model name is known (callers then fall back to the flat directory).
+    """
+    if not model_name:
+        return None
+    return model_name.strip().replace("/", "__")
+
+
+def resolve_steering_vector_path(vector_dir, steering_type: str,
+                                 model_name: Optional[str] = None,
+                                 layers=(-1, -2, 0)) -> Optional[str]:
+    """Resolve a steering-vector file, preferring a per-model subdirectory.
+
+    Steering vectors are model-specific (they live in a model's hidden space and have
+    that model's hidden_size), so a single repo/volume must be able to hold vectors for
+    several models side by side. Layout::
+
+        <vector_dir>/<model_slug>/<type>_layer-1.pt   # per-model (preferred)
+        <vector_dir>/<type>_layer-1.pt                # flat  (legacy / single-model)
+
+    Search order: for each candidate dir (model subdir first, then the flat base), try
+    each layer suffix, then the no-suffix name. ``model_name`` falls back to the
+    ``MODEL_NAME`` env var (which the served worker already sets), so no plumbing is
+    needed on the serving path. Returns the first existing path, or None.
+    """
+    from pathlib import Path
+    base = Path(vector_dir)
+    slug = steering_model_slug(model_name or os.environ.get("MODEL_NAME"))
+    search_dirs = []
+    if slug:
+        search_dirs.append(base / slug)
+    search_dirs.append(base)
+    for d in search_dirs:
+        for layer_idx in layers:
+            candidate = d / f"{steering_type}_layer{layer_idx}.pt"
+            if candidate.exists():
+                return str(candidate)
+    for d in search_dirs:
+        candidate = d / f"{steering_type}.pt"
+        if candidate.exists():
+            return str(candidate)
+    return None
+
+
 class SteeringEffect(BaseEffect):
     """Activation steering effect using Contrastive Activation Addition (CAA) vectors"""
     
     def __init__(self, weight: float = 0.5, direction: str = "up", steering_type: str = "associative",
-                 vector_path: Optional[str] = None, vector_dir: Optional[str] = None):
+                 vector_path: Optional[str] = None, vector_dir: Optional[str] = None,
+                 model_name: Optional[str] = None):
         super().__init__(weight, direction)
         self.steering_type = steering_type
         self.vector_path = vector_path
@@ -1676,6 +1725,9 @@ class SteeringEffect(BaseEffect):
         # volume (e.g. /runpod-volume/steering_vectors regenerated for gpt-oss) instead of the
         # committed defaults. Keep this in sync with deploy/runpod/handler.py's STEERING_DIR.
         self.vector_dir = vector_dir or os.environ.get("STEERING_DIR", "outputs/steering_vectors")
+        # Model id used to pick the per-model subdir (falls back to MODEL_NAME env in the
+        # resolver). Different models need different vectors; this keeps them from colliding.
+        self.model_name = model_name
         self.vector = None  # Initialize as None - will be loaded on demand
         
         # Dictionary to cache loaded vectors by steering_type
@@ -1700,20 +1752,10 @@ class SteeringEffect(BaseEffect):
             if self.vector_path:
                 vector_path = self.vector_path
             else:
-                # Construct path from steering_type
-                # Try multiple layer indices (prefer last layer)
-                vector_dir = Path(self.vector_dir)
-                for layer_idx in [-1, -2, 0]:
-                    candidate_path = vector_dir / f"{self.steering_type}_layer{layer_idx}.pt"
-                    if candidate_path.exists():
-                        vector_path = str(candidate_path)
-                        break
-                
-                if vector_path is None:
-                    # Try without layer suffix
-                    candidate_path = vector_dir / f"{self.steering_type}.pt"
-                    if candidate_path.exists():
-                        vector_path = str(candidate_path)
+                # Construct path from steering_type, preferring a per-model subdir so
+                # vectors for different models can coexist in one vector_dir.
+                vector_path = resolve_steering_vector_path(
+                    self.vector_dir, self.steering_type, model_name=self.model_name)
         
         if vector_path is None:
             logger.warning(f"CRITICAL WARNING: No steering vector path specified for '{self.steering_type}'. "
@@ -2000,11 +2042,13 @@ class RandomOrthogonalSteeringEffect(BaseEffect):
                  reference_vector_path: Optional[str] = None,
                  vector_dir: str = "outputs/steering_vectors",
                  hidden_size: int = 768,
-                 orthogonality_tolerance: float = 1e-6):
+                 orthogonality_tolerance: float = 1e-6,
+                 model_name: Optional[str] = None):
         super().__init__(weight, direction)
         self.reference_steering_type = reference_steering_type
         self.reference_vector_path = reference_vector_path
         self.vector_dir = vector_dir
+        self.model_name = model_name
         self.hidden_size = hidden_size
         self.orthogonality_tolerance = orthogonality_tolerance
         
@@ -2045,31 +2089,10 @@ class RandomOrthogonalSteeringEffect(BaseEffect):
                 # REMOVE SILENT FAILURE
                 raise RuntimeError(f"CRITICAL EXPERIMENTAL FAILURE: Could not load steering vector at {self.reference_vector_path}. Aborting trial to prevent false null results.") from e
         
-        # Try to load from vector_dir using steering_type
-        vector_dir = Path(self.vector_dir)
-        for layer_idx in [-1, -2, 0]:
-            candidate_path = vector_dir / f"{self.reference_steering_type}_layer{layer_idx}.pt"
-            if candidate_path.exists():
-                try:
-                    ref_vec = torch.load(candidate_path, map_location='cpu')
-                    if isinstance(ref_vec, torch.Tensor):
-                        # Resize if needed
-                        if ref_vec.shape[0] != hidden_size:
-                            if ref_vec.shape[0] < hidden_size:
-                                padding = torch.zeros(hidden_size - ref_vec.shape[0])
-                                ref_vec = torch.cat([ref_vec, padding])
-                            else:
-                                ref_vec = ref_vec[:hidden_size]
-                        self.reference_vector = ref_vec
-                        logger.info(f"Loaded reference vector from {candidate_path}: norm={torch.norm(ref_vec):.4f}")
-                        return ref_vec
-                except Exception as e:
-                    # REMOVE SILENT FAILURE
-                    raise RuntimeError(f"CRITICAL EXPERIMENTAL FAILURE: Could not load steering vector at {candidate_path}. Aborting trial to prevent false null results.") from e
-        
-        # Try without layer suffix
-        candidate_path = vector_dir / f"{self.reference_steering_type}.pt"
-        if candidate_path.exists():
+        # Try to load from vector_dir using steering_type, preferring a per-model subdir.
+        candidate_path = resolve_steering_vector_path(
+            self.vector_dir, self.reference_steering_type, model_name=self.model_name)
+        if candidate_path is not None:
             try:
                 ref_vec = torch.load(candidate_path, map_location='cpu')
                 if isinstance(ref_vec, torch.Tensor):
@@ -2086,7 +2109,7 @@ class RandomOrthogonalSteeringEffect(BaseEffect):
             except Exception as e:
                 # REMOVE SILENT FAILURE
                 raise RuntimeError(f"CRITICAL EXPERIMENTAL FAILURE: Could not load steering vector at {candidate_path}. Aborting trial to prevent false null results.") from e
-        
+
         # REMOVE SILENT FAILURE: No fallback to zero vector
         raise RuntimeError(f"CRITICAL EXPERIMENTAL FAILURE: Reference vector for '{self.reference_steering_type}' not found at {self.vector_dir}. Aborting trial to prevent false null results.")
     
@@ -3764,7 +3787,8 @@ class ActivationAdditionsEffect(BaseEffect):
         # Steering vectors will be loaded from disk (CAA-generated)
         # Fallback to zero vectors if not found (NOT random noise)
         self.steering_vectors = {}
-        self.vector_dir = "outputs/steering_vectors"
+        self.vector_dir = os.environ.get("STEERING_DIR", "outputs/steering_vectors")
+        self.model_name = None  # set by caller to pick a per-model subdir (else MODEL_NAME env)
         self._vector_cache = {}
         
         # Contrastive prompt system for steering vector construction
@@ -3828,21 +3852,10 @@ class ActivationAdditionsEffect(BaseEffect):
         if steering_type in self._vector_cache:
             return self._vector_cache[steering_type]
         
-        vector_dir = Path(self.vector_dir)
-        vector_path = None
-        
-        # Try multiple layer indices
-        for layer_idx in [-1, -2, 0]:
-            candidate_path = vector_dir / f"{steering_type}_layer{layer_idx}.pt"
-            if candidate_path.exists():
-                vector_path = candidate_path
-                break
-        
-        if vector_path is None:
-            candidate_path = vector_dir / f"{steering_type}.pt"
-            if candidate_path.exists():
-                vector_path = candidate_path
-        
+        # Prefer a per-model subdir so vectors for different models can coexist.
+        vector_path = resolve_steering_vector_path(
+            self.vector_dir, steering_type, model_name=self.model_name)
+
         if vector_path is None:
             logger.warning(f"Steering vector for '{steering_type}' not found. Using zero vector.")
             vector = torch.zeros(hidden_size)
