@@ -76,9 +76,15 @@ def behavioral_metrics(text: str) -> dict:
 # --------------------------------------------------------------------------------------
 
 
+def _status_printer(label):
+    def _cb(status, job_id):
+        print(f"[remote]   {label}: {status} (job {job_id})", flush=True)
+    return _cb
+
+
 def run_steering(client, model, outdir):
     print(f"[remote] regenerating steering vectors for {model} on the worker ...", flush=True)
-    res = client.run_task("steering", model=model)
+    res = client.run_task("steering", model=model, on_status=_status_printer("steering"))
     os.makedirs(outdir, exist_ok=True)
     with open(os.path.join(outdir, "steering_result.json"), "w") as fh:
         json.dump(res, fh, indent=2)
@@ -94,7 +100,8 @@ def run_endpoints(client, model, packs, outdir):
     results = {}
     for pack in packs:
         print(f"[remote] running endpoint battery for pack='{pack}' on the worker ...", flush=True)
-        res = client.run_task("endpoints", pack_name=pack, model=model)
+        res = client.run_task("endpoints", pack_name=pack, model=model,
+                              on_status=_status_printer(f"endpoints[{pack}]"))
         results[pack] = {"ok": res.get("ok"), "gpu_seconds": res.get("gpu_seconds")}
         data = res.get("endpoints_json")
         if data is not None:
@@ -142,7 +149,12 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="Run the study over a RunPod Serverless endpoint")
     ap.add_argument("--mode", choices=["steering", "endpoints", "behavioral"], default="behavioral")
     ap.add_argument("--model", default=None, help="Served model (e.g. openai/gpt-oss-120b)")
-    ap.add_argument("--packs", default="lsd,cocaine,morphine")
+    ap.add_argument("--packs", default="lsd,cocaine,morphine",
+                    help="Comma-separated packs (ignored if --full)")
+    ap.add_argument("--full", action="store_true",
+                    help="Use the paper's full 13-pack panel (lsd,psilocybin,mescaline,dmt,2c_b,"
+                         "amphetamine,cocaine,methylphenidate,heroin,benzodiazepines,morphine,"
+                         "caffeine,placebo)")
     ap.add_argument("--intensities", default="0.0,0.25,0.5,0.75,1.0")
     ap.add_argument("--prompts", default=None, help="Path to a newline-delimited prompt file")
     ap.add_argument("--max-tokens", type=int, default=128)
@@ -151,7 +163,10 @@ def main(argv=None):
     args = ap.parse_args(argv)
 
     client = interface_from_env(model=args.model)
-    packs = [p.strip() for p in args.packs.split(",") if p.strip()]
+    # The paper's full 13-pack panel (mirrors scripts/reproduce.py PACKS_FULL).
+    PACKS_FULL = ["lsd", "psilocybin", "mescaline", "dmt", "2c_b", "amphetamine", "cocaine",
+                  "methylphenidate", "heroin", "benzodiazepines", "morphine", "caffeine", "placebo"]
+    packs = PACKS_FULL if args.full else [p.strip() for p in args.packs.split(",") if p.strip()]
 
     if args.mode == "steering":
         run_steering(client, args.model, args.outdir)

@@ -120,14 +120,32 @@ curl -s -X POST https://api.runpod.ai/v2/<ENDPOINT_ID>/runsync \
   -d '{"input":{"task":"endpoints","pack_name":"lsd","model":"gpt-oss-120b"}}'
 ```
 
-Or drive it from a laptop (torch-free client — pay only for the worker's GPU-seconds):
+Or drive it from a laptop (torch-free client — pay only for the worker's GPU-seconds). The client
+submits server-side jobs **async** (`/run` + poll `/status`) so the multi-minute battery on a 120B
+model can't hit the `/runsync` timeout:
 
 ```bash
 export RUNPOD_ENDPOINT_ID=... RUNPOD_API_KEY=...
+
+# 0) one-time: make the served model's steering vectors valid (writes to the volume).
 python scripts/run_remote_study.py --mode steering  --model openai/gpt-oss-120b
-python scripts/run_remote_study.py --mode endpoints --model openai/gpt-oss-120b --packs lsd,cocaine,morphine
-python scripts/run_remote_study.py --mode behavioral --model openai/gpt-oss-120b --packs lsd,cocaine
+
+# 1) the FULL study — Table-1 internal-telemetry battery across the paper's 13-pack panel:
+python scripts/run_remote_study.py --mode endpoints --model openai/gpt-oss-120b --full \
+    --outdir outputs/remote_study_gptoss120b
+python scripts/analyze_endpoints.py --input-dir outputs/remote_study_gptoss120b/endpoints
+
+# 2) behavioral dose-response (packs × intensities) -> tidy CSV -> curves:
+python scripts/run_remote_study.py --mode behavioral --model openai/gpt-oss-120b --full \
+    --intensities 0.0,0.25,0.5,0.75,1.0 --out outputs/remote_study_gptoss120b/behavioral.csv
+python analysis/dose_response_stats.py --in outputs/remote_study_gptoss120b/behavioral.csv --plots
 ```
+
+`--full` = the paper's 13-pack panel (lsd, psilocybin, mescaline, dmt, 2c_b, amphetamine, cocaine,
+methylphenidate, heroin, benzodiazepines, morphine, caffeine, placebo); drop it and pass `--packs`
+for a subset. Each `endpoints` pack is a separate async job, so you can watch progress
+(`IN_QUEUE → IN_PROGRESS → COMPLETED`) per pack and the run resumes cleanly if interrupted (the
+job writes JSON to the volume and `--skip-completed` avoids re-running finished cells).
 
 `--mode endpoints` reproduces the **full** study (Table-1 battery, internal telemetry) via the
 endpoint; `--mode behavioral` is a text-only dose sweep whose CSV feeds

@@ -30,6 +30,7 @@ class _FakeResp:
     def __init__(self, payload, status=200):
         self._payload = payload
         self.status_code = status
+        self.text = str(payload)
 
     def raise_for_status(self):
         if self.status_code >= 400:
@@ -40,13 +41,25 @@ class _FakeResp:
 
 
 class _FakeRequests:
+    """Fake transport. `runsync` (and generate_text) get `payload`; the async /run + /status
+    flow returns a job id then a single COMPLETED status carrying `payload` as `output`.
+    """
+
     def __init__(self, payload):
         self.payload = payload
         self.last = None
 
     def post(self, url, headers=None, json=None, timeout=None):
         self.last = {"url": url, "headers": headers, "json": json}
+        if url.endswith("/run"):
+            return _FakeResp({"id": "job-1"})
+        # /runsync
         return _FakeResp(self.payload)
+
+    def get(self, url, headers=None, timeout=None):
+        # /status/<id> -> immediately COMPLETED with the payload as output
+        out = self.payload.get("output", self.payload) if isinstance(self.payload, dict) else self.payload
+        return _FakeResp({"status": "COMPLETED", "output": out})
 
 
 def _client(monkeypatch, payload):
@@ -81,19 +94,42 @@ def test_generate_text_raises_on_error_output(monkeypatch):
         client.generate_text("hi")
 
 
-def test_run_task_sends_task_and_returns_result(monkeypatch):
+def test_run_task_async_submits_and_polls_to_completion(monkeypatch):
+    # Default: long jobs go through /run + /status (not /runsync) so they can't time out.
     client, fake = _client(monkeypatch, {"output": {"ok": True, "task": "steering",
                                                     "artifacts": ["a.pt"]}})
-    res = client.run_task("steering", layer=-1)
+    statuses = []
+    res = client.run_task("steering", layer=-1, poll_interval=0,
+                          on_status=lambda s, j: statuses.append(s))
     assert res["ok"] and res["task"] == "steering"
+    # submitted via /run
+    assert fake.last["url"].endswith("/ep123/run")
     body = fake.last["json"]["input"]
     assert body["task"] == "steering" and body["layer"] == -1 and body["model"] == "openai/gpt-oss-120b"
+    assert statuses == ["COMPLETED"]
+
+
+def test_run_task_wait_false_uses_runsync(monkeypatch):
+    client, fake = _client(monkeypatch, {"output": {"ok": True, "task": "warmup"}})
+    res = client.run_task("warmup", wait=False)
+    assert res["ok"] and res["task"] == "warmup"
+    assert fake.last["url"].endswith("/ep123/runsync")
 
 
 def test_run_task_raises_on_error(monkeypatch):
     client, _ = _client(monkeypatch, {"output": {"ok": False, "error": "no weights"}})
     with pytest.raises(RuntimeError, match="no weights"):
-        client.run_task("endpoints", pack_name="lsd")
+        client.run_task("endpoints", pack_name="lsd", poll_interval=0)
+
+
+def test_run_async_raises_on_failed_job(monkeypatch):
+    fake = _FakeRequests({"output": {}})
+    # override /status to report FAILED
+    fake.get = lambda url, headers=None, timeout=None: _FakeResp({"status": "FAILED", "error": "boom"})
+    monkeypatch.setattr(rc, "requests", fake)
+    client = rc.RunPodModelInterface("ep123", "key")
+    with pytest.raises(RuntimeError, match="boom"):
+        client.run_task("endpoints", pack_name="lsd", poll_interval=0)
 
 
 def test_interface_from_env_requires_both_vars(monkeypatch):
