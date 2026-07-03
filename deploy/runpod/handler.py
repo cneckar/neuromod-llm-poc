@@ -43,6 +43,21 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__f
 STEERING_DIR = os.environ.get("STEERING_DIR", "/runpod-volume/steering_vectors")
 ENDPOINTS_DIR = os.environ.get("ENDPOINTS_DIR", "/runpod-volume/endpoints")
 
+# Optional volume-code overlay. If NEUROMOD_CODE_DIR points at a repo checkout on the network
+# volume, prepend it to sys.path so the worker imports neuromod/api from THERE instead of the
+# baked /app copy. This lets you ship pure-Python fixes to neuromod.* (e.g. steering) by running
+# `git pull` on the volume checkout from a CPU pod — NO image rebuild. Caveats: handler.py itself
+# is not overlaid (it's already the running entrypoint from /app), and dependency changes still
+# need a rebuild. neuromod.* imports are deferred into functions, so this insert (at import time)
+# takes effect before any of them run.
+NEUROMOD_CODE_DIR = os.environ.get("NEUROMOD_CODE_DIR")
+_CODE_OVERLAY_ACTIVE = bool(NEUROMOD_CODE_DIR and os.path.isdir(NEUROMOD_CODE_DIR))
+if _CODE_OVERLAY_ACTIVE:
+    sys.path.insert(0, NEUROMOD_CODE_DIR)
+    print(f"[overlay] Volume code overlay active: {NEUROMOD_CODE_DIR} (shadows baked /app)", flush=True)
+elif NEUROMOD_CODE_DIR:
+    print(f"[overlay] NEUROMOD_CODE_DIR={NEUROMOD_CODE_DIR} not a directory; using baked /app", flush=True)
+
 # Model registry (Deploy D2): friendly alias -> HF repo id. These are the switchable
 # endpoints -- the snappy default (20b), the hero (120b, 80GB), and Google's Gemma. Only
 # vetted ids load: a client-supplied ``model`` is resolved through this allow-list so a
@@ -414,6 +429,28 @@ def run_diag(parsed: Dict[str, Any]) -> Dict[str, Any]:
             info[f"disk_{label}_total_gb"] = round(u.total / 1e9, 1)
         except Exception:
             info[f"disk_{label}_free_gb"] = None
+    # Which code is the worker actually running? Report the overlay state and the git HEAD of
+    # both the baked copy and the overlay so you can confirm a fix is deployed WITHOUT a rebuild.
+    info["code_overlay_active"] = _CODE_OVERLAY_ACTIVE
+    info["code_overlay_dir"] = NEUROMOD_CODE_DIR
+
+    def _git_head(path):
+        try:
+            r = subprocess.run(["git", "-C", path, "rev-parse", "--short", "HEAD"],
+                               capture_output=True, text=True, timeout=10)
+            return (r.stdout or "").strip() or None
+        except Exception:
+            return None
+
+    info["git_head_baked"] = _git_head(_REPO_ROOT)
+    info["git_head_overlay"] = _git_head(NEUROMOD_CODE_DIR) if _CODE_OVERLAY_ACTIVE else None
+    # The path Python will actually import neuromod from (proves the overlay is winning).
+    try:
+        import importlib.util as _ilu
+        spec = _ilu.find_spec("neuromod")
+        info["neuromod_import_path"] = getattr(spec, "origin", None) if spec else None
+    except Exception as exc:
+        info["neuromod_import_path"] = f"(error: {exc})"
     return info
 
 
