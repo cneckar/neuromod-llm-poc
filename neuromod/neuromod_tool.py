@@ -246,6 +246,26 @@ class NeuromodTool:
         
         return hidden_states
     
+    def build_kv_cache(self, model=None):
+        """If a KV-decay/compression effect is active, return a decaying transformers Cache to
+        pass as ``past_key_values`` to ``model.generate()`` — the only way those effects reach a
+        served generation (HF never calls ``modify_kv_cache``). Returns None otherwise, so normal
+        packs are unaffected.
+        """
+        factors = []
+        try:
+            for eff in self.pack_manager.active_effects:
+                if hasattr(eff, "kv_decay_factor"):
+                    f = eff.kv_decay_factor()
+                    if f is not None and f < 1.0:
+                        factors.append(f)
+        except Exception:
+            return None
+        if not factors:
+            return None
+        from .effects import make_decaying_cache
+        return make_decaying_cache(min(factors))  # strongest decay wins
+
     def modify_kv_cache(self, kv_cache):
         """Modify KV cache"""
         # Apply modifications from new modular system
