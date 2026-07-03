@@ -56,12 +56,19 @@ def test_parse_event_input_wrapper_and_defaults():
     assert parsed["prompt"].endswith("Assistant:")
 
 
-def test_parse_event_raw_prompt_and_intensity_clamp():
-    ev = {"prompt": "just this", "intensity": 5.0, "pack_name": "cocaine", "max_tokens": 32}
+def test_parse_event_raw_prompt_and_intensity_overload():
+    # Intensity is a multiplier now: > 1.0 is allowed (overload), bounded by the safety ceiling.
+    ev = {"prompt": "just this", "intensity": 3.0, "pack_name": "cocaine", "max_tokens": 32}
     parsed = h.parse_event(ev)
     assert parsed["prompt"] == "just this"
-    assert parsed["intensity"] == 1.0  # clamped to [0, 1]
+    assert parsed["intensity"] == 3.0  # passes through (not clamped to 1.0)
     assert parsed["max_tokens"] == 32
+
+
+def test_parse_event_intensity_clamped_to_ceiling(monkeypatch):
+    monkeypatch.setenv("NEUROMOD_MAX_INTENSITY", "5.0")
+    assert h.parse_event({"prompt": "x", "intensity": 99.0})["intensity"] == 5.0  # capped
+    assert h.parse_event({"prompt": "x", "intensity": -2.0})["intensity"] == 0.0  # floor
 
 
 def test_parse_event_bad_numbers_fall_back():

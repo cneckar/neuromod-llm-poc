@@ -88,18 +88,28 @@ class NeuromodTool:
             return {"ok": False, "error": str(e)}
     
     def _scale_pack_intensity(self, pack: Pack, intensity: float) -> Pack:
-        """Scale all effect weights by intensity"""
+        """Scale all effect weights by ``intensity`` (a MULTIPLIER, not a 0-1 percentage).
+
+        Historically weights were clamped to 1.0, so a pack's weak baked weights could never be
+        pushed past their spec no matter the dose. To allow *overloading* a pack ("dial it up
+        until you see an effect"), the per-effect weight is now clamped to a generous ceiling
+        instead of 1.0 — so intensity can be > 1.0 and actually amplifies the effects. The ceiling
+        is configurable via ``NEUROMOD_MAX_EFFECT_WEIGHT`` (default 5.0) purely as a safety rail so
+        a runaway dose can't push an effect into NaN/inf territory and crash the worker.
+        """
+        import os
         from copy import deepcopy
-        from .pack_system import EffectConfig
-        
+
+        max_weight = float(os.environ.get("NEUROMOD_MAX_EFFECT_WEIGHT", "5.0"))
+
         # Create a copy of the pack
         scaled_pack = deepcopy(pack)
-        
-        # Scale all effect weights
+
+        # Scale all effect weights (multiplier; clamp to [0, max_weight], not [0, 1]).
         for effect_config in scaled_pack.effects:
             effect_config.weight *= intensity
-            effect_config.weight = max(0.0, min(1.0, effect_config.weight))
-            
+            effect_config.weight = max(0.0, min(max_weight, effect_config.weight))
+
         return scaled_pack
 
     def _setup_default_probes(self):

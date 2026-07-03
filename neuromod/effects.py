@@ -53,7 +53,12 @@ class BaseEffect(ABC):
     """Base class for all neuromodulation effects"""
     
     def __init__(self, weight: float = 0.5, direction: str = "up"):
-        self.weight = max(0.0, min(1.0, weight))  # Clamp to 0-1
+        # Clamp to [0, max]. The ceiling is 1.0 by default UNLESS overloading is enabled via
+        # NEUROMOD_MAX_EFFECT_WEIGHT (matches neuromod_tool._scale_pack_intensity), which lets an
+        # intensity > 1.0 actually amplify effects past their pack spec instead of re-clamping to
+        # 1.0 here. Note: probability-like params (e.g. top_p) stay bounded in their own effect.
+        _max_w = float(os.environ.get("NEUROMOD_MAX_EFFECT_WEIGHT", "5.0"))
+        self.weight = max(0.0, min(_max_w, weight))
         self.direction = direction  # "up", "down", or "neutral"
         
     @abstractmethod
