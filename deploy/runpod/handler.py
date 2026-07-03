@@ -522,13 +522,39 @@ def run_job(task: str, parsed: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def run_warmup(parsed: Dict[str, Any]) -> Dict[str, Any]:
-    """Pre-load the model on the worker (charges one cold start, then returns)."""
+    """Pre-load the model on the worker (charges one cold start, then returns).
+
+    Also reports the model's parameter device distribution so you can confirm gpt-oss's MoE
+    experts are all on the GPU. Any params on 'cpu'/'meta' are what cause the intermittent
+    "grouped_mm mat2 is on cpu" crash at generation.
+    """
     start = time.time()
-    _get_model(parsed["model"])
+    iface = _get_model(parsed["model"])
     cold = _pop_cold_start()
+
+    device_counts: Dict[str, int] = {}
+    hf_device_map = None
+    try:
+        model = getattr(iface, "model", None)
+        if model is not None:
+            for p in model.parameters():
+                d = str(p.device)
+                device_counts[d] = device_counts.get(d, 0) + 1
+            hf_device_map = getattr(model, "hf_device_map", None)
+            if hf_device_map is not None:
+                # summarize which devices the map places layers on (not the full per-layer dump)
+                hf_device_map = sorted({str(v) for v in hf_device_map.values()})
+    except Exception as exc:  # pragma: no cover - defensive
+        device_counts = {"error": str(exc)}
+
+    all_on_gpu = bool(device_counts) and all(
+        k.startswith("cuda") for k in device_counts if k != "error")
     return {"ok": True, "task": "warmup", "model": parsed["model"],
             "cold_start_seconds": round(cold, 4) if cold else None,
-            "warmup_seconds": round(time.time() - start, 4)}
+            "warmup_seconds": round(time.time() - start, 4),
+            "param_devices": device_counts,       # e.g. {"cuda:0": 700} — any "cpu"/"meta" is the bug
+            "hf_device_map_devices": hf_device_map,
+            "all_params_on_gpu": all_on_gpu}
 
 
 def run_steering_inprocess(parsed: Dict[str, Any]) -> Dict[str, Any]:

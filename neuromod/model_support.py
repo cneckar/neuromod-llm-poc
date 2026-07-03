@@ -997,9 +997,24 @@ class ModelSupportManager:
             else:
                 load_kwargs['quantization_config'] = quantization_config
         
+        # Pre-quantized MoE (gpt-oss MXFP4): use device_map="auto" so the Mxfp4 quantizer
+        # dispatches the packed expert weights onto the GPU correctly. A hard device_map="cuda:0"
+        # can leave those expert buffers off-GPU, which surfaces at generation as
+        # "grouped_mm mat2 is on cpu, different from other tensors on cuda:0" (intermittent — only
+        # when a token routes to an off-GPU expert). The model fits the GPU (63GB MXFP4 on a 140GB
+        # H200), so "auto" won't actually offload; we also cap max_memory to the GPU (leaving
+        # headroom for activations/KV) so nothing silently spills to CPU.
+        if is_pre_quantized and cuda_available and self.system_info.gpu_count > 0:
+            load_kwargs['device_map'] = "auto"
+            gpu_gb = self.system_info.gpu_memory_gb or 0.0
+            if gpu_gb > 20:
+                load_kwargs['max_memory'] = {0: f"{int(gpu_gb - 12)}GiB", "cpu": "0GiB"}
+            logger.info(f"Pre-quantized MoE: device_map='auto'"
+                        + (f" max_memory={load_kwargs.get('max_memory')}" if 'max_memory' in load_kwargs else "")
+                        + " (keep experts on GPU; avoid 'grouped_mm mat2 on cpu')")
         # Only add device_map if it's not None
         # When GPU is available, use specific GPU device instead of "auto" to prevent CPU offloading
-        if device_map is not None:
+        elif device_map is not None:
             if enable_cpu_offload and quantization_config is not None:
                 # For CPU offloading (no GPU), use "auto" which allows CPU/GPU distribution
                 if device_map == "auto":
