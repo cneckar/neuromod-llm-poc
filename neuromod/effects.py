@@ -1799,10 +1799,11 @@ class SteeringEffect(BaseEffect):
         
         # Get or load the vector
         steering_vector = self.get_vector(hidden_size=hidden_size)
-        
-        # FIX: Move vector to the same device as hidden_states
-        steering_vector = steering_vector.to(hidden_states.device)
-        
+
+        # Move vector to the hidden states' device AND dtype. Steering vectors are stored fp32;
+        # bf16 models (gpt-oss) would otherwise raise / promote on `hidden_states + steering_effect`.
+        steering_vector = steering_vector.to(device=hidden_states.device, dtype=hidden_states.dtype)
+
         # Calculate effective steering strength
         base_strength = 0.0
         max_strength = 0.3
@@ -1944,9 +1945,9 @@ class RandomDirectionEffect(BaseEffect):
         
         # Get or generate the random vector
         random_vector = self.get_vector(hidden_size=hidden_size)
-        
-        # FIX: Move to device
-        random_vector = random_vector.to(hidden_states.device)
+
+        # Match device AND dtype (bf16 models like gpt-oss otherwise error on the residual add).
+        random_vector = random_vector.to(device=hidden_states.device, dtype=hidden_states.dtype)
         
         # Calculate effective steering strength
         base_strength = 0.0
@@ -2235,8 +2236,8 @@ class RandomOrthogonalSteeringEffect(BaseEffect):
         # Get or generate the orthogonal vector
         orthogonal_vector = self.get_vector(hidden_size=hidden_size)
         
-        # FIX: Move to device
-        orthogonal_vector = orthogonal_vector.to(hidden_states.device)
+        # Match device + dtype (bf16-safe residual add).
+        orthogonal_vector = orthogonal_vector.to(device=hidden_states.device, dtype=hidden_states.dtype)
         
         # Calculate effective steering strength
         base_strength = 0.0
@@ -3966,8 +3967,8 @@ class ActivationAdditionsEffect(BaseEffect):
         # Get steering vector
         steering_vector = self.steering_vectors[self.steering_type]
         
-        # [FIX] Move to device
-        steering_vector = steering_vector.to(hidden_states.device)
+        # Match device + dtype (bf16-safe residual add).
+        steering_vector = steering_vector.to(device=hidden_states.device, dtype=hidden_states.dtype)
         
         # Calculate effective steering strength
         base_strength = 0.0
@@ -4023,8 +4024,8 @@ class ActivationAdditionsEffect(BaseEffect):
                         if self.steering_type in self.steering_vectors:
                             steering_vector = self.steering_vectors[self.steering_type]
                             
-                            # [FIX] Move steering vector to hidden_states device
-                            steering_vector = steering_vector.to(hidden_states.device)
+                            # Match device + dtype (bf16-safe residual add).
+                            steering_vector = steering_vector.to(device=hidden_states.device, dtype=hidden_states.dtype)
                             steering_effect = steering_vector.unsqueeze(0).unsqueeze(0) * effective_strength
                             
                             # Apply to last token position
@@ -4124,8 +4125,8 @@ class SoftProjectionEffect(BaseEffect):
                         if self.projection_type in self.projections:
                             projection = self.projections[self.projection_type]
                             
-                            # [FIX] Move projection matrix to device
-                            projection = projection.to(hidden_states.device)
+                            # Match device + dtype (bf16-safe: projection matmul with hidden_states).
+                            projection = projection.to(device=hidden_states.device, dtype=hidden_states.dtype)
                             # Soft projection: h = h + α * P * h
                             projected = torch.matmul(hidden_states, projection.T)
                             hidden_states = hidden_states + effective_strength * projected
