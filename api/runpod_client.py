@@ -15,11 +15,16 @@ See ``deploy/runpod/handler.py`` for the endpoint side and ``scripts/run_remote_
 driver.
 """
 
+import time
 from typing import Any, Dict, List, Optional
 
 import requests
 
 RUNPOD_BASE = "https://api.runpod.ai/v2"
+
+# Terminal RunPod job states for the async /run + /status flow.
+_DONE_STATES = {"COMPLETED"}
+_FAIL_STATES = {"FAILED", "CANCELLED", "TIMED_OUT"}
 
 
 class RunPodModelInterface:
@@ -35,12 +40,51 @@ class RunPodModelInterface:
 
     # ---- low-level ---------------------------------------------------------------------
 
+    def _headers(self) -> Dict[str, str]:
+        return {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+
     def _runsync(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         url = f"{self.base}/{self.endpoint_id}/runsync"
-        headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
-        resp = requests.post(url, headers=headers, json={"input": payload}, timeout=self.timeout)
+        resp = requests.post(url, headers=self._headers(), json={"input": payload}, timeout=self.timeout)
         resp.raise_for_status()
         return resp.json()
+
+    def _run_async(self, payload: Dict[str, Any], poll_interval: float = 5.0,
+                   on_status=None) -> Dict[str, Any]:
+        """Submit via /run and poll /status until terminal. For long jobs (steering / the
+        endpoint battery on a big model) that would blow the synchronous /runsync window.
+
+        Returns the full status body (with ``output``). Raises on FAILED/CANCELLED/TIMED_OUT
+        or if the job doesn't finish within ``self.timeout`` seconds.
+        """
+        run_url = f"{self.base}/{self.endpoint_id}/run"
+        resp = requests.post(run_url, headers=self._headers(), json={"input": payload}, timeout=120)
+        resp.raise_for_status()
+        job_id = resp.json().get("id")
+        if not job_id:
+            raise RuntimeError(f"RunPod /run returned no job id: {resp.text[:300]}")
+
+        status_url = f"{self.base}/{self.endpoint_id}/status/{job_id}"
+        deadline = time.time() + self.timeout
+        last = None
+        while time.time() < deadline:
+            s = requests.get(status_url, headers=self._headers(), timeout=60)
+            s.raise_for_status()
+            body = s.json()
+            status = body.get("status")
+            if status != last:
+                if on_status:
+                    on_status(status, job_id)
+                last = status
+            if status in _DONE_STATES:
+                return body
+            if status in _FAIL_STATES:
+                raise RuntimeError(f"RunPod job {job_id} {status}: "
+                                   f"{str(body.get('error') or body.get('output'))[:500]}")
+            time.sleep(poll_interval)
+        raise TimeoutError(f"RunPod job {job_id} did not finish within {self.timeout}s "
+                           f"(last status: {last}). Raise the client timeout or the endpoint's "
+                           f"Execution Timeout.")
 
     @staticmethod
     def _extract_output(body: Dict[str, Any]) -> Dict[str, Any]:
@@ -59,12 +103,21 @@ class RunPodModelInterface:
 
     # ---- high-level --------------------------------------------------------------------
 
-    def run_task(self, task: str, **payload) -> Dict[str, Any]:
-        """Invoke a server-side job (``warmup`` / ``steering`` / ``endpoints`` / ``generate``)."""
+    def run_task(self, task: str, wait: bool = True, poll_interval: float = 5.0,
+                 on_status=None, **payload) -> Dict[str, Any]:
+        """Invoke a server-side job (``warmup`` / ``steering`` / ``endpoints`` / ``generate``).
+
+        Server-side jobs are long (steering-vector regen and the Table-1 battery on a big model
+        run for minutes), so by default this uses the async ``/run`` + ``/status`` flow and polls
+        to completion — the synchronous ``/runsync`` window would time out. Pass ``wait=False`` to
+        use ``/runsync`` (only for short jobs like ``warmup`` on an already-warm worker).
+        """
         body = {"task": task, **payload}
         if self.model and "model" not in body:
             body["model"] = self.model
-        out = self._extract_output(self._runsync(body))
+        raw = self._run_async(body, poll_interval=poll_interval, on_status=on_status) if wait \
+            else self._runsync(body)
+        out = self._extract_output(raw)
         if isinstance(out, dict) and out.get("error") and "response" not in out:
             raise RuntimeError(f"RunPod task '{task}' error: {out['error']}")
         return out
