@@ -68,16 +68,24 @@ def _client(monkeypatch, payload):
     return rc.RunPodModelInterface("ep123", "key", model="openai/gpt-oss-120b"), fake
 
 
-def test_generate_text_shapes_request_and_parses_dict_output(monkeypatch):
+def test_generate_text_async_by_default(monkeypatch):
+    # Default: submit via /run + poll /status, so a >90s big-model generation can't time out.
     client, fake = _client(monkeypatch, {"output": {"response": "hello", "emotions": {"joy": 1},
                                                     "gpu_seconds": 2.1}})
-    out = client.generate_text("hi", pack_name="lsd", intensity=0.7, max_tokens=64)
+    out = client.generate_text("hi", pack_name="lsd", intensity=0.7, max_tokens=64, poll_interval=0)
     assert out["text"] == "hello" and out["emotions"] == {"joy": 1} and out["gpu_seconds"] == 2.1
-    body = fake.last["json"]["input"]
+    body = fake.last["json"]["input"]  # last POST is the /run submission
     assert body["prompt"] == "hi" and body["pack_name"] == "lsd" and body["intensity"] == 0.7
     assert body["model"] == "openai/gpt-oss-120b"
-    assert fake.last["url"].endswith("/ep123/runsync")
+    assert fake.last["url"].endswith("/ep123/run")
     assert fake.last["headers"]["Authorization"] == "Bearer key"
+
+
+def test_generate_text_wait_false_uses_runsync(monkeypatch):
+    client, fake = _client(monkeypatch, {"output": {"response": "hi", "emotions": {}}})
+    out = client.generate_text("hi", wait=False)
+    assert out["text"] == "hi"
+    assert fake.last["url"].endswith("/ep123/runsync")
 
 
 def test_extract_output_from_aggregate_stream_list(monkeypatch):

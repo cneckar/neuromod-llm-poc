@@ -125,13 +125,23 @@ class RunPodModelInterface:
     def generate_text(self, prompt: str, max_tokens: int = 100,
                       temperature: float = 1.0, top_p: float = 1.0,
                       pack_name: Optional[str] = None, intensity: float = 0.5,
+                      wait: bool = True, poll_interval: float = 3.0, on_status=None,
                       **_ignored) -> Dict[str, Any]:
-        """One neuromodulated completion. Returns ``{text, emotions, gpu_seconds, raw}``."""
+        """One neuromodulated completion. Returns ``{text, emotions, reasoning, gpu_seconds, raw}``.
+
+        Big reasoning models (gpt-oss-120b) — especially on a cold start — routinely take longer
+        than RunPod's ~90s ``/runsync`` window, which then returns IN_PROGRESS with NO output (an
+        empty reply). So by default this uses the async ``/run`` + poll ``/status`` flow and waits
+        for completion. Pass ``wait=False`` for the low-latency ``/runsync`` path on small/warm
+        models.
+        """
         payload = {"prompt": prompt, "max_tokens": max_tokens, "temperature": temperature,
                    "top_p": top_p, "pack_name": pack_name, "intensity": intensity}
         if self.model:
             payload["model"] = self.model
-        out = self._extract_output(self._runsync(payload))
+        raw = self._run_async(payload, poll_interval=poll_interval, on_status=on_status) if wait \
+            else self._runsync(payload)
+        out = self._extract_output(raw)
         if out.get("error") and "response" not in out:
             raise RuntimeError(f"RunPod endpoint error: {out['error']}")
         return {"text": out.get("response", ""), "emotions": out.get("emotions", {}),
