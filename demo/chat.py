@@ -875,21 +875,29 @@ class NeuromodChat:
         print(f"   New settings: max={new_config['max_tokens']}, min={new_config['min_tokens']}")
 
     def set_intensity(self, command: str):
-        """Set the dose/intensity applied to the active pack (0.0-1.0)."""
+        """Set the dose/intensity applied to the active pack.
+
+        Intensity is a MULTIPLIER on pack weights (1.0 = as specified), so values > 1.0 overload
+        the pack. Bounded by NEUROMOD_MAX_INTENSITY (default 5.0) to match the server's safety rail.
+        """
+        max_intensity = float(os.environ.get("NEUROMOD_MAX_INTENSITY", "5.0"))
         parts = command.split()
         if len(parts) < 2:
-            print(f"❌ Usage: /intensity <0.0-1.0>   (current: {self.intensity:.2f})")
+            print(f"❌ Usage: /intensity <0.0-{max_intensity:g}>   (current: {self.intensity:.2f}; "
+                  f">1.0 overloads the pack)")
             return
         try:
             val = float(parts[1])
         except ValueError:
-            print("❌ Intensity must be a number between 0.0 and 1.0")
+            print(f"❌ Intensity must be a number between 0.0 and {max_intensity:g}")
             return
-        if not 0.0 <= val <= 1.0:
-            print("❌ Intensity must be between 0.0 and 1.0")
+        if not 0.0 <= val <= max_intensity:
+            print(f"❌ Intensity must be between 0.0 and {max_intensity:g} "
+                  f"(raise NEUROMOD_MAX_INTENSITY to go higher)")
             return
         self.intensity = val
-        print(f"✅ Intensity set to {self.intensity:.2f}")
+        note = "  ⚡ overloaded (>1.0)" if val > 1.0 else ""
+        print(f"✅ Intensity set to {self.intensity:.2f}{note}")
         # Local mode holds pack state on the model, so re-apply at the new dose. Remote mode
         # sends intensity per request, so nothing to re-apply.
         if self.remote is None and self.active_packs:

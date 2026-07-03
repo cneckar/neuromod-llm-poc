@@ -136,8 +136,11 @@ def parse_event(event: Dict[str, Any]) -> Dict[str, Any]:
         except (TypeError, ValueError):
             return default
 
-    intensity = _num("intensity", 0.5)
-    intensity = max(0.0, min(1.0, float(intensity)))
+    # Intensity is a MULTIPLIER on pack weights, not a 0-1 percentage, so allow overloading a
+    # pack past 1.0 ("dial it up until you see an effect"). Bounded by NEUROMOD_MAX_INTENSITY
+    # (default 5.0) as a safety rail against a runaway dose crashing the worker.
+    _max_intensity = float(os.environ.get("NEUROMOD_MAX_INTENSITY", "5.0"))
+    intensity = max(0.0, min(_max_intensity, float(_num("intensity", 0.5))))
 
     return {
         "prompt": prompt,
