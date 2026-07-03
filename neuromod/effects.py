@@ -1693,9 +1693,11 @@ def resolve_steering_vector_path(vector_dir, steering_type: str,
         <vector_dir>/<type>_layer-1.pt                # flat  (legacy / single-model)
 
     Search order: for each candidate dir (model subdir first, then the flat base), try
-    each layer suffix, then the no-suffix name. ``model_name`` falls back to the
-    ``MODEL_NAME`` env var (which the served worker already sets), so no plumbing is
-    needed on the serving path. Returns the first existing path, or None.
+    each layer suffix, then the no-suffix name. As a final fallback, the repo-committed
+    ``outputs/steering_vectors`` is also searched, so vectors committed to the repo (e.g. the
+    gpt-oss-120b set) are found even when ``STEERING_DIR`` points at an empty network volume.
+    ``model_name`` falls back to the ``MODEL_NAME`` env var (which the served worker already
+    sets), so no plumbing is needed on the serving path. Returns the first existing path, or None.
     """
     from pathlib import Path
     base = Path(vector_dir)
@@ -1704,6 +1706,15 @@ def resolve_steering_vector_path(vector_dir, steering_type: str,
     if slug:
         search_dirs.append(base / slug)
     search_dirs.append(base)
+    # Repo-committed fallback (neuromod/effects.py -> <repo>/outputs/steering_vectors). Guarded so
+    # it's a no-op in odd exec contexts where __file__ is undefined.
+    try:
+        repo_committed = Path(__file__).resolve().parent.parent / "outputs" / "steering_vectors"
+        for extra in ((repo_committed / slug) if slug else None, repo_committed):
+            if extra is not None and extra not in search_dirs:
+                search_dirs.append(extra)
+    except NameError:
+        pass
     for d in search_dirs:
         for layer_idx in layers:
             candidate = d / f"{steering_type}_layer{layer_idx}.pt"
@@ -1734,10 +1745,35 @@ class SteeringEffect(BaseEffect):
         # resolver). Different models need different vectors; this keeps them from colliding.
         self.model_name = model_name
         self.vector = None  # Initialize as None - will be loaded on demand
-        
+        # Forward-hook handles registered on the model's layers (removed in cleanup()).
+        self._handles = []
+        # Which layers to steer. The committed vectors are captured at the last layer
+        # (<type>_layer-1.pt), so by default steer the last N layers' residual stream.
+        # Override via NEUROMOD_STEER_LAYERS (int count of trailing layers, default 1).
+        try:
+            self._steer_last_n = max(1, int(os.environ.get("NEUROMOD_STEER_LAYERS", "1")))
+        except ValueError:
+            self._steer_last_n = 1
+
         # Dictionary to cache loaded vectors by steering_type
         self._vector_cache = {}
-        
+
+    def _resolve_layers(self, model):
+        """Return the list of transformer decoder layers for common architectures."""
+        for path in (("model", "layers"), ("transformer", "h"), ("gpt_neox", "layers"),
+                     ("model", "decoder", "layers")):
+            obj = model
+            ok = True
+            for attr in path:
+                if hasattr(obj, attr):
+                    obj = getattr(obj, attr)
+                else:
+                    ok = False
+                    break
+            if ok and obj is not None and len(obj) > 0:
+                return list(obj)
+        return []
+
     def load_vector(self, vector_path: Optional[str] = None, hidden_size: int = 768) -> bool:
         """
         Load a pre-computed steering vector from disk.
@@ -1829,10 +1865,40 @@ class SteeringEffect(BaseEffect):
         return self.vector
         
     def apply(self, model, **kwargs):
-        """Apply steering to hidden states"""
-        # This will be applied during generation
-        pass
-        
+        """Register forward hooks that add the steering vector to the residual stream.
+
+        Previously a no-op, which meant steering vectors did NOTHING during served generation
+        (only sampler/attention effects fired). Now we hook the last N decoder layers and add the
+        (device/dtype-matched) steering vector to each layer's output hidden states, so the pack's
+        steering component actually alters generation. Idempotent: clears prior hooks first.
+        """
+        self.cleanup()
+        layers = self._resolve_layers(model)
+        if not layers:
+            logger.warning("SteeringEffect: could not locate transformer layers; steering inactive")
+            return
+
+        n = min(self._steer_last_n, len(layers))
+        targets = layers[-n:]
+
+        def _make_hook():
+            def hook(module, inputs, output):
+                if isinstance(output, tuple):
+                    if not output or output[0] is None:
+                        return output
+                    steered = self.apply_steering(output[0])
+                    return (steered,) + tuple(output[1:])
+                return self.apply_steering(output)
+            return hook
+
+        for layer in targets:
+            try:
+                self._handles.append(layer.register_forward_hook(_make_hook()))
+            except Exception as e:  # pragma: no cover - defensive
+                logger.warning(f"SteeringEffect: failed to hook a layer: {e}")
+        logger.info(f"SteeringEffect '{self.steering_type}': hooked {len(self._handles)} layer(s) "
+                    f"(weight={self.weight})")
+
     def apply_steering(self, hidden_states: torch.Tensor) -> torch.Tensor:
         """Apply steering to hidden states"""
         if hidden_states is None or hidden_states.numel() == 0:
@@ -1872,9 +1938,13 @@ class SteeringEffect(BaseEffect):
         return None
         
     def cleanup(self):
-        """Clean up resources"""
-        # Optionally clear cache if needed
-        pass
+        """Remove the registered forward hooks so steering stops affecting generation."""
+        for handle in getattr(self, "_handles", []):
+            try:
+                handle.remove()
+            except Exception:
+                pass
+        self._handles = []
 
 
 class RandomDirectionEffect(BaseEffect):
