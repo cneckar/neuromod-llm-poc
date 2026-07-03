@@ -421,19 +421,18 @@ class LocalModelInterface(BaseModelInterface):
                     self.neuromod_tool.pack_manager.apply_pack(single_pack, self.model)
                     logger.info(f"Applied individual effect: {effect_name}")
             
-            # Method 4: Multiple packs (combine effects)
+            # Method 4: Multiple packs. Apply each via the real entry point (apply(), not the
+            # nonexistent load_pack()). Note: apply_pack clears prior effects, so the last pack
+            # currently wins — true multi-pack blending is a separate feature; this at least
+            # applies (and no longer crashes with AttributeError).
             elif multiple_packs:
-                all_effects = []
-                for pack_name in multiple_packs:
+                for pname in multiple_packs:
                     try:
-                        # Load pack to get effects
-                        self.neuromod_tool.load_pack(pack_name)
-                        # Get the active effects and add to our list
-                        pack_info = self.neuromod_tool.get_effect_info()
-                        logger.info(f"Loaded pack: {pack_name}")
+                        self.neuromod_tool.apply(pname, intensity=intensity)
+                        logger.info(f"Applied pack: {pname} @ intensity={intensity}")
                     except Exception as e:
-                        logger.warning(f"Failed to load pack {pack_name}: {e}")
-                
+                        logger.warning(f"Failed to apply pack {pname}: {e}")
+
                 logger.info(f"Applied multiple packs: {multiple_packs}")
             
             # Apply effects to the model through the pack manager
