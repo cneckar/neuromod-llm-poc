@@ -399,8 +399,21 @@ def run_diag(parsed: Dict[str, Any]) -> Dict[str, Any]:
         info["driver_version"] = (out.stdout or "").strip().splitlines()[0] if out.stdout else None
     except Exception:
         info["driver_version"] = None
-    # Volume presence — confirms the network volume is actually mounted.
+    # Volume presence + free space — the gpt-oss-120b weights need ~63GB on the volume
+    # (HF_HOME). A near-full/tiny volume shows up here as low free_gb (the "No space left on
+    # device" download failure mode).
     info["volume_mounted"] = os.path.isdir("/runpod-volume")
+    import shutil
+    hf_home = os.environ.get("HF_HOME", "/root/.cache/huggingface")
+    info["hf_home"] = hf_home
+    for label, path in (("root", "/"), ("volume", "/runpod-volume"), ("tmp", "/tmp"),
+                        ("hf_home", hf_home if os.path.isdir(hf_home) else "/")):
+        try:
+            u = shutil.disk_usage(path)
+            info[f"disk_{label}_free_gb"] = round(u.free / 1e9, 1)
+            info[f"disk_{label}_total_gb"] = round(u.total / 1e9, 1)
+        except Exception:
+            info[f"disk_{label}_free_gb"] = None
     return info
 
 
