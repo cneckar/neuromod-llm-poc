@@ -488,6 +488,65 @@ def run_warmup(parsed: Dict[str, Any]) -> Dict[str, Any]:
             "warmup_seconds": round(time.time() - start, 4)}
 
 
+def run_steering_inprocess(parsed: Dict[str, Any]) -> Dict[str, Any]:
+    """Generate steering vectors on the ALREADY-WARM model (no subprocess reload).
+
+    Reuses the model loaded by :func:`_get_model` and only runs forward passes over the
+    prompt-pair dataset, so the whole job is minutes — it fits a serverless execution window.
+    (The old subprocess path reloaded ~63GB every time, which is what blew the timeout.)
+    Vectors are written to ``STEERING_DIR`` as ``<type>_layer<layer>.pt`` — the exact name the
+    pack loader looks for — so inference picks them up via ``STEERING_DIR``.
+    """
+    import json as _json
+    import torch
+    from neuromod.steering_generator import SteeringVectorGenerator
+
+    start = time.time()
+    iface = _get_model(parsed["model"])
+    cold = _pop_cold_start()
+    out = parsed.get("output_dir") or STEERING_DIR
+    os.makedirs(out, exist_ok=True)
+    layer = parsed.get("layer")
+    layer = -1 if layer is None else int(layer)  # match the pack loader (<type>_layer-1.pt)
+    min_pairs = int(parsed.get("min_pairs") or 100)
+    validate = bool(parsed.get("validate", False))  # off by default so a new arch still emits
+
+    dataset = os.path.join(_REPO_ROOT, "datasets", "steering_prompts.jsonl")
+    types = set()
+    with open(dataset) as fh:
+        for line in fh:
+            try:
+                d = _json.loads(line)
+                if d.get("steering_type"):
+                    types.add(d["steering_type"])
+            except Exception:
+                continue
+    only = parsed.get("steering_type")
+    type_list = [only] if only else sorted(types)
+
+    gen = SteeringVectorGenerator(iface.model, iface.tokenizer)
+    made: List[str] = []
+    failed: Dict[str, str] = {}
+    for st in type_list:
+        try:
+            vec = gen.compute_vector_robust(dataset_path=dataset, steering_type=st,
+                                            layer_idx=layer, use_pca=True, validate=validate,
+                                            min_pairs=min_pairs)
+            path = os.path.join(out, f"{st}_layer{layer}.pt")
+            torch.save(vec, path)
+            made.append(os.path.basename(path))
+        except Exception as exc:  # per-type failure shouldn't sink the whole job
+            failed[st] = str(exc)[-300:]
+
+    result = {"ok": len(made) > 0, "task": "steering", "model": parsed["model"],
+              "output_dir": out, "generated": made, "failed": failed,
+              "gpu_seconds": round(time.time() - start, 2),
+              "cold_start_seconds": round(cold, 2) if cold else None}
+    log_billing({"model": parsed["model"], "pack": "steering",
+                 "gpu_seconds": result["gpu_seconds"], "cold_start_seconds": result["cold_start_seconds"]})
+    return result
+
+
 def dispatch_task(parsed: Dict[str, Any], model=None) -> Dict[str, Any]:
     """Route a non-``generate`` task to its handler. Returns a result dict."""
     task = parsed["task"]
@@ -495,7 +554,9 @@ def dispatch_task(parsed: Dict[str, Any], model=None) -> Dict[str, Any]:
         return run_diag(parsed)
     if task == "warmup":
         return run_warmup(parsed)
-    if task in ("steering", "endpoints"):
+    if task == "steering":
+        return run_steering_inprocess(parsed)  # reuse warm model — fits the serverless window
+    if task == "endpoints":
         return run_job(task, parsed)
     return error_response(f"unknown task: {task!r} (expected one of {TASKS})")
 
