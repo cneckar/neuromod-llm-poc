@@ -266,14 +266,16 @@ def run_inference(parsed: Dict[str, Any], model=None) -> Dict[str, Any]:
         temperature=parsed["temperature"],
         top_p=parsed["top_p"],
         pack_name=parsed["pack_name"],
+        intensity=parsed["intensity"],
     )
 
     if isinstance(result, dict):
         text = result.get("text", "")
         emotions = result.get("emotions", {})
         tokens = result.get("tokens_generated")
+        reasoning = result.get("reasoning")
     else:
-        text, emotions, tokens = result, {}, None
+        text, emotions, tokens, reasoning = result, {}, None, None
 
     generation_time = time.time() - start
     response = format_response(
@@ -282,7 +284,8 @@ def run_inference(parsed: Dict[str, Any], model=None) -> Dict[str, Any]:
     )
     record = billing_record(parsed, generation_time, cold)
     response.update({"gpu_seconds": record["gpu_seconds"],
-                     "cold_start_seconds": record["cold_start_seconds"]})
+                     "cold_start_seconds": record["cold_start_seconds"],
+                     "reasoning": reasoning})
     log_billing(record)
     return response
 
@@ -320,7 +323,7 @@ def run_inference_stream(parsed: Dict[str, Any], model=None) -> Iterator[Dict[st
         for chunk in model.generate_text_stream(
             prompt=parsed["prompt"], max_tokens=parsed["max_tokens"],
             temperature=parsed["temperature"], top_p=parsed["top_p"],
-            pack_name=parsed["pack_name"],
+            pack_name=parsed["pack_name"], intensity=parsed["intensity"],
         ):
             pieces.append(chunk)
             yield {"chunk": chunk}
@@ -329,7 +332,7 @@ def run_inference_stream(parsed: Dict[str, Any], model=None) -> Iterator[Dict[st
         result = model.generate_text(
             prompt=parsed["prompt"], max_tokens=parsed["max_tokens"],
             temperature=parsed["temperature"], top_p=parsed["top_p"],
-            pack_name=parsed["pack_name"],
+            pack_name=parsed["pack_name"], intensity=parsed["intensity"],
         )
         if isinstance(result, dict):
             text = result.get("text", "")

@@ -135,6 +135,7 @@ class RunPodModelInterface:
         if out.get("error") and "response" not in out:
             raise RuntimeError(f"RunPod endpoint error: {out['error']}")
         return {"text": out.get("response", ""), "emotions": out.get("emotions", {}),
+                "reasoning": out.get("reasoning"),
                 "gpu_seconds": out.get("gpu_seconds"), "raw": out}
 
     def warmup(self) -> Dict[str, Any]:

@@ -67,6 +67,7 @@ class NeuromodChat:
         self.active_packs = []
         self.custom_effects = []  # Store custom effect combinations
         self.intensity = 0.8  # dose applied to the active pack (server-side in remote mode)
+        self.show_reasoning = False  # remote: show the model's analysis channel (altered CoT)
 
         # Token configuration presets
         self.token_presets = {
@@ -332,6 +333,11 @@ class NeuromodChat:
                 intensity=self.intensity,
             )
             text = (res.get("text") or "").strip()
+            # Optionally show the model's reasoning/analysis channel — on a reasoning model the
+            # altered cognition is often most visible here (toggle with /reasoning).
+            reasoning = res.get("reasoning")
+            if self.show_reasoning and reasoning:
+                print(f"\033[2m🧩 reasoning: {reasoning}\033[0m")
             # Surface server-provided emotions (if the handler computed any) + cost/latency.
             emotions = res.get("emotions") or {}
             if emotions:
@@ -383,6 +389,7 @@ class NeuromodChat:
         print("  /tokens - Show token configuration options")
         print("  /set_tokens - Change response length (short/medium/long/very_long)")
         print("  /intensity - Set pack dose/intensity (0.0-1.0)")
+        print("  /reasoning - Toggle showing the model reasoning channel (remote)")
         print("  /quit - Exit chat")
         print("  /help - Show this help")
         print("-" * 60)
@@ -490,6 +497,11 @@ class NeuromodChat:
         elif cmd.startswith("/intensity"):
             self.set_intensity(command)
 
+        elif cmd == "/reasoning":
+            self.show_reasoning = not self.show_reasoning
+            print(f"✅ Reasoning channel display: {'ON' if self.show_reasoning else 'OFF'}"
+                  + ("" if self.remote else "  (remote mode only)"))
+
         elif cmd == "/help":
             print("\n💬 Chat Commands:")
             print("  /packs - Show available packs")
@@ -508,6 +520,7 @@ class NeuromodChat:
             print("  /tokens - Show token configuration options")
             print("  /set_tokens - Change response length (short/medium/long/very_long)")
             print("  /intensity - Set pack dose/intensity (0.0-1.0)")
+            print("  /reasoning - Toggle showing the model reasoning channel (remote)")
             print("  /quit - Exit chat")
             print("  /help - Show this help")
 
