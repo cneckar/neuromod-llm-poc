@@ -92,11 +92,14 @@ class SteeringVectorGenerator:
             else:
                 hidden_states = output
             
-            # Extract last token's activation
+            # Extract last token's activation. Cast to float32: gpt-oss (and other bf16 models)
+            # produce bfloat16 hidden states, which NumPy can't consume downstream (PCA / stacking)
+            # -> "Got unsupported ScalarType BFloat16". float32 is numpy-safe and steering-vector
+            # precision is fine at fp32 (it's cast to the model dtype at apply time).
             if len(hidden_states.shape) == 3:  # [batch, seq_len, hidden_size]
-                activation['act'] = hidden_states[0, -1, :].detach().cpu()
+                activation['act'] = hidden_states[0, -1, :].detach().cpu().float()
             elif len(hidden_states.shape) == 2:  # [seq_len, hidden_size]
-                activation['act'] = hidden_states[-1, :].detach().cpu()
+                activation['act'] = hidden_states[-1, :].detach().cpu().float()
             else:
                 raise ValueError(f"Unexpected hidden_states shape: {hidden_states.shape}")
         
