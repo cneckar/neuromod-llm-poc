@@ -1727,6 +1727,66 @@ def resolve_steering_vector_path(vector_dir, steering_type: str,
     return None
 
 
+def _resolve_transformer_layers(model):
+    """Return the list of transformer decoder layers for common architectures, or []."""
+    for path in (("model", "layers"), ("transformer", "h"), ("gpt_neox", "layers"),
+                 ("model", "decoder", "layers")):
+        obj = model
+        ok = True
+        for attr in path:
+            if hasattr(obj, attr):
+                obj = getattr(obj, attr)
+            else:
+                ok = False
+                break
+        if ok and obj is not None and len(obj) > 0:
+            return list(obj)
+    return []
+
+
+def remove_steering_hooks(effect):
+    """Remove any forward hooks an effect registered on the model."""
+    for h in getattr(effect, "_handles", []) or []:
+        try:
+            h.remove()
+        except Exception:
+            pass
+    effect._handles = []
+
+
+def install_residual_steering_hooks(effect, model):
+    """Register forward hooks on the last N decoder layers so each layer's hidden states pass
+    through ``effect.apply_steering()``. Shared by SteeringEffect and the placebo controls
+    (RandomDirection / RandomOrthogonal) — all of which had a no-op ``apply()`` that stranded
+    their real logic in ``apply_steering``, so steering/placebo did nothing during served
+    generation. Idempotent: clears prior hooks first.
+    """
+    remove_steering_hooks(effect)
+    layers = _resolve_transformer_layers(model)
+    if not layers:
+        logger.warning(f"{type(effect).__name__}: could not locate transformer layers; "
+                       f"steering inactive")
+        return
+    n = min(getattr(effect, "_steer_last_n", 1), len(layers))
+
+    def _make_hook():
+        def hook(module, inputs, output):
+            if isinstance(output, tuple):
+                if not output or output[0] is None:
+                    return output
+                return (effect.apply_steering(output[0]),) + tuple(output[1:])
+            return effect.apply_steering(output)
+        return hook
+
+    for layer in layers[-n:]:
+        try:
+            effect._handles.append(layer.register_forward_hook(_make_hook()))
+        except Exception as e:  # pragma: no cover - defensive
+            logger.warning(f"{type(effect).__name__}: failed to hook a layer: {e}")
+    logger.info(f"{type(effect).__name__} '{getattr(effect, 'steering_type', getattr(effect, 'reference_steering_type', '?'))}': "
+                f"hooked {len(effect._handles)} layer(s) (weight={effect.weight})")
+
+
 class SteeringEffect(BaseEffect):
     """Activation steering effect using Contrastive Activation Addition (CAA) vectors"""
     
@@ -1759,20 +1819,7 @@ class SteeringEffect(BaseEffect):
         self._vector_cache = {}
 
     def _resolve_layers(self, model):
-        """Return the list of transformer decoder layers for common architectures."""
-        for path in (("model", "layers"), ("transformer", "h"), ("gpt_neox", "layers"),
-                     ("model", "decoder", "layers")):
-            obj = model
-            ok = True
-            for attr in path:
-                if hasattr(obj, attr):
-                    obj = getattr(obj, attr)
-                else:
-                    ok = False
-                    break
-            if ok and obj is not None and len(obj) > 0:
-                return list(obj)
-        return []
+        return _resolve_transformer_layers(model)
 
     def load_vector(self, vector_path: Optional[str] = None, hidden_size: int = 768) -> bool:
         """
@@ -1872,32 +1919,7 @@ class SteeringEffect(BaseEffect):
         (device/dtype-matched) steering vector to each layer's output hidden states, so the pack's
         steering component actually alters generation. Idempotent: clears prior hooks first.
         """
-        self.cleanup()
-        layers = self._resolve_layers(model)
-        if not layers:
-            logger.warning("SteeringEffect: could not locate transformer layers; steering inactive")
-            return
-
-        n = min(self._steer_last_n, len(layers))
-        targets = layers[-n:]
-
-        def _make_hook():
-            def hook(module, inputs, output):
-                if isinstance(output, tuple):
-                    if not output or output[0] is None:
-                        return output
-                    steered = self.apply_steering(output[0])
-                    return (steered,) + tuple(output[1:])
-                return self.apply_steering(output)
-            return hook
-
-        for layer in targets:
-            try:
-                self._handles.append(layer.register_forward_hook(_make_hook()))
-            except Exception as e:  # pragma: no cover - defensive
-                logger.warning(f"SteeringEffect: failed to hook a layer: {e}")
-        logger.info(f"SteeringEffect '{self.steering_type}': hooked {len(self._handles)} layer(s) "
-                    f"(weight={self.weight})")
+        install_residual_steering_hooks(self, model)
 
     def apply_steering(self, hidden_states: torch.Tensor) -> torch.Tensor:
         """Apply steering to hidden states"""
@@ -1939,12 +1961,7 @@ class SteeringEffect(BaseEffect):
         
     def cleanup(self):
         """Remove the registered forward hooks so steering stops affecting generation."""
-        for handle in getattr(self, "_handles", []):
-            try:
-                handle.remove()
-            except Exception:
-                pass
-        self._handles = []
+        remove_steering_hooks(self)
 
 
 class RandomDirectionEffect(BaseEffect):
@@ -2039,16 +2056,22 @@ class RandomDirectionEffect(BaseEffect):
         return self.random_vector
     
     def apply(self, model, **kwargs):
-        """Apply random direction steering (placeholder - actual steering happens in apply_steering)"""
+        """Register forward hooks that add the RANDOM steering vector to the residual stream.
+
+        This is the active-placebo control: same intervention magnitude as SteeringEffect but a
+        random direction. Previously a no-op (logic stranded in apply_steering with no hook), so
+        the control condition did nothing during served generation — now it actually perturbs.
+        """
         # Get hidden size from model if available
         if hasattr(model, 'config') and hasattr(model.config, 'hidden_size'):
             self.hidden_size = model.config.hidden_size
         elif hasattr(model, 'config') and hasattr(model.config, 'd_model'):
             self.hidden_size = model.config.d_model
-        
-        # Pre-generate the random vector
+
+        # Pre-generate the random vector, then hook the residual stream like SteeringEffect.
         self.get_vector(hidden_size=self.hidden_size)
-    
+        install_residual_steering_hooks(self, model)
+
     def apply_steering(self, hidden_states: torch.Tensor) -> torch.Tensor:
         """Apply random direction steering to hidden states"""
         if hidden_states is None or hidden_states.numel() == 0:
@@ -2087,7 +2110,8 @@ class RandomDirectionEffect(BaseEffect):
         return None
     
     def cleanup(self):
-        """Clean up resources"""
+        """Clean up resources and remove the residual hooks."""
+        remove_steering_hooks(self)
         self.random_vector = None
         self._normalized = False
 
@@ -2310,16 +2334,21 @@ class RandomOrthogonalSteeringEffect(BaseEffect):
         return self.orthogonal_vector
     
     def apply(self, model, **kwargs):
-        """Apply random orthogonal steering (placeholder - actual steering happens in apply_steering)"""
+        """Register forward hooks adding the ORTHOGONAL control vector to the residual stream.
+
+        Control condition (a direction orthogonal to the real steering vector). Was a no-op with
+        its logic stranded in apply_steering; now hooks the residual stream like SteeringEffect.
+        """
         # Get hidden size from model if available
         if hasattr(model, 'config') and hasattr(model.config, 'hidden_size'):
             self.hidden_size = model.config.hidden_size
         elif hasattr(model, 'config') and hasattr(model.config, 'd_model'):
             self.hidden_size = model.config.d_model
-        
-        # Pre-generate the orthogonal vector
+
+        # Pre-generate the orthogonal vector, then hook the residual stream.
         self.get_vector(hidden_size=self.hidden_size)
-    
+        install_residual_steering_hooks(self, model)
+
     def apply_steering(self, hidden_states: torch.Tensor) -> torch.Tensor:
         """Apply random orthogonal steering to hidden states"""
         if hidden_states is None or hidden_states.numel() == 0:
@@ -2358,7 +2387,8 @@ class RandomOrthogonalSteeringEffect(BaseEffect):
         return None
     
     def cleanup(self):
-        """Clean up resources"""
+        """Clean up resources and remove the residual hooks."""
+        remove_steering_hooks(self)
         self.reference_vector = None
         self.orthogonal_vector = None
         self._computed = False

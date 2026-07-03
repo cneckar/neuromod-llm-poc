@@ -88,5 +88,28 @@ def test_steer_last_n_env(monkeypatch):
     assert len(eff._handles) == 2  # last two layers hooked
 
 
+def test_placebo_controls_now_hook_and_perturb():
+    """RandomDirection / RandomOrthogonal were no-ops in serving; they must now hook + perturb."""
+    from neuromod.effects import RandomDirectionEffect
+
+    model = _Model(n=3)
+    x = torch.zeros(1, 4, 8)
+    assert torch.allclose(model(x), torch.zeros_like(model(x)))
+
+    eff = RandomDirectionEffect(weight=1.0)
+    eff.hidden_size = 8
+    # give it a known random vector so apply() doesn't need a reference norm
+    eff.random_vector = torch.ones(8)
+    eff._normalized = True
+    eff.apply(model)
+    assert eff._handles, "placebo control registered no hook"
+    steered = model(x)
+    assert not torch.allclose(steered, torch.zeros_like(steered)), "placebo control had no effect"
+
+    eff.cleanup()
+    assert eff._handles == []
+    assert torch.allclose(model(x), torch.zeros_like(model(x)))
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-v"]))

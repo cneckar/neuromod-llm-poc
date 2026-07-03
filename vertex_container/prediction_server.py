@@ -373,18 +373,14 @@ def apply_neuromodulation(pack_name: str = None, custom_pack: Dict = None,
         
         # Method 4: Multiple packs (combine effects)
         elif multiple_packs:
-            all_effects = []
             for pack_name in multiple_packs:
                 try:
-                    # Load pack to get effects
-                    neuromod_tool.load_pack(pack_name)
-                    # Get the active effects and add to our list
-                    pack_info = neuromod_tool.get_effect_info()
-                    # Note: This is a simplified approach - in practice you'd want to
-                    # extract the actual effect configurations from each pack
-                    logger.info(f"Loaded pack: {pack_name}")
+                    # Apply the pack via the real entry point. NeuromodTool has no load_pack();
+                    # the old call raised AttributeError that was swallowed below, applying NOTHING.
+                    neuromod_tool.apply(pack_name)
+                    logger.info(f"Applied pack: {pack_name}")
                 except Exception as e:
-                    logger.warning(f"Failed to load pack {pack_name}: {e}")
+                    logger.warning(f"Failed to apply pack {pack_name}: {e}")
             
             # Apply the combined effects
             # Note: This is a simplified implementation - you'd want more sophisticated

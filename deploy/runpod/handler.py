@@ -277,14 +277,23 @@ def run_inference(parsed: Dict[str, Any], model=None) -> Dict[str, Any]:
         emotions = result.get("emotions", {})
         tokens = result.get("tokens_generated")
         reasoning = result.get("reasoning")
+        neuromod_applied = result.get("neuromod_applied", None)
+        neuromod_error = result.get("neuromod_error")
     else:
         text, emotions, tokens, reasoning = result, {}, None, None
+        neuromod_applied, neuromod_error = None, None
 
     generation_time = time.time() - start
     response = format_response(
         text, parsed, emotions=emotions,
         generation_time=generation_time, tokens_generated=tokens,
     )
+    # Honesty: only claim pack_applied if it actually applied. A requested-but-failed pack
+    # reports pack_applied=None + neuromod_error so the client isn't told the dose landed.
+    if parsed.get("pack_name") and neuromod_applied is False:
+        response["pack_applied"] = None
+        response["neuromod_error"] = neuromod_error or "pack not applied"
+    response["neuromod_applied"] = neuromod_applied
     record = billing_record(parsed, generation_time, cold)
     response.update({"gpu_seconds": record["gpu_seconds"],
                      "cold_start_seconds": record["cold_start_seconds"],
@@ -351,6 +360,13 @@ def run_inference_stream(parsed: Dict[str, Any], model=None) -> Iterator[Dict[st
     log_billing(record)
     final = format_response(text, parsed, emotions=emotions,
                             generation_time=generation_time, tokens_generated=tokens)
+    # Honesty (streaming): reflect whether the pack actually applied (set by generate_text_stream).
+    nm = getattr(model, "_last_stream_neuromod", None)
+    if nm is not None:
+        final["neuromod_applied"] = nm.get("neuromod_applied")
+        if parsed.get("pack_name") and nm.get("neuromod_applied") is False:
+            final["pack_applied"] = None
+            final["neuromod_error"] = nm.get("neuromod_error") or "pack not applied"
     final.update({"gpu_seconds": record["gpu_seconds"],
                   "cold_start_seconds": record["cold_start_seconds"]})
     yield {"done": True, **final}
