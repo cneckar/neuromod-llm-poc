@@ -90,9 +90,11 @@ Response mirrors the existing `ChatResponse` (`response`, `emotions`, `pack_appl
 - **Weights on the network volume:** bake the MXFP4 checkpoint onto the volume once
   (`huggingface-cli download openai/gpt-oss-120b`) and set `HF_HOME=/runpod-volume/hf` so a
   cold start doesn't re-pull 63 GB. Config: `runpod.endpoint.gpt-oss-120b.json` (`MODEL_NAME=openai/gpt-oss-120b`).
-- **Neuromod validity:** the committed steering vectors are from a different model and get
-  padded/truncated for gpt-oss (so the steering component is a no-op until regenerated). Run the
-  `steering` job below **once** for this model before trusting pack effects.
+- **Neuromod validity:** steering vectors are model-specific, so they live in per-model
+  subdirectories (`outputs/steering_vectors/<model-slug>/`, e.g. `openai__gpt-oss-120b/`). If the
+  repo ships vectors for this model they're used directly; otherwise the loader falls back to the
+  flat legacy set (wrong-dim for gpt-oss → padded/truncated → steering is a no-op) until you run the
+  `steering` job below **once** for this model.
 
 ## Server-side jobs — run the whole study serverless (no pod)
 
@@ -127,10 +129,14 @@ endpoint; `--mode behavioral` is a text-only dose sweep whose CSV feeds
 job outputs at the volume (defaults `/runpod-volume/{steering_vectors,endpoints}`).
 
 `STEERING_DIR` is dual-purpose: the `steering` job **writes** vectors there, and the pack system
-**loads** them from there at inference (`SteeringEffect` reads `STEERING_DIR`). So after
-regenerating vectors on the volume, generations actually use them — no code change, just the env
-var. Without it, inference falls back to the committed `outputs/steering_vectors` (wrong-dim for
-gpt-oss → padded/truncated → no real steering).
+**loads** them from there at inference. Both sides are **model-aware** — the job writes to
+`$STEERING_DIR/<model-slug>/` and `SteeringEffect` looks there first (keyed on the model id, which
+it reads from the loaded model or the `MODEL_NAME` env), falling back to the flat `$STEERING_DIR/`
+and finally the committed `outputs/steering_vectors/`. So one volume (or repo) can hold vectors for
+several models at once, and after regenerating for the served model its generations pick them up
+automatically — no code change, just the env var. Vectors are tiny (~hidden_size × 4 bytes), so a
+model's set can also be **committed** under `outputs/steering_vectors/<model-slug>/` to skip
+regeneration entirely.
 
 ## Acceptance criteria (issue #14) — status
 

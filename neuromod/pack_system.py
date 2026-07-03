@@ -109,6 +109,15 @@ class PackManager:
                     })
                     effect = self.effect_registry.get_effect(effect_config.effect, **params)
                 
+                # Give steering effects the model id so they load the right per-model
+                # steering vectors (<vector_dir>/<model_slug>/...). Derived from the loaded
+                # model so local usage works without setting the MODEL_NAME env var.
+                if hasattr(effect, "model_name") and getattr(effect, "model_name", None) is None:
+                    model_id = (getattr(model, "name_or_path", None)
+                                or getattr(getattr(model, "config", None), "_name_or_path", None))
+                    if model_id:
+                        effect.model_name = model_id
+
                 # Pass tokenizer to effect if available
                 if tokenizer is not None:
                     params['tokenizer'] = tokenizer

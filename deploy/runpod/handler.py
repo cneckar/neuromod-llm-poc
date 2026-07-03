@@ -500,11 +500,19 @@ def run_steering_inprocess(parsed: Dict[str, Any]) -> Dict[str, Any]:
     import json as _json
     import torch
     from neuromod.steering_generator import SteeringVectorGenerator
+    from neuromod.effects import steering_model_slug
 
     start = time.time()
     iface = _get_model(parsed["model"])
     cold = _pop_cold_start()
-    out = parsed.get("output_dir") or STEERING_DIR
+    # Nest under a per-model subdir so vectors for different served models coexist on the
+    # one network volume; the loader (resolve_steering_vector_path) finds them via MODEL_NAME.
+    out = parsed.get("output_dir")
+    if not out:
+        out = STEERING_DIR
+        slug = steering_model_slug(parsed["model"])
+        if slug and os.path.basename(os.path.normpath(out)) != slug:
+            out = os.path.join(out, slug)
     os.makedirs(out, exist_ok=True)
     layer = parsed.get("layer")
     layer = -1 if layer is None else int(layer)  # match the pack loader (<type>_layer-1.pt)
