@@ -67,6 +67,10 @@ RUN python -c "import importlib.metadata as m; from packaging.version import Ver
 v=Version(m.version('kernels')); print('kernels',v); \
 assert Version('0.12') <= v < Version('0.15'), 'kernels must be >=0.12 and <0.15; got %s'%v; \
 import kernels; print('kernels import OK ->', kernels.__file__)"
+# transformers 5.x broke the gpt-oss MXFP4 path (dequantizes to bf16 even with valid kernels).
+RUN python -c "import importlib.metadata as m; from packaging.version import Version; \
+v=Version(m.version('transformers')); print('transformers',v); \
+assert v < Version('5'), 'transformers 5.x breaks gpt-oss MXFP4 (dequantizes to bf16); pin <5, got %s'%v"
 
 # RunPod invokes the handler via the serverless runtime started in handler.start().
 CMD ["python", "-u", "deploy/runpod/handler.py"]

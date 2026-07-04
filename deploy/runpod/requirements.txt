@@ -6,8 +6,11 @@ runpod>=1.6.0
 
 # Model runtime. Torch is provided by the base image; these are the HF stack the
 # neuromod hooks operate on (steering / attention / logits processors need Transformers).
-# transformers>=4.55 is required for the gpt-oss architecture.
-transformers>=4.55.0
+# gpt-oss + MXFP4 support landed in the 4.55 line. PIN <5: transformers 5.x changed the MXFP4 /
+# kernels integration, so even with a valid kernels (0.14) it prints "MXFP4 requires
+# kernels>=0.12.0" and DEQUANTIZES gpt-oss to bf16 (~240GB) -> spills to CPU -> grouped_mm /
+# disk-offload / OOM. The unbounded ">=4.55" let pip pull 5.13.0, which is exactly this failure.
+transformers>=4.55,<5
 accelerate>=0.34.0
 safetensors>=0.4.0
 sentencepiece>=0.2.0
