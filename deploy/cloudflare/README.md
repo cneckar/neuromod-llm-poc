@@ -31,29 +31,32 @@ Request body (same shape as the RunPod handler / `ChatRequest`):
 ```bash
 cd deploy/cloudflare
 npm install
-# 1. Point at your RunPod Serverless endpoint:
-#    edit wrangler.toml -> RUNPOD_ENDPOINT_ID
-# 2. Secrets (never committed):
-wrangler secret put RUNPOD_API_KEY          # required
-wrangler secret put RUNPOD_ENDPOINT_ID_PRO  # optional: gated 120b endpoint (tier switch)
-wrangler secret put UNLOCK_KEY              # optional: unlocks the 120b tier via /?k=<key>
-wrangler secret put API_KEY                # optional client auth; omit = open (dev only)
+# 1. Config (gitignored — real values live here, both endpoint ids + the unlock key):
+cp wrangler.toml.example wrangler.toml
+#    edit wrangler.toml -> RUNPOD_ENDPOINT_ID, RUNPOD_ENDPOINT_ID_PRO, UNLOCK_KEY
+# 2. Credentials as encrypted secrets (never in any file):
+wrangler secret put RUNPOD_API_KEY      # required — used for BOTH endpoints (same key)
+wrangler secret put API_KEY             # optional client auth; omit = open (dev only)
 # 3. Run / ship:
 npm run dev                             # local (wrangler dev)
 npm run deploy                          # publish
 ```
 
+`wrangler.toml` is **gitignored**; the committed template is `wrangler.toml.example`.
+
 ### Two-tier routing (default 8B, gated 120B) — backend only
 
-Everyone hits the **default** endpoint (`RUNPOD_ENDPOINT_ID` in `wrangler.toml`, e.g. llama-8b).
-Visiting **`/?k=<UNLOCK_KEY>`** validates the key server-side, sets an **httpOnly** cookie, and
-redirects to a clean `/`; that browser's `/api/chat` requests then route to the gated
-**`RUNPOD_ENDPOINT_ID_PRO`** (gpt-oss-120b). `/?k=` (empty/wrong) locks back to the default.
+Everyone hits the **default** endpoint (`RUNPOD_ENDPOINT_ID`, e.g. llama-8b). Visiting
+**`/?k=<UNLOCK_KEY>`** validates the key server-side, sets an **httpOnly** cookie, and redirects to
+a clean `/`; that browser's `/api/chat` requests then route to the gated **`RUNPOD_ENDPOINT_ID_PRO`**
+(gpt-oss-120b). `/?k=` (empty/wrong) locks back to the default.
 
-The PRO endpoint id and the unlock key live **only** in Worker secrets — never in `wrangler.toml`,
-the served HTML, or page JS. The cookie is httpOnly (scripts can't read it), and the streamed
-response has its `model`/tier fields stripped, so the client cannot tell which endpoint served it.
-The UI is byte-for-byte identical in both tiers.
+Both endpoint ids + the unlock key live in `wrangler.toml`, which is **gitignored** — so they're
+not in the repo. They're also never sent to the browser (Worker env is server-side), the tier
+cookie is **httpOnly** (page scripts can't read it), and the streamed response has its `model`/tier
+fields stripped, so the client cannot tell which endpoint served it. The UI is byte-for-byte
+identical in both tiers. (`RUNPOD_ENDPOINT_ID_PRO`/`UNLOCK_KEY` may instead be set as
+`wrangler secret`s if you prefer; env resolves either way — don't set both.)
 
 Requires the RunPod endpoint (#14) running the **streaming** handler (`STREAMING=1`, the
 default) so `/stream/{id}` yields `{chunk}` / `{done}` events.
