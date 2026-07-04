@@ -25,7 +25,9 @@ cd "$(dirname "$0")/.."
 : "${RUNPOD_ENDPOINT_ID:?set RUNPOD_ENDPOINT_ID}"
 : "${RUNPOD_API_KEY:?set RUNPOD_API_KEY}"
 
-PACKS="${PACKS:-cocaine,amphetamine,dmt,lsd,placebo}"
+# Stimulants (mode collapse) + psychedelics (semantic drift/specter) + depressants (structural
+# break point, per reviewer) + the placebo control.
+PACKS="${PACKS:-cocaine,amphetamine,dmt,lsd,morphine,fentanyl,placebo}"
 SEEDS="${SEEDS:-100}"
 STEP="${STEP:-0.05}"
 PROMPT="${PROMPT:-a tree}"

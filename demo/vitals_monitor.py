@@ -252,6 +252,47 @@ def synthetic_frames(n: int = 21, size: int = 96, seed: int = 0) -> List[Frame]:
     return frames
 
 
+def frames_from_remote(endpoint_id: str, api_key: str, pack: str, prompt: str, seed: int,
+                       doses: Sequence[float], steps: int = 4, size: int = 512,
+                       poll_interval: float = 2.0, image_model: str = "sdxl-turbo",
+                       metrics_layer=None) -> List[Frame]:  # pragma: no cover - network
+    """Generate real vitals frames on a deployed RunPod worker (fixed seed, fine dose grid).
+
+    Requests pre-VAE latents so the live graph can plot latent spectral energy alongside CLIP
+    drift. Metrics are computed locally (needs the metric deps, no SD weights).
+    """
+    import base64
+    from io import BytesIO
+    from PIL import Image
+    from api.runpod_client import RunPodModelInterface
+    from api.image_model import latents_from_b64
+    if metrics_layer is None:
+        from neuromod.metrics import pharmacodynamics as metrics_layer
+
+    client = RunPodModelInterface(endpoint_id=endpoint_id, api_key=api_key)
+    frames: List[Frame] = []
+    baseline_img = None
+    prev_img = None
+    for dose in doses:
+        pack_arg = None if float(dose) == 0.0 else pack
+        out = client.generate_image(prompt, pack_name=pack_arg, intensity=float(dose), seed=int(seed),
+                                    steps=steps, width=size, height=size, image_model=image_model,
+                                    return_latents=True, poll_interval=poll_interval)
+        url = out.get("image")
+        if not url:
+            continue
+        b64 = url.split(",", 1)[1] if "," in url else url
+        img = Image.open(BytesIO(base64.b64decode(b64))).convert("RGB")
+        latents = latents_from_b64(out["latents"]) if out.get("latents") else None
+        if float(dose) == 0.0:
+            baseline_img = img
+        m = metrics_layer.compute_image_metrics(img, latents=latents, prompt=prompt,
+                                                baseline_image=baseline_img, prev_image=prev_img)
+        frames.append(Frame(dose, img, m))
+        prev_img = img
+    return frames
+
+
 def frames_from_interface(interface, pack: str, prompt: str, seed: int,
                           doses: Sequence[float], metrics_layer=None) -> List[Frame]:  # pragma: no cover - GPU
     """Generate real frames via an ``ImageNeuromodInterface`` on a fixed seed.
@@ -313,6 +354,12 @@ def main(argv=None):
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--model", default="sdxl-turbo")
     ap.add_argument("--steps", default=None, help="Comma-separated doses (default 0..1 by 0.05)")
+    ap.add_argument("--remote", action="store_true",
+                    help="Generate frames on a RunPod worker (task=image) instead of a local model")
+    ap.add_argument("--endpoint", default=os.environ.get("RUNPOD_ENDPOINT_ID"))
+    ap.add_argument("--api-key", default=os.environ.get("RUNPOD_API_KEY"))
+    ap.add_argument("--diffusion-steps", type=int, default=4, help="Diffusion steps/image (remote)")
+    ap.add_argument("--image-size", type=int, default=512, help="Square image size (remote)")
     args = ap.parse_args(argv)
 
     if args.steps:
@@ -323,6 +370,13 @@ def main(argv=None):
     if args.demo:
         frames = synthetic_frames(n=len(doses))
         title = "Visual Pharmacodynamics (demo)"
+    elif args.remote:  # pragma: no cover - network
+        if not args.endpoint or not args.api_key:
+            ap.error("--remote needs --endpoint/--api-key (or RUNPOD_ENDPOINT_ID/RUNPOD_API_KEY)")
+        frames = frames_from_remote(args.endpoint, args.api_key, args.pack, args.prompt, args.seed,
+                                    doses, steps=args.diffusion_steps, size=args.image_size,
+                                    image_model=args.model)
+        title = f"Visual Pharmacodynamics — {args.pack}"
     else:  # pragma: no cover - GPU path
         from demo.image_generation_demo import ImageNeuromodInterface
         iface = ImageNeuromodInterface(model_name=args.model)

@@ -85,6 +85,28 @@ def pil_to_data_url(image) -> str:
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
 
 
+def latents_to_b64(latents) -> str:
+    """Encode a latents array (numpy or a torch tensor) as base64 ``.npy`` (carries shape+dtype).
+
+    Torch is imported only when a tensor is passed, so the pure-numpy path stays torch-free
+    (tests / the client decode never import torch).
+    """
+    import numpy as np
+    if hasattr(latents, "detach"):  # torch tensor
+        import torch
+        latents = latents.detach().to("cpu", dtype=torch.float32).numpy()
+    arr = np.asarray(latents, dtype=np.float32)
+    buf = io.BytesIO()
+    np.save(buf, arr)
+    return base64.b64encode(buf.getvalue()).decode("ascii")
+
+
+def latents_from_b64(s: str):
+    """Decode a base64 ``.npy`` latents payload back to a numpy array (numpy-only)."""
+    import numpy as np
+    return np.load(io.BytesIO(base64.b64decode(s)), allow_pickle=False)
+
+
 class NeuromodImageInterface:
     """Cache-once SD pipeline + neuromod pack adaptation for one worker."""
 
@@ -257,12 +279,31 @@ class NeuromodImageInterface:
         self._steer = None
         self.generation_params = {}
 
+    def _decode_latents(self, latents):
+        """Manually VAE-decode pre-VAE latents to a PIL image (fp32 VAE for SDXL stability)."""
+        vae = self.pipeline.vae
+        sf = getattr(getattr(vae, "config", None), "scaling_factor", 0.18215) or 0.18215
+        lat = (latents / sf).to(vae.dtype)
+        img = vae.decode(lat, return_dict=False)[0]
+        if hasattr(self.pipeline, "image_processor"):
+            return self.pipeline.image_processor.postprocess(img, output_type="pil")[0]
+        import numpy as np
+        from PIL import Image
+        arr = (img.detach() / 2 + 0.5).clamp(0, 1).cpu().permute(0, 2, 3, 1).numpy()[0]
+        return Image.fromarray((arr * 255).astype(np.uint8))
+
     # -- generation --------------------------------------------------------------------------
     def generate(self, prompt: str, pack_name: Optional[str] = None, intensity: float = 0.5,
                  width: Optional[int] = None, height: Optional[int] = None,
                  steps: Optional[int] = None, guidance_scale: Optional[float] = None,
-                 seed: Optional[int] = None) -> Dict[str, Any]:
-        """Generate one image; return ``{image: data-url, ...}`` (honest ``pack_applied``)."""
+                 seed: Optional[int] = None, return_latents: bool = False) -> Dict[str, Any]:
+        """Generate one image; return ``{image: data-url, ...}`` (honest ``pack_applied``).
+
+        With ``return_latents=True`` the pre-VAE latents are captured (``output_type="latent"`` +
+        a manual VAE decode) and returned as a base64 ``.npy`` under ``latents`` so the dose-response
+        driver can compute latent-space spectral metrics with full parity to a local pipeline. Off
+        by default so the chat UI isn't burdened with the extra payload.
+        """
         import torch
         from contextlib import nullcontext
 
@@ -320,16 +361,26 @@ class NeuromodImageInterface:
             except Exception as e:
                 logger.warning(f"[image] steering context failed: {e}")
 
+        latents_b64 = None
         try:
             with torch.no_grad(), steer_ctx:
-                out = self.pipeline(prompt=prompt, width=w, height=h, generator=gen, **call_kwargs)
-                image = out.images[0]
+                if return_latents and hasattr(self.pipeline, "vae"):
+                    # Capture the pre-VAE latents, then decode them ourselves so the returned image
+                    # and the returned latents correspond to the SAME generation.
+                    lat = self.pipeline(prompt=prompt, width=w, height=h, generator=gen,
+                                        output_type="latent", **call_kwargs).images
+                    image = self._decode_latents(lat)
+                    latents_b64 = latents_to_b64(lat)
+                else:
+                    image = self.pipeline(prompt=prompt, width=w, height=h, generator=gen,
+                                          **call_kwargs).images[0]
                 if self.refiner is not None:
+                    # Refiner runs post-decode; the returned latents are the BASE (pre-refine) ones.
                     image = self.refiner(prompt=prompt, image=image, generator=gen).images[0]
         finally:
             self.clear()
 
-        return {
+        result = {
             "image": pil_to_data_url(image),
             "prompt": prompt,
             "pack_applied": pack_name if neuromod_applied else None,
@@ -340,3 +391,6 @@ class NeuromodImageInterface:
             "width": w, "height": h,
             "generation_time": round(time.time() - start, 3),
         }
+        if latents_b64 is not None:
+            result["latents"] = latents_b64
+        return result

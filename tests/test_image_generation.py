@@ -27,9 +27,10 @@ class FakeImageModel:
         self.calls = []
 
     def generate(self, prompt, pack_name=None, intensity=0.5, width=None, height=None,
-                 steps=None, guidance_scale=None, seed=None):
+                 steps=None, guidance_scale=None, seed=None, return_latents=False):
         self.calls.append(dict(prompt=prompt, pack_name=pack_name, intensity=intensity,
-                               width=width, height=height, steps=steps, seed=seed))
+                               width=width, height=height, steps=steps, seed=seed,
+                               return_latents=return_latents))
         return {
             "image": "data:image/png;base64,AAAA",
             "prompt": prompt,

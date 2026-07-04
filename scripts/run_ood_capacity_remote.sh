@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# "Cocaine Crunch" capacity-collapse study over the deployed RunPod worker (thread C+).
+#
+# Sweeps stimulant dose for an in-distribution prompt ("a tree") and a battery of compositional
+# OOD prompts, then contrasts how fast CLIP prompt-adherence decays. If stimulants cause a genuine
+# capacity failure (not just lower variance), adherence to the hard OOD prompts collapses faster and
+# further than to the easy in-distribution one.
+#
+# Usage:
+#   export RUNPOD_ENDPOINT_ID=xxx RUNPOD_API_KEY=yyy
+#   scripts/run_ood_capacity_remote.sh
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+: "${RUNPOD_ENDPOINT_ID:?set RUNPOD_ENDPOINT_ID}"
+: "${RUNPOD_API_KEY:?set RUNPOD_API_KEY}"
+
+PACKS="${PACKS:-cocaine,amphetamine}"
+SEEDS="${SEEDS:-100}"
+STEP="${STEP:-0.1}"
+MODEL="${MODEL:-sdxl-turbo}"
+STEPS="${STEPS:-4}"
+OUTDIR="${OUTDIR:-outputs/ood}"
+mkdir -p "$OUTDIR"
+
+# Pull the in-distribution + OOD prompt battery from the analysis module (single source of truth).
+readarray -t LINES < <(python3 - <<'PY'
+import analysis.ood_capacity as oc
+print(f"tree\t{oc.INDIST_PROMPT}")
+for label, prompt in oc.OOD_PROMPTS.items():
+    print(f"{label}\t{prompt}")
+PY
+)
+
+sweep () {  # label  prompt
+  local label="$1" prompt="$2" csv="$OUTDIR/$1.csv"
+  echo ">> $label: \"$prompt\""
+  python3 demo/dose_response_runner.py \
+    --remote --model "$MODEL" --steps "$STEPS" --no-latents \
+    --packs "$PACKS" --seeds "$SEEDS" --intensity-step "$STEP" \
+    --prompt "$prompt" --out "$csv"
+  echo "$label=$csv"
+}
+
+OOD_ARGS=()
+INDIST_ARG=""
+for line in "${LINES[@]}"; do
+  label="${line%%$'\t'*}"; prompt="${line#*$'\t'}"
+  pair="$(sweep "$label" "$prompt" | tail -1)"
+  if [ "$label" = "tree" ]; then INDIST_ARG="$pair"; else OOD_ARGS+=("$pair"); fi
+done
+
+OOD_JOINED=$(IFS=,; echo "${OOD_ARGS[*]}")
+echo "Analyzing OOD capacity gap -> $OUTDIR/analysis"
+python3 analysis/ood_capacity.py --indist "$INDIST_ARG" --ood "$OOD_JOINED" \
+  --packs "$PACKS" --outdir "$OUTDIR/analysis"
+echo "Done. ood_capacity_gap.csv + ood_capacity.png in $OUTDIR/analysis"

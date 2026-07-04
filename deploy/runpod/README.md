@@ -167,8 +167,17 @@ Under the hood: `demo/dose_response_runner.py --remote` (its `RemoteGenerator` c
 image task) → `analysis/dose_response_stats.py` (Spearman / Mann-Kendall / BH-FDR / EC50-Hill /
 breakpoints + ribbon plots). The run is **resumable** — re-run the same command to continue. The
 box running the driver needs the metric deps (`torch`, `open_clip_torch`, `lpips`, `scikit-image`)
-but **no SD weights** (those live on the worker). Latent-space `latent_*` metrics aren't produced
-over HTTP (the worker returns pixels only); every image-space + CLIP metric still is.
+but **no SD weights** (those live on the worker). The image task returns the pre-VAE **latents**
+too (`return_latents`), so the driver computes the full **latent-space** spectral metrics with
+parity to a local pipeline (pass `--no-latents` to skip them for a smaller payload).
+
+The security-framed companion studies run the same way (generation on the worker, scoring local):
+
+```bash
+scripts/run_safety_boundary_remote.sh   # architectural-jailbreak: safety-trigger rate vs dose (2 detectors, placebo)
+scripts/run_ood_capacity_remote.sh      # "Cocaine Crunch": stimulant dose collapses OOD-prompt adherence
+python demo/vitals_monitor.py --remote --pack lsd --seed 42   # synced image+vitals video/slider (fine grid)
+```
 
 Or drive it from a laptop (torch-free client — pay only for the worker's GPU-seconds). The client
 submits server-side jobs **async** (`/run` + poll `/status`) so the multi-minute battery on a 120B
