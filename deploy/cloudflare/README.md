@@ -15,7 +15,7 @@ Browser ──POST /api/chat──► Worker ──/run + poll /stream (RunPod k
 
 | Route | Purpose |
 |---|---|
-| `GET /` | Full drag-and-drop demo UI (`src/index.html`, ported from `docs/demo.html`): drag drug "pills" onto the avatar, set the dose (intensity slider, 0–5× — >1 overloads), streams tokens. Wired to the REAL backend (not the OpenAI-prompt simulation the GitHub Pages version used). |
+| `GET /` | Full drag-and-drop demo UI (`src/index.html`, ported from `docs/chat.html`): drag drug "pills" onto the avatar, set the dose (intensity slider, 0–5× — >1 overloads), streams tokens. Wired to the REAL backend (not the OpenAI-prompt simulation the GitHub Pages version used). |
 | `GET /health` | `{ok:true}` |
 | `GET /api/packs` | Pack catalog (from `PACKS` var or a default list) |
 | `POST /api/chat` | SSE stream: `data: {chunk}` events, then the final `data: {done, response, …}` and `data: [DONE]` |
