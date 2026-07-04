@@ -303,6 +303,22 @@ def run(
       that is recorded too, giving the two independent detectors the analysis needs.
     """
     done = _load_done_keys(csv_path)
+    # Warn LOUDLY about any missing metric backend up front — otherwise cells "succeed" with the
+    # affected metrics silently omitted, and you only find out much later (or via a diversity crash).
+    missing = []
+    if not pdm.clip_available():
+        missing.append("CLIP (pip install open_clip_torch)  -> clip_prompt_similarity, concept probes")
+    if not pdm.lpips_available():
+        missing.append("LPIPS (pip install lpips)            -> lpips_vs_baseline, lpips_step, diversity")
+    if not getattr(pdm, "ssim_available", lambda: True)():
+        missing.append("scikit-image (pip install scikit-image) -> ssim_vs_baseline, SSIM diversity")
+    if missing:
+        print("\n" + "!" * 78)
+        print("WARNING: metric backends missing — these metrics will be OMITTED from the run:")
+        for m in missing:
+            print("  - " + m)
+        print("Install them and restart for the full headline metric set (SSIM / LPIPS / diversity).")
+        print("!" * 78 + "\n")
     clip = pdm.CLIPScorer() if pdm.clip_available() else None
     lp = pdm.LPIPSScorer() if pdm.lpips_available() else None
     fh, writer = _open_writer(csv_path)
