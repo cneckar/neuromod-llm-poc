@@ -152,6 +152,24 @@ text `MODEL_REGISTRY`) so it can't pull an arbitrary checkpoint. Because the tie
 unlocked browsers to the large endpoint, the same 🖼️ toggle yields Turbo on the default tier and
 high-quality SDXL on the PRO tier — automatically, with no tier info exposed to the frontend.
 
+#### Full dose-response study over the worker (SDXL-Turbo)
+
+To run the N=100 fine-grid pharmacodynamics study, generation happens on the worker (`task="image"`)
+and the metrics are scored locally:
+
+```bash
+export RUNPOD_ENDPOINT_ID=<image-endpoint> RUNPOD_API_KEY=...
+scripts/run_dose_response_remote.sh            # warms, sweeps (resumable), then runs the stats
+# knobs: PACKS=… SEEDS=100 STEP=0.05 PROMPT="a tree" CONCEPTS="a human figure,a face" MODEL=sdxl-turbo
+```
+
+Under the hood: `demo/dose_response_runner.py --remote` (its `RemoteGenerator` calls the worker's
+image task) → `analysis/dose_response_stats.py` (Spearman / Mann-Kendall / BH-FDR / EC50-Hill /
+breakpoints + ribbon plots). The run is **resumable** — re-run the same command to continue. The
+box running the driver needs the metric deps (`torch`, `open_clip_torch`, `lpips`, `scikit-image`)
+but **no SD weights** (those live on the worker). Latent-space `latent_*` metrics aren't produced
+over HTTP (the worker returns pixels only); every image-space + CLIP metric still is.
+
 Or drive it from a laptop (torch-free client — pay only for the worker's GPU-seconds). The client
 submits server-side jobs **async** (`/run` + poll `/status`) so the multi-minute battery on a 120B
 model can't hit the `/runsync` timeout:

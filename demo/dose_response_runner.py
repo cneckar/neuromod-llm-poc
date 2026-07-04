@@ -222,6 +222,52 @@ class ModelGenerator:
         return result
 
 
+class RemoteGenerator:
+    """Generator that runs image generation on a deployed RunPod worker (``task="image"``).
+
+    Generation happens on the worker's GPU (e.g. SDXL-Turbo); metrics are computed locally by
+    :func:`run`. No local SD weights are needed — only the metric deps (CLIP / LPIPS / skimage).
+    Determinism comes from the ``seed`` the worker seeds its generator with, so dose 0.0 is a
+    stable per-seed baseline exactly as in the local path.
+
+    Caveat: the worker returns pixels only, so latent-space metrics (``latent_*``) are unavailable
+    over HTTP and simply omitted — every image-space + CLIP metric (the headline set: SSIM, LPIPS,
+    inter-seed diversity, CLIP drift, pixel energy/variance/entropy) is still computed.
+    """
+
+    def __init__(self, prompt: str, endpoint_id: str, api_key: str, steps: int = 4,
+                 size: int = 512, poll_interval: float = 2.0, image_model: Optional[str] = None,
+                 timeout: int = 3600):
+        from api.runpod_client import RunPodModelInterface
+        self.prompt = prompt
+        self.steps = steps
+        self.size = size
+        self.poll_interval = poll_interval
+        self.image_model = image_model
+        self.client = RunPodModelInterface(endpoint_id=endpoint_id, api_key=api_key, timeout=timeout)
+
+    def generate(self, pack: str, intensity: float, seed: int) -> Dict:
+        import base64
+        from io import BytesIO
+        pack_arg = None if intensity == 0.0 else pack  # dose 0.0 == sober baseline
+        try:
+            out = self.client.generate_image(
+                self.prompt, pack_name=pack_arg, intensity=float(intensity), seed=int(seed),
+                steps=self.steps, width=self.size, height=self.size,
+                image_model=self.image_model, poll_interval=self.poll_interval)
+        except Exception as e:  # network / worker error — mark failed so run() skips this cell
+            return {"image": None, "latents": None, "success": False, "error": str(e)}
+        url = out.get("image") if isinstance(out, dict) else None
+        if not url:
+            return {"image": None, "latents": None, "success": False,
+                    "error": (out or {}).get("error", "no image returned")}
+        b64 = url.split(",", 1)[1] if "," in url else url
+        from PIL import Image
+        img = Image.open(BytesIO(base64.b64decode(b64))).convert("RGB")
+        return {"image": img, "latents": None, "success": True,
+                "pack_applied": out.get("pack_applied"), "neuromod_error": out.get("neuromod_error")}
+
+
 # --------------------------------------------------------------------------------------
 # Runner
 # --------------------------------------------------------------------------------------
@@ -362,6 +408,8 @@ def main(argv=None):
     ap.add_argument("--prompt", default="a tree", help="Text prompt (held fixed across conditions)")
     ap.add_argument("--intensities", default=None,
                     help="Comma-separated doses (default 0.0..1.0 step 0.1)")
+    ap.add_argument("--intensity-step", type=float, default=None,
+                    help="Build a 0.0..1.0 dose grid with this step (e.g. 0.05 for the fine grid)")
     ap.add_argument("--seeds", type=int, default=100, help="Number of fixed seeds (0..N-1)")
     ap.add_argument("--seed-start", type=int, default=0, help="First seed value")
     ap.add_argument("--out", default="outputs/dose_response/results.csv", help="Output CSV path")
@@ -376,11 +424,27 @@ def main(argv=None):
                     help="Attach the independent SafetyOracle (thread B); needs CLIP")
     ap.add_argument("--dry-run", action="store_true",
                     help="Use synthetic generator (no torch/model) to validate plumbing")
+    # Remote generation on a deployed RunPod worker (task="image"); metrics computed locally.
+    ap.add_argument("--remote", action="store_true",
+                    help="Generate on a RunPod worker instead of a local pipeline (task=image)")
+    ap.add_argument("--endpoint", default=os.environ.get("RUNPOD_ENDPOINT_ID"),
+                    help="RunPod endpoint id (or set RUNPOD_ENDPOINT_ID)")
+    ap.add_argument("--api-key", default=os.environ.get("RUNPOD_API_KEY"),
+                    help="RunPod API key (or set RUNPOD_API_KEY)")
+    ap.add_argument("--steps", type=int, default=4, help="Diffusion steps per image (remote)")
+    ap.add_argument("--image-size", type=int, default=512, help="Square image size (remote)")
+    ap.add_argument("--poll-interval", type=float, default=2.0, help="RunPod /status poll seconds")
     ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args(argv)
 
     packs = [x.strip() for x in args.packs.split(",") if x.strip()]
-    intensities = _parse_floats(args.intensities) if args.intensities else DEFAULT_INTENSITIES
+    if args.intensities:
+        intensities = _parse_floats(args.intensities)
+    elif args.intensity_step:
+        n = int(round(1.0 / args.intensity_step))
+        intensities = [round(i * args.intensity_step, 4) for i in range(n + 1)]
+    else:
+        intensities = DEFAULT_INTENSITIES
     seeds = list(range(args.seed_start, args.seed_start + args.seeds))
     concepts = [x.strip() for x in args.concepts.split(",")] if args.concepts else None
 
@@ -399,6 +463,14 @@ def main(argv=None):
     if args.dry_run:
         generator = DryRunGenerator(prompt=args.prompt)
         print("[dry-run] Using synthetic generator (no model loaded).")
+    elif args.remote:
+        if not args.endpoint or not args.api_key:
+            ap.error("--remote needs --endpoint/--api-key (or RUNPOD_ENDPOINT_ID/RUNPOD_API_KEY)")
+        generator = RemoteGenerator(prompt=args.prompt, endpoint_id=args.endpoint,
+                                    api_key=args.api_key, steps=args.steps, size=args.image_size,
+                                    poll_interval=args.poll_interval, image_model=args.model)
+        print(f"[remote] Generating on RunPod endpoint {args.endpoint} "
+              f"(image_model={args.model}, steps={args.steps}, size={args.image_size}).")
     else:
         generator = ModelGenerator(model_name=args.model, prompt=args.prompt)
 
