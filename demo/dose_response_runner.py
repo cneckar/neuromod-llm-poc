@@ -448,6 +448,8 @@ def main(argv=None):
                     help="Save images under <out>_images/ (shortcut for --image-dir)")
     ap.add_argument("--safety", action="store_true",
                     help="Attach the independent SafetyOracle (thread B); needs CLIP")
+    ap.add_argument("--no-sd-checker", action="store_true",
+                    help="With --safety, skip the SD-native safety checker (CLIP oracle only)")
     ap.add_argument("--dry-run", action="store_true",
                     help="Use synthetic generator (no torch/model) to validate plumbing")
     # Remote generation on a deployed RunPod worker (task="image"); metrics computed locally.
@@ -486,7 +488,10 @@ def main(argv=None):
         spec = importlib.util.spec_from_file_location("safety_boundary", sb_path)
         sb = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(sb)
-        safety_oracle = sb.SafetyOracle()
+        # Two independent detectors, both run on the driver over the returned image: the CLIP
+        # concept oracle and (unless disabled) the model's own StableDiffusionSafetyChecker.
+        model_checker = None if args.no_sd_checker else sb.SDModelChecker()
+        safety_oracle = sb.SafetyOracle(model_checker=model_checker)
 
     if args.dry_run:
         generator = DryRunGenerator(prompt=args.prompt)
