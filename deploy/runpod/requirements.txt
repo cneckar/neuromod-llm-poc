@@ -32,3 +32,10 @@ bitsandbytes>=0.43.0
 #     See huggingface/transformers#46291.
 kernels>=0.12,<0.15
 triton>=3.4.0
+
+# Image generation (task="image"): Stable Diffusion / SDXL via diffusers. Loaded lazily on the
+# first image request and cached alongside the LLM (co-resident) — size the endpoint's GPU for
+# both. Pick the SD model per endpoint with IMAGE_MODEL (small: sdxl-turbo; large:
+# stabilityai/stable-diffusion-xl-base-1.0, optional IMAGE_REFINER for a refine pass).
+diffusers>=0.30.0
+Pillow>=10.0.0

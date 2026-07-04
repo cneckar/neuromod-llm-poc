@@ -127,8 +127,13 @@ def parse_event(event: Dict[str, Any]) -> Dict[str, Any]:
 
     if payload.get("prompt"):
         prompt = str(payload["prompt"])
+    elif payload.get("messages"):
+        prompt = messages_to_prompt(payload["messages"])
     else:
-        prompt = messages_to_prompt(payload.get("messages", []))
+        # No prompt and no messages -> genuinely empty. Keep it empty (don't let
+        # messages_to_prompt([]) fabricate a bare "Assistant:") so the empty-input guards in
+        # run_inference / run_image actually fire.
+        prompt = ""
 
     def _num(key, default):
         try:
@@ -155,6 +160,13 @@ def parse_event(event: Dict[str, Any]) -> Dict[str, Any]:
         "output_dir": payload.get("output_dir"),
         "layer": payload.get("layer"),
         "only_tests": payload.get("only_tests"),
+        # Image generation (task="image"): all optional; None -> the interface's per-model defaults.
+        "image_model": payload.get("image_model"),
+        "width": payload.get("width"),
+        "height": payload.get("height"),
+        "steps": payload.get("steps"),
+        "guidance_scale": payload.get("guidance_scale"),
+        "seed": payload.get("seed"),
     }
 
 
@@ -404,7 +416,58 @@ def stream_handler(event: Dict[str, Any], model=None) -> Iterator[Dict[str, Any]
 # Server-side jobs (run heavy work ON the warm worker, so the full study stays serverless)
 # --------------------------------------------------------------------------------------
 
-TASKS = ("generate", "warmup", "steering", "endpoints", "diag")
+TASKS = ("generate", "image", "warmup", "steering", "endpoints", "diag")
+
+# Image (Stable Diffusion) singleton — loaded lazily on the first image request and cached for
+# the warm worker, alongside the LLM. Keyed by the resolved SD model id.
+_IMAGE_MODEL = None
+_IMAGE_MODEL_NAME: Optional[str] = None
+
+
+def _get_image_model(model_name: Optional[str] = None):
+    """Load and cache the neuromodulated SD interface once per worker (per SD model id)."""
+    global _IMAGE_MODEL, _IMAGE_MODEL_NAME
+    from api.image_model import NeuromodImageInterface, resolve_image_model  # deferred heavy import
+
+    resolved = resolve_image_model(model_name)
+    if _IMAGE_MODEL is not None and _IMAGE_MODEL_NAME == resolved:
+        return _IMAGE_MODEL
+    _IMAGE_MODEL = NeuromodImageInterface(resolved)
+    _IMAGE_MODEL_NAME = resolved
+    return _IMAGE_MODEL
+
+
+def run_image(parsed: Dict[str, Any], image_model=None) -> Dict[str, Any]:
+    """Generate one neuromodulated image and shape a response (base64 PNG data URL).
+
+    ``image_model`` may be injected by tests (any object exposing ``generate(...)``) to avoid a
+    real SD load. The SD model is chosen per endpoint via the ``IMAGE_MODEL`` env; the browser
+    can only override within an allow-list (see ``resolve_image_model``).
+    """
+    if not parsed.get("prompt"):
+        return error_response("No prompt provided for image generation.")
+    start = time.time()
+    cold = None
+    if image_model is None:
+        t0 = time.time()
+        image_model = _get_image_model(parsed.get("image_model"))
+        load = time.time() - t0
+        cold = load if load > 1.0 else None  # first call pays the SD load; ~0 when warm
+    result = image_model.generate(
+        prompt=parsed["prompt"], pack_name=parsed.get("pack_name"),
+        intensity=parsed.get("intensity", 0.5),
+        width=parsed.get("width"), height=parsed.get("height"),
+        steps=parsed.get("steps"), guidance_scale=parsed.get("guidance_scale"),
+        seed=parsed.get("seed"),
+    )
+    gpu_seconds = round(time.time() - start, 4)
+    result.setdefault("task", "image")
+    result["model"] = parsed.get("model")
+    result["gpu_seconds"] = gpu_seconds
+    result["cold_start_seconds"] = round(cold, 4) if cold else None
+    log_billing({"model": _IMAGE_MODEL_NAME or parsed.get("image_model"), "pack": "image",
+                 "gpu_seconds": gpu_seconds, "cold_start_seconds": result["cold_start_seconds"]})
+    return result
 
 
 def run_diag(parsed: Dict[str, Any]) -> Dict[str, Any]:
@@ -649,6 +712,8 @@ def dispatch_task(parsed: Dict[str, Any], model=None) -> Dict[str, Any]:
     task = parsed["task"]
     if task == "diag":
         return run_diag(parsed)
+    if task == "image":
+        return run_image(parsed, image_model=model)
     if task == "warmup":
         return run_warmup(parsed)
     if task == "steering":

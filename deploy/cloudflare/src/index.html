@@ -53,6 +53,11 @@
         .message.assistant { background-color: #0a0a0a; color: #CCC; }
         .message.system { background-color: #1a1a1a; color: #888; font-style: italic; font-size: 12px; border-color: #555; }
         .message .reasoning { display: block; color: #777; font-size: 12px; font-style: italic; margin-bottom: 6px; border-left: 2px solid #333; padding-left: 8px; }
+        .chat-toolbar { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; font-size: 13px; color: #CCC; }
+        .chat-toolbar label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+        .chat-toolbar input[type=checkbox] { accent-color: #00CCFF; width: 15px; height: 15px; cursor: pointer; }
+        .chat-toolbar .hint { color: #888; font-size: 12px; }
+        .message img.gen-image { display: block; max-width: 100%; margin-top: 8px; border: 1px solid #333; }
         .chat-input-container { display: flex; gap: 0.5rem; }
         .chat-input { flex: 1; padding: 10px; border: 1px solid #333; background-color: #0a0a0a; color: #CCC; font-size: 14px; font-family: 'Times New Roman', Times, serif; resize: none; }
         .chat-input:focus { outline: none; border-color: #00CCFF; background-color: #1a1a1a; }
@@ -146,6 +151,10 @@
                                 <div class="message assistant"><strong>AI: </strong><span>Hello! Drag a pill onto my avatar to alter my cognition, set the dose, and let's talk.</span></div>
                             </div>
                             <div class="loading" id="loading"><div class="spinner"></div><p id="loadingText">warming up…</p></div>
+                            <div class="chat-toolbar">
+                                <label><input type="checkbox" id="imageToggle"> 🖼️ Generate image</label>
+                                <span class="hint">the same pill + dose steers the image</span>
+                            </div>
                             <div class="chat-input-container">
                                 <textarea class="chat-input" id="chatInput" placeholder="Type your message here…" rows="2"></textarea>
                                 <button class="send-button" id="sendButton" onclick="sendMessage()">Send</button>
@@ -305,21 +314,29 @@
             loading.classList.add('show'); loadingText.textContent = 'queued (first call after idle pays a cold start)…';
             sendButton.disabled = true;
 
-            conversationHistory.push({ role: 'user', content: message });
             const pack = activePacks.length ? activePacks[0] : null;
             const intensity = parseFloat(intensityEl.value);
+            const imageMode = document.getElementById('imageToggle').checked;
+            // Image requests are one-shot prompts (not chat turns); only text turns build history.
+            if (!imageMode) conversationHistory.push({ role: 'user', content: message });
+            loadingText.textContent = imageMode
+                ? 'painting… (first image after idle pays a model load; SDXL takes a bit)'
+                : 'queued (first call after idle pays a cold start)…';
 
             const { span, message: msgEl } = addMessage('assistant', '');
-            let full = '', gotChunk = false;
+            let full = '', gotChunk = false, gotImage = false;
             try {
                 const headers = { 'Content-Type': 'application/json' };
+                const body = imageMode
+                    ? { task: 'image', prompt: message, pack_name: pack, intensity: intensity }
+                    : { messages: conversationHistory, pack_name: pack, intensity: intensity };
                 const resp = await fetch('/api/chat', {
                     method: 'POST', headers,
                     // max_tokens is set per tier by the Worker (server-side); not sent here.
-                    body: JSON.stringify({ messages: conversationHistory, pack_name: pack, intensity: intensity })
+                    body: JSON.stringify(body)
                 });
                 if (!resp.ok || !resp.body) throw new Error('HTTP ' + resp.status);
-                loadingText.textContent = 'generating…';
+                loadingText.textContent = imageMode ? 'rendering…' : 'generating…';
                 const reader = resp.body.getReader();
                 const decoder = new TextDecoder();
                 let buf = '';
@@ -337,6 +354,17 @@
                         let evt; try { evt = JSON.parse(payload); } catch { continue; }
                         if (evt.error) { full += (full ? '\n' : '') + '[error] ' + evt.error; span.textContent = full; }
                         else if (typeof evt.chunk === 'string') { gotChunk = true; full += evt.chunk; span.textContent = full; }
+                        else if (typeof evt.image === 'string') {
+                            // Image task: render the base64 PNG inline in the chat bubble.
+                            gotImage = true; full = '[image]';
+                            span.textContent = '';
+                            const img = document.createElement('img'); img.className = 'gen-image'; img.src = evt.image;
+                            img.alt = message; msgEl.appendChild(img);
+                            if (evt.pack_applied === null && pack) {
+                                const w = document.createElement('span'); w.className = 'reasoning';
+                                w.textContent = '⚠️ pack did not apply server-side' + (evt.neuromod_error ? ': ' + evt.neuromod_error : ''); msgEl.insertBefore(w, span);
+                            }
+                        }
                         else if (evt.done || evt.response) {
                             if (!gotChunk && evt.response) { full = evt.response; span.textContent = full; }
                             if (evt.reasoning) {
@@ -357,7 +385,8 @@
                     }
                 }
                 if (!full) { full = '(no response — the worker may have timed out; try again once it is warm)'; span.textContent = full; }
-                conversationHistory.push({ role: 'assistant', content: full });
+                // Only text turns feed back into chat context; images are one-shot.
+                if (!imageMode && !gotImage) conversationHistory.push({ role: 'assistant', content: full });
             } catch (e) {
                 span.textContent = 'Error: ' + e.message;
             } finally {

@@ -43,10 +43,37 @@ test("tierCookie sets httpOnly + clears", () => {
   assert.match(tierCookie(null), /Max-Age=0/);
 });
 
-test("stripTierInfo removes model/tier hints", () => {
+test("stripTierInfo removes model/tier hints (incl. image_model)", () => {
   assert.deepEqual(stripTierInfo({ chunk: "hi", model: "gpt-oss-120b", model_type: "local" }),
                    { chunk: "hi" });
+  // image_model (SDXL-Turbo default vs SDXL pro) would leak the tier too — must be stripped.
+  assert.deepEqual(stripTierInfo({ image: "data:...", image_model: "stabilityai/sdxl-turbo" }),
+                   { image: "data:..." });
   assert.equal(stripTierInfo("x"), "x");
+});
+
+test("buildRunpodInput image task: whitelisted task + clamped params", () => {
+  const p = buildRunpodInput({ task: "image", prompt: "a fox", pack_name: "lsd", intensity: 2,
+                               width: 1024, height: 768, steps: 30, seed: 7, guidance_scale: 9 });
+  assert.equal(p.input.task, "image");
+  assert.equal(p.input.prompt, "a fox");
+  assert.equal(p.input.width, 1024);
+  assert.equal(p.input.height, 768);
+  assert.equal(p.input.steps, 30);
+  assert.equal(p.input.seed, 7);
+  assert.equal(p.input.guidance_scale, 9);
+  // Out-of-range params get clamped; the chat default omits task entirely.
+  const clamped = buildRunpodInput({ task: "image", prompt: "x", width: 9999, steps: 999 });
+  assert.equal(clamped.input.width, 1024);
+  assert.equal(clamped.input.steps, 80);
+  const chat = buildRunpodInput({ messages: [{ role: "user", content: "hi" }] });
+  assert.ok(!("task" in chat.input));
+});
+
+test("buildRunpodInput ignores non-image task values (no server-job passthrough)", () => {
+  // A browser must not be able to trigger steering/endpoints/diag jobs via /api/chat.
+  const p = buildRunpodInput({ task: "steering", prompt: "x" });
+  assert.ok(!("task" in p.input));
 });
 
 test("clampIntensity clamps and defaults", () => {

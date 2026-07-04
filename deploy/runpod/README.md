@@ -100,7 +100,7 @@ Response mirrors the existing `ChatResponse` (`response`, `emotions`, `pack_appl
 
 The handler routes on an `input.task` field, so heavy work runs **on the warm worker** (which has
 the model in-process with full internals) and results land on the network volume — everything stays
-scale-to-zero. Tasks: `generate` (default), `warmup`, `steering`, `endpoints`.
+scale-to-zero. Tasks: `generate` (default), `image`, `warmup`, `steering`, `endpoints`.
 
 ```bash
 # Regenerate steering vectors for the served model (one-time; runs on the H200 worker, writes to
@@ -119,6 +119,36 @@ curl -s -X POST https://api.runpod.ai/v2/<ENDPOINT_ID>/runsync \
   -H "Authorization: Bearer $RUNPOD_API_KEY" -H "Content-Type: application/json" \
   -d '{"input":{"task":"endpoints","pack_name":"lsd","model":"gpt-oss-120b"}}'
 ```
+
+### Image generation (`task="image"`) — neuromodulated Stable Diffusion
+
+The same worker can generate images with `task:"image"`: it lazily loads a Stable Diffusion /
+SDXL pipeline (via `diffusers`) **co-resident with the LLM** and caches it for the warm worker,
+applying the *same* neuromod pack (steering pill + dose) to the UNet activations + sampler. It
+returns a PNG as a base64 data URL, which the Cloudflare chat UI drops inline (the 🖼️ toggle).
+
+```bash
+curl -s -X POST https://api.runpod.ai/v2/<ENDPOINT_ID>/runsync \
+  -H "Authorization: Bearer $RUNPOD_API_KEY" -H "Content-Type: application/json" \
+  -d '{"input":{"task":"image","prompt":"a fox in a forest","pack_name":"lsd","intensity":1.5,
+                "width":1024,"height":1024,"steps":30,"seed":7}}'
+# -> {"image":"data:image/png;base64,...","pack_applied":"lsd", ...}
+```
+
+Configure the SD model **per endpoint** (co-resident on bigger GPUs — size each endpoint's GPU for
+the LLM **and** SD):
+
+| Env var | Purpose | Small tier (e.g. llama-8b) | Large tier (e.g. gpt-oss-120b) |
+|---|---|---|---|
+| `IMAGE_MODEL` | SD model id/alias | `sdxl-turbo` (~8 GB, 1–4 steps) | `stabilityai/stable-diffusion-xl-base-1.0` (~7 GB, 1024²) |
+| `IMAGE_REFINER` | optional SDXL refine pass | *(unset)* | `stabilityai/stable-diffusion-xl-refiner-1.0` (+~7 GB) |
+| `IMAGE_CPU_OFFLOAD` | page SD weights CPU↔GPU per step if VRAM is tight (slower) | `1` if needed | usually unset |
+
+Aliases: `sdxl-turbo`, `sdxl`/`sdxl-base`, `sd-v1-5`, `sd-v2-1`. A browser-supplied `image_model`
+is resolved through this allow-list (like the text `MODEL_REGISTRY`), so it can't pull an arbitrary
+checkpoint onto a scale-to-zero GPU. Because the tier switch already routes unlocked browsers to the
+large endpoint, the same 🖼️ toggle yields Turbo on the default tier and high-quality SDXL on the PRO
+tier — automatically, with no tier info exposed to the frontend.
 
 Or drive it from a laptop (torch-free client — pay only for the worker's GPU-seconds). The client
 submits server-side jobs **async** (`/run` + poll `/status`) so the multi-minute battery on a 120B

@@ -75,7 +75,8 @@ export function tierCookie(key) {
 /** Strip fields that would reveal which backend/tier served a response (model, endpoint hints). */
 export function stripTierInfo(obj) {
   if (!obj || typeof obj !== "object") return obj;
-  const { model, model_type, ...rest } = obj;
+  // image_model would reveal the tier too (SDXL-Turbo default vs SDXL pro), so drop it as well.
+  const { model, model_type, image_model, ...rest } = obj;
   return rest;
 }
 
@@ -97,10 +98,21 @@ function num(value, fallback) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+/** Clamp an optional positive integer within [min,max]; undefined/invalid -> undefined (omit). */
+function optInt(value, min, max) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return undefined;
+  return Math.max(min, Math.min(max, Math.round(n)));
+}
+
 /**
  * Build the RunPod `{ input: {...} }` payload from a browser chat request body.
  * Accepts either a raw `prompt` or a `messages` array; applies the same defaults and
  * intensity clamp as the RunPod handler's parse_event.
+ *
+ * `task` is whitelisted to "image" (or the default chat "generate") so the browser can only
+ * ask for a chat completion or an image — never the server-side job tasks (steering/endpoints/
+ * diag), which run heavy work on the worker.
  */
 export function buildRunpodInput(body) {
   const b = body || {};
@@ -113,6 +125,22 @@ export function buildRunpodInput(body) {
   input.temperature = num(b.temperature, 1.0);
   input.top_p = num(b.top_p, 1.0);
   if (b.model) input.model = String(b.model);
+  if (b.task === "image") {
+    input.task = "image";
+    // Image params (all optional; the worker applies per-model defaults for anything omitted).
+    // Bounds keep a browser from requesting an absurd canvas / step count on a shared GPU.
+    const w = optInt(b.width, 256, 1024);
+    const h = optInt(b.height, 256, 1024);
+    const steps = optInt(b.steps, 1, 80);
+    const seed = optInt(b.seed, 0, 2 ** 31 - 1);
+    if (w !== undefined) input.width = w;
+    if (h !== undefined) input.height = h;
+    if (steps !== undefined) input.steps = steps;
+    if (seed !== undefined) input.seed = seed;
+    if (Number.isFinite(Number(b.guidance_scale))) {
+      input.guidance_scale = Math.max(0, Math.min(20, Number(b.guidance_scale)));
+    }
+  }
   return { input };
 }
 
