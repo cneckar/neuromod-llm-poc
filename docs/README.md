@@ -5,7 +5,7 @@ This is the static website for PiHK.AI (Parameters I Have Known and Inferred), h
 ## Files
 
 - `index.html` - Main homepage with project overview and features
-- `demo.html` - Interactive demo showcasing neuromodulation effects
+- `chat.html` - Interactive chat embedding the live neuromodulation Worker (chat.pihk.ai)
 - `README.md` - This file
 
 ## Features
@@ -18,12 +18,10 @@ This is the static website for PiHK.AI (Parameters I Have Known and Inferred), h
 - Statistics and metrics
 - Community links
 
-### Interactive Demo (`demo.html`)
-- Pack selection interface
-- Prompt input system
-- Mock response generation
-- Emotion tracking display
-- Real-time visualization
+### Interactive Chat (`chat.html`)
+- Embeds the live Cloudflare Worker (https://chat.pihk.ai) in an iframe
+- Drag-and-drop pillbox + real steered generation on a live model
+- Dose (intensity) control and per-tier model badge
 
 ## Deployment
 
