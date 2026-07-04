@@ -115,6 +115,50 @@ function num(value, fallback) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+// ---- Chemistry lab: custom packs -----------------------------------------------------------
+// The effect types the browser may compose into a custom "drug". Whitelisted (a custom pack from an
+// untrusted browser reaches the GPU) — only these names, matching neuromod.effects' registry, are
+// forwarded; anything else is dropped. `steering: true` marks effects that take a steering_type.
+export const CUSTOM_EFFECTS = {
+  steering: { label: "Steering (concept vector)", steering: true },
+  temperature: { label: "Temperature / entropy" },
+  noise_injection: { label: "Noise injection" },
+  kv_decay: { label: "Memory decay (KV)" },
+  style_affect_logit_bias: { label: "Tone / style bias" },
+  risk_preference_steering: { label: "Risk preference" },
+  random_direction: { label: "Placebo (random direction)" },
+};
+export const STEERING_TYPES = ["associative", "visionary", "synesthesia", "ego_thin", "playful",
+  "salient", "goal_focused", "prosocial", "abstract", "affiliative"];
+const MAX_CUSTOM_EFFECTS = 8;
+
+/**
+ * Sanitize a browser-built custom pack to a safe, minimal shape (or null if empty/invalid):
+ * whitelist effect names, clamp weight to [0,1] (the Python Pack requires it), restrict direction
+ * to up/down, cap the number of effects, and validate steering_type against the known list.
+ */
+export function validateCustomPack(cp) {
+  if (!cp || typeof cp !== "object" || !Array.isArray(cp.effects)) return null;
+  const effects = [];
+  for (const e of cp.effects.slice(0, MAX_CUSTOM_EFFECTS)) {
+    if (!e || !CUSTOM_EFFECTS[e.effect]) continue;                 // whitelist the effect type
+    const weight = Math.max(0, Math.min(1, Number(e.weight)));     // Pack validation requires [0,1]
+    if (!Number.isFinite(weight) || weight === 0) continue;
+    const out = { effect: e.effect, weight, direction: e.direction === "down" ? "down" : "up" };
+    if (CUSTOM_EFFECTS[e.effect].steering && e.parameters &&
+        STEERING_TYPES.includes(e.parameters.steering_type)) {
+      out.parameters = { steering_type: e.parameters.steering_type };
+    }
+    effects.push(out);
+  }
+  if (!effects.length) return null;
+  return {
+    name: String(cp.name || "Custom Compound").slice(0, 40),
+    description: String(cp.description || "User-designed compound").slice(0, 200),
+    effects,
+  };
+}
+
 /** Clamp an optional positive integer within [min,max]; undefined/invalid -> undefined (omit). */
 function optInt(value, min, max) {
   const n = Number(value);
@@ -137,6 +181,11 @@ export function buildRunpodInput(body) {
   if (b.prompt) input.prompt = String(b.prompt);
   else input.messages = Array.isArray(b.messages) ? b.messages : [];
   input.pack_name = b.pack_name || null;
+  // Chemistry-lab custom pack (validated/whitelisted). Takes precedence over a named pack.
+  if (b.custom_pack) {
+    const cp = validateCustomPack(b.custom_pack);
+    if (cp) { input.custom_pack = cp; input.pack_name = null; }
+  }
   input.intensity = clampIntensity(b.intensity, 0.5);
   input.max_tokens = num(b.max_tokens, 128);
   input.temperature = num(b.temperature, 1.0);

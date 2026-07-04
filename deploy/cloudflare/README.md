@@ -27,6 +27,12 @@ Request body (same shape as the RunPod handler / `ChatRequest`):
   "pack_name": "lsd", "intensity": 0.7, "max_tokens": 128, "model": "openai/gpt-oss-20b" }
 ```
 
+**Chemistry Lab (custom packs).** Instead of `pack_name`, the body may carry a `custom_pack`
+`{ name, description, effects: [{ effect, weight, direction, parameters }] }` built in the UI's
+⚗️ Chemistry Lab. It's **validated/whitelisted at the edge** (`validateCustomPack`: only known effect
+types, weight clamped to [0,1], ≤8 effects, steering_type checked) before reaching the GPU, then
+applied via the neuromod tool's `custom_pack` path.
+
 ## Setup & deploy
 
 ```bash
