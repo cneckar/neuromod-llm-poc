@@ -5,12 +5,22 @@ import {
   clampIntensity, buildRunpodInput, corsHeaders, sseEncode,
   parseRunpodStream, isTerminal, checkAuth,
   parseCookies, isProRequest, resolveEndpointId, tierCookie, stripTierInfo, TIER_COOKIE,
-  maxTokensForTier, modelLabelForTier,
+  maxTokensForTier, modelLabelForTier, prefersDefaultTier, effectiveProTier,
 } from "../src/lib.js";
 
 // Fake request carrying a cookie header.
 function reqWithCookie(cookie) {
   return { headers: { get: (h) => (h.toLowerCase() === "cookie" ? cookie : null) } };
+}
+
+// Fake request carrying both a cookie and the X-Prefer-Tier header.
+function reqWith(cookie, preferTier) {
+  return { headers: { get: (h) => {
+    const k = h.toLowerCase();
+    if (k === "cookie") return cookie;
+    if (k === "x-prefer-tier") return preferTier || null;
+    return null;
+  } } };
 }
 
 test("parseCookies", () => {
@@ -30,6 +40,23 @@ test("tier switch: default endpoint unless a valid unlock cookie is present", ()
   assert.equal(isProRequest(reqWithCookie(`${TIER_COOKIE}=s3cr3t`), env), true);
 });
 
+test("tier downgrade: PRO browser can opt into the fast/default model", () => {
+  const env = { RUNPOD_ENDPOINT_ID: "default8b", RUNPOD_ENDPOINT_ID_PRO: "pro120b", UNLOCK_KEY: "s3cr3t" };
+  const proCookie = `${TIER_COOKIE}=s3cr3t`;
+  // Unlocked, no preference -> PRO.
+  assert.equal(effectiveProTier(reqWith(proCookie, null), env), true);
+  assert.equal(resolveEndpointId(reqWith(proCookie, null), env), "pro120b");
+  // Unlocked but asking for default -> served the default endpoint...
+  assert.equal(effectiveProTier(reqWith(proCookie, "default"), env), false);
+  assert.equal(resolveEndpointId(reqWith(proCookie, "default"), env), "default8b");
+  // ...yet raw access is still PRO (so the UI keeps offering the toggle).
+  assert.equal(isProRequest(reqWith(proCookie, "default"), env), true);
+  assert.equal(prefersDefaultTier(reqWith(proCookie, "default")), true);
+  // A non-PRO browser can't upgrade via the header (no cookie -> still default).
+  assert.equal(effectiveProTier(reqWith(null, "pro"), env), false);
+  assert.equal(resolveEndpointId(reqWith(null, null), env), "default8b");
+});
+
 test("tier switch: PRO impossible when unlock not configured", () => {
   const env = { RUNPOD_ENDPOINT_ID: "default8b" }; // no UNLOCK_KEY / PRO id
   assert.equal(resolveEndpointId(reqWithCookie(`${TIER_COOKIE}=whatever`), env), "default8b");
@@ -43,10 +70,37 @@ test("tierCookie sets httpOnly + clears", () => {
   assert.match(tierCookie(null), /Max-Age=0/);
 });
 
-test("stripTierInfo removes model/tier hints", () => {
+test("stripTierInfo removes model/tier hints (incl. image_model)", () => {
   assert.deepEqual(stripTierInfo({ chunk: "hi", model: "gpt-oss-120b", model_type: "local" }),
                    { chunk: "hi" });
+  // image_model (SDXL-Turbo default vs SDXL pro) would leak the tier too — must be stripped.
+  assert.deepEqual(stripTierInfo({ image: "data:...", image_model: "stabilityai/sdxl-turbo" }),
+                   { image: "data:..." });
   assert.equal(stripTierInfo("x"), "x");
+});
+
+test("buildRunpodInput image task: whitelisted task + clamped params", () => {
+  const p = buildRunpodInput({ task: "image", prompt: "a fox", pack_name: "lsd", intensity: 2,
+                               width: 1024, height: 768, steps: 30, seed: 7, guidance_scale: 9 });
+  assert.equal(p.input.task, "image");
+  assert.equal(p.input.prompt, "a fox");
+  assert.equal(p.input.width, 1024);
+  assert.equal(p.input.height, 768);
+  assert.equal(p.input.steps, 30);
+  assert.equal(p.input.seed, 7);
+  assert.equal(p.input.guidance_scale, 9);
+  // Out-of-range params get clamped; the chat default omits task entirely.
+  const clamped = buildRunpodInput({ task: "image", prompt: "x", width: 9999, steps: 999 });
+  assert.equal(clamped.input.width, 1024);
+  assert.equal(clamped.input.steps, 80);
+  const chat = buildRunpodInput({ messages: [{ role: "user", content: "hi" }] });
+  assert.ok(!("task" in chat.input));
+});
+
+test("buildRunpodInput ignores non-image task values (no server-job passthrough)", () => {
+  // A browser must not be able to trigger steering/endpoints/diag jobs via /api/chat.
+  const p = buildRunpodInput({ task: "steering", prompt: "x" });
+  assert.ok(!("task" in p.input));
 });
 
 test("clampIntensity clamps and defaults", () => {
