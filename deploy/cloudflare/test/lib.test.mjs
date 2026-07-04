@@ -4,7 +4,49 @@ import assert from "node:assert/strict";
 import {
   clampIntensity, buildRunpodInput, corsHeaders, sseEncode,
   parseRunpodStream, isTerminal, checkAuth,
+  parseCookies, isProRequest, resolveEndpointId, tierCookie, stripTierInfo, TIER_COOKIE,
 } from "../src/lib.js";
+
+// Fake request carrying a cookie header.
+function reqWithCookie(cookie) {
+  return { headers: { get: (h) => (h.toLowerCase() === "cookie" ? cookie : null) } };
+}
+
+test("parseCookies", () => {
+  assert.deepEqual(parseCookies("a=1; b=hello%20world"), { a: "1", b: "hello world" });
+  assert.deepEqual(parseCookies(""), {});
+});
+
+test("tier switch: default endpoint unless a valid unlock cookie is present", () => {
+  const env = { RUNPOD_ENDPOINT_ID: "default8b", RUNPOD_ENDPOINT_ID_PRO: "pro120b", UNLOCK_KEY: "s3cr3t" };
+  // no cookie -> default
+  assert.equal(resolveEndpointId(reqWithCookie(null), env), "default8b");
+  assert.equal(isProRequest(reqWithCookie(null), env), false);
+  // wrong cookie -> default
+  assert.equal(resolveEndpointId(reqWithCookie(`${TIER_COOKIE}=nope`), env), "default8b");
+  // correct cookie -> pro
+  assert.equal(resolveEndpointId(reqWithCookie(`${TIER_COOKIE}=s3cr3t`), env), "pro120b");
+  assert.equal(isProRequest(reqWithCookie(`${TIER_COOKIE}=s3cr3t`), env), true);
+});
+
+test("tier switch: PRO impossible when unlock not configured", () => {
+  const env = { RUNPOD_ENDPOINT_ID: "default8b" }; // no UNLOCK_KEY / PRO id
+  assert.equal(resolveEndpointId(reqWithCookie(`${TIER_COOKIE}=whatever`), env), "default8b");
+});
+
+test("tierCookie sets httpOnly + clears", () => {
+  const set = tierCookie("s3cr3t");
+  assert.match(set, /^nm_tier=s3cr3t;/);
+  assert.match(set, /HttpOnly/);
+  assert.match(set, /Secure/);
+  assert.match(tierCookie(null), /Max-Age=0/);
+});
+
+test("stripTierInfo removes model/tier hints", () => {
+  assert.deepEqual(stripTierInfo({ chunk: "hi", model: "gpt-oss-120b", model_type: "local" }),
+                   { chunk: "hi" });
+  assert.equal(stripTierInfo("x"), "x");
+});
 
 test("clampIntensity clamps and defaults", () => {
   assert.equal(clampIntensity(0.7), 0.7);

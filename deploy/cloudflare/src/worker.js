@@ -18,6 +18,7 @@
 import {
   RUNPOD_BASE, buildRunpodInput, corsHeaders, sseEncode,
   parseRunpodStream, isTerminal, checkAuth,
+  UNLOCK_PARAM, resolveEndpointId, tierCookie, stripTierInfo,
 } from "./lib.js";
 // The full drag-and-drop demo UI (ported from docs/demo.html, rewired to the real backend).
 import INDEX_HTML from "./index.html";
@@ -42,6 +43,21 @@ export default {
     }
     if (url.pathname === "/health") return json({ ok: true }, env);
     if (url.pathname === "/") {
+      // Backend-only tier unlock: `/?k=<UNLOCK_KEY>` validates the key server-side and sets an
+      // httpOnly cookie, then redirects to a clean "/" (key never lingers in the URL or reaches
+      // page JS). `/?k=` (empty/wrong) locks back to the default endpoint.
+      if (url.searchParams.has(UNLOCK_PARAM)) {
+        const provided = url.searchParams.get(UNLOCK_PARAM) || "";
+        const ok = env && env.UNLOCK_KEY && provided === env.UNLOCK_KEY;
+        return new Response(null, {
+          status: 302,
+          headers: {
+            location: "/",
+            "set-cookie": tierCookie(ok ? env.UNLOCK_KEY : null),
+            ...corsHeaders(env && env.ALLOW_ORIGIN),
+          },
+        });
+      }
       return new Response(INDEX_HTML, {
         headers: { "content-type": "text/html; charset=utf-8", ...corsHeaders(env && env.ALLOW_ORIGIN) },
       });
@@ -70,7 +86,12 @@ async function handleChat(request, env) {
   }
 
   const payload = buildRunpodInput(body);
-  const base = `${RUNPOD_BASE}/${env.RUNPOD_ENDPOINT_ID}`;
+  // Route to the PRO endpoint if this request carries a valid tier cookie; else the default.
+  // resolveEndpointId reads only server-side env + the httpOnly cookie — the client never sees
+  // which endpoint it hit. Ignore any client-supplied `model` so the browser can't force a tier.
+  delete payload.input.model;
+  const endpointId = resolveEndpointId(request, env);
+  const base = `${RUNPOD_BASE}/${endpointId}`;
   const authHeaders = {
     "content-type": "application/json",
     authorization: `Bearer ${env.RUNPOD_API_KEY}`,
@@ -101,7 +122,8 @@ async function handleChat(request, env) {
           const data = await r.json();
           const outputs = parseRunpodStream(data);
           for (; seen < outputs.length; seen++) {
-            controller.enqueue(encoder.encode(sseEncode(outputs[seen])));
+            // Strip model/tier hints so the client can't tell which endpoint served it.
+            controller.enqueue(encoder.encode(sseEncode(stripTierInfo(outputs[seen]))));
           }
           if (isTerminal(data.status)) break;
           await new Promise((res) => setTimeout(res, pollMs));
