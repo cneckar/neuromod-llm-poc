@@ -177,6 +177,38 @@ export function sseEncode(obj) {
 }
 
 /**
+ * Build a flat, D1-insertable archive record for a completed chat from the request body and the
+ * ordered list of RunPod output objects the Worker relayed. Pure (no Worker/D1 runtime) so it is
+ * unit-testable. Image bytes are NOT stored (only a had_image flag) to keep rows small.
+ */
+export function buildChatRecord(body, outputs, extra = {}) {
+  const b = body || {};
+  let text = "", reasoning = null, hadImage = false, error = null, gotChunk = false;
+  for (const o of outputs || []) {
+    if (!o || typeof o !== "object") continue;
+    if (typeof o.chunk === "string") { text += o.chunk; gotChunk = true; }
+    if (typeof o.image === "string") hadImage = true;
+    if (o.reasoning) reasoning = String(o.reasoning);
+    if (o.error) error = String(o.error);
+    if (!gotChunk && typeof o.response === "string") text = o.response;
+  }
+  const messages = Array.isArray(b.messages) ? b.messages
+    : (b.prompt ? [{ role: "user", content: String(b.prompt) }] : []);
+  return {
+    tier: extra.tier || null,                              // server-side archive only
+    task: b.task === "image" ? "image" : "chat",
+    pack_name: b.pack_name || null,
+    custom_pack: b.custom_pack ? JSON.stringify(b.custom_pack) : null,
+    intensity: Number.isFinite(Number(b.intensity)) ? Number(b.intensity) : null,
+    had_image: hadImage ? 1 : 0,
+    messages: JSON.stringify(messages),
+    assistant: text || null,
+    reasoning: reasoning,
+    error: error,
+  };
+}
+
+/**
  * Extract the ordered list of generator outputs from a RunPod `/stream/{id}` poll body.
  * RunPod wraps each yielded item as `{ output: <item> }` inside a `stream` array.
  */

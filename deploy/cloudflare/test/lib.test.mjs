@@ -5,7 +5,7 @@ import {
   clampIntensity, buildRunpodInput, corsHeaders, sseEncode,
   parseRunpodStream, isTerminal, checkAuth,
   parseCookies, isProRequest, resolveEndpointId, tierCookie, stripTierInfo, TIER_COOKIE,
-  maxTokensForTier, modelLabelForTier, prefersDefaultTier, effectiveProTier,
+  maxTokensForTier, modelLabelForTier, prefersDefaultTier, effectiveProTier, buildChatRecord,
 } from "../src/lib.js";
 
 // Fake request carrying a cookie header.
@@ -147,6 +147,35 @@ test("buildRunpodInput from raw prompt clamps intensity + passes model", () => {
   assert.equal(p.input.intensity, 5);   // capped at MAX_INTENSITY (overload allowed up to 5)
   assert.equal(p.input.model, "openai/gpt-oss-120b");
   assert.ok(!("messages" in p.input));
+});
+
+test("buildChatRecord assembles a text chat from streamed chunks", () => {
+  const body = { messages: [{ role: "user", content: "hi" }], pack_name: "lsd", intensity: 0.8 };
+  const outputs = [{ chunk: "Hel" }, { chunk: "lo." }, { done: true, reasoning: "thinking" }];
+  const r = buildChatRecord(body, outputs, { tier: "pro" });
+  assert.equal(r.task, "chat");
+  assert.equal(r.assistant, "Hello.");
+  assert.equal(r.reasoning, "thinking");
+  assert.equal(r.pack_name, "lsd");
+  assert.equal(r.intensity, 0.8);
+  assert.equal(r.tier, "pro");
+  assert.equal(r.had_image, 0);
+  assert.deepEqual(JSON.parse(r.messages), body.messages);
+});
+
+test("buildChatRecord records image + custom pack, no image bytes", () => {
+  const body = { prompt: "a fox", task: "image", custom_pack: { name: "mydrug", effects: [] } };
+  const r = buildChatRecord(body, [{ image: "data:image/png;base64,AAAA", pack_applied: null }]);
+  assert.equal(r.task, "image");
+  assert.equal(r.had_image, 1);
+  assert.ok(!/AAAA/.test(JSON.stringify(r)));         // image bytes not persisted
+  assert.equal(JSON.parse(r.custom_pack).name, "mydrug");
+  assert.deepEqual(JSON.parse(r.messages), [{ role: "user", content: "a fox" }]);
+});
+
+test("buildChatRecord falls back to response field + records error", () => {
+  assert.equal(buildChatRecord({}, [{ response: "full text", done: true }]).assistant, "full text");
+  assert.equal(buildChatRecord({}, [{ error: "boom" }]).error, "boom");
 });
 
 test("sseEncode formats a data frame", () => {
