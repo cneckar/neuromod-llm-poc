@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PiHK.AI — Live Neuromodulation Lab</title>
+    <meta name="description" content="Interactive demo of REAL architectural neuromodulation on a live LLM">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%A0%3C/text%3E%3C/svg%3E">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Times New Roman', Times, serif; background-color: #000; color: #CCC; line-height: 1.6; font-size: 14px; }
+        a { color: #00CCFF; text-decoration: underline; }
+        a:visited { color: #CC99FF; }
+        a:hover { color: #FFF; background-color: #333; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        header { background-color: #1a1a1a; border-bottom: 2px solid #333; padding: 15px 0; margin-bottom: 20px; }
+        .header-content { max-width: 1400px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: bold; color: #FFF; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .logo:hover { background-color: transparent; color: #00CCFF; }
+        nav { display: flex; gap: 20px; }
+        nav a { color: #CCC; text-decoration: none; font-size: 13px; }
+        nav a:hover { color: #FFF; background-color: transparent; }
+        main { padding: 20px 0; }
+        .demo-container { background-color: #0a0a0a; border: 1px solid #333; padding: 20px; margin: 20px 0; }
+        .demo-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        .demo-header h1 { font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #FFF; }
+        h3 { color: #FFF; font-size: 16px; margin: 15px 0 8px 0; }
+        .demo-layout { display: grid; grid-template-columns: 350px 1fr; gap: 2rem; margin-bottom: 2rem; }
+        .pillbox-section { background-color: #1a1a1a; border: 1px solid #333; padding: 15px; max-height: 80vh; overflow-y: auto; }
+        .pillbox-section h3 { margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .category { margin-bottom: 15px; }
+        .category-header { font-weight: bold; color: #00CCFF; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; }
+        .pills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+        .pill { background-color: #0a0a0a; border: 1px solid #333; padding: 10px; text-align: center; cursor: grab; transition: all 0.2s; user-select: none; position: relative; }
+        .pill:active { cursor: grabbing; }
+        .pill:hover { border-color: #00CCFF; background-color: #1a1a1a; }
+        .pill.dragging { opacity: 0.5; }
+        .pill-name { font-size: 12px; font-weight: bold; color: #CCC; margin-bottom: 5px; }
+        .pill-emoji { font-size: 20px; margin-bottom: 5px; }
+        .chat-section { display: flex; flex-direction: column; height: 80vh; }
+        .avatar-container { background-color: #1a1a1a; border: 1px solid #333; padding: 20px; text-align: center; margin-bottom: 15px; min-height: 200px; position: relative; }
+        .avatar { width: 120px; height: 120px; background: radial-gradient(circle at 35% 30%, #123, #012); border: 2px solid #333; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 60px; transition: all 0.3s; overflow: hidden; }
+        .avatar.drag-over { border-color: #00CCFF; background: radial-gradient(circle at 35% 30%, #036, #013); box-shadow: 0 0 24px #00CCFF66; }
+        .avatar-status { color: #CCC; font-weight: bold; margin-bottom: 10px; }
+        .active-effects { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 15px; }
+        .active-effect { background-color: #0a0a0a; border: 1px solid #333; padding: 5px 10px; font-size: 12px; color: #CCC; display: flex; align-items: center; gap: 8px; }
+        .remove-effect { background-color: #333; border: 1px solid #555; width: 18px; height: 18px; cursor: pointer; color: #CCC; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .remove-effect:hover { background-color: #555; color: #FFF; }
+        .chat-container { background-color: #1a1a1a; border: 1px solid #333; padding: 15px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .chat-messages { flex: 1; overflow-y: auto; margin-bottom: 10px; padding: 15px; background-color: #0a0a0a; border: 1px solid #333; }
+        .message { margin-bottom: 10px; padding: 10px; max-width: 85%; border: 1px solid #333; white-space: pre-wrap; }
+        .message.user { background-color: #1a1a1a; color: #CCC; margin-left: auto; text-align: right; border-color: #00CCFF; }
+        .message.assistant { background-color: #0a0a0a; color: #CCC; }
+        .message.system { background-color: #1a1a1a; color: #888; font-style: italic; font-size: 12px; border-color: #555; }
+        .message .reasoning { display: block; color: #777; font-size: 12px; font-style: italic; margin-bottom: 6px; border-left: 2px solid #333; padding-left: 8px; }
+        .chat-input-container { display: flex; gap: 0.5rem; }
+        .chat-input { flex: 1; padding: 10px; border: 1px solid #333; background-color: #0a0a0a; color: #CCC; font-size: 14px; font-family: 'Times New Roman', Times, serif; resize: none; }
+        .chat-input:focus { outline: none; border-color: #00CCFF; background-color: #1a1a1a; }
+        .send-button { background-color: #333; color: #CCC; border: 1px solid #555; padding: 10px 20px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .send-button:hover:not(:disabled) { background-color: #555; color: #FFF; border-color: #00CCFF; }
+        .send-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .controls-section { background-color: #1a1a1a; border: 1px solid #555; padding: 15px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: center; }
+        .controls-section strong { color: #FFF; }
+        .dose-row { display: flex; align-items: center; gap: 10px; }
+        .dose-row input[type=range] { flex: 1; accent-color: #00CCFF; }
+        .dose-val { min-width: 3.5em; text-align: right; color: #00CCFF; font-weight: bold; }
+        .dose-val.overload { color: #FF6699; }
+        .access-input { width: 100%; padding: 8px; border: 1px solid #333; background-color: #0a0a0a; color: #CCC; font-size: 12px; font-family: 'Courier New', monospace; }
+        .access-input:focus { outline: none; border-color: #00CCFF; }
+        .loading { display: none; text-align: center; padding: 15px; color: #888; }
+        .loading.show { display: block; }
+        .spinner { border: 3px solid #333; border-top: 3px solid #00CCFF; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 8px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .back-link { display: inline-block; margin-bottom: 15px; color: #00CCFF; text-decoration: underline; }
+        .disclaimer { background-color: #1a1a1a; border: 1px solid #555; padding: 15px; margin-bottom: 20px; font-size: 12px; color: #CCC; }
+        .disclaimer strong { color: #FFF; }
+        .pill:hover::after { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background-color: #1a1a1a; border: 1px solid #00CCFF; padding: 8px 12px; font-size: 11px; color: #CCC; white-space: normal; width: 200px; z-index: 1000; margin-bottom: 5px; pointer-events: none; }
+        @media (max-width: 1024px) { .demo-layout { grid-template-columns: 1fr; } .pillbox-section { max-height: 300px; } .controls-section { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <a href="/" class="logo">🧠 PiHK.AI</a>
+            <nav>
+                <a href="/">Demo</a>
+                <a href="https://github.com/cneckar/neuromod-llm-poc">GitHub</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="demo-container">
+                <div class="disclaimer">
+                    <strong>This is the real engine.</strong> Unlike a prompt-engineered simulation, every response below is
+                    generated by a live language model whose internals are being modified in real time — Contrastive Activation
+                    Addition (CAA) steering vectors added to the residual stream, per-head attention scaling, and KV-cache decay.
+                    Drag a compound onto the avatar, set the dose, and chat. Intensity is a <em>multiplier</em>: past 1.0 you are
+                    overloading the pack — expect it to get strange.
+                </div>
+
+                <div class="demo-header">
+                    <h1>Live Neuromodulation Lab</h1>
+                    <p>Drag a pill onto the AI avatar to apply a real steering intervention, then chat.</p>
+                </div>
+
+                <div class="controls-section">
+                    <div>
+                        <strong>Dose (intensity)</strong>
+                        <div class="dose-row">
+                            <input type="range" id="intensity" min="0" max="5" step="0.1" value="0.8">
+                            <span class="dose-val" id="doseVal">0.8×</span>
+                        </div>
+                    </div>
+                    <div>
+                        <strong>Access key</strong> <span style="color:#888;font-size:12px;">(only if the endpoint requires one)</span>
+                        <input type="password" class="access-input" id="accessKey" placeholder="leave blank if open">
+                    </div>
+                </div>
+
+                <div class="demo-layout">
+                    <div class="pillbox-section">
+                        <h3>Pillbox</h3>
+                        <div id="pillbox"></div>
+                    </div>
+
+                    <div class="chat-section">
+                        <div class="avatar-container" id="avatarContainer">
+                            <div class="avatar" id="avatar" draggable="false">🧠</div>
+                            <div class="avatar-status" id="avatarStatus">Baseline — no compound applied</div>
+                            <div class="active-effects" id="activeEffects"></div>
+                        </div>
+
+                        <div class="chat-container">
+                            <div class="chat-messages" id="chatMessages">
+                                <div class="message assistant"><strong>AI: </strong><span>Hello! Drag a pill onto my avatar to alter my cognition, set the dose, and let's talk.</span></div>
+                            </div>
+                            <div class="loading" id="loading"><div class="spinner"></div><p id="loadingText">warming up…</p></div>
+                            <div class="chat-input-container">
+                                <textarea class="chat-input" id="chatInput" placeholder="Type your message here…" rows="2"></textarea>
+                                <button class="send-button" id="sendButton" onclick="sendMessage()">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Pack catalog — keys are the REAL backend pack names (packs/config.json), so they map 1:1.
+        const packs = {
+            none: { name: "None", emoji: "⚪", category: "controls", description: "No neuromodulation (baseline)." },
+            placebo: { name: "Placebo", emoji: "💊", category: "controls", description: "Active-control condition (random-direction steering)." },
+            caffeine: { name: "Caffeine", emoji: "☕", category: "stimulants", description: "Enhanced focus (goal_focused steering)." },
+            cocaine: { name: "Cocaine", emoji: "❄️", category: "stimulants", description: "Sharp focus, high salience." },
+            amphetamine: { name: "Amphetamine", emoji: "⚡", category: "stimulants", description: "Sharp focus, repetition suppression." },
+            methylphenidate: { name: "Methylphenidate", emoji: "💊", category: "stimulants", description: "Focus and salience." },
+            modafinil: { name: "Modafinil", emoji: "🔬", category: "stimulants", description: "Focus, stepwise reasoning." },
+            lsd: { name: "LSD", emoji: "🌈", category: "psychedelics", description: "High entropy: visionary + associative + synesthesia." },
+            psilocybin: { name: "Psilocybin", emoji: "🍄", category: "psychedelics", description: "Ego dissolution (ego_thin + visionary)." },
+            dmt: { name: "DMT", emoji: "🌀", category: "psychedelics", description: "Intense visionary + synesthesia, memory decay." },
+            mescaline: { name: "Mescaline", emoji: "🌵", category: "psychedelics", description: "Increased entropy, visionary." },
+            "2c_b": { name: "2C-B", emoji: "💎", category: "psychedelics", description: "Visionary + associative." },
+            alcohol: { name: "Alcohol", emoji: "🍷", category: "depressants", description: "Reduced focus, looser output." },
+            benzodiazepines: { name: "Benzodiazepines", emoji: "💊", category: "depressants", description: "Calm, slight fragmentation." },
+            heroin: { name: "Heroin", emoji: "💉", category: "depressants", description: "High calm, memory decay." },
+            morphine: { name: "Morphine", emoji: "💊", category: "depressants", description: "Calm, reduced focus." },
+            fentanyl: { name: "Fentanyl", emoji: "⚠️", category: "depressants", description: "Very high calm, memory truncation." },
+            ketamine: { name: "Ketamine", emoji: "💉", category: "dissociatives", description: "Fragmentation (abstract + ego_thin)." },
+            pcp: { name: "PCP", emoji: "💊", category: "dissociatives", description: "Disruption, activation noise." },
+            dxm: { name: "DXM", emoji: "💊", category: "dissociatives", description: "Disruption, associative." },
+            nitrous_oxide: { name: "Nitrous Oxide", emoji: "🎈", category: "dissociatives", description: "Disruption, attention oscillation." },
+            mdma: { name: "MDMA", emoji: "💕", category: "empathogens", description: "Prosocial, warm (prosocial + affiliative)." },
+            mda: { name: "MDA", emoji: "💖", category: "empathogens", description: "Prosocial, visionary, associative." },
+            "6_apb": { name: "6-APB", emoji: "💗", category: "empathogens", description: "Prosocial, associative, focus." },
+            cannabis_thc: { name: "Cannabis THC", emoji: "🌿", category: "cannabis", description: "Playful, meandering (playful steering)." },
+            mentor: { name: "Mentor", emoji: "👨‍🏫", category: "specialized", description: "Calm, exacting specialist." },
+            speciation: { name: "Speciation", emoji: "🧬", category: "specialized", description: "Novel idea combinations." },
+            archivist: { name: "Archivist", emoji: "📚", category: "specialized", description: "Long-horizon recall (KV-cache tuned)." }
+        };
+        const categoryOrder = ["controls", "stimulants", "psychedelics", "depressants", "dissociatives", "empathogens", "cannabis", "specialized"];
+        const categoryNames = { controls: "Controls", stimulants: "Stimulants", psychedelics: "Psychedelics", depressants: "Depressants", dissociatives: "Dissociatives", empathogens: "Empathogens", cannabis: "Cannabis", specialized: "Specialized" };
+
+        let activePacks = [];
+        let conversationHistory = [];
+
+        function initPillbox() {
+            const pillbox = document.getElementById('pillbox');
+            categoryOrder.forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category';
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.textContent = categoryNames[category];
+                categoryDiv.appendChild(header);
+                const grid = document.createElement('div');
+                grid.className = 'pills-grid';
+                Object.entries(packs).forEach(([key, pack]) => {
+                    if (pack.category !== category) return;
+                    const pill = document.createElement('div');
+                    pill.className = 'pill';
+                    pill.draggable = true;
+                    pill.dataset.pack = key;
+                    const em = document.createElement('div'); em.className = 'pill-emoji'; em.textContent = pack.emoji;
+                    const nm = document.createElement('div'); nm.className = 'pill-name'; nm.textContent = pack.name;
+                    pill.appendChild(em); pill.appendChild(nm);
+                    pill.setAttribute('data-tooltip', pack.description);
+                    pill.addEventListener('dragstart', handleDragStart);
+                    pill.addEventListener('dragend', handleDragEnd);
+                    pill.addEventListener('click', () => applyPack(key)); // click also applies (mobile-friendly)
+                    grid.appendChild(pill);
+                });
+                categoryDiv.appendChild(grid);
+                pillbox.appendChild(categoryDiv);
+            });
+        }
+
+        function handleDragStart(e) { e.target.classList.add('dragging'); e.dataTransfer.setData('text/plain', e.target.dataset.pack); }
+        function handleDragEnd(e) { e.target.classList.remove('dragging'); }
+
+        const avatarContainer = document.getElementById('avatarContainer');
+        avatarContainer.addEventListener('dragover', (e) => { e.preventDefault(); document.getElementById('avatar').classList.add('drag-over'); });
+        avatarContainer.addEventListener('dragleave', () => document.getElementById('avatar').classList.remove('drag-over'));
+        avatarContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            document.getElementById('avatar').classList.remove('drag-over');
+            const key = e.dataTransfer.getData('text/plain');
+            if (key && packs[key]) applyPack(key);
+        });
+
+        function applyPack(key) {
+            if (key === 'none') { activePacks = []; }
+            else if (!activePacks.includes(key)) { activePacks.push(key); }
+            addMessage('system', 'Applied ' + packs[key].name + (activePacks.length > 1 ? ' — note: the model applies one pack at a time; the first (' + packs[activePacks[0]].name + ') drives generation.' : ''));
+            refreshState();
+        }
+        function removePack(key) { activePacks = activePacks.filter(p => p !== key); addMessage('system', 'Removed ' + packs[key].name); refreshState(); }
+        window.removePack = removePack;
+
+        function refreshState() {
+            const container = document.getElementById('activeEffects');
+            container.innerHTML = '';
+            activePacks.forEach(key => {
+                const effect = document.createElement('div');
+                effect.className = 'active-effect';
+                const s = document.createElement('span'); s.textContent = packs[key].emoji + ' ' + packs[key].name;
+                const b = document.createElement('button'); b.className = 'remove-effect'; b.textContent = '×'; b.onclick = () => removePack(key);
+                effect.appendChild(s); effect.appendChild(b);
+                container.appendChild(effect);
+            });
+            const avatar = document.getElementById('avatar');
+            const status = document.getElementById('avatarStatus');
+            if (activePacks.length) {
+                avatar.textContent = packs[activePacks[0]].emoji;
+                status.textContent = 'Under the influence of ' + packs[activePacks[0]].name;
+            } else { avatar.textContent = '🧠'; status.textContent = 'Baseline — no compound applied'; }
+        }
+
+        function addMessage(role, content) {
+            const messages = document.getElementById('chatMessages');
+            const message = document.createElement('div');
+            message.className = 'message ' + role;
+            const strong = document.createElement('strong');
+            strong.textContent = (role === 'user' ? 'You' : role === 'assistant' ? 'AI' : 'System') + ': ';
+            const span = document.createElement('span');
+            span.textContent = content;
+            message.appendChild(strong); message.appendChild(span);
+            messages.appendChild(message);
+            messages.scrollTop = messages.scrollHeight;
+            return { span, message };
+        }
+
+        // Dose slider display
+        const intensityEl = document.getElementById('intensity');
+        const doseVal = document.getElementById('doseVal');
+        function renderDose() {
+            const v = parseFloat(intensityEl.value);
+            doseVal.textContent = v.toFixed(1) + '×';
+            doseVal.classList.toggle('overload', v > 1.0);
+        }
+        intensityEl.addEventListener('input', renderDose);
+        renderDose();
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            addMessage('user', message);
+            input.value = '';
+
+            const loading = document.getElementById('loading');
+            const loadingText = document.getElementById('loadingText');
+            const sendButton = document.getElementById('sendButton');
+            loading.classList.add('show'); loadingText.textContent = 'queued (first call after idle pays a cold start)…';
+            sendButton.disabled = true;
+
+            conversationHistory.push({ role: 'user', content: message });
+            const pack = activePacks.length ? activePacks[0] : null;
+            const intensity = parseFloat(intensityEl.value);
+            const accessKey = document.getElementById('accessKey').value.trim();
+
+            const { span, message: msgEl } = addMessage('assistant', '');
+            let full = '', gotChunk = false;
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (accessKey) headers['x-api-key'] = accessKey;
+                const resp = await fetch('/api/chat', {
+                    method: 'POST', headers,
+                    body: JSON.stringify({ messages: conversationHistory, pack_name: pack, intensity: intensity, max_tokens: 300 })
+                });
+                if (!resp.ok || !resp.body) throw new Error('HTTP ' + resp.status);
+                loadingText.textContent = 'generating…';
+                const reader = resp.body.getReader();
+                const decoder = new TextDecoder();
+                let buf = '';
+                const scroll = () => { const m = document.getElementById('chatMessages'); m.scrollTop = m.scrollHeight; };
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buf += decoder.decode(value, { stream: true });
+                    const frames = buf.split('\n\n'); buf = frames.pop();
+                    for (const frame of frames) {
+                        const line = frame.split('\n').find(l => l.startsWith('data:'));
+                        if (!line) continue;
+                        const payload = line.slice(5).trim();
+                        if (payload === '[DONE]') continue;
+                        let evt; try { evt = JSON.parse(payload); } catch { continue; }
+                        if (evt.error) { full += (full ? '\n' : '') + '[error] ' + evt.error; span.textContent = full; }
+                        else if (typeof evt.chunk === 'string') { gotChunk = true; full += evt.chunk; span.textContent = full; }
+                        else if (evt.done || evt.response) {
+                            if (!gotChunk && evt.response) { full = evt.response; span.textContent = full; }
+                            if (evt.reasoning) {
+                                const r = document.createElement('span'); r.className = 'reasoning';
+                                r.textContent = '🧩 ' + evt.reasoning; msgEl.insertBefore(r, span);
+                            }
+                            if (evt.pack_applied === null && pack) {
+                                const w = document.createElement('span'); w.className = 'reasoning';
+                                w.textContent = '⚠️ pack did not apply server-side' + (evt.neuromod_error ? ': ' + evt.neuromod_error : ''); msgEl.insertBefore(w, span);
+                            }
+                        }
+                        scroll();
+                    }
+                }
+                if (!full) { full = '(no response — the worker may have timed out; try again once it is warm)'; span.textContent = full; }
+                conversationHistory.push({ role: 'assistant', content: full });
+            } catch (e) {
+                span.textContent = 'Error: ' + e.message;
+            } finally {
+                loading.classList.remove('show');
+                sendButton.disabled = false;
+            }
+        }
+        window.sendMessage = sendMessage;
+
+        document.getElementById('chatInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        });
+        document.addEventListener('DOMContentLoaded', () => { initPillbox(); refreshState(); });
+    </script>
+</body>
+</html>

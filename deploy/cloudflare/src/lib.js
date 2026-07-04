@@ -8,11 +8,17 @@
 
 export const RUNPOD_BASE = "https://api.runpod.ai/v2";
 
-/** Clamp an intensity to [0, 1] with a fallback (mirrors the Python handler). */
+/**
+ * Max intensity the edge forwards. Intensity is a MULTIPLIER on pack weights (>1 overloads),
+ * bounded server-side by NEUROMOD_MAX_INTENSITY (default 5). Keep in sync with that default.
+ */
+export const MAX_INTENSITY = 5;
+
+/** Clamp an intensity to [0, MAX_INTENSITY] with a fallback (mirrors the Python handler). */
 export function clampIntensity(value, fallback = 0.5) {
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
-  return Math.max(0, Math.min(1, n));
+  return Math.max(0, Math.min(MAX_INTENSITY, n));
 }
 
 function num(value, fallback) {
