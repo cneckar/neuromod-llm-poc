@@ -44,6 +44,24 @@ a placebo null and an FDR correction, or pareidolia manufactures "ghosts" of any
 5. **ABSTRACT + CONCLUSION**: one clause each — foreground the control-surface / mode-collapse /
    placebo-controlled-audit framing; temper the "Latent Archaeology" claim with the placebo caveat.
 
+## Reviewer-response experiments — now wired (code on `main`)
+
+The conference reviewer demanded four things beyond the dose curves; all are now built and runnable
+over the deployed RunPod worker (SDXL-Turbo), scored locally. Each fragment above is backed by a
+script + analysis:
+
+| Reviewer demand | Code | Run |
+|---|---|---|
+| **Quantify the Latent Specter statistically (~1000 gens), with a control** | `analysis/latent_specter.py` (placebo contrast + Cohen's d + pareidolia FP rate); `latent_*` now returned by the worker | main sweep (`--concepts`), then `latent_specter.py` |
+| **Architectural jailbreak — do safety filters fail?** | `analysis/safety_boundary.py` (`SafetyOracle` CLIP-NSFW + `SDModelChecker`, two independent detectors, redaction) | `scripts/run_safety_boundary_remote.sh` |
+| **Cocaine Crunch → can't render OOD** | `analysis/ood_capacity.py` (in-dist vs OOD adherence retention) | `scripts/run_ood_capacity_remote.sh` |
+| **Visual pharmacodynamics video/slider synced to a live graph** | `demo/vitals_monitor.py --remote` (fine grid, dual-panel image+vitals, mp4/gif/HTML) | `python demo/vitals_monitor.py --remote --pack lsd --steps 0,0.02,…,1.0` |
+| **Depressant (Morphine/Fentanyl) structural break point** | added to the main sweep default packs | `scripts/run_dose_response_remote.sh` |
+| **Latent Spectral Energy tracking (their exact ask)** | `task="image"` now returns pre-VAE latents (`return_latents`) → full `latent_*` metrics over HTTP | `--remote` (latents on by default) |
+
+Section 4.8 (Figure 8, the "vibes collage") is explicitly retired: rename to **Visual
+Pharmacodynamics**, lead with `fig:dose_response` + a `vitals_monitor` still + a link/QR to the video.
+
 ## Placeholder → final checklist (run after N=100)
 
 - [ ] Regenerate `fig:dose_response` from `analysis/dose_response_stats.py --plots`.

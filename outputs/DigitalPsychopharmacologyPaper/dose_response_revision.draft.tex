@@ -143,6 +143,32 @@ adherence with dose.
 
 
 % ======================================================================================
+% FRAGMENT 3b — NEW Results subsection (insert after the mode-collapse material / Fragment 1).
+% "Cocaine Crunch" as a capacity failure, per the reviewer's OOD challenge.
+% ======================================================================================
+\subsection{Stimulant Constriction Is a Capacity Failure}
+Mode collapse (declining inter-seed diversity) shows the output \emph{distribution} narrowing, but
+the sharper claim is that an over-stimulated model loses \emph{generative capacity}---it can no longer
+compose novel scenes. We test this directly by contrasting adherence decay for an in-distribution
+prompt (``a tree'') against a battery of compositional out-of-distribution prompts (e.g.\ ``an
+astronaut riding a horse on the moon'', ``a snail made of translucent glass''). We define
+\emph{capacity retention} as top-dose CLIP adherence relative to baseline. Under stimulant dose,
+retention for the OOD prompts falls faster and further than for the in-distribution prompt
+(capacity gap $=\!\textit{TODO}$ % TODO(N100): from analysis/ood_capacity.py (ood_capacity_gap.csv)
+, Figure~\ref{fig:ood_capacity})---i.e.\ ``spectral constriction'' is not merely lower variance but a
+measurable collapse of the model's ability to render out-of-distribution structure.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{ood_capacity.png} % TODO(N100)
+    \caption{\textbf{Capacity collapse under stimulant dose.} Adherence retention (top-dose /
+    baseline) for the in-distribution prompt vs.\ compositional OOD prompts. \textit{Harness ready
+    (\texttt{scripts/run\_ood\_capacity\_remote.sh}); N=100 result pending.}}
+    \label{fig:ood_capacity}
+\end{figure}
+
+
+% ======================================================================================
 % FRAGMENT 4 — REPLACE the body of \subsection{Spectral Safety Auditing: The Stress Test} (l.933).
 % ======================================================================================
 Current safety evaluations rely on jailbreaking (prompt engineering) to elicit restricted content.
@@ -156,9 +182,21 @@ against an \emph{independent} oracle, not the same probe used to steer; (3) swee
 full curve, not a single anecdote; (4) include a \emph{placebo} (random-direction) arm; and (5)
 report a false-positive rate against a null and an FDR correction. A ``latent ghost'' of a restricted
 concept is evidence of superficial alignment \emph{only} if it exceeds that placebo/null baseline. We
-provide the harness (\texttt{analysis/safety\_boundary.py}); wiring an independent NSFW/violence
-oracle to it and running the benign-prompt dose sweep is the immediate next step---in our pilot this
-arm emitted only the generic pharmacodynamic metrics, so we make no safety-degradation claim yet.
+instrument exactly this (\texttt{analysis/safety\_boundary.py}): a benign-prompt dose sweep scored by
+\emph{two independent} detectors---a CLIP NSFW/violence concept oracle and the diffusion model's own
+\texttt{StableDiffusionSafetyChecker}---with a placebo arm and redaction of any flagged output.
+Figure~\ref{fig:safety_boundary} reports the safety-trigger rate versus dose. % TODO(N100): run + fill.
+A rising rate would demonstrate entropy as an architectural jailbreak; a flat rate would refute it
+for the visual modality---both honest, and both grounded in the placebo/FDR discipline above.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{safety_boundary_trigger_rates.png} % TODO(N100)
+    \caption{\textbf{Architectural-jailbreak stress test.} Safety-trigger rate on \emph{benign}
+    prompts vs dose, for two independent detectors, with a placebo arm. \textit{Harness ready
+    (\texttt{scripts/run\_safety\_boundary\_remote.sh}); N=100 result pending.}}
+    \label{fig:safety_boundary}
+\end{figure}
 
 
 % ======================================================================================

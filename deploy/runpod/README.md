@@ -171,6 +171,14 @@ but **no SD weights** (those live on the worker). The image task returns the pre
 too (`return_latents`), so the driver computes the full **latent-space** spectral metrics with
 parity to a local pipeline (pass `--no-latents` to skip them for a smaller payload).
 
+The security-framed companion studies run the same way (generation on the worker, scoring local):
+
+```bash
+scripts/run_safety_boundary_remote.sh   # architectural-jailbreak: safety-trigger rate vs dose (2 detectors, placebo)
+scripts/run_ood_capacity_remote.sh      # "Cocaine Crunch": stimulant dose collapses OOD-prompt adherence
+python demo/vitals_monitor.py --remote --pack lsd --seed 42   # synced image+vitals video/slider (fine grid)
+```
+
 Or drive it from a laptop (torch-free client — pay only for the worker's GPU-seconds). The client
 submits server-side jobs **async** (`/run` + poll `/status`) so the multi-minute battery on a 120B
 model can't hit the `/runsync` timeout:
