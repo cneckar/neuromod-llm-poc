@@ -82,6 +82,31 @@
         .disclaimer strong { color: #FFF; }
         .pill:hover::after { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background-color: #1a1a1a; border: 1px solid #00CCFF; padding: 8px 12px; font-size: 11px; color: #CCC; white-space: normal; width: 200px; z-index: 1000; margin-bottom: 5px; pointer-events: none; }
         @media (max-width: 1024px) { .demo-layout { grid-template-columns: 1fr; } .pillbox-section { max-height: 300px; } .controls-section { grid-template-columns: 1fr; } }
+        /* Chemistry lab */
+        .lab-btn { float: right; background-color: #0a0a0a; color: #00CCFF; border: 1px solid #00CCFF; padding: 3px 8px; font-size: 11px; cursor: pointer; font-family: inherit; }
+        .lab-btn:hover { background-color: #00CCFF; color: #000; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 40px 15px; }
+        .modal-overlay.show { display: flex; }
+        .modal { background-color: #0a0a0a; border: 1px solid #00CCFF; max-width: 640px; width: 100%; padding: 20px; }
+        .modal h2 { color: #FFF; font-size: 18px; margin-bottom: 4px; }
+        .modal .sub { color: #888; font-size: 12px; margin-bottom: 15px; }
+        .modal label { color: #CCC; font-size: 12px; display: block; margin-bottom: 4px; }
+        .lab-name { width: 100%; padding: 8px; background: #1a1a1a; border: 1px solid #333; color: #CCC; font-family: inherit; margin-bottom: 15px; }
+        .lab-name:focus { outline: none; border-color: #00CCFF; }
+        .effect-row { display: grid; grid-template-columns: 1.4fr 1fr 1.2fr auto; gap: 8px; align-items: center; margin-bottom: 8px; padding: 8px; background: #1a1a1a; border: 1px solid #333; }
+        .effect-row select, .effect-row input[type=range] { width: 100%; }
+        .effect-row select { background: #0a0a0a; color: #CCC; border: 1px solid #333; padding: 5px; font-family: inherit; }
+        .effect-row .wlabel { font-size: 11px; color: #00CCFF; text-align: center; }
+        .effect-row input[type=range] { accent-color: #00CCFF; }
+        .dir-toggle { background: #0a0a0a; border: 1px solid #333; color: #CCC; padding: 5px 8px; cursor: pointer; font-size: 11px; font-family: inherit; }
+        .dir-toggle.down { color: #FF6699; border-color: #FF6699; }
+        .rm-row { background: #333; border: 1px solid #555; color: #CCC; width: 24px; height: 24px; cursor: pointer; }
+        .rm-row:hover { background: #FF6699; color: #000; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 15px; }
+        .modal-actions button { padding: 10px 16px; font-family: inherit; cursor: pointer; border: 1px solid #555; }
+        .btn-primary { background: #00CCFF; color: #000; border-color: #00CCFF; font-weight: bold; }
+        .btn-secondary { background: #1a1a1a; color: #CCC; }
+        .btn-add { background: #1a1a1a; color: #00CCFF; border: 1px dashed #00CCFF; padding: 8px; width: 100%; cursor: pointer; font-family: inherit; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -124,7 +149,7 @@
 
                 <div class="demo-layout">
                     <div class="pillbox-section">
-                        <h3>Pillbox</h3>
+                        <h3>Pillbox <button id="labBtn" class="lab-btn" title="Design a custom compound">⚗️ Chemistry Lab</button></h3>
                         <div id="pillbox"></div>
                     </div>
 
@@ -154,6 +179,22 @@
             </div>
         </div>
     </main>
+
+    <div class="modal-overlay" id="labModal">
+        <div class="modal">
+            <h2>⚗️ Chemistry Lab</h2>
+            <div class="sub">Design a custom compound: choose effects, set each one's weight and direction, name it, and synthesize. It drops into your Pillbox and applies through the normal interface (dose slider included).</div>
+            <label>Compound name</label>
+            <input class="lab-name" id="labName" maxlength="40" placeholder="e.g. Neurobloom-7">
+            <label>Effects</label>
+            <div id="labEffects"></div>
+            <button class="btn-add" id="labAddBtn">+ Add effect</button>
+            <div class="modal-actions">
+                <button class="btn-primary" id="labSynthBtn">Synthesize</button>
+                <button class="btn-secondary" id="labCloseBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Pack catalog — keys are the REAL backend pack names (packs/config.json), so they map 1:1.
@@ -187,8 +228,21 @@
             speciation: { name: "Speciation", emoji: "🧬", category: "specialized", description: "Novel idea combinations." },
             archivist: { name: "Archivist", emoji: "📚", category: "specialized", description: "Long-horizon recall (KV-cache tuned)." }
         };
-        const categoryOrder = ["controls", "stimulants", "psychedelics", "depressants", "dissociatives", "empathogens", "cannabis", "specialized"];
-        const categoryNames = { controls: "Controls", stimulants: "Stimulants", psychedelics: "Psychedelics", depressants: "Depressants", dissociatives: "Dissociatives", empathogens: "Empathogens", cannabis: "Cannabis", specialized: "Specialized" };
+        const categoryOrder = ["custom", "controls", "stimulants", "psychedelics", "depressants", "dissociatives", "empathogens", "cannabis", "specialized"];
+        const categoryNames = { custom: "Your Lab", controls: "Controls", stimulants: "Stimulants", psychedelics: "Psychedelics", depressants: "Depressants", dissociatives: "Dissociatives", empathogens: "Empathogens", cannabis: "Cannabis", specialized: "Specialized" };
+
+        // Chemistry lab: effect palette (mirrors the Worker's whitelist in lib.js) + steering flavors.
+        const LAB_EFFECTS = {
+            steering: { label: "Steering (concept vector)", steering: true },
+            temperature: { label: "Temperature / entropy" },
+            noise_injection: { label: "Noise injection" },
+            kv_decay: { label: "Memory decay (KV)" },
+            style_affect_logit_bias: { label: "Tone / style bias" },
+            risk_preference_steering: { label: "Risk preference" },
+            random_direction: { label: "Placebo (random direction)" },
+        };
+        const STEERING_TYPES = ["associative", "visionary", "synesthesia", "ego_thin", "playful", "salient", "goal_focused", "prosocial", "abstract", "affiliative"];
+        const customDrugs = {};   // key "custom:<name>" -> { name, description, effects:[...] } (the def)
 
         let activePacks = [];
         let conversationHistory = [];
@@ -310,7 +364,10 @@
             loading.classList.add('show'); loadingText.textContent = 'queued (first call after idle pays a cold start)…';
             sendButton.disabled = true;
 
-            const pack = activePacks.length ? activePacks[0] : null;
+            const activeKey = activePacks.length ? activePacks[0] : null;
+            const isCustom = activeKey && customDrugs[activeKey];   // a chemistry-lab compound
+            const pack = isCustom ? null : activeKey;
+            const customPack = isCustom ? customDrugs[activeKey] : null;
             const intensity = parseFloat(intensityEl.value);
             const imageMode = document.getElementById('imageToggle').checked;
             // Image requests are one-shot prompts (not chat turns); only text turns build history.
@@ -324,8 +381,8 @@
             try {
                 const headers = withTierHeader({ 'Content-Type': 'application/json' });
                 const body = imageMode
-                    ? { task: 'image', prompt: message, pack_name: pack, intensity: intensity }
-                    : { messages: conversationHistory, pack_name: pack, intensity: intensity };
+                    ? { task: 'image', prompt: message, pack_name: pack, custom_pack: customPack, intensity: intensity }
+                    : { messages: conversationHistory, pack_name: pack, custom_pack: customPack, intensity: intensity };
                 const resp = await fetch('/api/chat', {
                     method: 'POST', headers,
                     // max_tokens is set per tier by the Worker (server-side); not sent here.
@@ -412,6 +469,75 @@
             preferFast = e.target.checked;   // takes effect on the next message; badge updates now
             loadModelBadge();
         });
+
+        // ---- Chemistry Lab -----------------------------------------------------------------
+        function addEffectRow(preset) {
+            const row = document.createElement('div');
+            row.className = 'effect-row';
+            const sel = document.createElement('select');
+            Object.entries(LAB_EFFECTS).forEach(([k, v]) => {
+                const o = document.createElement('option'); o.value = k; o.textContent = v.label; sel.appendChild(o);
+            });
+            // steering-type dropdown (shown only for the steering effect)
+            const stSel = document.createElement('select');
+            STEERING_TYPES.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t.replace('_', ' '); stSel.appendChild(o); });
+            const weight = document.createElement('input');
+            weight.type = 'range'; weight.min = '0.05'; weight.max = '1'; weight.step = '0.05'; weight.value = '0.5';
+            const wlab = document.createElement('div'); wlab.className = 'wlabel';
+            const dir = document.createElement('button'); dir.type = 'button'; dir.className = 'dir-toggle'; dir.textContent = '▲ up'; dir.dataset.dir = 'up';
+            const rm = document.createElement('button'); rm.type = 'button'; rm.className = 'rm-row'; rm.textContent = '×';
+            const midCol = document.createElement('div');   // holds weight OR steering-type
+            function renderMid() {
+                midCol.innerHTML = '';
+                if (LAB_EFFECTS[sel.value].steering) { midCol.appendChild(stSel); }
+                midCol.appendChild(weight);
+            }
+            function renderW() { wlab.textContent = parseFloat(weight.value).toFixed(2); }
+            sel.addEventListener('change', renderMid);
+            weight.addEventListener('input', renderW);
+            dir.addEventListener('click', () => {
+                const d = dir.dataset.dir === 'up' ? 'down' : 'up';
+                dir.dataset.dir = d; dir.textContent = d === 'up' ? '▲ up' : '▼ down'; dir.classList.toggle('down', d === 'down');
+            });
+            rm.addEventListener('click', () => row.remove());
+            if (preset) { sel.value = preset.effect; weight.value = preset.weight; }
+            row.appendChild(sel); row.appendChild(midCol); row.appendChild(dir); row.appendChild(wlab); row.appendChild(rm);
+            row._read = () => {
+                const e = { effect: sel.value, weight: parseFloat(weight.value), direction: dir.dataset.dir };
+                if (LAB_EFFECTS[sel.value].steering) e.parameters = { steering_type: stSel.value };
+                return e;
+            };
+            document.getElementById('labEffects').appendChild(row);
+            renderMid(); renderW();
+        }
+        function openLab() {
+            const box = document.getElementById('labEffects'); box.innerHTML = '';
+            document.getElementById('labName').value = '';
+            addEffectRow({ effect: 'steering', weight: 0.5 });   // start with one steering row
+            document.getElementById('labModal').classList.add('show');
+        }
+        function closeLab() { document.getElementById('labModal').classList.remove('show'); }
+        function synthesize() {
+            const rows = [...document.querySelectorAll('#labEffects .effect-row')];
+            const effects = rows.map(r => r._read()).filter(e => e.weight > 0);
+            if (!effects.length) { alert('Add at least one effect.'); return; }
+            const name = (document.getElementById('labName').value.trim() || 'Custom Compound').slice(0, 40);
+            const key = 'custom:' + name.toLowerCase().replace(/[^a-z0-9]+/g, '_') + ':' + Date.now();
+            const def = { name, description: 'User-designed compound', effects };
+            customDrugs[key] = def;
+            // Register as a pill so the standard pillbox/apply/dose flow works unchanged.
+            packs[key] = { name, emoji: '⚗️', category: 'custom',
+                           description: effects.map(e => `${e.effect} ${e.direction} ${e.weight}`).join(', ') };
+            document.getElementById('pillbox').innerHTML = '';
+            initPillbox();
+            closeLab();
+            applyPack(key);   // apply the freshly synthesized compound
+        }
+        document.getElementById('labBtn').addEventListener('click', openLab);
+        document.getElementById('labAddBtn').addEventListener('click', () => addEffectRow());
+        document.getElementById('labSynthBtn').addEventListener('click', synthesize);
+        document.getElementById('labCloseBtn').addEventListener('click', closeLab);
+        document.getElementById('labModal').addEventListener('click', (e) => { if (e.target.id === 'labModal') closeLab(); });
 
         document.addEventListener('DOMContentLoaded', () => { initPillbox(); refreshState(); loadModelBadge(); });
     </script>

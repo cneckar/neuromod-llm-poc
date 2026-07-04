@@ -6,6 +6,7 @@ import {
   parseRunpodStream, isTerminal, checkAuth,
   parseCookies, isProRequest, resolveEndpointId, tierCookie, stripTierInfo, TIER_COOKIE,
   maxTokensForTier, modelLabelForTier, prefersDefaultTier, effectiveProTier, buildChatRecord,
+  validateCustomPack,
 } from "../src/lib.js";
 
 // Fake request carrying a cookie header.
@@ -77,6 +78,47 @@ test("stripTierInfo removes model/tier hints (incl. image_model)", () => {
   assert.deepEqual(stripTierInfo({ image: "data:...", image_model: "stabilityai/sdxl-turbo" }),
                    { image: "data:..." });
   assert.equal(stripTierInfo("x"), "x");
+});
+
+test("validateCustomPack: whitelist, clamp, steering_type, cap", () => {
+  const cp = validateCustomPack({
+    name: "Neurobloom", description: "d",
+    effects: [
+      { effect: "steering", weight: 0.5, direction: "up", parameters: { steering_type: "visionary" } },
+      { effect: "temperature", weight: 3, direction: "down" },     // weight clamped to 1
+      { effect: "not_a_real_effect", weight: 0.5 },                 // dropped (not whitelisted)
+      { effect: "steering", weight: 0.4, parameters: { steering_type: "evil" } }, // bad steering_type dropped
+      { effect: "kv_decay", weight: 0 },                           // zero weight dropped
+    ],
+  });
+  assert.equal(cp.name, "Neurobloom");
+  assert.equal(cp.effects.length, 3);                              // 2 dropped
+  assert.deepEqual(cp.effects[0], { effect: "steering", weight: 0.5, direction: "up",
+                                    parameters: { steering_type: "visionary" } });
+  assert.equal(cp.effects[1].weight, 1);                           // clamped
+  assert.equal(cp.effects[1].direction, "down");
+  assert.ok(!("parameters" in cp.effects[2]));                     // steering w/ bad type -> no params
+});
+
+test("validateCustomPack: empty/invalid -> null; effect cap", () => {
+  assert.equal(validateCustomPack(null), null);
+  assert.equal(validateCustomPack({ effects: [] }), null);
+  assert.equal(validateCustomPack({ effects: [{ effect: "nope", weight: 1 }] }), null);
+  const many = { effects: Array.from({ length: 20 }, () => ({ effect: "temperature", weight: 0.5 })) };
+  assert.equal(validateCustomPack(many).effects.length, 8);       // capped at MAX_CUSTOM_EFFECTS
+});
+
+test("buildRunpodInput forwards a validated custom_pack (overrides pack_name)", () => {
+  const p = buildRunpodInput({ pack_name: "lsd", intensity: 1,
+    custom_pack: { name: "X", effects: [{ effect: "steering", weight: 0.6, direction: "up",
+                                          parameters: { steering_type: "playful" } }] } });
+  assert.equal(p.input.pack_name, null);                          // custom overrides named pack
+  assert.equal(p.input.custom_pack.name, "X");
+  assert.equal(p.input.custom_pack.effects[0].effect, "steering");
+  // An invalid custom pack is dropped, leaving the named pack.
+  const q = buildRunpodInput({ pack_name: "lsd", custom_pack: { effects: [{ effect: "nope", weight: 1 }] } });
+  assert.equal(q.input.pack_name, "lsd");
+  assert.ok(!("custom_pack" in q.input));
 });
 
 test("buildRunpodInput image task: whitelisted task + clamped params", () => {

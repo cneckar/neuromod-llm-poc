@@ -33,10 +33,14 @@ class FakeModel:
         self.emotions = emotions or {"joy": 0.5}
         self.calls = []
 
-    def generate_text(self, prompt, max_tokens, temperature, top_p, pack_name, intensity=0.5):
+    def generate_text(self, prompt, max_tokens, temperature, top_p, pack_name, intensity=0.5,
+                      custom_pack=None):
         self.calls.append(dict(prompt=prompt, max_tokens=max_tokens, temperature=temperature,
-                               top_p=top_p, pack_name=pack_name, intensity=intensity))
-        return {"text": self.text, "emotions": self.emotions, "tokens_generated": 5}
+                               top_p=top_p, pack_name=pack_name, intensity=intensity,
+                               custom_pack=custom_pack))
+        # A custom pack "applies" in this fake so the honest-label path can be exercised.
+        return {"text": self.text, "emotions": self.emotions, "tokens_generated": 5,
+                "neuromod_applied": True if (pack_name or custom_pack) else None}
 
 
 def test_messages_to_prompt_roles():
@@ -74,6 +78,23 @@ def test_parse_event_intensity_clamped_to_ceiling(monkeypatch):
 def test_parse_event_bad_numbers_fall_back():
     parsed = h.parse_event({"prompt": "x", "max_tokens": "not-a-number"})
     assert parsed["max_tokens"] == 128
+
+
+def test_parse_event_custom_pack_passthrough_and_validation():
+    cp = {"name": "MyDrug", "effects": [{"effect": "steering", "weight": 0.5, "direction": "up"}]}
+    assert h.parse_event({"prompt": "x", "custom_pack": cp})["custom_pack"] == cp
+    # A custom pack with no effects (or a non-dict) is rejected -> None.
+    assert h.parse_event({"prompt": "x", "custom_pack": {"name": "n", "effects": []}})["custom_pack"] is None
+    assert h.parse_event({"prompt": "x", "custom_pack": "nope"})["custom_pack"] is None
+
+
+def test_run_inference_applies_custom_pack_and_labels_it():
+    model = FakeModel(text="ok")
+    cp = {"name": "MyDrug", "effects": [{"effect": "steering", "weight": 0.5, "direction": "up"}]}
+    r = h.run_inference(h.parse_event({"prompt": "hi", "custom_pack": cp, "intensity": 0.9}), model=model)
+    assert model.calls[0]["custom_pack"] == cp          # reached the model
+    assert r["pack_applied"] == "MyDrug"                # labeled by the custom name
+    assert r["neuromod_applied"] is True
 
 
 def test_format_response_shape_and_token_count():
@@ -121,7 +142,8 @@ class FakeStreamModel:
     def __init__(self, chunks):
         self.chunks = chunks
 
-    def generate_text_stream(self, prompt, max_tokens, temperature, top_p, pack_name, intensity=0.5):
+    def generate_text_stream(self, prompt, max_tokens, temperature, top_p, pack_name, intensity=0.5,
+                             custom_pack=None):
         for c in self.chunks:
             yield c
 

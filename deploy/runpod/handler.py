@@ -147,9 +147,17 @@ def parse_event(event: Dict[str, Any]) -> Dict[str, Any]:
     _max_intensity = float(os.environ.get("NEUROMOD_MAX_INTENSITY", "5.0"))
     intensity = max(0.0, min(_max_intensity, float(_num("intensity", 0.5))))
 
+    # Chemistry-lab custom pack: a {name, description, effects:[{effect,weight,direction,parameters}]}
+    # dict built in the browser. Passed straight to the neuromod tool, which validates it (unknown
+    # effect / out-of-range weight -> apply fails -> honest pack_applied=None). Only accept a dict.
+    custom_pack = payload.get("custom_pack")
+    if not isinstance(custom_pack, dict) or not custom_pack.get("effects"):
+        custom_pack = None
+
     return {
         "prompt": prompt,
         "pack_name": payload.get("pack_name") or None,
+        "custom_pack": custom_pack,
         "intensity": intensity,
         "max_tokens": _num("max_tokens", 128),
         "temperature": _num("temperature", 1.0),
@@ -282,6 +290,7 @@ def run_inference(parsed: Dict[str, Any], model=None) -> Dict[str, Any]:
         temperature=parsed["temperature"],
         top_p=parsed["top_p"],
         pack_name=parsed["pack_name"],
+        custom_pack=parsed.get("custom_pack"),
         intensity=parsed["intensity"],
     )
 
@@ -301,9 +310,13 @@ def run_inference(parsed: Dict[str, Any], model=None) -> Dict[str, Any]:
         text, parsed, emotions=emotions,
         generation_time=generation_time, tokens_generated=tokens,
     )
-    # Honesty: only claim pack_applied if it actually applied. A requested-but-failed pack
-    # reports pack_applied=None + neuromod_error so the client isn't told the dose landed.
-    if parsed.get("pack_name") and neuromod_applied is False:
+    # A custom (chemistry-lab) pack has no pack_name; label the applied pack by its custom name.
+    custom = parsed.get("custom_pack")
+    if custom and neuromod_applied is not False:
+        response["pack_applied"] = custom.get("name") or "custom"
+    # Honesty: only claim pack_applied if it actually applied. A requested-but-failed pack (named
+    # OR custom) reports pack_applied=None + neuromod_error so the client isn't told the dose landed.
+    if (parsed.get("pack_name") or custom) and neuromod_applied is False:
         response["pack_applied"] = None
         response["neuromod_error"] = neuromod_error or "pack not applied"
     response["neuromod_applied"] = neuromod_applied
@@ -348,7 +361,8 @@ def run_inference_stream(parsed: Dict[str, Any], model=None) -> Iterator[Dict[st
         for chunk in model.generate_text_stream(
             prompt=parsed["prompt"], max_tokens=parsed["max_tokens"],
             temperature=parsed["temperature"], top_p=parsed["top_p"],
-            pack_name=parsed["pack_name"], intensity=parsed["intensity"],
+            pack_name=parsed["pack_name"], custom_pack=parsed.get("custom_pack"),
+            intensity=parsed["intensity"],
         ):
             pieces.append(chunk)
             yield {"chunk": chunk}
@@ -357,7 +371,8 @@ def run_inference_stream(parsed: Dict[str, Any], model=None) -> Iterator[Dict[st
         result = model.generate_text(
             prompt=parsed["prompt"], max_tokens=parsed["max_tokens"],
             temperature=parsed["temperature"], top_p=parsed["top_p"],
-            pack_name=parsed["pack_name"], intensity=parsed["intensity"],
+            pack_name=parsed["pack_name"], custom_pack=parsed.get("custom_pack"),
+            intensity=parsed["intensity"],
         )
         if isinstance(result, dict):
             text = result.get("text", "")
