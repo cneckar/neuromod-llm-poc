@@ -367,6 +367,10 @@ def run_inference_stream(parsed: Dict[str, Any], model=None) -> Iterator[Dict[st
         if parsed.get("pack_name") and nm.get("neuromod_applied") is False:
             final["pack_applied"] = None
             final["neuromod_error"] = nm.get("neuromod_error") or "pack not applied"
+    # Harmony (gpt-oss) reasoning: the analysis channel is captured during streaming (only the
+    # final channel was streamed as the answer). Surface it so the UI can show an expandable
+    # "how it was thinking" panel. None for non-harmony models.
+    final["reasoning"] = getattr(model, "_last_stream_reasoning", None)
     final.update({"gpu_seconds": record["gpu_seconds"],
                   "cold_start_seconds": record["cold_start_seconds"]})
     yield {"done": True, **final}

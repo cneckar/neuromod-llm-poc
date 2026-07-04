@@ -32,5 +32,9 @@ POLL_MS = "300"
 # Token budget per tier (Worker sets these; the frontend can't know which model it hit).
 MAX_TOKENS_DEFAULT = "1536"   # default/small model (e.g. llama-8b) — plenty long
 MAX_TOKENS_PRO = "512"        # PRO/large model (e.g. gpt-oss-120b) — reasonable
+# Display label per tier for the UI's "Model" badge (GET /api/model). Display name only — NOT
+# the endpoint id or unlock key, so this is safe to expose to the browser.
+MODEL_LABEL_DEFAULT = "Llama-3.1-8B"
+MODEL_LABEL_PRO = "gpt-oss-120b"
 # Optional: override the pack list returned by /api/packs (the UI has its own built-in catalog).
 # PACKS = "none,lsd,dmt,cocaine,mdma"
