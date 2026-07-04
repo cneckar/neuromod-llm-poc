@@ -5,6 +5,7 @@ import {
   clampIntensity, buildRunpodInput, corsHeaders, sseEncode,
   parseRunpodStream, isTerminal, checkAuth,
   parseCookies, isProRequest, resolveEndpointId, tierCookie, stripTierInfo, TIER_COOKIE,
+  maxTokensForTier,
 } from "../src/lib.js";
 
 // Fake request carrying a cookie header.
@@ -54,6 +55,18 @@ test("clampIntensity clamps and defaults", () => {
   assert.equal(clampIntensity(9), 5);    // capped at MAX_INTENSITY
   assert.equal(clampIntensity(-2), 0);
   assert.equal(clampIntensity("nope", 0.5), 0.5);
+});
+
+test("maxTokensForTier: per-tier limits from env, with fallbacks", () => {
+  const env = { MAX_TOKENS_DEFAULT: "1536", MAX_TOKENS_PRO: "512" };
+  assert.equal(maxTokensForTier(false, env), 1536); // 8b / default: plenty long
+  assert.equal(maxTokensForTier(true, env), 512);   // 120b / pro: reasonable
+  // Missing/invalid env -> built-in defaults (1536 default, 512 pro).
+  assert.equal(maxTokensForTier(false, {}), 1536);
+  assert.equal(maxTokensForTier(true, {}), 512);
+  assert.equal(maxTokensForTier(false, { MAX_TOKENS_DEFAULT: "0" }), 1536);   // non-positive ignored
+  assert.equal(maxTokensForTier(true, { MAX_TOKENS_PRO: "nope" }), 512);      // non-numeric ignored
+  assert.equal(maxTokensForTier(false, undefined), 1536);
 });
 
 test("buildRunpodInput from messages with defaults", () => {

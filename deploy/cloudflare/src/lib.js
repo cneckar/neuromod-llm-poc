@@ -41,6 +41,18 @@ export function resolveEndpointId(request, env) {
   return isProRequest(request, env) ? env.RUNPOD_ENDPOINT_ID_PRO : (env && env.RUNPOD_ENDPOINT_ID);
 }
 
+/**
+ * Max new tokens per tier. The frontend can't know the tier (it's server-side), so the Worker
+ * sets the limit: generous for the default/small model, reasonable for the PRO/large model.
+ * Configurable via MAX_TOKENS_DEFAULT / MAX_TOKENS_PRO env vars.
+ */
+export function maxTokensForTier(pro, env) {
+  const d = Number(env && env.MAX_TOKENS_DEFAULT);
+  const p = Number(env && env.MAX_TOKENS_PRO);
+  if (pro) return Number.isFinite(p) && p > 0 ? p : 512;   // 120b: reasonable (matches the CLI)
+  return Number.isFinite(d) && d > 0 ? d : 1536;           // 8b: plenty long
+}
+
 /** Set-Cookie value that stores the validated key (httpOnly) — or clears it when key is null. */
 export function tierCookie(key) {
   const base = `${TIER_COOKIE}=`;

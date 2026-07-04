@@ -29,5 +29,8 @@ RUNPOD_ENDPOINT_ID_PRO = "your-pro-endpoint-id"
 UNLOCK_KEY = "change-me-to-a-long-random-string"
 ALLOW_ORIGIN = "*"
 POLL_MS = "300"
+# Token budget per tier (Worker sets these; the frontend can't know which model it hit).
+MAX_TOKENS_DEFAULT = "1536"   # default/small model (e.g. llama-8b) — plenty long
+MAX_TOKENS_PRO = "512"        # PRO/large model (e.g. gpt-oss-120b) — reasonable
 # Optional: override the pack list returned by /api/packs (the UI has its own built-in catalog).
 # PACKS = "none,lsd,dmt,cocaine,mdma"
