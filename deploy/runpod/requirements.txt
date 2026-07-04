@@ -18,8 +18,14 @@ bitsandbytes>=0.43.0
 # gpt-oss ships MXFP4 weights and needs its Triton kernels at runtime (Triton >= 3.4, from the
 # cu128 torch the Dockerfile installs).
 #
-# IMPORTANT: pin kernels < 0.15. kernels 0.15 made "a version or revision is required" a HARD
-# error when pulling Hub kernels (deprecated in 0.12), so the current transformers MXFP4 path
-# fails with "Either a revision or a version must be specified." See huggingface/transformers#46291.
-kernels>=0.9,<0.15
+# IMPORTANT: pin kernels to [0.12, 0.15).
+#   * >= 0.12: transformers' MXFP4 path needs kernels >= 0.12.0 to fetch the gpt-oss Triton
+#     kernels. With an OLDER kernels it prints "MXFP4 quantization requires kernels>=0.12.0. We
+#     will default to dequantizing the model to bf16" — dequantizing 120B to bf16 is ~240GB,
+#     which does NOT fit the GPU (and device_map max_memory forbids CPU), so the load hangs/OOMs
+#     and every request times out. The old >=0.9 floor let some builds install <0.12.
+#   * < 0.15: kernels 0.15 made "a version or revision is required" a HARD error when pulling Hub
+#     kernels, so the MXFP4 path fails with "Either a revision or a version must be specified."
+#     See huggingface/transformers#46291.
+kernels>=0.12,<0.15
 triton>=3.4.0

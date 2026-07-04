@@ -48,14 +48,16 @@ RUN pip install --no-cache-dir --force-reinstall \
       torch torchvision torchaudio \
       --index-url https://download.pytorch.org/whl/cu128
 
-# Fail the build (free) — not a paid cold start — on either known gpt-oss load blocker:
+# Fail the build (free) — not a paid cold start — on any known gpt-oss load blocker:
 #   (1) torch not a CUDA 12.x build (host driver supports <= 12.8), or
-#   (2) kernels >= 0.15 (breaks the MXFP4 Hub-kernel load — transformers#46291).
+#   (2) kernels < 0.12 (MXFP4 silently dequantizes 120B to bf16 (~240GB) -> OOM/timeout), or
+#   (3) kernels >= 0.15 (breaks the MXFP4 Hub-kernel load — transformers#46291).
 RUN python -c "import torch,sys; cu=torch.version.cuda or ''; print('torch',torch.__version__,'cuda',cu); \
 sys.exit(0 if cu.startswith('12') else 'ERROR: torch CUDA %r is not 12.x; host driver supports <=12.8'%cu)"
 RUN python -c "import importlib.metadata as m; from packaging.version import Version; \
 v=Version(m.version('kernels')); print('kernels',v); \
-assert v < Version('0.15'), 'kernels>=0.15 breaks gpt-oss MXFP4 (transformers#46291); pin <0.15'"
+assert Version('0.12') <= v < Version('0.15'), \
+'kernels must be >=0.12 (else MXFP4 dequantizes to bf16 -> OOM) and <0.15 (transformers#46291); got %s'%v"
 
 # RunPod invokes the handler via the serverless runtime started in handler.start().
 CMD ["python", "-u", "deploy/runpod/handler.py"]
