@@ -8,6 +8,54 @@
 
 export const RUNPOD_BASE = "https://api.runpod.ai/v2";
 
+// ---- Backend-only tier switch --------------------------------------------------------------
+// Default endpoint (RUNPOD_ENDPOINT_ID, e.g. llama-8b) serves everyone. Visiting `/?<UNLOCK_PARAM>=
+// <UNLOCK_KEY>` sets an httpOnly cookie; requests carrying that cookie route to the PRO endpoint
+// (RUNPOD_ENDPOINT_ID_PRO, e.g. gpt-oss-120b). The PRO endpoint id and the unlock key live ONLY in
+// Worker env/secrets — never in the served HTML or JS, and the cookie is httpOnly so page scripts
+// can't read it either.
+export const UNLOCK_PARAM = "k";       // query param on GET / that carries the key
+export const TIER_COOKIE = "nm_tier";  // httpOnly cookie holding the validated key
+
+/** Parse a Cookie header into a plain object. */
+export function parseCookies(cookieHeader) {
+  const out = {};
+  for (const part of (cookieHeader || "").split(";")) {
+    const i = part.indexOf("=");
+    if (i < 0) continue;
+    const k = part.slice(0, i).trim();
+    if (k) out[k] = decodeURIComponent(part.slice(i + 1).trim());
+  }
+  return out;
+}
+
+/** True if this request is unlocked to the PRO tier (valid tier cookie === UNLOCK_KEY secret). */
+export function isProRequest(request, env) {
+  if (!env || !env.UNLOCK_KEY || !env.RUNPOD_ENDPOINT_ID_PRO) return false;
+  const cookies = parseCookies(request.headers.get("cookie"));
+  return cookies[TIER_COOKIE] === env.UNLOCK_KEY;
+}
+
+/** Resolve which RunPod endpoint id to use for this request (PRO if unlocked, else default). */
+export function resolveEndpointId(request, env) {
+  return isProRequest(request, env) ? env.RUNPOD_ENDPOINT_ID_PRO : (env && env.RUNPOD_ENDPOINT_ID);
+}
+
+/** Set-Cookie value that stores the validated key (httpOnly) — or clears it when key is null. */
+export function tierCookie(key) {
+  const base = `${TIER_COOKIE}=`;
+  const attrs = "HttpOnly; Secure; SameSite=Lax; Path=/";
+  return key ? `${base}${encodeURIComponent(key)}; ${attrs}; Max-Age=86400`
+             : `${base}; ${attrs}; Max-Age=0`;
+}
+
+/** Strip fields that would reveal which backend/tier served a response (model, endpoint hints). */
+export function stripTierInfo(obj) {
+  if (!obj || typeof obj !== "object") return obj;
+  const { model, model_type, ...rest } = obj;
+  return rest;
+}
+
 /**
  * Max intensity the edge forwards. Intensity is a MULTIPLIER on pack weights (>1 overloads),
  * bounded server-side by NEUROMOD_MAX_INTENSITY (default 5). Keep in sync with that default.
