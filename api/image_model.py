@@ -163,21 +163,26 @@ class NeuromodImageInterface:
         from neuromod import NeuromodTool
         from neuromod.pack_system import PackRegistry
 
-        cfg = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                           "packs", "config.json")
+        packs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "packs")
+        cfg = os.path.join(packs_dir, "config.json")
         self.registry = PackRegistry(cfg if os.path.exists(cfg) else "packs/config.json")
-        # Merge image-focused packs if present (adds visual effects on top of the text packs).
+        # Merge image-focused packs if present (adds visual effects on top of the text packs). The
+        # file currently lives under packs/archive/, so check both locations.
         try:
             import json
             from neuromod.pack_system import Pack
-            ip = os.path.join(os.path.dirname(cfg), "image_focused_packs.json")
-            if os.path.exists(ip):
+            for ip in (os.path.join(packs_dir, "image_focused_packs.json"),
+                       os.path.join(packs_dir, "archive", "image_focused_packs.json")):
+                if not os.path.exists(ip):
+                    continue
                 with open(ip) as fh:
                     for name, data in json.load(fh).get("packs", {}).items():
                         try:
                             self.registry.packs[name] = Pack.from_dict(data)
                         except Exception as e:
                             logger.debug(f"[image] skip pack {name}: {e}")
+                logger.info(f"[image] merged image-focused packs from {ip}")
+                break
         except Exception as e:
             logger.debug(f"[image] image-focused packs not merged: {e}")
         # The neuromod tool only needs a stand-in model/tokenizer here — image effects act on the
@@ -278,11 +283,20 @@ class NeuromodImageInterface:
             gp["num_inference_steps"] = int(steps)
         if guidance_scale is not None and not turbo:
             gp["guidance_scale"] = float(guidance_scale)
-        gp.pop("eta", None); gp.pop("strength", None)  # not accepted by a txt2img __call__
         if turbo:
             # SDXL-Turbo is a distilled/guidance-free model: the pipeline default (5.0) degrades
             # it, so force CFG off. (num_inference_steps stays low, set by the pack/defaults.)
             gp["guidance_scale"] = 0.0
+
+        # Whitelist the kwargs we forward to the diffusers __call__. apply_visual_effects_to_
+        # generation can inject keys a txt2img pipeline doesn't accept (temperature, eta, strength,
+        # *_prompts, …); passing any of them raises TypeError and aborts the whole request. So we
+        # take ONLY the sampler knobs the pipeline understands and drop everything else.
+        call_kwargs = {}
+        if "num_inference_steps" in gp:
+            call_kwargs["num_inference_steps"] = int(gp["num_inference_steps"])
+        if "guidance_scale" in gp:
+            call_kwargs["guidance_scale"] = float(gp["guidance_scale"])
 
         # Resolution: SDXL is native 1024, SD1.x/Turbo 512.
         default_res = 1024 if pipeline_kind(self.model_name) == "sdxl" else 512
@@ -305,7 +319,7 @@ class NeuromodImageInterface:
 
         try:
             with torch.no_grad(), steer_ctx:
-                out = self.pipeline(prompt=prompt, width=w, height=h, generator=gen, **gp)
+                out = self.pipeline(prompt=prompt, width=w, height=h, generator=gen, **call_kwargs)
                 image = out.images[0]
                 if self.refiner is not None:
                     image = self.refiner(prompt=prompt, image=image, generator=gen).images[0]
