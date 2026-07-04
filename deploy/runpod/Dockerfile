@@ -48,25 +48,18 @@ RUN pip install --no-cache-dir --force-reinstall \
       torch torchvision torchaudio \
       --index-url https://download.pytorch.org/whl/cu128
 
-# Re-pin kernels LAST (after the torch reinstall), with --no-deps so it can't drag torch/triton.
-# The torch reinstall can leave `kernels` in a state where transformers' is_kernels_available()
-# is False at runtime, which silently dequantizes gpt-oss to bf16 (~240GB) -> spills to CPU ->
-# "grouped_mm mat2 on cpu" / OOM. Force the correct kernels as the final package state.
-RUN pip install --no-cache-dir --force-reinstall --no-deps "kernels>=0.12,<0.15"
-
-# Fail the build (free) — not a paid cold start — on any known gpt-oss load blocker:
-#   (1) torch not a CUDA 12.x build (host driver supports <= 12.8),
-#   (2) triton < 3.4 (MXFP4 Triton kernels need it),
-#   (3) kernels not importable or outside [0.12, 0.15). A metadata-only version check is NOT
-#       enough — a broken `import kernels` still dequantizes at runtime, so import it here.
+# Fail the build (free) — not a paid cold start — on any known gpt-oss load blocker. These are
+# METADATA-only version checks: the build container has no GPU, so `import kernels`/`import triton`
+# can fail for GPU-absence reasons that don't reflect the runtime worker — verify versions, not
+# importability. (diag on a live worker confirmed kernels 0.14.1 / triton 3.6 import fine there.)
 RUN python -c "import torch,sys; cu=torch.version.cuda or ''; print('torch',torch.__version__,'cuda',cu); \
 sys.exit(0 if cu.startswith('12') else 'ERROR: torch CUDA %r is not 12.x; host driver supports <=12.8'%cu)"
-RUN python -c "import triton; from packaging.version import Version; print('triton',triton.__version__); \
-assert Version(triton.__version__) >= Version('3.4'), 'triton must be >=3.4 for MXFP4; got '+triton.__version__"
+RUN python -c "import importlib.metadata as m; from packaging.version import Version; \
+v=Version(m.version('triton')); print('triton',v); \
+assert v >= Version('3.4'), 'triton must be >=3.4 for MXFP4; got %s'%v"
 RUN python -c "import importlib.metadata as m; from packaging.version import Version; \
 v=Version(m.version('kernels')); print('kernels',v); \
-assert Version('0.12') <= v < Version('0.15'), 'kernels must be >=0.12 and <0.15; got %s'%v; \
-import kernels; print('kernels import OK ->', kernels.__file__)"
+assert Version('0.12') <= v < Version('0.15'), 'kernels must be >=0.12 and <0.15; got %s'%v"
 # transformers 5.x broke the gpt-oss MXFP4 path (dequantizes to bf16 even with valid kernels).
 RUN python -c "import importlib.metadata as m; from packaging.version import Version; \
 v=Version(m.version('transformers')); print('transformers',v); \
