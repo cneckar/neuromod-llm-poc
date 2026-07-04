@@ -130,6 +130,9 @@
                         <div class="model-badge" id="modelBadge">
                             <span class="model-dot"></span><span id="modelName">connecting…</span>
                         </div>
+                        <label id="fastToggleWrap" style="display:none; margin-top:8px; font-size:12px; color:#CCC; cursor:pointer; align-items:center; gap:6px;">
+                            <input type="checkbox" id="fastToggle" style="accent-color:#00CCFF;"> ⚡ Use the fast model instead
+                        </label>
                     </div>
                 </div>
 
@@ -203,6 +206,13 @@
 
         let activePacks = [];
         let conversationHistory = [];
+        let preferFast = false;  // a PRO user opting to use the cheap/default model instead
+
+        // Attach the tier-downgrade header when a PRO user has chosen the fast model.
+        function withTierHeader(headers) {
+            if (preferFast) headers['X-Prefer-Tier'] = 'default';
+            return headers;
+        }
 
         function initPillbox() {
             const pillbox = document.getElementById('pillbox');
@@ -326,7 +336,7 @@
             const { span, message: msgEl } = addMessage('assistant', '');
             let full = '', gotChunk = false, gotImage = false;
             try {
-                const headers = { 'Content-Type': 'application/json' };
+                const headers = withTierHeader({ 'Content-Type': 'application/json' });
                 const body = imageMode
                     ? { task: 'image', prompt: message, pack_name: pack, intensity: intensity }
                     : { messages: conversationHistory, pack_name: pack, intensity: intensity };
@@ -404,11 +414,18 @@
         async function loadModelBadge() {
             const el = document.getElementById('modelName');
             try {
-                const r = await fetch('/api/model');
+                const r = await fetch('/api/model', { headers: withTierHeader({}) });
                 const j = await r.json();
                 el.textContent = j.model || 'unknown';
+                // Only PRO-unlocked browsers get the choice to drop to the fast model.
+                document.getElementById('fastToggleWrap').style.display = j.pro ? 'inline-flex' : 'none';
             } catch { el.textContent = 'offline'; }
         }
+
+        document.getElementById('fastToggle').addEventListener('change', (e) => {
+            preferFast = e.target.checked;   // takes effect on the next message; badge updates now
+            loadModelBadge();
+        });
 
         document.addEventListener('DOMContentLoaded', () => { initPillbox(); refreshState(); loadModelBadge(); });
     </script>

@@ -16,6 +16,9 @@ export const RUNPOD_BASE = "https://api.runpod.ai/v2";
 // can't read it either.
 export const UNLOCK_PARAM = "k";       // query param on GET / that carries the key
 export const TIER_COOKIE = "nm_tier";  // httpOnly cookie holding the validated key
+// Header a PRO-unlocked browser sends to voluntarily use the cheap/default model instead. A
+// downgrade is always allowed (you can't upgrade this way — it only ever drops PRO -> default).
+export const PREFER_TIER_HEADER = "x-prefer-tier";
 
 /** Parse a Cookie header into a plain object. */
 export function parseCookies(cookieHeader) {
@@ -36,9 +39,23 @@ export function isProRequest(request, env) {
   return cookies[TIER_COOKIE] === env.UNLOCK_KEY;
 }
 
-/** Resolve which RunPod endpoint id to use for this request (PRO if unlocked, else default). */
+/** True if this request opts to use the cheap/default model despite holding PRO access. */
+export function prefersDefaultTier(request) {
+  const h = request && request.headers && request.headers.get(PREFER_TIER_HEADER);
+  return (h || "").toLowerCase() === "default";
+}
+
+/**
+ * The tier actually served for this request: PRO only if the browser is unlocked AND hasn't asked
+ * to downgrade. (`isProRequest` reports raw ACCESS — used to decide whether to offer the toggle.)
+ */
+export function effectiveProTier(request, env) {
+  return isProRequest(request, env) && !prefersDefaultTier(request);
+}
+
+/** Resolve which RunPod endpoint id to use for this request (PRO if unlocked+not downgraded). */
 export function resolveEndpointId(request, env) {
-  return isProRequest(request, env) ? env.RUNPOD_ENDPOINT_ID_PRO : (env && env.RUNPOD_ENDPOINT_ID);
+  return effectiveProTier(request, env) ? env.RUNPOD_ENDPOINT_ID_PRO : (env && env.RUNPOD_ENDPOINT_ID);
 }
 
 /**
@@ -149,7 +166,7 @@ export function corsHeaders(origin = "*") {
   return {
     "Access-Control-Allow-Origin": origin || "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-API-Key",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-API-Key, X-Prefer-Tier",
     "Access-Control-Max-Age": "86400",
   };
 }

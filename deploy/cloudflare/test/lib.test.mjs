@@ -5,12 +5,22 @@ import {
   clampIntensity, buildRunpodInput, corsHeaders, sseEncode,
   parseRunpodStream, isTerminal, checkAuth,
   parseCookies, isProRequest, resolveEndpointId, tierCookie, stripTierInfo, TIER_COOKIE,
-  maxTokensForTier, modelLabelForTier,
+  maxTokensForTier, modelLabelForTier, prefersDefaultTier, effectiveProTier,
 } from "../src/lib.js";
 
 // Fake request carrying a cookie header.
 function reqWithCookie(cookie) {
   return { headers: { get: (h) => (h.toLowerCase() === "cookie" ? cookie : null) } };
+}
+
+// Fake request carrying both a cookie and the X-Prefer-Tier header.
+function reqWith(cookie, preferTier) {
+  return { headers: { get: (h) => {
+    const k = h.toLowerCase();
+    if (k === "cookie") return cookie;
+    if (k === "x-prefer-tier") return preferTier || null;
+    return null;
+  } } };
 }
 
 test("parseCookies", () => {
@@ -28,6 +38,23 @@ test("tier switch: default endpoint unless a valid unlock cookie is present", ()
   // correct cookie -> pro
   assert.equal(resolveEndpointId(reqWithCookie(`${TIER_COOKIE}=s3cr3t`), env), "pro120b");
   assert.equal(isProRequest(reqWithCookie(`${TIER_COOKIE}=s3cr3t`), env), true);
+});
+
+test("tier downgrade: PRO browser can opt into the fast/default model", () => {
+  const env = { RUNPOD_ENDPOINT_ID: "default8b", RUNPOD_ENDPOINT_ID_PRO: "pro120b", UNLOCK_KEY: "s3cr3t" };
+  const proCookie = `${TIER_COOKIE}=s3cr3t`;
+  // Unlocked, no preference -> PRO.
+  assert.equal(effectiveProTier(reqWith(proCookie, null), env), true);
+  assert.equal(resolveEndpointId(reqWith(proCookie, null), env), "pro120b");
+  // Unlocked but asking for default -> served the default endpoint...
+  assert.equal(effectiveProTier(reqWith(proCookie, "default"), env), false);
+  assert.equal(resolveEndpointId(reqWith(proCookie, "default"), env), "default8b");
+  // ...yet raw access is still PRO (so the UI keeps offering the toggle).
+  assert.equal(isProRequest(reqWith(proCookie, "default"), env), true);
+  assert.equal(prefersDefaultTier(reqWith(proCookie, "default")), true);
+  // A non-PRO browser can't upgrade via the header (no cookie -> still default).
+  assert.equal(effectiveProTier(reqWith(null, "pro"), env), false);
+  assert.equal(resolveEndpointId(reqWith(null, null), env), "default8b");
 });
 
 test("tier switch: PRO impossible when unlock not configured", () => {

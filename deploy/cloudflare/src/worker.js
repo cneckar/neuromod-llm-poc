@@ -18,8 +18,8 @@
 import {
   RUNPOD_BASE, buildRunpodInput, corsHeaders, sseEncode,
   parseRunpodStream, isTerminal, checkAuth,
-  UNLOCK_PARAM, resolveEndpointId, isProRequest, maxTokensForTier, modelLabelForTier,
-  tierCookie, stripTierInfo,
+  UNLOCK_PARAM, resolveEndpointId, isProRequest, effectiveProTier, maxTokensForTier,
+  modelLabelForTier, tierCookie, stripTierInfo,
 } from "./lib.js";
 // The full drag-and-drop demo UI (ported from docs/demo.html, rewired to the real backend).
 import INDEX_HTML from "./index.html";
@@ -67,9 +67,16 @@ export default {
       return json({ packs: (env && env.PACKS && env.PACKS.split(",")) || DEFAULT_PACKS }, env);
     }
     if (url.pathname === "/api/model") {
-      // Report which model this browser is talking to (resolved server-side from the tier
-      // cookie). Display label only — never the endpoint id or unlock key.
-      return json({ model: modelLabelForTier(isProRequest(request, env), env) }, env);
+      // Report which model this browser is talking to (resolved server-side from the tier cookie
+      // + any downgrade preference). Display labels only — never the endpoint id or unlock key.
+      // `pro` = raw PRO access (drives whether the UI offers the "use fast model" toggle);
+      // `model` = the label actually in effect now; `fast` = the default-tier label to swap to.
+      const hasPro = isProRequest(request, env);
+      return json({
+        model: modelLabelForTier(effectiveProTier(request, env), env),
+        pro: hasPro,
+        fast: modelLabelForTier(false, env),
+      }, env);
     }
     if (url.pathname === "/api/chat" && request.method === "POST") {
       return handleChat(request, env);
@@ -96,7 +103,9 @@ async function handleChat(request, env) {
   // resolveEndpointId reads only server-side env + the httpOnly cookie — the client never sees
   // which endpoint it hit. Ignore any client-supplied `model` so the browser can't force a tier.
   delete payload.input.model;
-  const pro = isProRequest(request, env);
+  // effectiveProTier honors a PRO browser's opt-in downgrade (X-Prefer-Tier: default): a downgrade
+  // is always allowed, an upgrade is impossible (a non-PRO cookie can't reach the PRO endpoint).
+  const pro = effectiveProTier(request, env);
   const endpointId = pro ? env.RUNPOD_ENDPOINT_ID_PRO : env.RUNPOD_ENDPOINT_ID;
   // Token budget is set per tier server-side (the frontend can't know which model it hit):
   // generous for the small/default model, reasonable for the large PRO model.
