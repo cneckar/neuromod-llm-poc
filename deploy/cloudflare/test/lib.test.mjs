@@ -8,7 +8,8 @@ import {
 
 test("clampIntensity clamps and defaults", () => {
   assert.equal(clampIntensity(0.7), 0.7);
-  assert.equal(clampIntensity(5), 1);
+  assert.equal(clampIntensity(3), 3);    // >1 overload is allowed
+  assert.equal(clampIntensity(9), 5);    // capped at MAX_INTENSITY
   assert.equal(clampIntensity(-2), 0);
   assert.equal(clampIntensity("nope", 0.5), 0.5);
 });
@@ -24,7 +25,7 @@ test("buildRunpodInput from messages with defaults", () => {
 test("buildRunpodInput from raw prompt clamps intensity + passes model", () => {
   const p = buildRunpodInput({ prompt: "x", intensity: 9, model: "openai/gpt-oss-120b" });
   assert.equal(p.input.prompt, "x");
-  assert.equal(p.input.intensity, 1);
+  assert.equal(p.input.intensity, 5);   // capped at MAX_INTENSITY (overload allowed up to 5)
   assert.equal(p.input.model, "openai/gpt-oss-120b");
   assert.ok(!("messages" in p.input));
 });

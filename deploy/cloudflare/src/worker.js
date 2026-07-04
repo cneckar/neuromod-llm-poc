@@ -19,10 +19,12 @@ import {
   RUNPOD_BASE, buildRunpodInput, corsHeaders, sseEncode,
   parseRunpodStream, isTerminal, checkAuth,
 } from "./lib.js";
-import { INDEX_HTML } from "./ui.js";
+// The full drag-and-drop demo UI (ported from docs/demo.html, rewired to the real backend).
+import INDEX_HTML from "./index.html";
 
+// Vestigial: the UI (index.html) ships its own full catalog. Kept for /api/packs consumers.
 const DEFAULT_PACKS = ["none", "lsd", "dmt", "psilocybin", "mdma", "cocaine",
-  "amphetamine", "ketamine", "morphine", "caffeine", "nicotine"];
+  "amphetamine", "ketamine", "morphine", "caffeine", "cannabis_thc"];
 
 function json(obj, env, status = 200) {
   return new Response(JSON.stringify(obj), {
