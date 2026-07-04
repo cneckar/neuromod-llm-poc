@@ -19,7 +19,7 @@ import {
   RUNPOD_BASE, buildRunpodInput, corsHeaders, sseEncode,
   parseRunpodStream, isTerminal, checkAuth,
   UNLOCK_PARAM, resolveEndpointId, isProRequest, effectiveProTier, maxTokensForTier,
-  modelLabelForTier, tierCookie, stripTierInfo,
+  modelLabelForTier, tierCookie, stripTierInfo, buildChatRecord,
 } from "./lib.js";
 // The full drag-and-drop demo UI (ported from docs/demo.html, rewired to the real backend).
 import INDEX_HTML from "./index.html";
@@ -79,13 +79,54 @@ export default {
       }, env);
     }
     if (url.pathname === "/api/chat" && request.method === "POST") {
-      return handleChat(request, env);
+      return handleChat(request, env, ctx);
+    }
+    // Chat archive (D1). Gated behind the unlock cookie so transcripts aren't world-readable.
+    if (url.pathname === "/api/chats" || url.pathname.startsWith("/api/chats/")) {
+      return handleChatsRead(request, env, url);
     }
     return json({ error: "not found" }, env, 404);
   },
 };
 
-async function handleChat(request, env) {
+async function handleChatsRead(request, env, url) {
+  if (!isProRequest(request, env)) return json({ error: "unauthorized" }, env, 401);
+  if (!env || !env.DB) return json({ chats: [], note: "D1 not configured" }, env);
+  const cols = "id, created, tier, task, pack_name, custom_pack, intensity, had_image, assistant, reasoning, error";
+  try {
+    const single = url.pathname.startsWith("/api/chats/") && url.pathname.slice("/api/chats/".length);
+    if (single) {
+      const row = await env.DB.prepare(`SELECT ${cols}, messages FROM chats WHERE id = ?`).bind(single).first();
+      return row ? json({ chat: row }, env) : json({ error: "not found" }, env, 404);
+    }
+    const limit = Math.max(1, Math.min(200, Number(url.searchParams.get("limit")) || 50));
+    const { results } = await env.DB.prepare(
+      `SELECT ${cols} FROM chats ORDER BY created DESC LIMIT ?`).bind(limit).all();
+    return json({ chats: results || [] }, env);
+  } catch (e) {
+    return json({ error: `d1 read failed: ${e}` }, env, 500);
+  }
+}
+
+/** Persist one completed chat to D1. No-op when D1 isn't bound; never throws into the response. */
+async function saveChat(env, record) {
+  if (!env || !env.DB) return;
+  try {
+    await env.DB.prepare(
+      `INSERT INTO chats
+         (id, created, tier, task, pack_name, custom_pack, intensity, had_image, messages, assistant, reasoning, error)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      crypto.randomUUID(), new Date().toISOString(), record.tier, record.task, record.pack_name,
+      record.custom_pack, record.intensity, record.had_image, record.messages, record.assistant,
+      record.reasoning, record.error
+    ).run();
+  } catch (e) {
+    console.log("saveChat failed:", String(e));  // archival must never break the chat response
+  }
+}
+
+async function handleChat(request, env, ctx) {
   if (!checkAuth(request, env)) return json({ error: "unauthorized" }, env, 401);
   if (!env || !env.RUNPOD_API_KEY || !env.RUNPOD_ENDPOINT_ID) {
     return json({ error: "worker not configured (missing RunPod secrets)" }, env, 500);
@@ -128,6 +169,7 @@ async function handleChat(request, env) {
   const pollMs = Number(env.POLL_MS) || 300;
   const encoder = new TextEncoder();
 
+  const collected = [];  // relayed outputs, for the D1 archive
   const stream = new ReadableStream({
     async start(controller) {
       try {
@@ -142,6 +184,7 @@ async function handleChat(request, env) {
           // poll, not a cumulative list. So emit every item in this batch — do NOT carry a running
           // index across polls (that skipped most tokens, producing sparse/garbled output).
           for (const out of parseRunpodStream(data)) {
+            collected.push(out);
             // Strip model/tier hints so the client can't tell which endpoint served it.
             controller.enqueue(encoder.encode(sseEncode(stripTierInfo(out))));
           }
@@ -153,6 +196,11 @@ async function handleChat(request, env) {
       } finally {
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         controller.close();
+        // Archive the completed exchange to D1 (best-effort, off the response path).
+        if (ctx && env && env.DB) {
+          const record = buildChatRecord(body, collected, { tier: pro ? "pro" : "default" });
+          ctx.waitUntil(saveChat(env, record));
+        }
       }
     },
   });

@@ -19,6 +19,7 @@ Browser ──POST /api/chat──► Worker ──/run + poll /stream (RunPod k
 | `GET /health` | `{ok:true}` |
 | `GET /api/packs` | Pack catalog (from `PACKS` var or a default list) |
 | `POST /api/chat` | SSE stream: `data: {chunk}` events, then the final `data: {done, response, …}` and `data: [DONE]` |
+| `GET /api/chats` | **Chat archive** (D1). Unlock-gated. `?limit=N` recent rows; `/api/chats/<id>` one full transcript. Empty if D1 isn't bound. |
 
 Request body (same shape as the RunPod handler / `ChatRequest`):
 ```json
@@ -43,6 +44,21 @@ npm run deploy                          # publish
 ```
 
 `wrangler.toml` is **gitignored**; the committed template is `wrangler.toml.example`.
+
+### Chat archive (D1) — optional
+
+Persist every completed chat for posterity. **D1** (Cloudflare's serverless SQLite) is the right fit
+here over KV/R2: it's durable, queryable, and browsable — the whole point of an archive. Enable it by
+binding a D1 database as `DB`; leave the binding out and persistence is simply off (the Worker no-ops).
+
+```bash
+npx wrangler d1 create neuromod_chats     # prints database_id -> paste into wrangler.toml [[d1_databases]]
+npx wrangler d1 execute neuromod_chats --file=migrations/0001_create_chats.sql --remote
+```
+
+The Worker writes each finished exchange off the response path (`ctx.waitUntil`), so archiving never
+slows or breaks a chat. Image *bytes* aren't stored (only a `had_image` flag) to keep rows small.
+Read them back at `GET /api/chats` — **gated behind the unlock cookie** so transcripts aren't public.
 
 ### Two-tier routing (default 8B, gated 120B) — backend only
 

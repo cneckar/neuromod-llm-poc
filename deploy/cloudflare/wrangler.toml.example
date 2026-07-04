@@ -8,6 +8,15 @@ compatibility_date = "2024-11-01"
 type = "Text"
 globs = ["**/*.html"]
 
+# Chat archive (optional). Bind a D1 database as DB and the Worker saves every completed chat and
+# serves the (unlock-gated) /api/chats read API. Leave it out to disable persistence entirely.
+#   npx wrangler d1 create neuromod_chats            # prints database_id -> paste below
+#   npx wrangler d1 execute neuromod_chats --file=migrations/0001_create_chats.sql --remote
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "neuromod_chats"
+# database_id = "your-d1-database-id"
+
 # ---------------------------------------------------------------------------------------------
 # Copy this file to `wrangler.toml` (which is gitignored) and fill in your real values:
 #     cp wrangler.toml.example wrangler.toml
