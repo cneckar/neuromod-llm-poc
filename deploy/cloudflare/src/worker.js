@@ -18,7 +18,8 @@
 import {
   RUNPOD_BASE, buildRunpodInput, corsHeaders, sseEncode,
   parseRunpodStream, isTerminal, checkAuth,
-  UNLOCK_PARAM, resolveEndpointId, isProRequest, maxTokensForTier, tierCookie, stripTierInfo,
+  UNLOCK_PARAM, resolveEndpointId, isProRequest, maxTokensForTier, modelLabelForTier,
+  tierCookie, stripTierInfo,
 } from "./lib.js";
 // The full drag-and-drop demo UI (ported from docs/demo.html, rewired to the real backend).
 import INDEX_HTML from "./index.html";
@@ -64,6 +65,11 @@ export default {
     }
     if (url.pathname === "/api/packs") {
       return json({ packs: (env && env.PACKS && env.PACKS.split(",")) || DEFAULT_PACKS }, env);
+    }
+    if (url.pathname === "/api/model") {
+      // Report which model this browser is talking to (resolved server-side from the tier
+      // cookie). Display label only — never the endpoint id or unlock key.
+      return json({ model: modelLabelForTier(isProRequest(request, env), env) }, env);
     }
     if (url.pathname === "/api/chat" && request.method === "POST") {
       return handleChat(request, env);

@@ -36,9 +36,16 @@ except ImportError as e:
     logger.warning(f"Neuromodulation system not available: {e}")
     NEUROMOD_AVAILABLE = False
 
+import re as _re
+
+# Harmony (gpt-oss) channel parsing lives in a pure, torch-free module so it's unit-testable
+# without a GPU. Re-exported here for the callers that import it from model_manager.
+from api.harmony import split_harmony_channels
+
+
 class BaseModelInterface(ABC):
     """Abstract base class for model interfaces"""
-    
+
     @abstractmethod
     def generate_text(self, prompt: str, max_tokens: int = 100, 
                      temperature: float = 1.0, top_p: float = 1.0,
@@ -282,16 +289,7 @@ class LocalModelInterface(BaseModelInterface):
         raw = tok.decode(new_tokens, skip_special_tokens=False)
 
         if "<|channel|>" in raw or "<|message|>" in raw:
-            # Content of a channel runs from its <|message|> to the next control token.
-            def _grab(channel):
-                m = re.search(
-                    r"<\|channel\|>\s*" + channel +
-                    r"\b[^<]*<\|message\|>(.*?)(?=<\|(?:end|return|call|channel|start)\|>|$)",
-                    raw, re.DOTALL)
-                return m.group(1).strip() if m else ""
-
-            final = _grab("final")
-            reasoning = _grab("analysis")
+            final, reasoning = split_harmony_channels(raw)
             if not final:
                 # Model didn't emit a 'final' channel (e.g. stopped mid-analysis). Fall back to the
                 # last channel's message, else the clean decode.
@@ -303,6 +301,10 @@ class LocalModelInterface(BaseModelInterface):
 
         # No harmony channels — normal model.
         return tok.decode(new_tokens, skip_special_tokens=True).strip(), None
+
+    def _is_harmony(self) -> bool:
+        """True for gpt-oss (harmony) models, whose stream multiplexes analysis+final channels."""
+        return "gpt-oss" in (self.model_name or "").lower()
 
     def generate_text_stream(self, prompt: str, max_tokens: int = 100,
                              temperature: float = 1.0, top_p: float = 1.0,
@@ -371,10 +373,19 @@ class LocalModelInterface(BaseModelInterface):
                 gen_params["past_key_values"] = _kv
                 gen_params["use_cache"] = True
 
+        # Harmony/reasoning models (gpt-oss) multiplex an analysis (CoT) channel and a final
+        # (answer) channel into ONE token stream. Skipping special tokens would drop the
+        # <|channel|> markers but leave the analysis text glued in front of the answer (the
+        # "analysis...final..." leak). So for harmony we stream WITH special tokens and split
+        # channels incrementally: only the FINAL channel is streamed as the answer, and the
+        # analysis channel is captured as reasoning (surfaced in the handler's done event).
+        harmony = self._is_harmony()
+        self._last_stream_reasoning = None
+
         # timeout so a producer thread that dies (OOM / bad steering shape) surfaces as an
         # error instead of hanging the consumer forever.
         streamer = TextIteratorStreamer(self.tokenizer, skip_prompt=True,
-                                        skip_special_tokens=True, timeout=120)
+                                        skip_special_tokens=not harmony, timeout=120)
         generation_kwargs = dict(**inputs, streamer=streamer, **gen_params)
 
         errors: List[Exception] = []
@@ -390,9 +401,27 @@ class LocalModelInterface(BaseModelInterface):
         thread = Thread(target=_run, daemon=True)
         thread.start()
         try:
-            for chunk in streamer:
-                if chunk:
-                    yield chunk
+            if harmony:
+                buf = ""
+                emitted = 0  # chars of the FINAL channel already yielded
+                for chunk in streamer:
+                    if not chunk:
+                        continue
+                    buf += chunk
+                    final, reasoning = split_harmony_channels(buf)
+                    self._last_stream_reasoning = reasoning
+                    # Hold back a trailing INCOMPLETE harmony marker so control-token chars never
+                    # leak into the answer (e.g. the "<" of "<|return|>", or "<|ch"…). Matches only
+                    # a real marker prefix — a bare "<" then end, or "<|" + letters + optional "|" —
+                    # so a legitimate "<" in prose ("a < b") is left intact. Resolves next chunk.
+                    safe = _re.sub(r"<(\|[a-z]*\|?)?$", "", final)
+                    if len(safe) > emitted:
+                        yield safe[emitted:]
+                        emitted = len(safe)
+            else:
+                for chunk in streamer:
+                    if chunk:
+                        yield chunk
         except Exception:
             # Streamer raised (timeout / producer death) — prefer the real generate error below.
             if not errors:

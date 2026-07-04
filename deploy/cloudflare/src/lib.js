@@ -53,6 +53,17 @@ export function maxTokensForTier(pro, env) {
   return Number.isFinite(d) && d > 0 ? d : 1536;           // 8b: plenty long
 }
 
+/**
+ * Human-friendly label for the model the request is served by. The client can't know its tier
+ * (server-side), so the Worker reports the label. This is a display name only — NOT the endpoint
+ * id or unlock key — so exposing it leaks nothing about how to reach the PRO tier.
+ * Configurable via MODEL_LABEL_DEFAULT / MODEL_LABEL_PRO.
+ */
+export function modelLabelForTier(pro, env) {
+  if (pro) return (env && env.MODEL_LABEL_PRO) || "gpt-oss-120b";
+  return (env && env.MODEL_LABEL_DEFAULT) || "Llama-3.1-8B";
+}
+
 /** Set-Cookie value that stores the validated key (httpOnly) — or clears it when key is null. */
 export function tierCookie(key) {
   const base = `${TIER_COOKIE}=`;

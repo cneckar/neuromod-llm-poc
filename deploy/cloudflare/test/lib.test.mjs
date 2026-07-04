@@ -5,7 +5,7 @@ import {
   clampIntensity, buildRunpodInput, corsHeaders, sseEncode,
   parseRunpodStream, isTerminal, checkAuth,
   parseCookies, isProRequest, resolveEndpointId, tierCookie, stripTierInfo, TIER_COOKIE,
-  maxTokensForTier,
+  maxTokensForTier, modelLabelForTier,
 } from "../src/lib.js";
 
 // Fake request carrying a cookie header.
@@ -67,6 +67,16 @@ test("maxTokensForTier: per-tier limits from env, with fallbacks", () => {
   assert.equal(maxTokensForTier(false, { MAX_TOKENS_DEFAULT: "0" }), 1536);   // non-positive ignored
   assert.equal(maxTokensForTier(true, { MAX_TOKENS_PRO: "nope" }), 512);      // non-numeric ignored
   assert.equal(maxTokensForTier(false, undefined), 1536);
+});
+
+test("modelLabelForTier: per-tier display label from env, with fallbacks", () => {
+  const env = { MODEL_LABEL_DEFAULT: "Llama-3.1-8B", MODEL_LABEL_PRO: "gpt-oss-120b" };
+  assert.equal(modelLabelForTier(false, env), "Llama-3.1-8B");
+  assert.equal(modelLabelForTier(true, env), "gpt-oss-120b");
+  // Missing env -> built-in defaults.
+  assert.equal(modelLabelForTier(false, {}), "Llama-3.1-8B");
+  assert.equal(modelLabelForTier(true, {}), "gpt-oss-120b");
+  assert.equal(modelLabelForTier(false, undefined), "Llama-3.1-8B");
 });
 
 test("buildRunpodInput from messages with defaults", () => {

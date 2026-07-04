@@ -65,8 +65,15 @@
         .dose-row input[type=range] { flex: 1; accent-color: #00CCFF; }
         .dose-val { min-width: 3.5em; text-align: right; color: #00CCFF; font-weight: bold; }
         .dose-val.overload { color: #FF6699; }
-        .access-input { width: 100%; padding: 8px; border: 1px solid #333; background-color: #0a0a0a; color: #CCC; font-size: 12px; font-family: 'Courier New', monospace; }
-        .access-input:focus { outline: none; border-color: #00CCFF; }
+        .model-badge { display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; padding: 8px 12px; border: 1px solid #333; background-color: #0a0a0a; font-family: 'Courier New', monospace; font-size: 13px; color: #00CCFF; }
+        .model-dot { width: 9px; height: 9px; border-radius: 50%; background-color: #33CC66; box-shadow: 0 0 6px #33CC66; }
+        .reasoning-details { margin-bottom: 6px; border-left: 2px solid #333; padding-left: 8px; }
+        .reasoning-details summary { color: #888; font-size: 12px; font-style: italic; cursor: pointer; list-style: none; user-select: none; }
+        .reasoning-details summary:hover { color: #00CCFF; }
+        .reasoning-details summary::-webkit-details-marker { display: none; }
+        .reasoning-details summary::before { content: '▸ '; }
+        .reasoning-details[open] summary::before { content: '▾ '; }
+        .reasoning-details .reasoning-body { color: #777; font-size: 12px; font-style: italic; white-space: pre-wrap; margin-top: 6px; }
         .loading { display: none; text-align: center; padding: 15px; color: #888; }
         .loading.show { display: block; }
         .spinner { border: 3px solid #333; border-top: 3px solid #00CCFF; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 8px; }
@@ -114,8 +121,10 @@
                         </div>
                     </div>
                     <div>
-                        <strong>Access key</strong> <span style="color:#888;font-size:12px;">(only if the endpoint requires one)</span>
-                        <input type="password" class="access-input" id="accessKey" placeholder="leave blank if open">
+                        <strong>Model</strong> <span style="color:#888;font-size:12px;">(live endpoint)</span>
+                        <div class="model-badge" id="modelBadge">
+                            <span class="model-dot"></span><span id="modelName">connecting…</span>
+                        </div>
                     </div>
                 </div>
 
@@ -299,13 +308,11 @@
             conversationHistory.push({ role: 'user', content: message });
             const pack = activePacks.length ? activePacks[0] : null;
             const intensity = parseFloat(intensityEl.value);
-            const accessKey = document.getElementById('accessKey').value.trim();
 
             const { span, message: msgEl } = addMessage('assistant', '');
             let full = '', gotChunk = false;
             try {
                 const headers = { 'Content-Type': 'application/json' };
-                if (accessKey) headers['x-api-key'] = accessKey;
                 const resp = await fetch('/api/chat', {
                     method: 'POST', headers,
                     // max_tokens is set per tier by the Worker (server-side); not sent here.
@@ -333,8 +340,13 @@
                         else if (evt.done || evt.response) {
                             if (!gotChunk && evt.response) { full = evt.response; span.textContent = full; }
                             if (evt.reasoning) {
-                                const r = document.createElement('span'); r.className = 'reasoning';
-                                r.textContent = '🧩 ' + evt.reasoning; msgEl.insertBefore(r, span);
+                                // Collapsible chain-of-thought (gpt-oss analysis channel): the
+                                // answer stays clean; expand to see how the model was thinking.
+                                const d = document.createElement('details'); d.className = 'reasoning-details';
+                                const sm = document.createElement('summary'); sm.textContent = 'Reasoning';
+                                const bd = document.createElement('div'); bd.className = 'reasoning-body';
+                                bd.textContent = evt.reasoning;
+                                d.appendChild(sm); d.appendChild(bd); msgEl.insertBefore(d, span);
                             }
                             if (evt.pack_applied === null && pack) {
                                 const w = document.createElement('span'); w.className = 'reasoning';
@@ -358,7 +370,18 @@
         document.getElementById('chatInput').addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
         });
-        document.addEventListener('DOMContentLoaded', () => { initPillbox(); refreshState(); });
+        // Show which model this browser is talking to (resolved server-side by the Worker from
+        // the tier cookie). Display label only — the endpoint id / unlock key never reach here.
+        async function loadModelBadge() {
+            const el = document.getElementById('modelName');
+            try {
+                const r = await fetch('/api/model');
+                const j = await r.json();
+                el.textContent = j.model || 'unknown';
+            } catch { el.textContent = 'offline'; }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { initPillbox(); refreshState(); loadModelBadge(); });
     </script>
 </body>
 </html>
