@@ -96,7 +96,8 @@ class RunPodModelInterface:
         out = body.get("output", body)
         if isinstance(out, list):
             for item in reversed(out):
-                if isinstance(item, dict) and (item.get("done") or "response" in item or "ok" in item):
+                if isinstance(item, dict) and (item.get("done") or "response" in item
+                                               or "ok" in item or "image" in item):
                     return item
             return out[-1] if out and isinstance(out[-1], dict) else {}
         return out if isinstance(out, dict) else {}
@@ -147,6 +148,31 @@ class RunPodModelInterface:
         return {"text": out.get("response", ""), "emotions": out.get("emotions", {}),
                 "reasoning": out.get("reasoning"),
                 "gpu_seconds": out.get("gpu_seconds"), "raw": out}
+
+    def generate_image(self, prompt: str, pack_name: Optional[str] = None, intensity: float = 0.5,
+                       seed: Optional[int] = None, steps: Optional[int] = None,
+                       width: Optional[int] = None, height: Optional[int] = None,
+                       image_model: Optional[str] = None, wait: bool = True,
+                       poll_interval: float = 2.0, on_status=None) -> Dict[str, Any]:
+        """One neuromodulated image (``task="image"``). Returns the worker's result dict.
+
+        The interesting field is ``image`` — a ``data:image/png;base64,...`` URL. The SD model is
+        chosen by the endpoint's ``IMAGE_MODEL`` env; ``image_model`` overrides it only within the
+        worker's allow-list. Uses the async ``/run`` + poll flow by default so a cold SD load can't
+        blow the ``/runsync`` window.
+        """
+        payload: Dict[str, Any] = {"task": "image", "prompt": prompt,
+                                   "pack_name": pack_name, "intensity": intensity}
+        for k, v in (("seed", seed), ("steps", steps), ("width", width),
+                     ("height", height), ("image_model", image_model)):
+            if v is not None:
+                payload[k] = v
+        raw = self._run_async(payload, poll_interval=poll_interval, on_status=on_status) if wait \
+            else self._runsync(payload)
+        out = self._extract_output(raw)
+        if isinstance(out, dict) and out.get("error"):
+            raise RuntimeError(f"RunPod image error: {out['error']}")
+        return out
 
     def warmup(self) -> Dict[str, Any]:
         """Pre-load the model on a worker (pays one cold start; useful before a sweep)."""
