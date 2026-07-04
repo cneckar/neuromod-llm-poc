@@ -284,8 +284,11 @@ class NeuromodImageInterface:
         if guidance_scale is not None and not turbo:
             gp["guidance_scale"] = float(guidance_scale)
         if turbo:
-            # SDXL-Turbo is a distilled/guidance-free model: the pipeline default (5.0) degrades
-            # it, so force CFG off. (num_inference_steps stays low, set by the pack/defaults.)
+            # SDXL-Turbo is a distilled/guidance-free model trained for 1–4 steps: force CFG off
+            # (the pipeline default 5.0 degrades it) and clamp steps to [1,10] — a client-supplied
+            # `steps` (bounded to 80 at the edge) would otherwise run 20–40× the needed work on a
+            # shared GPU for a model that doesn't benefit from it.
+            gp["num_inference_steps"] = max(1, min(10, int(gp.get("num_inference_steps", 2))))
             gp["guidance_scale"] = 0.0
 
         # Whitelist the kwargs we forward to the diffusers __call__. apply_visual_effects_to_

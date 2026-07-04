@@ -144,11 +144,13 @@ the LLM **and** SD):
 | `IMAGE_REFINER` | optional SDXL refine pass | *(unset)* | `stabilityai/stable-diffusion-xl-refiner-1.0` (+~7 GB) |
 | `IMAGE_CPU_OFFLOAD` | page SD weights CPU↔GPU per step if VRAM is tight (slower) | `1` if needed | usually unset |
 
-Aliases: `sdxl-turbo`, `sdxl`/`sdxl-base`, `sd-v1-5`, `sd-v2-1`. A browser-supplied `image_model`
-is resolved through this allow-list (like the text `MODEL_REGISTRY`), so it can't pull an arbitrary
-checkpoint onto a scale-to-zero GPU. Because the tier switch already routes unlocked browsers to the
-large endpoint, the same 🖼️ toggle yields Turbo on the default tier and high-quality SDXL on the PRO
-tier — automatically, with no tier info exposed to the frontend.
+Aliases: `sdxl-turbo`, `sdxl`/`sdxl-base`, `sd-v1-5`, `sd-v2-1`. The SD model is **endpoint-
+controlled** (the `IMAGE_MODEL` env), not client-selectable — the Cloudflare frontend never forwards
+`image_model`, so a browser can't make the small endpoint load a big SD model and OOM the shared GPU.
+A direct API caller *may* pass `image_model`, but it's resolved through the allow-list above (like the
+text `MODEL_REGISTRY`) so it can't pull an arbitrary checkpoint. Because the tier switch already routes
+unlocked browsers to the large endpoint, the same 🖼️ toggle yields Turbo on the default tier and
+high-quality SDXL on the PRO tier — automatically, with no tier info exposed to the frontend.
 
 Or drive it from a laptop (torch-free client — pay only for the worker's GPU-seconds). The client
 submits server-side jobs **async** (`/run` + poll `/status`) so the multi-minute battery on a 120B
