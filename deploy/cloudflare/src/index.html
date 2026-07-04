@@ -308,7 +308,8 @@
                 if (accessKey) headers['x-api-key'] = accessKey;
                 const resp = await fetch('/api/chat', {
                     method: 'POST', headers,
-                    body: JSON.stringify({ messages: conversationHistory, pack_name: pack, intensity: intensity, max_tokens: 300 })
+                    // max_tokens is set per tier by the Worker (server-side); not sent here.
+                    body: JSON.stringify({ messages: conversationHistory, pack_name: pack, intensity: intensity })
                 });
                 if (!resp.ok || !resp.body) throw new Error('HTTP ' + resp.status);
                 loadingText.textContent = 'generating…';

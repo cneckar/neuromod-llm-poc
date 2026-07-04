@@ -18,7 +18,7 @@
 import {
   RUNPOD_BASE, buildRunpodInput, corsHeaders, sseEncode,
   parseRunpodStream, isTerminal, checkAuth,
-  UNLOCK_PARAM, resolveEndpointId, tierCookie, stripTierInfo,
+  UNLOCK_PARAM, resolveEndpointId, isProRequest, maxTokensForTier, tierCookie, stripTierInfo,
 } from "./lib.js";
 // The full drag-and-drop demo UI (ported from docs/demo.html, rewired to the real backend).
 import INDEX_HTML from "./index.html";
@@ -90,7 +90,11 @@ async function handleChat(request, env) {
   // resolveEndpointId reads only server-side env + the httpOnly cookie — the client never sees
   // which endpoint it hit. Ignore any client-supplied `model` so the browser can't force a tier.
   delete payload.input.model;
-  const endpointId = resolveEndpointId(request, env);
+  const pro = isProRequest(request, env);
+  const endpointId = pro ? env.RUNPOD_ENDPOINT_ID_PRO : env.RUNPOD_ENDPOINT_ID;
+  // Token budget is set per tier server-side (the frontend can't know which model it hit):
+  // generous for the small/default model, reasonable for the large PRO model.
+  payload.input.max_tokens = maxTokensForTier(pro, env);
   const base = `${RUNPOD_BASE}/${endpointId}`;
   const authHeaders = {
     "content-type": "application/json",
