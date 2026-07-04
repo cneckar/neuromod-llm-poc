@@ -167,6 +167,7 @@ def parse_event(event: Dict[str, Any]) -> Dict[str, Any]:
         "steps": payload.get("steps"),
         "guidance_scale": payload.get("guidance_scale"),
         "seed": payload.get("seed"),
+        "return_latents": bool(payload.get("return_latents", False)),
     }
 
 
@@ -458,7 +459,7 @@ def run_image(parsed: Dict[str, Any], image_model=None) -> Dict[str, Any]:
         intensity=parsed.get("intensity", 0.5),
         width=parsed.get("width"), height=parsed.get("height"),
         steps=parsed.get("steps"), guidance_scale=parsed.get("guidance_scale"),
-        seed=parsed.get("seed"),
+        seed=parsed.get("seed"), return_latents=parsed.get("return_latents", False),
     )
     gpu_seconds = round(time.time() - start, 4)
     result.setdefault("task", "image")

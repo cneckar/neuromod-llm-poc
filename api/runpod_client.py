@@ -152,8 +152,8 @@ class RunPodModelInterface:
     def generate_image(self, prompt: str, pack_name: Optional[str] = None, intensity: float = 0.5,
                        seed: Optional[int] = None, steps: Optional[int] = None,
                        width: Optional[int] = None, height: Optional[int] = None,
-                       image_model: Optional[str] = None, wait: bool = True,
-                       poll_interval: float = 2.0, on_status=None) -> Dict[str, Any]:
+                       image_model: Optional[str] = None, return_latents: bool = False,
+                       wait: bool = True, poll_interval: float = 2.0, on_status=None) -> Dict[str, Any]:
         """One neuromodulated image (``task="image"``). Returns the worker's result dict.
 
         The interesting field is ``image`` — a ``data:image/png;base64,...`` URL. The SD model is
@@ -167,6 +167,8 @@ class RunPodModelInterface:
                      ("height", height), ("image_model", image_model)):
             if v is not None:
                 payload[k] = v
+        if return_latents:
+            payload["return_latents"] = True
         raw = self._run_async(payload, poll_interval=poll_interval, on_status=on_status) if wait \
             else self._runsync(payload)
         out = self._extract_output(raw)

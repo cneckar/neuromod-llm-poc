@@ -63,13 +63,21 @@ def test_generate_image_raises_on_worker_error(monkeypatch):
 # ---- RemoteGenerator (runner) ---------------------------------------------------------------
 
 class FakeClient:
-    def __init__(self):
+    def __init__(self, with_latents=False):
         self.calls = []
+        self.with_latents = with_latents
 
     def generate_image(self, prompt, pack_name=None, intensity=0.5, seed=None, steps=None,
-                       width=None, height=None, image_model=None, poll_interval=2.0):
-        self.calls.append({"pack_name": pack_name, "intensity": intensity, "seed": seed})
-        return {"image": _png_data_url((intensity and 200 or 0, 0, 0)), "pack_applied": pack_name}
+                       width=None, height=None, image_model=None, return_latents=False,
+                       poll_interval=2.0):
+        self.calls.append({"pack_name": pack_name, "intensity": intensity, "seed": seed,
+                           "return_latents": return_latents})
+        out = {"image": _png_data_url((intensity and 200 or 0, 0, 0)), "pack_applied": pack_name}
+        if return_latents and self.with_latents:
+            import numpy as np
+            from api.image_model import latents_to_b64
+            out["latents"] = latents_to_b64(np.zeros((1, 4, 8, 8), dtype="float32"))
+        return out
 
 
 def _remote_with_fake():
@@ -83,7 +91,15 @@ def test_remote_generator_decodes_png_to_image():
     res = gen.generate("lsd", 0.5, 3)
     assert res["success"] is True and res["latents"] is None
     assert res["image"].size == (8, 8)          # decoded PIL image
-    assert gen.client.calls[0] == {"pack_name": "lsd", "intensity": 0.5, "seed": 3}
+    assert gen.client.calls[0]["pack_name"] == "lsd" and gen.client.calls[0]["seed"] == 3
+
+
+def test_remote_generator_decodes_latents_when_returned():
+    gen = RemoteGenerator(prompt="a tree", endpoint_id="ep", api_key="k", size=8, latents=True)
+    gen.client = FakeClient(with_latents=True)
+    res = gen.generate("lsd", 0.5, 3)
+    assert gen.client.calls[0]["return_latents"] is True   # driver asked for latents
+    assert res["latents"] is not None and res["latents"].shape == (1, 4, 8, 8)
 
 
 def test_remote_generator_dose0_is_sober_baseline():

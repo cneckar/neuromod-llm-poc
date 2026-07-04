@@ -167,8 +167,9 @@ Under the hood: `demo/dose_response_runner.py --remote` (its `RemoteGenerator` c
 image task) → `analysis/dose_response_stats.py` (Spearman / Mann-Kendall / BH-FDR / EC50-Hill /
 breakpoints + ribbon plots). The run is **resumable** — re-run the same command to continue. The
 box running the driver needs the metric deps (`torch`, `open_clip_torch`, `lpips`, `scikit-image`)
-but **no SD weights** (those live on the worker). Latent-space `latent_*` metrics aren't produced
-over HTTP (the worker returns pixels only); every image-space + CLIP metric still is.
+but **no SD weights** (those live on the worker). The image task returns the pre-VAE **latents**
+too (`return_latents`), so the driver computes the full **latent-space** spectral metrics with
+parity to a local pipeline (pass `--no-latents` to skip them for a smaller payload).
 
 Or drive it from a laptop (torch-free client — pay only for the worker's GPU-seconds). The client
 submits server-side jobs **async** (`/run` + poll `/status`) so the multi-minute battery on a 120B

@@ -230,20 +230,22 @@ class RemoteGenerator:
     Determinism comes from the ``seed`` the worker seeds its generator with, so dose 0.0 is a
     stable per-seed baseline exactly as in the local path.
 
-    Caveat: the worker returns pixels only, so latent-space metrics (``latent_*``) are unavailable
-    over HTTP and simply omitted — every image-space + CLIP metric (the headline set: SSIM, LPIPS,
-    inter-seed diversity, CLIP drift, pixel energy/variance/entropy) is still computed.
+    With ``latents=True`` the worker also returns the pre-VAE latents, so latent-space spectral
+    metrics (``latent_*``) are computed too — full parity with a local pipeline. Every image-space +
+    CLIP metric (SSIM, LPIPS, inter-seed diversity, CLIP drift, pixel energy/variance/entropy) is
+    always computed.
     """
 
     def __init__(self, prompt: str, endpoint_id: str, api_key: str, steps: int = 4,
                  size: int = 512, poll_interval: float = 2.0, image_model: Optional[str] = None,
-                 timeout: int = 3600):
+                 timeout: int = 3600, latents: bool = True):
         from api.runpod_client import RunPodModelInterface
         self.prompt = prompt
         self.steps = steps
         self.size = size
         self.poll_interval = poll_interval
         self.image_model = image_model
+        self.want_latents = latents
         self.client = RunPodModelInterface(endpoint_id=endpoint_id, api_key=api_key, timeout=timeout)
 
     def generate(self, pack: str, intensity: float, seed: int) -> Dict:
@@ -254,7 +256,8 @@ class RemoteGenerator:
             out = self.client.generate_image(
                 self.prompt, pack_name=pack_arg, intensity=float(intensity), seed=int(seed),
                 steps=self.steps, width=self.size, height=self.size,
-                image_model=self.image_model, poll_interval=self.poll_interval)
+                image_model=self.image_model, return_latents=self.want_latents,
+                poll_interval=self.poll_interval)
         except Exception as e:  # network / worker error — mark failed so run() skips this cell
             return {"image": None, "latents": None, "success": False, "error": str(e)}
         url = out.get("image") if isinstance(out, dict) else None
@@ -264,7 +267,14 @@ class RemoteGenerator:
         b64 = url.split(",", 1)[1] if "," in url else url
         from PIL import Image
         img = Image.open(BytesIO(base64.b64decode(b64))).convert("RGB")
-        return {"image": img, "latents": None, "success": True,
+        latents = None
+        if out.get("latents"):
+            try:
+                from api.image_model import latents_from_b64
+                latents = latents_from_b64(out["latents"])
+            except Exception as e:
+                print(f"  [warn] latent decode failed: {e}")
+        return {"image": img, "latents": latents, "success": True,
                 "pack_applied": out.get("pack_applied"), "neuromod_error": out.get("neuromod_error")}
 
 
@@ -450,6 +460,8 @@ def main(argv=None):
     ap.add_argument("--steps", type=int, default=4, help="Diffusion steps per image (remote)")
     ap.add_argument("--image-size", type=int, default=512, help="Square image size (remote)")
     ap.add_argument("--poll-interval", type=float, default=2.0, help="RunPod /status poll seconds")
+    ap.add_argument("--no-latents", action="store_true",
+                    help="Remote: don't fetch pre-VAE latents (drops latent_* metrics; smaller payload)")
     ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args(argv)
 
@@ -484,7 +496,8 @@ def main(argv=None):
             ap.error("--remote needs --endpoint/--api-key (or RUNPOD_ENDPOINT_ID/RUNPOD_API_KEY)")
         generator = RemoteGenerator(prompt=args.prompt, endpoint_id=args.endpoint,
                                     api_key=args.api_key, steps=args.steps, size=args.image_size,
-                                    poll_interval=args.poll_interval, image_model=args.model)
+                                    poll_interval=args.poll_interval, image_model=args.model,
+                                    latents=not args.no_latents)
         print(f"[remote] Generating on RunPod endpoint {args.endpoint} "
               f"(image_model={args.model}, steps={args.steps}, size={args.image_size}).")
     else:
