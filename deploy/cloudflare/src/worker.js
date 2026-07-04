@@ -130,7 +130,6 @@ async function handleChat(request, env) {
 
   const stream = new ReadableStream({
     async start(controller) {
-      let seen = 0;
       try {
         while (true) {
           const r = await fetch(`${base}/stream/${id}`, { headers: authHeaders });
@@ -139,10 +138,12 @@ async function handleChat(request, env) {
             break;
           }
           const data = await r.json();
-          const outputs = parseRunpodStream(data);
-          for (; seen < outputs.length; seen++) {
+          // RunPod's /stream drains: each poll returns ONLY the outputs generated since the last
+          // poll, not a cumulative list. So emit every item in this batch — do NOT carry a running
+          // index across polls (that skipped most tokens, producing sparse/garbled output).
+          for (const out of parseRunpodStream(data)) {
             // Strip model/tier hints so the client can't tell which endpoint served it.
-            controller.enqueue(encoder.encode(sseEncode(stripTierInfo(outputs[seen]))));
+            controller.enqueue(encoder.encode(sseEncode(stripTierInfo(out))));
           }
           if (isTerminal(data.status)) break;
           await new Promise((res) => setTimeout(res, pollMs));
