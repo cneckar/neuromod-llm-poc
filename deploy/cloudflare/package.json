@@ -5,8 +5,8 @@
   "type": "module",
   "description": "Cloudflare Worker fronting the neuromod RunPod Serverless endpoint (streaming SSE).",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "dev": "npx wrangler dev",
+    "deploy": "npx wrangler deploy",
     "test": "node --test test/*.test.mjs"
   },
   "devDependencies": {
