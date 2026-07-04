@@ -45,6 +45,21 @@ echo "Grid     : 0.0..1.0 step $STEP  ($NDOSE doses)   Seeds: $SEEDS"
 echo "Total    : ~$TOTAL image generations -> $OUT"
 echo
 
+# 0) Preflight: the driver box scores metrics locally, so it needs these — fail fast if missing
+#    (otherwise cells "succeed" with SSIM/LPIPS/diversity silently omitted).
+echo "[0/3] Checking local metric deps…"
+python3 - <<'PY' || { echo "  -> install the missing deps above, then re-run."; exit 1; }
+import importlib.util as u
+need = {"torch": "torch", "PIL": "pillow", "numpy": "numpy",
+        "skimage": "scikit-image", "lpips": "lpips", "open_clip": "open_clip_torch"}
+missing = [pip for mod, pip in need.items() if u.find_spec(mod) is None]
+if missing:
+    print("  MISSING:", " ".join(missing))
+    print("  pip install " + " ".join(missing))
+    raise SystemExit(1)
+print("  all metric backends present (torch, PIL, numpy, scikit-image, lpips, open_clip)")
+PY
+
 # 1) Warm the worker so the first image doesn't eat the whole cold start mid-loop.
 echo "[1/3] Warming worker (loads the SD model once)…"
 python3 - <<PY || echo "  (warmup skipped: $?)"

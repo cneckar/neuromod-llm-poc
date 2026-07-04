@@ -397,6 +397,15 @@ def lpips_available() -> bool:
     return LPIPSScorer.available()
 
 
+def ssim_available() -> bool:
+    """True if scikit-image (SSIM + the SSIM-based diversity fallback) is importable."""
+    try:
+        import skimage.metrics  # noqa: F401
+        return True
+    except Exception:
+        return False
+
+
 # ----------------------------------------------------------------------------------------
 # Inter-seed diversity (mode-collapse) -- LPIPS if available, SSIM/L2 fallback
 # ----------------------------------------------------------------------------------------
@@ -423,7 +432,14 @@ def pairwise_diversity(
         return 0.0
 
     if method == "auto":
-        method = "lpips" if (lpips_model is not None or LPIPSScorer.available()) else "ssim"
+        # Prefer LPIPS, then SSIM, then the dependency-free L2 fallback — never crash a long run
+        # just because a perceptual backend isn't installed.
+        if lpips_model is not None or LPIPSScorer.available():
+            method = "lpips"
+        elif ssim_available():
+            method = "ssim"
+        else:
+            method = "l2"
 
     if method == "lpips":
         model = lpips_model or LPIPSScorer()
