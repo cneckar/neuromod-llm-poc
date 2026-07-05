@@ -27,20 +27,19 @@ jobs:
 
       - name: Build website
         run: |
-          # Create a simple build process
+          # The site lives directly in docs/ (index.html, effects.html, packs.html,
+          # reference-data.js, chat.html, 404.html, CNAME, sitemap.xml, robots.txt, assets).
+          # NOTE: this used to copy docs/website/*, which no longer exists — that made every
+          # deploy fail, so the live site went stale. Publish the real docs/ tree instead.
           mkdir -p _site
-          cp -r docs/website/* _site/
-          
-          # Add a simple sitemap
-          echo '<?xml version="1.0" encoding="UTF-8"?>' > _site/sitemap.xml
-          echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' >> _site/sitemap.xml
-          echo '  <url>' >> _site/sitemap.xml
-          echo '    <loc>https://pihk.ai/</loc>' >> _site/sitemap.xml
-          echo '    <lastmod>'$(date -u +%Y-%m-%d)'</lastmod>' >> _site/sitemap.xml
-          echo '    <changefreq>weekly</changefreq>' >> _site/sitemap.xml
-          echo '    <priority>1.0</priority>' >> _site/sitemap.xml
-          echo '  </url>' >> _site/sitemap.xml
-          echo '</urlset>' >> _site/sitemap.xml
+          cp -r docs/. _site/
+          # Don't publish the in-repo Markdown docs as raw pages at the site root.
+          find _site -maxdepth 1 -name '*.md' -delete
+          # Fail loudly if the expected pages didn't make it in.
+          for f in index.html effects.html packs.html reference-data.js chat.html 404.html CNAME; do
+            test -f "_site/$f" || { echo "MISSING _site/$f"; exit 1; }
+          done
+          echo "Published files:"; ls -la _site
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -48,6 +47,8 @@ jobs:
           path: _site
 
   deploy:
+    # Only publish to production Pages on a real push to main — PR builds just validate.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
