@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PiHK.AI - Pseudopharmaceuticals I Have Known and Inferred</title>
+    <title>PiHK.AI - Perturbagens I Have Known and Inferred</title>
     <meta name="description" content="Exploring the intersection of AI consciousness, neuromodulation, and psychoactive research through large language models.">
     <link rel="icon" type="image/png" href="pihkai.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
@@ -265,6 +265,47 @@
             color: #00CCFF;
             font-weight: bold;
         }
+
+        .explore {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 20px 0 10px 0;
+        }
+
+        .explore-card {
+            display: block;
+            background-color: #1a1a1a;
+            border: 1px solid #333333;
+            border-left: 4px solid #00CCFF;
+            padding: 18px 20px;
+            text-decoration: none;
+            color: #CCCCCC;
+        }
+
+        .explore-card:hover {
+            background-color: #202830;
+            border-color: #00CCFF;
+            color: #CCCCCC;
+        }
+
+        .explore-card .ec-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FFFFFF;
+            margin-bottom: 6px;
+        }
+
+        .explore-card .ec-count {
+            color: #00CCFF;
+            font-weight: bold;
+        }
+
+        .explore-card:hover .ec-title { color: #00CCFF; }
+
+        @media (max-width: 640px) {
+            .explore { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -276,6 +317,8 @@
             </a>
             <nav>
                 <a href="index.html">Home</a>
+                <a href="effects.html">Effects</a>
+                <a href="packs.html">Packs</a>
                 <a href="chat.html">Chat</a>
                 <a href="https://github.com/cneckar/neuromod-llm-poc">GitHub</a>
             </nav>
@@ -283,27 +326,50 @@
     </header>
 
     <div class="container">
-        <h1>Pseudopharmaceuticals I Have Known and Inferred</h1>
+        <h1>Perturbagens I Have Known and Inferred</h1>
         
         <div class="intro">
             <h2>About PiHK.AI</h2>
             <p>
-                Inspired by Alexander Shulgin's <em>PiHKAL</em> (Phenethylamines I Have Known and Loved), 
-                PiHK.AI represents a new frontier in AI research: the systematic exploration of 
+                Inspired by Alexander Shulgin's <em>PiHKAL</em> (Phenethylamines I Have Known and Loved),
+                PiHK.AI represents a new frontier in AI research: the systematic exploration of
                 <span class="highlight">neuromodulatory effects</span> on large language models.
             </p>
             <p>
-                This project enables researchers to study how different "drug-like" interventions affect AI behavior 
-                and cognition through a comprehensive system of neuromodulation packs, psychometric testing, and 
+                We call these interventions <span class="highlight">perturbagens</span> — a term borrowed from
+                drug-discovery screening, where a perturbagen is any agent (a compound, a gene knockdown, anything)
+                that perturbs a system's internal state so you can read out its altered signature. That is exactly
+                what we do here: no drug and no fine-tuning, just precise, reversible perturbations applied to a live
+                model's internal computation — steering vectors added to the residual stream, attention and logit
+                scaling, KV-cache decay, MoE-routing bias — and a measurement layer that reads out the shifted behavior.
+            </p>
+            <p>
+                This project enables researchers to study how these drug-like interventions affect AI behavior
+                and cognition through a comprehensive system of neuromodulation packs, psychometric testing, and
                 statistical analysis.
             </p>
+        </div>
+
+        <h2>Explore the Reference</h2>
+        <p>Two Erowid-style catalogs document the whole system in detail — click any item to read its full entry:</p>
+        <div class="explore">
+            <a class="explore-card" href="effects.html">
+                <div class="ec-title">Effect Index &rarr;</div>
+                <div>All <span class="ec-count">46</span> low-level effects and exactly what each one does inside the
+                     model runtime — forward hooks, logit processors, KV-cache surgery, MoE routing, and the image-generation effects.</div>
+            </a>
+            <a class="explore-card" href="packs.html">
+                <div class="ec-title">Pack Index &rarr;</div>
+                <div>All <span class="ec-count">31</span> "drug" packs — each pack's effect recipe (strengths &amp;
+                     directions), the behavioral artifacts to expect, dose-response findings, and probes to try.</div>
+            </a>
         </div>
 
         <h2>Project Statistics</h2>
         <table class="stats-table">
             <tr>
                 <td>
-                    <div class="number">28</div>
+                    <div class="number">31</div>
                     <div>Research Packs</div>
                 </td>
                 <td>
@@ -316,13 +382,18 @@
                 </td>
                 <td>
                     <div class="number">8</div>
-                    <div>Effect Categories</div>
+                    <div>Drug Categories</div>
                 </td>
             </tr>
         </table>
 
         <h2>Neuromodulation Packs</h2>
-        <p>The system includes 28 essential research packs across 8 main categories:</p>
+        <p>
+            The system includes 31 research packs across 8 main categories. Browse the full
+            <a href="packs.html">Pack Index</a> (recipe, expected artifacts, dose-response findings, and probes
+            for each) and the <a href="effects.html">Effect Index</a> (what each low-level effect does inside the
+            model runtime).
+        </p>
 
         <table>
             <tr>
@@ -337,7 +408,7 @@
             </tr>
             <tr>
                 <td><strong>Stimulants</strong></td>
-                <td>Caffeine, Cocaine, Amphetamine, Methylphenidate, Modafinil</td>
+                <td>Caffeine, Cocaine (+ 10% / 50% / 100% dose-calibration variants), Amphetamine, Methylphenidate, Modafinil</td>
                 <td>Enhanced focus, attention sharpening, cognitive performance</td>
             </tr>
             <tr>
@@ -371,6 +442,10 @@
                 <td>Research-specific cognitive enhancements and specializations</td>
             </tr>
         </table>
+        <p style="font-size:12px;color:#888">
+            31 packs total (per <span class="highlight">packs/config.json</span>), including three dose-calibration
+            variants of cocaine. See every pack's full recipe in the <a href="packs.html">Pack Index</a>.
+        </p>
 
         <h2>Quick Start</h2>
         <pre class="code-block"><code class="language-bash"># Clone the repository
@@ -407,7 +482,7 @@ pack_manager.apply_pack(model, pack)
 
         <h3>Drug Design Laboratory</h3>
         <ul>
-            <li>28 essential research packs</li>
+            <li>31 essential research packs</li>
             <li>46 neuromodulation effects</li>
             <li>5 optimization algorithms (Gradient Descent, Evolutionary, Random Search, Bayesian, RL)</li>
             <li>Comprehensive behavioral targeting</li>
@@ -432,6 +507,8 @@ pack_manager.apply_pack(model, pack)
         <h2>Getting Started</h2>
         <ul>
             <li><a href="https://github.com/cneckar/neuromod-llm-poc">Documentation</a> - Comprehensive guides, API reference, and tutorials</li>
+            <li><a href="effects.html">Effect Index</a> - Every runtime mechanism, explained in detail</li>
+            <li><a href="packs.html">Pack Index</a> - Every "drug" recipe, its artifacts, and probes to try</li>
             <li><a href="chat.html">Interactive Chat</a> - Try the neuromodulation system in your browser</li>
             <li><a href="https://github.com/cneckar/neuromod-llm-poc/discussions">Community</a> - Join discussions with researchers</li>
         </ul>
@@ -452,7 +529,7 @@ pack_manager.apply_pack(model, pack)
             <a href="https://github.com/cneckar/neuromod-llm-poc/blob/main/LICENSE">License</a>
         </div>
         <p>
-            © 2024 PiHK.AI - Pseudopharmaceuticals I Have Known and Inferred.<br>
+            © 2024 PiHK.AI - Perturbagens I Have Known and Inferred.<br>
             Inspired by Alexander Shulgin's PiHKAL.<br>
             Exploring the frontiers of AI consciousness, one parameter at a time.
         </p>

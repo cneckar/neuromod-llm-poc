@@ -1,10 +1,13 @@
 # PiHK.AI Website
 
-This is the static website for PiHK.AI (Parameters I Have Known and Inferred), hosted on GitHub Pages.
+This is the static website for PiHK.AI (Perturbagens I Have Known and Inferred), hosted on GitHub Pages.
 
 ## Files
 
 - `index.html` - Main homepage with project overview and features
+- `effects.html` - Erowid-style **Effect Index**: every low-level neuromodulation effect and exactly what it does inside the model runtime (forward hooks, logit processors, KV-cache surgery, MoE routing). Master/detail; data from `reference-data.js`.
+- `packs.html` - Erowid-style **Pack Index**: every predefined "drug" recipe with strengths/directions, expected behavioral artifacts, dose-response findings, and probes to try. Master/detail; effects cross-link to `effects.html`.
+- `reference-data.js` - `window.EFFECTS` / `window.PACKS` data backing the two index pages (grounded in `neuromod/effects.py` and `packs/config.json`).
 - `chat.html` - Interactive chat embedding the live neuromodulation Worker (chat.pihk.ai)
 - `README.md` - This file
 
