@@ -80,7 +80,7 @@ test("stripTierInfo removes model/tier hints (incl. image_model)", () => {
   assert.equal(stripTierInfo("x"), "x");
 });
 
-test("validateCustomPack: whitelist, clamp, steering_type, cap", () => {
+test("validateCustomPack: whitelist, clamp, sub-type params, cap", () => {
   const cp = validateCustomPack({
     name: "Neurobloom", description: "d",
     effects: [
@@ -98,6 +98,25 @@ test("validateCustomPack: whitelist, clamp, steering_type, cap", () => {
   assert.equal(cp.effects[1].weight, 1);                           // clamped
   assert.equal(cp.effects[1].direction, "down");
   assert.ok(!("parameters" in cp.effects[2]));                     // steering w/ bad type -> no params
+});
+
+test("validateCustomPack: newly-whitelisted effects + soft_projection projection_type", () => {
+  const cp = validateCustomPack({
+    effects: [
+      { effect: "top_p", weight: 0.6, direction: "down" },                                  // sampling extra
+      { effect: "qk_score_scaling", weight: 0.4, direction: "up" },                          // attention extra
+      { effect: "exponential_decay_kv", weight: 0.5, direction: "up" },                      // KV extra
+      { effect: "color_bias", weight: 0.7, direction: "up" },                                // visual extra
+      { effect: "soft_projection", weight: 0.5, direction: "up", parameters: { projection_type: "creative" } },
+      { effect: "soft_projection", weight: 0.5, direction: "up", parameters: { projection_type: "bogus" } }, // bad type dropped
+      { effect: "steering", weight: 0.5, direction: "up", parameters: { projection_type: "creative" } },     // wrong param for steering -> dropped
+      { effect: "expert_mixing", weight: 0.5 },                                              // stub -> not whitelisted
+    ],
+  });
+  assert.equal(cp.effects.length, 7);                              // expert_mixing dropped, rest kept
+  assert.deepEqual(cp.effects[4].parameters, { projection_type: "creative" });
+  assert.ok(!("parameters" in cp.effects[5]));                     // soft_projection w/ bad type -> no params
+  assert.ok(!("parameters" in cp.effects[6]));                     // steering given projection_type -> no params
 });
 
 test("validateCustomPack: empty/invalid -> null; effect cap", () => {

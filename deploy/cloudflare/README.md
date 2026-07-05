@@ -30,8 +30,19 @@ Request body (same shape as the RunPod handler / `ChatRequest`):
 **Chemistry Lab (custom packs).** Instead of `pack_name`, the body may carry a `custom_pack`
 `{ name, description, effects: [{ effect, weight, direction, parameters }] }` built in the UI's
 ⚗️ Chemistry Lab. It's **validated/whitelisted at the edge** (`validateCustomPack`: only known effect
-types, weight clamped to [0,1], ≤8 effects, steering_type checked) before reaching the GPU, then
+types, weight clamped to [0,1], ≤8 effects, sub-type params checked) before reaching the GPU, then
 applied via the neuromod tool's `custom_pack` path.
+
+The whitelist (`CUSTOM_EFFECTS`) exposes 33 of the registry's 46 effects, grouped for the UI:
+sampling/logits, steering & activation, attention surgery, working-memory (KV), and the six
+image-only visual effects. Two effects take an enumerated sub-type (`steering` → `steering_type`,
+`soft_projection` → `projection_type`), validated against `STEERING_TYPES` / `PROJECTION_TYPES`.
+Deliberately **excluded**: effects needing structured inputs a slider can't supply
+(`contrastive_decoding`, `verifier_guided_decoding`, `persona_voice_constraints`, `pulsed_sampler`,
+`token_class_temperature`, `structured_prefaces`, `compute_at_test_scheduling`,
+`retrieval_rate_modulation`), two inert stubs (`expert_mixing`, `activation_additions`), and the
+MoE-routing effects (no-op on the default non-MoE model). The frontend `LAB_EFFECTS` list mirrors
+`CUSTOM_EFFECTS` exactly (unit-checked), so the UI never offers an effect the edge would drop.
 
 ## Setup & deploy
 
