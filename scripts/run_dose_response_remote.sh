@@ -72,9 +72,14 @@ print("  ", c.generate_image("warmup ping", intensity=0.0, seed=0, steps=1, imag
 PY
 
 # 2) The sweep (resumable). --remote reads RUNPOD_ENDPOINT_ID / RUNPOD_API_KEY.
+# Set SAVE_IMAGES=1 to keep every generated PNG under <OUT>_images/ (for montages/figures).
+# ~14,700 PNGs at 512^2 is roughly 5-7 GB for the full 7-pack N=100 grid.
+SAVE_FLAG=""
+[ "${SAVE_IMAGES:-0}" = "1" ] && SAVE_FLAG="--save-images" && \
+  echo "  (SAVE_IMAGES=1 -> keeping all PNGs under ${OUT%.csv}_images/)"
 echo "[2/3] Sweeping (resumable — safe to re-run if interrupted)…"
 python3 demo/dose_response_runner.py \
-  --remote --model "$MODEL" --steps "$STEPS" \
+  --remote --model "$MODEL" --steps "$STEPS" $SAVE_FLAG \
   --packs "$PACKS" --seeds "$SEEDS" --intensity-step "$STEP" \
   --prompt "$PROMPT" --concepts "$CONCEPTS" \
   --out "$OUT"
