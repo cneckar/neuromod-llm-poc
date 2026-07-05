@@ -1,6 +1,6 @@
 # PiHK.AI Website
 
-This is the static website for PiHK.AI (Parameters I Have Known and Inferred), hosted on GitHub Pages.
+This is the static website for PiHK.AI (Perturbagens I Have Known and Inferred), hosted on GitHub Pages.
 
 ## Files
 
