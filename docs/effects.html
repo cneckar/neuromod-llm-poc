@@ -74,10 +74,10 @@
         <p class="lead">
             Every "drug" (pack) in PiHK.AI is a recipe of low-level <strong>effects</strong>: precise, reversible
             interventions installed into a running model at inference time — no fine-tuning, no weight edits.
-            An effect is a forward <code>hook</code>, a <code>LogitsProcessor</code>, a KV-cache subclass, or an
-            MoE-router patch. This page catalogs each one and explains exactly what it does to the runtime,
-            <em>why</em> that mechanism produces the behavior it does, and which knobs control it. Select an effect
-            from the list.
+            An effect is a forward <code>hook</code>, a <code>LogitsProcessor</code>, a KV-cache subclass, an
+            MoE-router patch, or an image-generation transform. This page catalogs all 46 and explains exactly what
+            each does to the runtime, <em>why</em> that mechanism produces the behavior it does, and which knobs
+            control it. Select an effect from the list.
         </p>
 
         <div class="layout">
@@ -108,7 +108,7 @@
 
         // Category display order (matches neuromod/effects.py families).
         var CAT_ORDER = ['steering', 'activation', 'attention', 'sampling', 'decoding',
-                         'logit-bias', 'kv-memory', 'moe-routing', 'other'];
+                         'logit-bias', 'kv-memory', 'moe-routing', 'visual', 'other'];
         function catRank(c) { var i = CAT_ORDER.indexOf(c); return i < 0 ? 99 : i; }
 
         function render(filter) {

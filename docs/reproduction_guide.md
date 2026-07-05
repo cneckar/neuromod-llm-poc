@@ -69,7 +69,7 @@ python scripts/validate_models.py --model "meta-llama/Meta-Llama-3.1-70B"
 python scripts/validate_packs.py
 ```
 
-**Expected Output**: All 28 packs load successfully, all effects validated.
+**Expected Output**: All 31 packs load successfully, all effects validated.
 
 ### 1.3 Blinding Verification
 

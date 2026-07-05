@@ -265,6 +265,47 @@
             color: #00CCFF;
             font-weight: bold;
         }
+
+        .explore {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 20px 0 10px 0;
+        }
+
+        .explore-card {
+            display: block;
+            background-color: #1a1a1a;
+            border: 1px solid #333333;
+            border-left: 4px solid #00CCFF;
+            padding: 18px 20px;
+            text-decoration: none;
+            color: #CCCCCC;
+        }
+
+        .explore-card:hover {
+            background-color: #202830;
+            border-color: #00CCFF;
+            color: #CCCCCC;
+        }
+
+        .explore-card .ec-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FFFFFF;
+            margin-bottom: 6px;
+        }
+
+        .explore-card .ec-count {
+            color: #00CCFF;
+            font-weight: bold;
+        }
+
+        .explore-card:hover .ec-title { color: #00CCFF; }
+
+        @media (max-width: 640px) {
+            .explore { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -309,11 +350,26 @@
             </p>
         </div>
 
+        <h2>Explore the Reference</h2>
+        <p>Two Erowid-style catalogs document the whole system in detail — click any item to read its full entry:</p>
+        <div class="explore">
+            <a class="explore-card" href="effects.html">
+                <div class="ec-title">Effect Index &rarr;</div>
+                <div>All <span class="ec-count">46</span> low-level effects and exactly what each one does inside the
+                     model runtime — forward hooks, logit processors, KV-cache surgery, MoE routing, and the image-generation effects.</div>
+            </a>
+            <a class="explore-card" href="packs.html">
+                <div class="ec-title">Pack Index &rarr;</div>
+                <div>All <span class="ec-count">31</span> "drug" packs — each pack's effect recipe (strengths &amp;
+                     directions), the behavioral artifacts to expect, dose-response findings, and probes to try.</div>
+            </a>
+        </div>
+
         <h2>Project Statistics</h2>
         <table class="stats-table">
             <tr>
                 <td>
-                    <div class="number">28</div>
+                    <div class="number">31</div>
                     <div>Research Packs</div>
                 </td>
                 <td>
@@ -326,7 +382,7 @@
                 </td>
                 <td>
                     <div class="number">8</div>
-                    <div>Effect Categories</div>
+                    <div>Drug Categories</div>
                 </td>
             </tr>
         </table>
@@ -352,7 +408,7 @@
             </tr>
             <tr>
                 <td><strong>Stimulants</strong></td>
-                <td>Caffeine, Cocaine, Amphetamine, Methylphenidate, Modafinil</td>
+                <td>Caffeine, Cocaine (+ 10% / 50% / 100% dose-calibration variants), Amphetamine, Methylphenidate, Modafinil</td>
                 <td>Enhanced focus, attention sharpening, cognitive performance</td>
             </tr>
             <tr>
@@ -386,6 +442,10 @@
                 <td>Research-specific cognitive enhancements and specializations</td>
             </tr>
         </table>
+        <p style="font-size:12px;color:#888">
+            31 packs total (per <span class="highlight">packs/config.json</span>), including three dose-calibration
+            variants of cocaine. See every pack's full recipe in the <a href="packs.html">Pack Index</a>.
+        </p>
 
         <h2>Quick Start</h2>
         <pre class="code-block"><code class="language-bash"># Clone the repository
@@ -422,7 +482,7 @@ pack_manager.apply_pack(model, pack)
 
         <h3>Drug Design Laboratory</h3>
         <ul>
-            <li>28 essential research packs</li>
+            <li>31 essential research packs</li>
             <li>46 neuromodulation effects</li>
             <li>5 optimization algorithms (Gradient Descent, Evolutionary, Random Search, Bayesian, RL)</li>
             <li>Comprehensive behavioral targeting</li>
