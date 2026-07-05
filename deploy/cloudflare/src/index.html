@@ -232,17 +232,46 @@
         const categoryOrder = ["custom", "controls", "stimulants", "psychedelics", "depressants", "dissociatives", "empathogens", "cannabis", "specialized"];
         const categoryNames = { custom: "Your Lab", controls: "Controls", stimulants: "Stimulants", psychedelics: "Psychedelics", depressants: "Depressants", dissociatives: "Dissociatives", empathogens: "Empathogens", cannabis: "Cannabis", specialized: "Specialized" };
 
-        // Chemistry lab: effect palette (mirrors the Worker's whitelist in lib.js) + steering flavors.
-        const LAB_EFFECTS = {
-            steering: { label: "Steering (concept vector)", steering: true },
-            temperature: { label: "Temperature / entropy" },
-            noise_injection: { label: "Noise injection" },
-            kv_decay: { label: "Memory decay (KV)" },
-            style_affect_logit_bias: { label: "Tone / style bias" },
-            risk_preference_steering: { label: "Risk preference" },
-            random_direction: { label: "Placebo (random direction)" },
-        };
+        // Chemistry lab: effect palette (mirrors the Worker's whitelist in lib.js) + sub-type flavors.
+        // `group` -> <optgroup>; `typeParam`/`typeValues` -> a second dropdown for effects that take
+        // one enumerated sub-type (steering flavor, projection mode).
         const STEERING_TYPES = ["associative", "visionary", "synesthesia", "ego_thin", "playful", "salient", "goal_focused", "prosocial", "abstract", "affiliative"];
+        const PROJECTION_TYPES = ["creative", "analytical", "emotional", "spatial", "linguistic"];
+        const LAB_EFFECTS = {
+            temperature:               { label: "Temperature / entropy",       group: "Sampling & logits" },
+            top_p:                     { label: "Top-p (nucleus)",             group: "Sampling & logits" },
+            frequency_penalty:         { label: "Frequency penalty",           group: "Sampling & logits" },
+            presence_penalty:          { label: "Presence penalty",            group: "Sampling & logits" },
+            style_affect_logit_bias:   { label: "Tone / style bias",           group: "Sampling & logits" },
+            risk_preference_steering:  { label: "Risk preference",             group: "Sampling & logits" },
+            steering:                  { label: "Steering (concept vector)",   group: "Steering & activation", typeParam: "steering_type",   typeValues: STEERING_TYPES },
+            soft_projection:           { label: "Soft projection (conceptor)", group: "Steering & activation", typeParam: "projection_type", typeValues: PROJECTION_TYPES },
+            layer_wise_gain:           { label: "Layer-wise gain",             group: "Steering & activation" },
+            lexical_jitter:            { label: "Lexical jitter (embedding)",  group: "Steering & activation" },
+            noise_injection:           { label: "Noise injection",             group: "Steering & activation" },
+            random_direction:          { label: "Placebo (random direction)",  group: "Steering & activation" },
+            random_orthogonal_steering:{ label: "Placebo (orthogonal)",        group: "Steering & activation" },
+            qk_score_scaling:          { label: "QK score scaling",            group: "Attention" },
+            head_reweighting:          { label: "Head reweighting",            group: "Attention" },
+            head_masking_dropout:      { label: "Head masking / dropout",      group: "Attention" },
+            positional_bias_tweak:     { label: "Positional bias",             group: "Attention" },
+            attention_oscillation:     { label: "Attention oscillation",       group: "Attention" },
+            attention_sinks_anchors:   { label: "Attention sinks / anchors",   group: "Attention" },
+            attention_focus:           { label: "Attention focus (induction)", group: "Attention" },
+            attention_masking:         { label: "Attention masking",           group: "Attention" },
+            kv_decay:                  { label: "Memory decay (KV)",           group: "Working memory (KV)" },
+            kv_compression:            { label: "KV compression",              group: "Working memory (KV)" },
+            exponential_decay_kv:      { label: "Exponential KV decay",        group: "Working memory (KV)" },
+            truncation_kv:             { label: "KV truncation (keep last N)", group: "Working memory (KV)" },
+            stride_compression_kv:     { label: "KV stride compression",       group: "Working memory (KV)" },
+            segment_gains_kv:          { label: "KV segment gains",            group: "Working memory (KV)" },
+            color_bias:                { label: "Color bias (image)",          group: "Visual — image only" },
+            style_transfer:            { label: "Style transfer (image)",      group: "Visual — image only" },
+            composition_bias:          { label: "Composition bias (image)",    group: "Visual — image only" },
+            visual_entropy:            { label: "Visual entropy (image)",      group: "Visual — image only" },
+            synesthetic_mapping:       { label: "Synesthetic mapping (image)", group: "Visual — image only" },
+            motion_blur:               { label: "Motion blur (image)",         group: "Visual — image only" },
+        };
         const customDrugs = {};   // key "custom:<name>" -> { name, description, effects:[...] } (the def)
 
         let activePacks = [];
@@ -476,21 +505,30 @@
             const row = document.createElement('div');
             row.className = 'effect-row';
             const sel = document.createElement('select');
-            Object.entries(LAB_EFFECTS).forEach(([k, v]) => {
-                const o = document.createElement('option'); o.value = k; o.textContent = v.label; sel.appendChild(o);
+            // Group the effects into <optgroup>s by their `group`.
+            const groups = {};
+            Object.entries(LAB_EFFECTS).forEach(([k, v]) => { (groups[v.group] = groups[v.group] || []).push([k, v]); });
+            Object.entries(groups).forEach(([gname, items]) => {
+                const og = document.createElement('optgroup'); og.label = gname;
+                items.forEach(([k, v]) => { const o = document.createElement('option'); o.value = k; o.textContent = v.label; og.appendChild(o); });
+                sel.appendChild(og);
             });
-            // steering-type dropdown (shown only for the steering effect)
+            // sub-type dropdown (shown only for effects that declare a typeParam, e.g. steering/soft_projection)
             const stSel = document.createElement('select');
-            STEERING_TYPES.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t.replace('_', ' '); stSel.appendChild(o); });
+            function fillTypeOptions() {
+                const meta = LAB_EFFECTS[sel.value];
+                stSel.innerHTML = '';
+                (meta.typeValues || []).forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t.replace(/_/g, ' '); stSel.appendChild(o); });
+            }
             const weight = document.createElement('input');
             weight.type = 'range'; weight.min = '0.05'; weight.max = '1'; weight.step = '0.05'; weight.value = '0.5';
             const wlab = document.createElement('div'); wlab.className = 'wlabel';
             const dir = document.createElement('button'); dir.type = 'button'; dir.className = 'dir-toggle'; dir.textContent = '▲ up'; dir.dataset.dir = 'up';
             const rm = document.createElement('button'); rm.type = 'button'; rm.className = 'rm-row'; rm.textContent = '×';
-            const midCol = document.createElement('div');   // holds weight OR steering-type
+            const midCol = document.createElement('div');   // holds weight (+ sub-type dropdown when applicable)
             function renderMid() {
                 midCol.innerHTML = '';
-                if (LAB_EFFECTS[sel.value].steering) { midCol.appendChild(stSel); }
+                if (LAB_EFFECTS[sel.value].typeParam) { fillTypeOptions(); midCol.appendChild(stSel); }
                 midCol.appendChild(weight);
             }
             function renderW() { wlab.textContent = parseFloat(weight.value).toFixed(2); }
@@ -501,15 +539,25 @@
                 dir.dataset.dir = d; dir.textContent = d === 'up' ? '▲ up' : '▼ down'; dir.classList.toggle('down', d === 'down');
             });
             rm.addEventListener('click', () => row.remove());
-            if (preset) { sel.value = preset.effect; weight.value = preset.weight; }
+            if (preset) {
+                if (LAB_EFFECTS[preset.effect]) sel.value = preset.effect;
+                if (preset.weight != null) weight.value = preset.weight;
+                if (preset.direction === 'down') { dir.dataset.dir = 'down'; dir.textContent = '▼ down'; dir.classList.add('down'); }
+            }
             row.appendChild(sel); row.appendChild(midCol); row.appendChild(dir); row.appendChild(wlab); row.appendChild(rm);
             row._read = () => {
                 const e = { effect: sel.value, weight: parseFloat(weight.value), direction: dir.dataset.dir };
-                if (LAB_EFFECTS[sel.value].steering) e.parameters = { steering_type: stSel.value };
+                const meta = LAB_EFFECTS[sel.value];
+                if (meta.typeParam) e.parameters = { [meta.typeParam]: stSel.value };
                 return e;
             };
             document.getElementById('labEffects').appendChild(row);
             renderMid(); renderW();
+            // Apply a preset's sub-type after the type dropdown is populated by renderMid().
+            const pmeta = LAB_EFFECTS[sel.value];
+            if (preset && pmeta.typeParam && preset.parameters && preset.parameters[pmeta.typeParam]) {
+                stSel.value = preset.parameters[pmeta.typeParam];
+            }
         }
         function openLab() {
             const box = document.getElementById('labEffects'); box.innerHTML = '';

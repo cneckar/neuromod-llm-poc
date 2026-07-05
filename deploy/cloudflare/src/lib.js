@@ -119,17 +119,56 @@ function num(value, fallback) {
 // The effect types the browser may compose into a custom "drug". Whitelisted (a custom pack from an
 // untrusted browser reaches the GPU) — only these names, matching neuromod.effects' registry, are
 // forwarded; anything else is dropped. `steering: true` marks effects that take a steering_type.
-export const CUSTOM_EFFECTS = {
-  steering: { label: "Steering (concept vector)", steering: true },
-  temperature: { label: "Temperature / entropy" },
-  noise_injection: { label: "Noise injection" },
-  kv_decay: { label: "Memory decay (KV)" },
-  style_affect_logit_bias: { label: "Tone / style bias" },
-  risk_preference_steering: { label: "Risk preference" },
-  random_direction: { label: "Placebo (random direction)" },
-};
 export const STEERING_TYPES = ["associative", "visionary", "synesthesia", "ego_thin", "playful",
   "salient", "goal_focused", "prosocial", "abstract", "affiliative"];
+export const PROJECTION_TYPES = ["creative", "analytical", "emotional", "spatial", "linguistic"];
+
+// `group` drives the UI's <optgroup>s. `typeParam`/`typeValues` mark effects that also take one
+// enumerated sub-type parameter (e.g. steering's flavor, soft_projection's mode). Excluded on
+// purpose: effects that need structured inputs a slider can't supply (contrastive_decoding needs an
+// amateur model, persona_voice_constraints a persona spec, pulsed_sampler an interval, etc.), the
+// two inert stubs (expert_mixing, activation_additions), and the MoE-routing effects (no-op on the
+// default non-MoE model).
+export const CUSTOM_EFFECTS = {
+  // Sampling & logits — decoding-time; model-agnostic.
+  temperature:               { label: "Temperature / entropy",       group: "Sampling & logits" },
+  top_p:                     { label: "Top-p (nucleus)",             group: "Sampling & logits" },
+  frequency_penalty:         { label: "Frequency penalty",           group: "Sampling & logits" },
+  presence_penalty:          { label: "Presence penalty",            group: "Sampling & logits" },
+  style_affect_logit_bias:   { label: "Tone / style bias",           group: "Sampling & logits" },
+  risk_preference_steering:  { label: "Risk preference",             group: "Sampling & logits" },
+  // Steering & activation — residual-stream / hidden-state surgery.
+  steering:                  { label: "Steering (concept vector)",   group: "Steering & activation", typeParam: "steering_type",   typeValues: STEERING_TYPES },
+  soft_projection:           { label: "Soft projection (conceptor)", group: "Steering & activation", typeParam: "projection_type", typeValues: PROJECTION_TYPES },
+  layer_wise_gain:           { label: "Layer-wise gain",             group: "Steering & activation" },
+  lexical_jitter:            { label: "Lexical jitter (embedding)",  group: "Steering & activation" },
+  noise_injection:           { label: "Noise injection",             group: "Steering & activation" },
+  random_direction:          { label: "Placebo (random direction)",  group: "Steering & activation" },
+  random_orthogonal_steering:{ label: "Placebo (orthogonal)",        group: "Steering & activation" },
+  // Attention surgery — general transformer hooks.
+  qk_score_scaling:          { label: "QK score scaling",            group: "Attention" },
+  head_reweighting:          { label: "Head reweighting",            group: "Attention" },
+  head_masking_dropout:      { label: "Head masking / dropout",      group: "Attention" },
+  positional_bias_tweak:     { label: "Positional bias",             group: "Attention" },
+  attention_oscillation:     { label: "Attention oscillation",       group: "Attention" },
+  attention_sinks_anchors:   { label: "Attention sinks / anchors",   group: "Attention" },
+  attention_focus:           { label: "Attention focus (induction)", group: "Attention" },
+  attention_masking:         { label: "Attention masking",           group: "Attention" },
+  // Working memory — KV-cache manipulation.
+  kv_decay:                  { label: "Memory decay (KV)",           group: "Working memory (KV)" },
+  kv_compression:            { label: "KV compression",              group: "Working memory (KV)" },
+  exponential_decay_kv:      { label: "Exponential KV decay",        group: "Working memory (KV)" },
+  truncation_kv:             { label: "KV truncation (keep last N)", group: "Working memory (KV)" },
+  stride_compression_kv:     { label: "KV stride compression",       group: "Working memory (KV)" },
+  segment_gains_kv:          { label: "KV segment gains",            group: "Working memory (KV)" },
+  // Visual — only affect Stable-Diffusion image generation; inert in a text chat.
+  color_bias:                { label: "Color bias (image)",          group: "Visual — image only" },
+  style_transfer:            { label: "Style transfer (image)",      group: "Visual — image only" },
+  composition_bias:          { label: "Composition bias (image)",    group: "Visual — image only" },
+  visual_entropy:            { label: "Visual entropy (image)",      group: "Visual — image only" },
+  synesthetic_mapping:       { label: "Synesthetic mapping (image)", group: "Visual — image only" },
+  motion_blur:               { label: "Motion blur (image)",         group: "Visual — image only" },
+};
 const MAX_CUSTOM_EFFECTS = 8;
 
 /**
@@ -145,9 +184,9 @@ export function validateCustomPack(cp) {
     const weight = Math.max(0, Math.min(1, Number(e.weight)));     // Pack validation requires [0,1]
     if (!Number.isFinite(weight) || weight === 0) continue;
     const out = { effect: e.effect, weight, direction: e.direction === "down" ? "down" : "up" };
-    if (CUSTOM_EFFECTS[e.effect].steering && e.parameters &&
-        STEERING_TYPES.includes(e.parameters.steering_type)) {
-      out.parameters = { steering_type: e.parameters.steering_type };
+    const meta = CUSTOM_EFFECTS[e.effect];
+    if (meta.typeParam && e.parameters && meta.typeValues.includes(e.parameters[meta.typeParam])) {
+      out.parameters = { [meta.typeParam]: e.parameters[meta.typeParam] };
     }
     effects.push(out);
   }
