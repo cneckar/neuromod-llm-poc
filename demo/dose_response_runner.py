@@ -153,6 +153,21 @@ def _load_done_keys(csv_path: str) -> set:
     return done
 
 
+def _packs_with_diversity(csv_path: str) -> set:
+    """Packs that already have their inter-seed diversity ('ALL' seed) rows written.
+
+    A pack with diversity done AND all its cells done is fully complete and can be skipped on
+    resume without regenerating any images (diversity is the only thing that needs the images)."""
+    packs = set()
+    if not os.path.exists(csv_path):
+        return packs
+    with open(csv_path, newline="") as fh:
+        for row in csv.DictReader(fh):
+            if row.get("seed") == "ALL" and row.get("metric") == "interseed_diversity":
+                packs.add(row["pack"])
+    return packs
+
+
 def _open_writer(csv_path: str):
     os.makedirs(os.path.dirname(os.path.abspath(csv_path)), exist_ok=True)
     exists = os.path.exists(csv_path) and os.path.getsize(csv_path) > 0
@@ -292,6 +307,7 @@ def run(
     csv_path: str,
     concepts: Optional[List[str]] = None,
     diversity_method: str = "auto",
+    diversity_max_pairs: int = 300,
     verbose: bool = True,
     image_dir: Optional[str] = None,
     safety_oracle=None,
@@ -313,6 +329,7 @@ def run(
       that is recorded too, giving the two independent detectors the analysis needs.
     """
     done = _load_done_keys(csv_path)
+    div_done = _packs_with_diversity(csv_path)  # packs whose diversity ('ALL') rows already exist
     # Warn LOUDLY about any missing metric backend up front — otherwise cells "succeed" with the
     # affected metrics silently omitted, and you only find out much later (or via a diversity crash).
     missing = []
@@ -337,6 +354,16 @@ def run(
     count = 0
     try:
         for pack in packs:
+            # A pack that already has BOTH all its cells and its diversity rows is fully complete —
+            # skip it entirely on resume (no regeneration; diversity is the only thing needing images).
+            pack_complete = pack in div_done and all(
+                (pack, float(i), int(s)) in done for i in intensities for s in seeds)
+            if pack_complete:
+                count += len(intensities) * len(seeds)
+                if verbose:
+                    print(f"  [{pack}] fully complete — skipping (all cells + diversity present)")
+                continue
+            need_images = pack not in div_done  # only regenerate done cells if we still owe diversity
             # For diversity, retain images per dose across seeds.
             images_by_dose: Dict[float, List] = {i: [] for i in intensities}
             for seed in seeds:
@@ -345,6 +372,10 @@ def run(
                 for intensity in sorted(intensities):
                     count += 1
                     key = (pack, float(intensity), int(seed))
+                    # Cell already recorded: skip WITHOUT regenerating unless we still need its image
+                    # for this pack's diversity (i.e. diversity rows aren't written yet).
+                    if key in done and not need_images:
+                        continue
                     result = generator.generate(pack, intensity, seed)
                     if not result.get("success", False) or result.get("image") is None:
                         if verbose:
@@ -409,13 +440,22 @@ def run(
                         print(f"  [{count}/{total}] {pack} i={intensity} seed={seed} "
                               f"({len(metrics)} metrics)")
 
-            # Inter-seed diversity per dose (mode-collapse metric).
-            for intensity, imgs in images_by_dose.items():
-                if len(imgs) < 2:
-                    continue
-                div = pdm.pairwise_diversity(imgs, method=diversity_method, lpips_model=lp)
-                _write_metrics(writer, pack, float(intensity), "ALL", {"interseed_diversity": div})
-                fh.flush()
+            # Inter-seed diversity per dose (mode-collapse metric). Capped at diversity_max_pairs
+            # (deterministic subsample) — full pairwise LPIPS over N=100 images x 21 doses is
+            # ~100k CPU ops and looks like a hang. Skipped if this pack's diversity is already done.
+            if pack not in div_done:
+                doses_sorted = sorted(images_by_dose.items())
+                for di, (intensity, imgs) in enumerate(doses_sorted, 1):
+                    if len(imgs) < 2:
+                        continue
+                    if verbose:
+                        print(f"  [{pack}] diversity {di}/{len(doses_sorted)} "
+                              f"(dose {intensity}, {len(imgs)} imgs, <= {diversity_max_pairs} pairs)…",
+                              flush=True)
+                    div = pdm.pairwise_diversity(imgs, method=diversity_method, lpips_model=lp,
+                                                 max_pairs=diversity_max_pairs)
+                    _write_metrics(writer, pack, float(intensity), "ALL", {"interseed_diversity": div})
+                    fh.flush()
     finally:
         fh.close()
 
@@ -442,6 +482,8 @@ def main(argv=None):
     ap.add_argument("--concepts", default=None,
                     help="Comma-separated off-prompt concepts for CLIP proximity (Latent Specter)")
     ap.add_argument("--diversity-method", default="auto", choices=["auto", "lpips", "ssim", "l2"])
+    ap.add_argument("--diversity-max-pairs", type=int, default=300,
+                    help="Cap pairwise comparisons for inter-seed diversity (deterministic subsample)")
     ap.add_argument("--image-dir", default=None,
                     help="Directory to save generated images (for hero montages; flagged ones redacted)")
     ap.add_argument("--save-images", action="store_true",
@@ -518,6 +560,7 @@ def main(argv=None):
         csv_path=args.out,
         concepts=concepts,
         diversity_method=args.diversity_method,
+        diversity_max_pairs=args.diversity_max_pairs,
         verbose=not args.quiet,
         image_dir=image_dir,
         safety_oracle=safety_oracle,
