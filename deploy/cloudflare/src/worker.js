@@ -188,7 +188,18 @@ async function handleChat(request, env, ctx) {
             // Strip model/tier hints so the client can't tell which endpoint served it.
             controller.enqueue(encoder.encode(sseEncode(stripTierInfo(out))));
           }
-          if (isTerminal(data.status)) break;
+          if (isTerminal(data.status)) {
+            // Surface a failed/cancelled job (and an image task that produced nothing) instead of
+            // ending on a bare [DONE] — otherwise the UI just "times out" with no reason.
+            if (data.status !== "COMPLETED" && !collected.length) {
+              controller.enqueue(encoder.encode(sseEncode({
+                error: `job ${data.status}` + (data.error ? `: ${String(data.error).slice(0, 300)}` : ""),
+              })));
+            } else if (!collected.length) {
+              controller.enqueue(encoder.encode(sseEncode({ error: "no output from worker" })));
+            }
+            break;
+          }
           await new Promise((res) => setTimeout(res, pollMs));
         }
       } catch (err) {

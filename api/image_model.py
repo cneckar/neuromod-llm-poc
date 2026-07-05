@@ -174,13 +174,14 @@ class NeuromodImageInterface:
                     getattr(pipe, opt)()
                 except Exception:
                     pass
-            # SDXL's VAE is numerically unstable in fp16 (produces all-black / NaN images). Keep it
-            # in fp32: `force_upcast` only fixes diffusers' OWN decode, NOT our manual latent decode
-            # (_decode_latents), so we must actually upcast the module — else return_latents=True
-            # yields black images and every image-space metric is garbage.
+            # SDXL's VAE is numerically unstable in fp16 (black/NaN). force_upcast makes diffusers'
+            # OWN decode (the normal .images[0] path) upcast on the fly — leave the module in fp16
+            # so that path keeps working. Our manual latent decode (_decode_latents) upcasts locally.
+            # NOTE: do NOT permanently move the VAE to fp32 — that makes diffusers skip its own
+            # upcast (needs_upcasting=False) and then feed fp16 latents into an fp32 VAE -> the
+            # normal path errors and every web image fails.
             try:
                 pipe.vae.config.force_upcast = True
-                pipe.vae = pipe.vae.to(torch.float32)
             except Exception:
                 pass
 
@@ -284,19 +285,28 @@ class NeuromodImageInterface:
         self.generation_params = {}
 
     def _decode_latents(self, latents):
-        """Manually VAE-decode pre-VAE latents to a PIL image (fp32 VAE for SDXL stability)."""
+        """Manually VAE-decode pre-VAE latents to a PIL image.
+
+        SDXL's VAE NaNs in fp16, so decode in fp32 — but only LOCALLY: upcast, decode, then restore
+        the VAE's original dtype so the normal .images[0] path (which relies on fp16 + force_upcast)
+        is unaffected.
+        """
         import torch
         vae = self.pipeline.vae
-        if vae.dtype != torch.float32:      # fp16 SDXL VAE -> NaN/black; decode in fp32
-            vae = vae.to(torch.float32)
-        sf = getattr(getattr(vae, "config", None), "scaling_factor", 0.18215) or 0.18215
-        lat = (latents.to(torch.float32) / sf)
-        img = vae.decode(lat, return_dict=False)[0]
+        orig_dtype = vae.dtype
+        if orig_dtype != torch.float32:
+            vae.to(torch.float32)
+        try:
+            sf = getattr(getattr(vae, "config", None), "scaling_factor", 0.18215) or 0.18215
+            img = vae.decode((latents.to(torch.float32) / sf), return_dict=False)[0]
+        finally:
+            if orig_dtype != torch.float32:
+                vae.to(orig_dtype)   # restore so the normal decode path keeps working
         if hasattr(self.pipeline, "image_processor"):
-            return self.pipeline.image_processor.postprocess(img, output_type="pil")[0]
+            return self.pipeline.image_processor.postprocess(img.to(torch.float32), output_type="pil")[0]
         import numpy as np
         from PIL import Image
-        arr = (img.detach() / 2 + 0.5).clamp(0, 1).cpu().permute(0, 2, 3, 1).numpy()[0]
+        arr = (img.detach().float() / 2 + 0.5).clamp(0, 1).cpu().permute(0, 2, 3, 1).numpy()[0]
         return Image.fromarray((arr * 255).astype(np.uint8))
 
     # -- generation --------------------------------------------------------------------------
