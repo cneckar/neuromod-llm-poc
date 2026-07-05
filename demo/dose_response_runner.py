@@ -153,6 +153,15 @@ def _load_done_keys(csv_path: str) -> set:
     return done
 
 
+def _looks_blank(image) -> bool:
+    """True if an image is (near-)constant — the signature of a broken decode (black/NaN VAE)."""
+    try:
+        arr = np.asarray(image, dtype=np.float32)
+        return float(arr.std()) < 1.0   # a real generation has plenty of pixel variance
+    except Exception:
+        return False
+
+
 def _packs_with_diversity(csv_path: str) -> set:
     """Packs that already have their inter-seed diversity ('ALL' seed) rows written.
 
@@ -352,6 +361,7 @@ def run(
 
     total = len(packs) * len(intensities) * len(seeds)
     count = 0
+    _blank_warned = [False]   # one-shot blank-image warning (mutable for closure-free scope)
     try:
         for pack in packs:
             # A pack that already has BOTH all its cells and its diversity rows is fully complete —
@@ -383,6 +393,14 @@ def run(
                         continue
                     image = result["image"]
                     latents = result.get("latents")
+
+                    if not _blank_warned[0] and _looks_blank(image):
+                        _blank_warned[0] = True
+                        print("\n" + "!" * 78)
+                        print("WARNING: generated image is (near-)BLANK — the worker's decode is likely broken")
+                        print("  (e.g. SDXL fp16-VAE NaN -> black). Image-space metrics will be garbage;")
+                        print("  fix/redeploy the worker before trusting this run. (latents may still be OK.)")
+                        print("!" * 78 + "\n", flush=True)
 
                     if intensity == 0.0:
                         baseline_image = image

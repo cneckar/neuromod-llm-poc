@@ -174,9 +174,13 @@ class NeuromodImageInterface:
                     getattr(pipe, opt)()
                 except Exception:
                     pass
-            # SDXL's VAE is numerically unstable in fp16 (black/NaN images); let diffusers upcast.
+            # SDXL's VAE is numerically unstable in fp16 (produces all-black / NaN images). Keep it
+            # in fp32: `force_upcast` only fixes diffusers' OWN decode, NOT our manual latent decode
+            # (_decode_latents), so we must actually upcast the module — else return_latents=True
+            # yields black images and every image-space metric is garbage.
             try:
                 pipe.vae.config.force_upcast = True
+                pipe.vae = pipe.vae.to(torch.float32)
             except Exception:
                 pass
 
@@ -281,9 +285,12 @@ class NeuromodImageInterface:
 
     def _decode_latents(self, latents):
         """Manually VAE-decode pre-VAE latents to a PIL image (fp32 VAE for SDXL stability)."""
+        import torch
         vae = self.pipeline.vae
+        if vae.dtype != torch.float32:      # fp16 SDXL VAE -> NaN/black; decode in fp32
+            vae = vae.to(torch.float32)
         sf = getattr(getattr(vae, "config", None), "scaling_factor", 0.18215) or 0.18215
-        lat = (latents / sf).to(vae.dtype)
+        lat = (latents.to(torch.float32) / sf)
         img = vae.decode(lat, return_dict=False)[0]
         if hasattr(self.pipeline, "image_processor"):
             return self.pipeline.image_processor.postprocess(img, output_type="pil")[0]
