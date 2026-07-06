@@ -208,3 +208,7 @@ temp/
 
 # Jupyter notebooks (optional - uncomment if you don't want to track them)
 # *.ipynb
+
+# Conference submission figures: keep these despite the global *.png ignore above.
+!outputs/UnpromptedSubmission/
+!outputs/UnpromptedSubmission/*.png
