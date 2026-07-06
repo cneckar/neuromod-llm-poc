@@ -24,13 +24,14 @@ OUTDIR="${OUTDIR:-outputs/ood}"
 mkdir -p "$OUTDIR"
 
 # Pull the in-distribution + OOD prompt battery from the analysis module (single source of truth).
-readarray -t LINES < <(python3 - <<'PY'
+# (Captured into a TSV string rather than `readarray`, which macOS's stock bash 3.2 lacks.)
+PROMPTS_TSV="$(python3 - <<'PY'
 import analysis.ood_capacity as oc
 print(f"tree\t{oc.INDIST_PROMPT}")
 for label, prompt in oc.OOD_PROMPTS.items():
     print(f"{label}\t{prompt}")
 PY
-)
+)"
 
 sweep () {  # label  prompt
   local label="$1" prompt="$2" csv="$OUTDIR/$1.csv"
@@ -44,13 +45,15 @@ sweep () {  # label  prompt
 
 OOD_ARGS=()
 INDIST_ARG=""
-for line in "${LINES[@]}"; do
-  label="${line%%$'\t'*}"; prompt="${line#*$'\t'}"
+# Here-string keeps the loop in the current shell (so INDIST_ARG/OOD_ARGS persist) and
+# works on bash 3.2. Skip blank lines.
+while IFS=$'\t' read -r label prompt; do
+  [ -n "$label" ] || continue
   pair="$(sweep "$label" "$prompt" | tail -1)"
   if [ "$label" = "tree" ]; then INDIST_ARG="$pair"; else OOD_ARGS+=("$pair"); fi
-done
+done <<< "$PROMPTS_TSV"
 
-OOD_JOINED=$(IFS=,; echo "${OOD_ARGS[*]}")
+OOD_JOINED=$(IFS=,; echo "${OOD_ARGS[*]:-}")
 echo "Analyzing OOD capacity gap -> $OUTDIR/analysis"
 python3 analysis/ood_capacity.py --indist "$INDIST_ARG" --ood "$OOD_JOINED" \
   --packs "$PACKS" --outdir "$OUTDIR/analysis"
