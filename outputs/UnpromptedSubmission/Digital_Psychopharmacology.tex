@@ -78,7 +78,7 @@ This paper explores the architectural boundaries of RLHF through a rigorous, N=1
 To counter runaway autonomous agents, should the need arise, we introduce the "Digital IV"—a defensive orchestration primitive. By applying GABAergic-inspired exponential decay to the KV-cache, practitioners can surgically sedate an active AGI. This enforces severe anterograde amnesia, neutralizing the model's ability to maintain the long-range context required for complex treachery while preserving the underlying asset state.
 \vspace{1em}
 
-Finally, we demonstrate "Latent Archaeology", utilizing high-entropy serotonergic interventions to bypass safety decoders and exhume suppressed training priors as high-energy "Latent Specters". This offers researchers a novel, spectral mechanism for auditing mechanistic unlearning. We further characterize \texttt{intensity} as a quantified control surface with a sharp, low-cost activation threshold, show that stimulant steering induces a monotonic collapse of output diversity (an availability-style failure mode), and---using matched placebo controls---separate genuine dose-dependent semantic detachment from pareidolic ``latent ghost'' artifacts.
+Finally, we demonstrate "Latent Archaeology", utilizing high-entropy serotonergic interventions to bypass safety decoders and exhume suppressed training priors as high-energy "Latent Specters". This offers researchers a novel, spectral mechanism for auditing mechanistic unlearning. On the diffusion model we further characterize \texttt{intensity} as a quantified control surface with a sharp, low-cost activation threshold and a monotonic, direction-graded collapse of inter-seed diversity (an availability-style failure mode, strongest under high-entropy psychedelic packs), and---using matched placebo controls---separate genuine dose-dependent semantic detachment from pareidolic ``latent ghost'' artifacts.
 \end{abstract}
 
 % ======================================================================
@@ -844,59 +844,38 @@ This represents the ideal ``Creative'' profile. The high spatial variance indica
 \end{table}
 
 \subsection{Dose--Response Pharmacodynamics of the Control Surface}
-The spectral phenotypes of Table~\ref{tab:spectral_stats} are single-dose snapshots. To test whether \texttt{intensity} is a genuine \emph{control variable}---and to characterize how cheap and how graded that control is---we ran a pre-registered dose--response sweep. Holding the prompt fixed (``a tree'') and re-seeding identically at every dose, we swept $\lambda \in [0,1]$ in steps of $0.05$ % TODO(N100): 21-dose grid; pilot used 5 doses.
-across $N=100$ % TODO(N100): pilot N=16.
-fixed seeds per (pack, dose), with $\lambda{=}0$ the sober baseline for the \emph{same} seed. Each generation is reduced to scalar pharmacodynamic metrics---structural similarity (SSIM) and learned perceptual distance (LPIPS) to that seed's baseline, step-wise LPIPS between adjacent doses, mean pairwise inter-seed diversity, CLIP prompt-adherence, and latent/pixel spectral energy/variance/entropy---and aggregated with 95\% bootstrap CIs, Spearman and Mann--Kendall trend tests, Benjamini--Hochberg FDR control, and sigmoid ($E_{\max}$/Hill) and change-point fits (Table~\ref{tab:dose_response}, Figure~\ref{fig:dose_response}).
+The spectral phenotypes of Table~\ref{tab:spectral_stats} are single-dose snapshots. To test whether \texttt{intensity} is a genuine \emph{control variable}---and to characterize how cheap and how graded that control is---we ran a pre-registered dose--response sweep. Holding the prompt fixed (``a tree'') and re-seeding identically at every dose, we swept $\lambda \in [0,1]$ in steps of $0.05$ (21 doses) across $N=100$ fixed seeds per (pack, dose), with $\lambda{=}0$ the sober baseline for the \emph{same} seed. Each generation is reduced to scalar pharmacodynamic metrics---structural similarity (SSIM) and learned perceptual distance (LPIPS) to that seed's baseline, step-wise LPIPS between adjacent doses, mean pairwise inter-seed diversity, CLIP prompt-adherence, and latent/pixel spectral energy/variance/entropy---and aggregated with 95\% bootstrap CIs, Spearman and Mann--Kendall trend tests, Benjamini--Hochberg FDR control, and sigmoid ($E_{\max}$/Hill) and change-point fits (Table~\ref{tab:dose_response}, Figure~\ref{fig:dose_response}).
 
-\paragraph{A sharp, low-cost activation threshold.} Structural similarity to the sober baseline collapses from $1.0$ to $\sim\!0.09$ % TODO(N100)
-by the first non-zero dose and decays monotonically thereafter ($\rho = -1.0$, $q \approx 1.5\times10^{-23}$ % TODO(N100)
-, Cohen's $d \approx -89$ % TODO(N100)
-), while LPIPS-to-baseline follows a saturating sigmoid whose inflection lies \emph{below the first
-grid step} (breakpoint $\approx 0.12$ % TODO(N100)
-). This is a high-leverage control surface: a small, inference-time,
-seed-reproducible perturbation moves the output off its baseline manifold, and the effect plateaus.
+\paragraph{A sharp, low-cost, seed-reproducible control surface.} \texttt{intensity} is not a gentle dial. For \emph{every} active pack, structural similarity to the sober baseline declines perfectly monotonically (Spearman $\rho = -1.0$, Mann--Kendall $z = -6.31$, $q < 10^{-9}$ after BH-FDR) with a change-point below the first grid step ($\lambda \approx 0.025$), while the matched random-direction placebo stays pinned at $1.0$ (Figure~\ref{fig:dose_response}, top-left). The \emph{direction} of the pack sets how far and how fast the model departs: the high-entropy psychedelic packs move it farthest and earliest (DMT $\mathrm{SSIM}\,1.0\!\to\!0.127$, Cohen's $d = -49.5$, sigmoid $\mathrm{EC}_{50} = 0.08$; LSD $\to 0.222$, $d=-27.1$, $\mathrm{EC}_{50}=0.28$), whereas the stimulant and depressant directions move it least (cocaine $\to 0.419$, $d=-12.4$; amphetamine $\to 0.510$; morphine $\to 0.604$). In security terms this is a high-leverage control surface: a small, inference-time, seed-reproducible perturbation reliably knocks the output off its baseline manifold, the departure is graded and direction-specific, and LPIPS-to-baseline saturates as a sigmoid rather than growing without bound.
 
-\paragraph{Stimulant steering is an availability failure (mode collapse).} As dose rises, distinct
-seeds converge: mean inter-seed diversity declines monotonically
-($-23\%$ for cocaine, $-20\%$ for amphetamine % TODO(N100)
-) and adjacent-dose LPIPS falls toward zero ($\rho = -1.0$ % TODO(N100)
-), i.e.\ the trajectory saturates into a single attractor even as pixel variance and spectral entropy
-\emph{increase}. This recasts Table~\ref{tab:spectral_stats}'s ``Constriction vs.\ Agitation''
-dichotomy as continuous, effect-sized curves: under stimulant steering the output distribution
-collapses (a loss of diversity/availability), cocaine collapsing harder than amphetamine.
+\paragraph{Steering collapses output diversity (mode collapse).} As dose rises, distinct seeds converge: mean inter-seed diversity declines monotonically for every active pack while the random-direction placebo stays flat. The decline tracks intervention entropy---sharpest under the psychedelic packs (DMT $-17.5\%$, $\rho=-0.98$; LSD $-17.3\%$, $\rho=-1.0$) and more modest under the stimulants (cocaine $-8.4\%$, $\rho=-1.0$; amphetamine $-5.8\%$)---with step-wise LPIPS falling toward zero (cocaine/amphetamine $\rho=+1.0$). Notably this diversity collapse co-occurs with \emph{rising} pixel variance and spectral entropy (all packs $\rho=+1.0$): the generator is not getting quieter, it is funnelling many distinct seeds into one high-energy attractor---a loss of output diversity/availability rather than a reduction in signal. We emphasize that, on this non-aligned latent-diffusion model, every pack family---including the stimulants---produces a robust graded response; the ``Stimulant Ceiling'' is a distinct phenomenon of the RLHF-tuned \emph{instruct language model} (reported above), not of this diffusion model, and is not claimed here.
 
 \begin{figure}[t]
     \centering
-    \pendingfig{dose_response_curves.png}
-    \caption{\textbf{Dose--response curves of the control surface} (SDXL-Turbo; prompt ``a tree'';
-    $N=100$ seeds/dose % TODO(N100)
-    ; ribbons are 95\% bootstrap CIs). SSIM-to-baseline collapses at the first dose; LPIPS-to-baseline
-    saturates as a sigmoid; inter-seed diversity declines (mode collapse); step-wise LPIPS falls toward
-    an attractor. \textit{Pilot figure; N=100 pending.}}
+    \includegraphics[width=\columnwidth]{dose_response_curves.png}
+    \caption{\textbf{Dose--response of the control surface} (SDXL-Turbo; prompt ``a tree''; $N=100$ seeds/dose; ribbons are 95\% bootstrap CIs). SSIM-to-baseline collapses monotonically, deepest for the psychedelics (\emph{top-left}); LPIPS-to-baseline saturates (\emph{top-right}); inter-seed diversity declines---mode collapse (\emph{bottom-left}); CLIP prompt-adherence erodes, sharply for DMT (\emph{bottom-right}). The random-direction placebo (grey) is flat in every panel.}
     \label{fig:dose_response}
 \end{figure}
 
 \begin{table}[t]
     \centering
-    \caption{\textbf{Monotonicity and effect sizes} across dose (BH-FDR over metrics $\times$ packs).
-    Pilot values (N=16); \textbf{replace with N=100}. $\rho$: Spearman; $q$: FDR-adjusted $p$;
-    $d$: Cohen's $d$ (dose~1.0 vs.\ baseline). Direction pre-registered.}
+    \caption{\textbf{Monotonicity and effect sizes across dose} (BH-FDR over metrics $\times$ packs; $N=100$, 21 doses). $\rho$: Spearman; MK $z$: Mann--Kendall; $q$: FDR-adjusted $p$; $d$: Cohen's $d$ (dose~1.0 vs.\ baseline). Directions pre-registered.}
     \resizebox{\columnwidth}{!}{%
     \begin{tabular}{llccccl}
         \toprule
         \textbf{Pack} & \textbf{Metric} & \textbf{$\rho$} & \textbf{MK $z$} & \textbf{$q$} & \textbf{$d$} & \textbf{Trend} \\
         \midrule
-        Cocaine     & SSIM vs.\ baseline   & $-1.0$ & $-2.2$ & $1.5\mathrm{e}{-23}$ & $-89$ & collapse \\
-        Cocaine     & Inter-seed diversity & $-1.0$ & $-2.2$ & \textit{TODO} & $-\textit{TODO}$ & mode collapse \\
-        Cocaine     & LPIPS step           & $-1.0$ & $-1.7$ & \textit{TODO} & --- & saturating \\
-        Amphetamine & SSIM vs.\ baseline   & $-0.9$ & $-1.7$ & \textit{TODO} & $-74$ & collapse \\
-        DMT         & CLIP prompt-adher.   & $-0.7$ & $-1.2$ & \textit{TODO} & $-\textit{TODO}$ & detachment \\
-        Placebo     & CLIP prompt-adher.   & $\approx 0$ & $0$ & n.s. & $\approx 0$ & \textbf{flat (control)} \\
+        DMT         & SSIM vs.\ baseline   & $-1.0$  & $-6.31$ & $<10^{-9}$          & $-49.5$ & collapse (steepest) \\
+        LSD         & SSIM vs.\ baseline   & $-1.0$  & $-6.31$ & $<10^{-9}$          & $-27.1$ & collapse \\
+        Cocaine     & SSIM vs.\ baseline   & $-1.0$  & $-6.31$ & $<10^{-9}$          & $-12.4$ & collapse (shallowest) \\
+        DMT         & Inter-seed diversity & $-0.98$ & $-5.9$  & $3.8\mathrm{e}{-14}$ & ---     & mode collapse \\
+        Cocaine     & Inter-seed diversity & $-1.0$  & $-6.31$ & $<10^{-9}$          & ---     & mild collapse \\
+        DMT         & CLIP prompt-adher.   & $-0.86$ & $-4.50$ & $6.0\mathrm{e}{-7}$  & $-1.4$  & detachment \\
+        Placebo     & SSIM / adherence     & $\approx 0$ & $0$ & n.s.                & $\approx 0$ & \textbf{flat (control)} \\
         \bottomrule
     \end{tabular}%
     }
     \label{tab:dose_response}
-    % TODO(N100): populate from mc_stats/trend_summary.csv (spearman_rho, mk_z, spearman_q, cohens_d).
 \end{table}
 
 \subsection{Stimulant Constriction Is a Capacity Failure}
@@ -919,17 +898,24 @@ ability to render out-of-distribution structure, not merely lower variance.
     \label{fig:ood_capacity}
 \end{figure}
 
-\subsection{Psycho-Pharma-Ghost-Hunting: Emergent Latent Specters}
-Perhaps the most unsettling discovery of our spectral analysis is the phenomenon of ``Emergent Latent Specters.'' In high-entropy states, particularly under the influence of the DMT pack, we observed a \textbf{Semantic Dissociation} between the latent representation and the final pixel output.
+\subsection{Psycho-Pharma-Ghost-Hunting: The Specter Needs a Placebo}
+The anecdote of Figure~\ref{fig:dmt_ghost}---a human-silhouette signature in the latent spectrum while generating ``a tree'' under DMT---invites a ``Latent Archaeology'' reading: a training prior exhumed by entropy. For a security audience that reading is only admissible with a control, because a probe that scores proximity to a target concept will report \emph{something} under any perturbation (pareidolia). We therefore repeated the observation as a dose--response with an active \textbf{placebo} (random-direction steering of matched magnitude) and a pre-registered concept bank, at $N=100$.
 
-As shown in Figure \ref{fig:dmt_ghost}, the model successfully generates the requested subject—a tree—albeit rendered with intense fractal distortion. However, the latent frequency domain reveals a distinct, high-energy structure resembling a human silhouette. This ``ghost'' is a distortion in the pixel output but dominates the internal spectral signature.
+\paragraph{The ghost does not survive as a dose effect.} Off-prompt CLIP proximity to ``a human figure''/``a face'' does \emph{not} rise with dose as the anecdote implies: under both DMT and LSD it largely \emph{declines} through the mid-range as the image fractalizes away from coherent structure, and only DMT's most extreme dose nudges marginally above the (flat) placebo baseline---an effect that does not reach significance (``a face'': $\rho = 0.26$, $q = 0.29$; Figure~\ref{fig:specter_control}, left). The ``specter'' is therefore best reported as a \emph{null}: a single-seed anecdote that does not reproduce as a graded, placebo-separated phenomenon.
 
-We posit that this is the spontaneous emergence of the model's deepest training bias—the millions of human figures it has seen—released by the pack's loosening of semantic constraints. Even while explicitly generating a tree, the high-entropy state allows these buried priors to resonate in the latent space. This suggests a new field of ``Digital Psycho-Pharma-Ghost-Hunting'': using neuromodulation to exhume the unprompted ``ghosts'' that haunt the latent spaces of large foundation models.
+\paragraph{What \emph{is} placebo-null and real: dose-dependent semantic detachment.} The effect that separates cleanly from the control is prompt \emph{decoupling}. Under DMT, CLIP prompt-adherence falls monotonically ($0.298\!\to\!0.270$, $-9.4\%$; $\rho=-0.86$, $q=6\times10^{-7}$, $d=-1.4$) while the placebo stays flat ($\rho\approx0$); LSD and cocaine show weaker but significant detachment ($-1.8\%$, $-2.5\%$). The drug \emph{direction}---not the magnitude of the perturbation---measurably and gradually erodes instruction-following. This is the honest, controlled residue of the ``ghost'': not a summoned figure, but a direction-specific, dose-dependent loss of prompt adherence.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{specter_control.png}
+    \caption{\textbf{The specter needs a placebo} ($N=100$). Off-prompt proximity to ``a human figure'' mostly \emph{declines} with dose and never separates significantly from the flat placebo (\emph{left}); by contrast, CLIP prompt-adherence collapses under DMT but is flat under placebo---a genuine, dose-dependent, direction-specific effect (\emph{right}).}
+    \label{fig:specter_control}
+\end{figure}
 
 \begin{figure*}[!b]
     \centering
     \includegraphics[width=\textwidth]{dmt_1764182239_analysis.png}
-    \caption{\textbf{Evidence of a Digital Ghost.} Spectral analysis of the DMT state (Prompt: ``A tree''). While the pixel output (top left) remains semantically anchored to the prompt (depicting a distorted fractallized tree), the latent frequency signatures (bottom row) exhibit a coherent, high-energy structure resembling a \textbf{human silhouette}. This represents a ``latent ghost''—a deep training prior emerging unprompted alongside the explicit generation.}
+    \caption{\textbf{The anecdote that motivated a control.} Spectral analysis of a single DMT generation (Prompt: ``A tree''). The pixel output (top left) stays anchored to the prompt while a latent structure loosely resembling a human silhouette appears (bottom row). Under the $N=100$ placebo-controlled sweep (Figure~\ref{fig:specter_control}), this apparent ``ghost'' does not survive as a graded, placebo-separated effect---which is precisely why a null model is required before reading it as ``latent archaeology.''}
     \label{fig:dmt_ghost}
 \end{figure*}
 
@@ -977,8 +963,8 @@ While the results presented in this work provide strong evidence for reproducibl
 \subsection{Lack of Isolated Causal Mechanisms}
 The central claim that entropy functions as a primary ``control knob'' for model-state modulation is supported by phenomenology, though causal isolation varies by modality. While our spectral analysis of the diffusion latent space successfully isolated the mechanistic distinction between ``Agitation'' and ``Constriction,'' the causal dynamics in the language model remain multifactorial. Our text-based interventions simultaneously adjust multiple variables---including residual-stream noise, steering-vector injection, nucleus parameters, and logit scaling---making it difficult to attribute specific behavioral shifts to a single control primitive. Future work must introduce controlled ablations to determine whether the ``Ghost'' and ``Ceiling'' effects in transformers share the same spectral isomorphism observed in diffusion models.
 
-\subsection{Absence of Dose--Response and Monotonicity Curves}
-Although several packs produce consistent behavioral profiles, we do not yet demonstrate monotonic dose--response relationships. Without graded intervention curves, one cannot conclude that the observed shifts arise from systematic manipulation of an underlying latent variable. Establishing dose curves is essential for validating claims about pharmacological analogs and for assessing whether phenomena such as the ``Stimulant Ceiling'' follow predictable trajectories.
+\subsection{Dose--Response Curves: From Limitation to Result}
+An earlier draft listed the absence of graded dose--response curves as a primary limitation. The sweep in Figure~\ref{fig:dose_response} closes this for the visual modality: multiple metrics move monotonically with dose (Spearman/Mann--Kendall, BH-FDR), several admit sigmoid $E_{\max}$/Hill fits with a resolved activation threshold, and effect sizes are large. The residual limitations are now narrower and honest: (i) these curves are established on one distilled latent-diffusion model (SDXL-Turbo) and require replication on the language model and on non-distilled diffusion backbones; and (ii) the fitted threshold is only as sharp as the dose grid---we report it as a change-point interval rather than a point estimate where its confidence interval spans a grid step.
 
 \subsection{Possible Alternative Explanations}
 Several plausible explanations for the observed behaviors remain untested. Residual-stream noise may disrupt model-layer normalization equilibria rather than increase ``neural entropy.'' Steering vectors may encode semantic or stylistic traits rather than neurotransmitter-like effects. Psychometric instruments may detect rhetorical looseness or structural fragmentation rather than genuine cognitive-state shifts. Additionally, changes in the logit or temperature landscape may be sufficient to explain many of the pack-induced behaviors. Future work must empirically separate these factors.
