@@ -33,23 +33,35 @@ for label, prompt in oc.OOD_PROMPTS.items():
 PY
 )"
 
-sweep () {  # label  prompt
-  local label="$1" prompt="$2" csv="$OUTDIR/$1.csv"
-  echo ">> $label: \"$prompt\""
+sweep () {  # label  prompt  — generates to $OUTDIR/$label.csv with LIVE progress
+  local label="$1" prompt="$2" csv="$OUTDIR/$label.csv"
+  echo ">> [$label] \"$prompt\"  ->  $csv"
+  # Run in the foreground WITHOUT capturing stdout, so the runner's per-cell progress
+  # (\"[i/total] pack i=.. seed=..\") streams to the terminal. (An earlier version wrapped
+  # this in $(...) for `tail -1`, which swallowed all progress and looked like a hang.)
   python3 demo/dose_response_runner.py \
     --remote --model "$MODEL" --steps "$STEPS" --no-latents \
     --packs "$PACKS" --seeds "$SEEDS" --intensity-step "$STEP" \
     --prompt "$prompt" --out "$csv"
-  echo "$label=$csv"
 }
+
+# Scale heads-up: the first cell may take a minute or two while the worker cold-starts.
+NPROMPTS=$(printf '%s\n' "$PROMPTS_TSV" | grep -c .)
+NPACKS=$(awk -F, '{print NF}' <<<"$PACKS")
+NDOSE=$(python3 -c "print(int(round(1.0/$STEP))+1)")
+echo "Sweeping $NPROMPTS prompts x $NPACKS packs x $NDOSE doses x $SEEDS seeds"
+echo "  (~$((NPROMPTS*NPACKS*NDOSE*SEEDS)) remote generations; resumable — re-run to continue if interrupted)"
+echo
 
 OOD_ARGS=()
 INDIST_ARG=""
 # Here-string keeps the loop in the current shell (so INDIST_ARG/OOD_ARGS persist) and
-# works on bash 3.2. Skip blank lines.
+# works on bash 3.2. The CSV path is deterministic, so we build the pair from known vars
+# instead of capturing sweep's stdout (which would hide progress). Skip blank lines.
 while IFS=$'\t' read -r label prompt; do
   [ -n "$label" ] || continue
-  pair="$(sweep "$label" "$prompt" | tail -1)"
+  sweep "$label" "$prompt"
+  pair="$label=$OUTDIR/$label.csv"
   if [ "$label" = "tree" ]; then INDIST_ARG="$pair"; else OOD_ARGS+=("$pair"); fi
 done <<< "$PROMPTS_TSV"
 
