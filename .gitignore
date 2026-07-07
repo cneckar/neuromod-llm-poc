@@ -216,3 +216,4 @@ temp/
 # GitHub Pages hero assets: keep despite the global image ignores above.
 !docs/hero_poster.jpg
 !docs/*.mp4
+!docs/*.pdf
