@@ -878,23 +878,39 @@ The spectral phenotypes of Table~\ref{tab:spectral_stats} are single-dose snapsh
     \label{tab:dose_response}
 \end{table}
 
-\subsection{Stimulant Constriction Is a Capacity Failure}
-Mode collapse shows the output \emph{distribution} narrowing; the sharper claim is that an
-over-stimulated model loses \emph{generative capacity}. We contrast adherence decay for an
-in-distribution prompt (``a tree'') against compositional out-of-distribution prompts (e.g.\ ``an
-astronaut riding a horse on the moon'', ``a snail made of translucent glass''), defining
-\emph{capacity retention} as top-dose CLIP adherence relative to baseline. Under stimulant dose,
-retention for the OOD prompts falls faster and further than for the in-distribution prompt
-(capacity gap $=\!\textit{TODO}$ % TODO(N100): from analysis/ood_capacity.py (ood_capacity_gap.csv)
-, Figure~\ref{fig:ood_capacity})---``spectral constriction'' is a measurable collapse of the model's
-ability to render out-of-distribution structure, not merely lower variance.
+\subsection{Stimulant Constriction Is \emph{Not} a Capacity Failure}
+Mode collapse shows the output \emph{distribution} narrowing under stimulant dose; the tempting sharper
+claim is that an over-stimulated model also loses \emph{generative capacity}---that it can no longer
+compose novel scenes. We pre-registered this and tested it directly: contrast prompt-adherence decay
+for an in-distribution prompt (``a tree'') against a battery of compositional out-of-distribution
+prompts (``an astronaut riding a horse'', ``an elephant-shaped teapot'', ``a snail made of translucent
+glass''), sweeping the two stimulant packs across dose at $N{=}100$ and defining \emph{capacity
+retention} as top-dose CLIP adherence relative to the sober baseline. If constriction were a capacity
+failure, retention for the hard OOD prompts should fall faster and further than for the easy in-domain
+one.
+
+\paragraph{It does not.} Capacity retention stays essentially flat---and \emph{indistinguishable}
+between in-distribution and OOD prompts (Figure~\ref{fig:ood_capacity}). Under cocaine, the
+in-distribution tree retains $97.7\%$ of its baseline adherence at full dose, while the OOD prompts
+retain $97.6\%$--$100.9\%$; under amphetamine, $97.7\%$ vs.\ $98.4\%$--$100.4\%$. The capacity gaps are
+within $\pm3$ points and, if anything, point the \emph{wrong} way (the in-distribution prompt drifts
+marginally more than the OOD ones; ``an astronaut riding a horse'' even gains adherence with dose,
+$\rho{=}{+}0.93$). Stimulant steering therefore restyles the image---dropping structural similarity and
+collapsing inter-seed diversity, as Section~\ref{fig:dose_response} showed---\emph{without} detaching
+it from the prompt, and it does so no more for hard compositional prompts than for familiar ones. The
+constriction is real, but it is a loss of output \emph{diversity}, not of generative \emph{capacity}.
+This also sharpens the contrast with the psychedelics: only the high-entropy direction (DMT) measurably
+erodes prompt adherence; the stimulant direction preserves it. The intuitive ``the model is too wired
+to be creative'' story is a clean negative result---the kind a null model is built to catch.
 
 \begin{figure}[t]
     \centering
-    \pendingfig{ood_capacity.png}
-    \caption{\textbf{Capacity collapse under stimulant dose.} Adherence retention (top-dose/baseline)
-    for the in-distribution prompt vs.\ compositional OOD prompts. \textit{Harness ready
-    (\texttt{run\_ood\_capacity\_remote.sh}); N=100 result pending.}}
+    \includegraphics[width=\columnwidth]{ood_capacity.png}
+    \caption{\textbf{No preferential capacity collapse under stimulant dose} (SDXL-Turbo; $N{=}100$).
+    Prompt-adherence retention (\% of the sober baseline) for the in-distribution prompt (dashed) vs.\
+    three compositional OOD prompts, under cocaine (\emph{left}) and amphetamine (\emph{right}). All
+    curves hug $100\%$; the OOD prompts are retained as well as, or better than, the in-distribution
+    one---refuting the ``capacity failure'' reading of stimulant constriction.}
     \label{fig:ood_capacity}
 \end{figure}
 
