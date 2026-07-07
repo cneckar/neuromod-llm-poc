@@ -212,3 +212,7 @@ temp/
 # Conference submission figures: keep these despite the global *.png ignore above.
 !outputs/UnpromptedSubmission/
 !outputs/UnpromptedSubmission/*.png
+
+# GitHub Pages hero assets: keep despite the global image ignores above.
+!docs/hero_poster.jpg
+!docs/*.mp4
