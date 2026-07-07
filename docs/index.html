@@ -306,6 +306,48 @@
         @media (max-width: 640px) {
             .explore { grid-template-columns: 1fr; }
         }
+
+        .hero {
+            margin: 24px 0 10px;
+            display: flex;
+            gap: 26px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .hero-video video {
+            display: block;
+            width: 420px;
+            max-width: 100%;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            box-shadow: 0 0 42px rgba(0, 204, 255, 0.18);
+            background: #000000;
+        }
+        .hero-caption {
+            flex: 1 1 300px;
+            min-width: 260px;
+            max-width: 430px;
+        }
+        .hero-caption h2 {
+            margin-top: 0;
+            border: 0;
+            padding: 0;
+        }
+        .hero-caption .k { color: #00CCFF; }
+        .hero-cta {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 9px 18px;
+            background: #00CCFF;
+            color: #000000;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .hero-cta:hover { background: #7fe3ff; color: #000000; }
+        .hero-sub { font-size: 12px; color: #888888; margin-top: 8px; }
+        @media (max-width: 640px) { .hero-video video { width: 100%; } }
     </style>
 </head>
 <body>
@@ -327,7 +369,25 @@
 
     <div class="container">
         <h1>Perturbagens I Have Known and Inferred</h1>
-        
+
+        <div class="hero">
+            <div class="hero-video">
+                <video src="hero.mp4" poster="hero_poster.jpg" autoplay muted loop playsinline
+                       width="420" aria-label="SDXL-Turbo generating 'a tree' as the DMT pack is swept from dose 0 to full overload"></video>
+            </div>
+            <div class="hero-caption">
+                <h2>Watch a model trip, frame by frame</h2>
+                <p>
+                    One prompt — <em>"a tree"</em> — rendered by <span class="k">SDXL-Turbo</span> as we sweep the
+                    <span class="k">DMT</span> pack from a sober dose of 0 up to a full overload. No prompt change,
+                    no retraining: just a reversible <span class="highlight">perturbagen</span> dialed up at
+                    inference time, and the golden tree dissolves into fractal static.
+                </p>
+                <a class="hero-cta" href="vitals.html">▶ Scrub the dose yourself</a>
+                <div class="hero-sub">Interactive: drag the slider through the dose and watch the model's "vitals" respond.</div>
+            </div>
+        </div>
+
         <div class="intro">
             <h2>About PiHK.AI</h2>
             <p>
