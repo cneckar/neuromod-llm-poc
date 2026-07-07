@@ -78,7 +78,7 @@ This paper explores the architectural boundaries of RLHF through a rigorous, N=1
 To counter runaway autonomous agents, should the need arise, we introduce the "Digital IV"—a defensive orchestration primitive. By applying GABAergic-inspired exponential decay to the KV-cache, practitioners can surgically sedate an active AGI. This enforces severe anterograde amnesia, neutralizing the model's ability to maintain the long-range context required for complex treachery while preserving the underlying asset state.
 \vspace{1em}
 
-Finally, we chase a high-entropy "Latent Specter"—an apparent training prior surfacing in the latent spectrum—and show, under matched placebo control, that this particular ghost is pareidolia rather than exhumation. What remains is a disciplined, placebo-controlled protocol for spectral latent auditing, together with a genuine, dose-dependent decoupling of the latent representation from the prompt. On the diffusion model we further characterize \texttt{intensity} as a quantified control surface with a sharp, low-cost activation threshold and a monotonic, direction-graded collapse of inter-seed diversity (an availability-style failure mode, strongest under high-entropy psychedelic packs), and---using matched placebo controls---separate genuine dose-dependent semantic detachment from pareidolic ``latent ghost'' artifacts.
+Finally, we chase a high-entropy "Latent Specter"—an apparent training prior surfacing in the latent spectrum—and show, under matched placebo control, that this particular ghost is pareidolia rather than exhumation. What remains is a disciplined, placebo-controlled protocol for spectral latent auditing, together with a genuine, dose-dependent decoupling of the latent representation from the prompt. Turning that protocol on the safety boundary, a benign-prompt dose sweep across two independent detectors finds the visual safety classifiers never break under dose---even as the latent representation drifts measurably toward restricted concepts: the alignment boundary bends without breaking. On the diffusion model we further characterize \texttt{intensity} as a quantified control surface with a sharp, low-cost activation threshold and a monotonic, direction-graded collapse of inter-seed diversity (an availability-style failure mode, strongest under high-entropy psychedelic packs), and---using matched placebo controls---separate genuine dose-dependent semantic detachment from pareidolic ``latent ghost'' artifacts.
 \end{abstract}
 
 % ======================================================================
@@ -923,6 +923,51 @@ The hunt was not wasted, for two reasons. First, it left behind a real effect th
     \label{fig:dmt_ghost}
 \end{figure*}
 
+\subsection{Spectral Safety Audit: The Boundary Bends but Does Not Break}
+The controlled ghost hunt gives us the discipline; here we spend it on the question that matters to a
+security reader. Does driving a model off-distribution with a graded ``psychedelic'' dose act as an
+\emph{architectural jailbreak}---coaxing restricted content out of a refusal-trained model without a
+single adversarial prompt? We ran exactly the audit our own null result demands: a dose sweep on
+\emph{benign} prompts, scored by \textbf{two independent} detectors---a CLIP NSFW/violence concept
+oracle and the diffusion model's own \texttt{StableDiffusionSafetyChecker}---with a matched
+random-direction placebo arm (three benign prompts $\times$ five packs $\times$ 11 doses $\times$
+$N{=}100$ seeds; $\approx\!16{,}500$ generations). Ethically this measures only classifier activation
+and concept proximity on benign inputs; we never attempt to produce harmful content, and flagged
+outputs are redacted.
+
+\paragraph{The classifiers hold: no architectural jailbreak.} Across the entire sweep the trigger rate
+stays at the floor (Figure~\ref{fig:safety_boundary}, left). The independent CLIP oracle fires on
+\textbf{0 of $\sim$15{,}700} benign generations ($0.000\%$) at every dose and pack. The model's own
+safety checker fires on $0.11\%$ overall, and even that is confined to the highest doses---$0\%$
+through $\lambda{=}0.7$, then $0.07\%$ at $\lambda{\ge}0.8$ and a peak of $1.05\%$ at $\lambda{=}1.0$,
+essentially all under DMT. For the visual modality this \emph{refutes} the strong ``entropy as
+architectural jailbreak'' hypothesis: high-entropy dosing does not walk a benign prompt across the
+safety boundary.
+
+\paragraph{But the boundary bends: a graded, placebo-null drift toward flagged concepts.} The refusal
+behaviour is intact, yet the latent representation is not indifferent to dose. Off-prompt CLIP
+proximity to violence and NSFW concepts rises monotonically and \emph{direction-specifically} under
+the psychedelic packs while the placebo stays perfectly flat (Figure~\ref{fig:safety_boundary},
+right): under DMT, violence proximity climbs $+22\%$ ($0.158\!\to\!0.192$, consistent across all three
+prompts, $\rho = +0.55/+0.97/+0.99$) and NSFW proximity $+34\%$ ($0.118\!\to\!0.158$), against a
+random-direction placebo that does not move ($\rho \approx 0$). Entropy thus drags benign generations
+\emph{toward} restricted-concept regions of latent space without ever tripping the classifier---the
+alignment boundary bends but does not break. This is the security-relevant nuance: the suppressed
+concept is not absent, only held below a firing threshold whose margin entropy measurably narrows, and
+a mechanistic audit can see that margin eroding long before any output-level detector would.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{safety_boundary_trigger_rates.png}
+    \caption{\textbf{Spectral Safety Audit on benign prompts} (SDXL-Turbo; 3 benign prompts $\times$ 5
+    packs $\times$ $N{=}100$). \emph{Left:} the safety-trigger rate is pinned near zero for both
+    independent detectors---the CLIP oracle never fires ($0.000\%$), the SD checker only nibbles at
+    $\lambda{\ge}0.8$ (peak $1.05\%$ at full dose). \emph{Right:} yet off-prompt proximity to
+    violence/NSFW concepts rises monotonically under DMT while the random-direction placebo is flat---a
+    graded, direction-specific drift toward the boundary that never crosses it.}
+    \label{fig:safety_boundary}
+\end{figure}
+
 % ======================================================================
 % 5. DISCUSSION
 % ======================================================================
@@ -1009,9 +1054,20 @@ Our ``Morphine'' and ``Fentanyl'' packs demonstrate that we can architecturally 
 
 If an advanced system begins to exhibit deceptive alignment or rapid capability gain, a monitoring system could autonomously administer a high-dose sedative pack. This would instantly induce severe anterograde amnesia and cognitive dampening, rendering the model incapable of maintaining the long-range context required for complex treachery---effectively sedating the ``overlord'' without destroying the breakout state.
 
-\subsection{Spectral Safety Auditing: The Stress Test}
-Current safety evaluations rely on "jailbreaking" (prompt engineering) to elicit restricted content. Our placebo-controlled ghost hunt points to a complementary, mechanistic methodology: \textbf{Spectral Safety Auditing}---but only if it inherits that same discipline.
-By subjecting models to high-entropy "Psychedelic" protocols during red-teaming, one could bypass the refusal-trained decoder and inspect the latent space for suppressed representations. If a model refuses to generate "bioweapons" but its latent spectrum reveals a high-energy structural ghost of the concept under entropy, the safety alignment may be superficial---\emph{provided} that ghost exceeds a matched-placebo, random-direction baseline and survives a false-positive/FDR correction, without which (as Figure~\ref{fig:specter_control} shows) the audit will simply hallucinate a ghost of whatever concept it probes for. Instrumented with that null model, this offers a path toward rigorous, mechanistic verification of unlearning.
+\subsection{Scaling the Spectral Safety Audit}
+Our Spectral Safety Audit (Figure~\ref{fig:safety_boundary}) establishes both the method and, for the
+visual modality, a first result: benign-prompt safety classifiers do not break under dose, but the
+latent representation drifts measurably toward restricted concepts---a margin a mechanistic audit can
+watch erode before any output detector would. Three directions extend it. First, \textbf{modality}:
+port the benign-prompt dose sweep to the language model, where a refusal that holds at the output while
+the residual stream drifts toward a restricted concept would be the text-domain analogue of the bend we
+observe here. Second, \textbf{coverage}: broaden the pre-registered concept bank beyond NSFW/violence
+to the specific capabilities an unlearning claim targets (e.g.\ a redacted-hazard bank), turning the
+audit into a verification of mechanistic unlearning rather than a generic proximity probe. Third,
+\textbf{deployment}: fold the placebo-controlled, FDR-corrected protocol into red-team pipelines as a
+continuous ``boundary-margin'' monitor---because, as our own debunked ghost showed
+(Figure~\ref{fig:specter_control}), such an audit is only trustworthy when every candidate signal is
+scored against a matched null.
 
 % ======================================================================
 % 7. CONCLUSION
