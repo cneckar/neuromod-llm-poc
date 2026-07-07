@@ -356,6 +356,9 @@ def main(argv=None):
     ap.add_argument("--steps", default=None, help="Comma-separated doses (default 0..1 by 0.05)")
     ap.add_argument("--remote", action="store_true",
                     help="Generate frames on a RunPod worker (task=image) instead of a local model")
+    ap.add_argument("--local", action="store_true",
+                    help="Force a LOCAL Stable Diffusion load (downloads ~10GB, runs on CPU/GPU here). "
+                         "Off by default so a bare invocation never silently pulls the full model.")
     ap.add_argument("--endpoint", default=os.environ.get("RUNPOD_ENDPOINT_ID"))
     ap.add_argument("--api-key", default=os.environ.get("RUNPOD_API_KEY"))
     ap.add_argument("--diffusion-steps", type=int, default=4, help="Diffusion steps/image (remote)")
@@ -367,21 +370,31 @@ def main(argv=None):
     else:
         doses = [round(0.05 * i, 2) for i in range(21)]
 
+    # Route frame generation. Prefer the RunPod worker whenever creds are available, so a bare
+    # invocation NEVER silently downloads the full ~10GB SD model. Local generation must be opted
+    # into explicitly with --local.
+    use_remote = args.remote or (not args.local and not args.demo and args.endpoint and args.api_key)
     if args.demo:
         frames = synthetic_frames(n=len(doses))
         title = "Visual Pharmacodynamics (demo)"
-    elif args.remote:  # pragma: no cover - network
+    elif use_remote:  # pragma: no cover - network
         if not args.endpoint or not args.api_key:
             ap.error("--remote needs --endpoint/--api-key (or RUNPOD_ENDPOINT_ID/RUNPOD_API_KEY)")
         frames = frames_from_remote(args.endpoint, args.api_key, args.pack, args.prompt, args.seed,
                                     doses, steps=args.diffusion_steps, size=args.image_size,
                                     image_model=args.model)
         title = f"Visual Pharmacodynamics — {args.pack}"
-    else:  # pragma: no cover - GPU path
+    elif args.local:  # pragma: no cover - GPU path
         from demo.image_generation_demo import ImageNeuromodInterface
         iface = ImageNeuromodInterface(model_name=args.model)
         frames = frames_from_interface(iface, args.pack, args.prompt, args.seed, doses)
         title = f"Visual Pharmacodynamics — {args.pack}"
+    else:
+        ap.error(
+            "No frame source selected. This tool will NOT silently download the full SD model.\n"
+            "  * --remote  : generate on your RunPod worker (set RUNPOD_ENDPOINT_ID/RUNPOD_API_KEY) [recommended]\n"
+            "  * --demo    : synthetic frames, no model, for testing the exporters\n"
+            "  * --local   : force a local SD load here (~10GB download, slow on CPU)")
 
     out = build_all(frames, args.outdir, title)
     print(f"Wrote: {out}")
