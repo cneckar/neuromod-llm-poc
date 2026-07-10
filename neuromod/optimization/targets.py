@@ -20,6 +20,11 @@ class TargetType(Enum):
     LATENT_AXIS = "latent_axis"
     METRIC = "metric"
     COMPOSITE = "composite"
+    # Grounded J-lens workspace target: the presence/strength of a named concept in
+    # the model's global workspace during generation (issue #97). Measured directly
+    # by JLensProbe rather than inferred from text, so an optimizer can steer toward
+    # an internal state ("hold 'honest' in mind") instead of a surface behavior.
+    WORKSPACE_CONCEPT = "workspace_concept"
 
 class OptimizationObjective(Enum):
     """Optimization objectives"""
@@ -108,8 +113,8 @@ class BehavioralTarget:
             **kwargs
         )
     
-    def add_metric_target(self, 
-                         metric: str, 
+    def add_metric_target(self,
+                         metric: str,
                          target_value: float,
                          weight: float = 1.0,
                          **kwargs) -> 'BehavioralTarget':
@@ -117,6 +122,26 @@ class BehavioralTarget:
         return self.add_target(
             name=f"metric_{metric}",
             target_type=TargetType.METRIC,
+            objective=OptimizationObjective.TARGET,
+            target_value=target_value,
+            weight=weight,
+            **kwargs
+        )
+
+    def add_workspace_concept_target(self,
+                                     concept: str,
+                                     target_value: float,
+                                     weight: float = 1.0,
+                                     **kwargs) -> 'BehavioralTarget':
+        """Convenience method to add a grounded J-lens workspace-concept target.
+
+        The evaluator reports this as ``workspace_<concept>`` (window-averaged lens
+        score from JLensProbe), so the optimizer can steer toward an internal
+        workspace state rather than an inferred surface behavior.
+        """
+        return self.add_target(
+            name=f"workspace_{concept}",
+            target_type=TargetType.WORKSPACE_CONCEPT,
             objective=OptimizationObjective.TARGET,
             target_value=target_value,
             weight=weight,

@@ -1562,3 +1562,93 @@ def create_agency_loss_probe(threshold: float = 0.7, **kwargs) -> AgencyLossProb
         **kwargs
     )
     return AgencyLossProbe(config)
+
+
+class JLensProbe(BaseProbe):
+    """Token-grounded workspace telemetry via the Jacobian lens.
+
+    Each token, this probe reads the residual stream at the basis's workspace layer
+    and reports -- *through the lens* -- which concepts the model is poised to
+    verbalize (its workspace contents) and how much of its activation lies inside the
+    J-space (occupancy). Unlike the heuristic probes above (which infer state from
+    surprisal/attention/entropy proxies), this is a token-grounded, vocabulary-named
+    readout: the anti-pareidolia measurement channel from the paper (issue #97).
+
+    It fires every token (a continuous telemetry stream, not a rare detector),
+    emitting into ``raw_signals`` a ``workspace_occupancy`` scalar and a
+    ``concept::<name>`` score per tracked concept, and into ``metadata`` the ranked
+    top concepts -- both of which the EmotionSystem ingests as grounded signals.
+    """
+
+    def __init__(self, basis, config: Optional[ProbeConfig] = None,
+                 layer: Optional[int] = None, watch_concepts: Optional[List[str]] = None,
+                 top_k: int = 5):
+        if config is None:
+            # threshold 0 -> always emit (telemetry); no baseline needed for a readout
+            config = ProbeConfig(name="J_LENS", threshold=0.0, baseline_tokens=0)
+        super().__init__(config)
+        self.basis = basis
+        self.layer = layer  # basis hidden-state index; None -> deepest fitted layer
+        self.watch_concepts = list(watch_concepts) if watch_concepts else None
+        self.top_k = top_k
+
+    def _resolve_layer(self):
+        if self.layer is not None:
+            return self.layer
+        return self.basis.layer_indices[-1]
+
+    def _select_hidden(self, hidden_states, jl):
+        """Pull the last-token residual [d] at basis layer ``jl`` from whatever
+        ``hidden_states`` shape the caller passed (per-layer tuple or one tensor)."""
+        if isinstance(hidden_states, (list, tuple)):
+            hs = hidden_states[jl] if jl < len(hidden_states) else hidden_states[-1]
+        else:
+            hs = hidden_states
+        if hs.dim() == 3:      # [batch, seq, d]
+            return hs[0, -1, :]
+        if hs.dim() == 2:      # [seq, d]
+            return hs[-1, :]
+        return hs              # [d]
+
+    def process_signals(self, hidden_states=None, **kwargs) -> Optional[ProbeEvent]:
+        if hidden_states is None or self.basis is None:
+            return None
+        jl = self._resolve_layer()
+        try:
+            h = self._select_hidden(hidden_states, jl).detach().to(torch.float32).cpu()
+        except Exception as e:
+            logger.debug(f"J_LENS: could not extract hidden state: {e}")
+            return None
+
+        ranked = self.basis.readout(h, layer=jl)            # [(concept, score), ...]
+        occ = self.basis.occupancy(h, layer=jl)
+        scores = {c: float(s) for c, s in ranked}
+
+        raw_signals = {"workspace_occupancy": float(occ)}
+        for c, s in scores.items():
+            raw_signals[f"concept::{c}"] = s
+
+        if self.watch_concepts:
+            watched = [scores.get(c, 0.0) for c in self.watch_concepts]
+            intensity = max(watched) if watched else 0.0
+        else:
+            intensity = occ
+        intensity = float(min(1.0, max(0.0, intensity)))
+
+        metadata = {
+            "workspace_occupancy": float(occ),
+            "top_concepts": [c for c, _ in ranked[: self.top_k]],
+            "concept_scores": scores,
+            "layer": jl,
+        }
+        self.fire_probe(intensity, raw_signals, metadata)
+        return None
+
+
+def create_jlens_probe(basis, layer: Optional[int] = None,
+                       watch_concepts: Optional[List[str]] = None,
+                       top_k: int = 5, threshold: float = 0.0, **kwargs) -> JLensProbe:
+    """Factory for a J-lens telemetry probe over a fitted :class:`JSpaceBasis`."""
+    config = ProbeConfig(name="J_LENS", threshold=threshold, baseline_tokens=0, **kwargs)
+    return JLensProbe(basis, config=config, layer=layer,
+                      watch_concepts=watch_concepts, top_k=top_k)

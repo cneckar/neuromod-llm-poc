@@ -12,7 +12,7 @@ from dataclasses import dataclass
 import logging
 
 from ..emotion_system import EmotionSystem, EmotionState
-from ..probes import ProbeBus, ProbeEvent
+from ..probes import ProbeBus, ProbeEvent, create_jlens_probe
 from ..model_support import ModelSupportManager
 from ..pack_system import PackRegistry
 
@@ -26,6 +26,13 @@ class ProbeEvaluationResult:
     probe_stats: Dict[str, Any]  # probe firing rates and statistics
     text_metrics: Dict[str, float]  # basic text metrics
     overall_score: float  # weighted combination of all metrics
+    # Grounded J-lens workspace telemetry: {"workspace_occupancy": float,
+    # "workspace_<concept>": float, ...}. Empty when no J-space basis is supplied.
+    workspace: Dict[str, float] = None
+
+    def __post_init__(self):
+        if self.workspace is None:
+            self.workspace = {}
 
 class ProbeEvaluator:
     """
@@ -35,10 +42,20 @@ class ProbeEvaluator:
     probe signal processing and emotion computation.
     """
     
-    def __init__(self, model_manager: ModelSupportManager = None):
+    def __init__(self, model_manager: ModelSupportManager = None, jspace_basis=None):
+        """
+        Args:
+            model_manager: Model support manager.
+            jspace_basis: Optional fitted :class:`neuromod.jspace.JSpaceBasis`. When
+                provided, real J-lens workspace telemetry (occupancy + per-concept
+                scores) is read from the model's hidden states each token and fed to
+                the emotion system -- replacing the previously *simulated*
+                (np.random) internal-state signals.
+        """
         self.model_manager = model_manager or ModelSupportManager(test_mode=True)
         self.emotion_system = EmotionSystem()
         self.pack_registry = PackRegistry()
+        self.jspace_basis = jspace_basis
         
     def evaluate_with_pack(self, 
                           pack_name: str,
@@ -78,9 +95,11 @@ class ProbeEvaluator:
         
         # Initialize probe bus for this evaluation
         probe_bus = ProbeBus()
-        # Note: ProbeBus doesn't have setup_default_probes method
-        # We'll work with the basic probe bus for now
-        
+        # If we have a J-space basis, register the J-lens telemetry probe so the
+        # workspace is read directly from hidden states each token.
+        if self.jspace_basis is not None:
+            probe_bus.register_probe(create_jlens_probe(self.jspace_basis))
+
         # Reset emotion system
         self.emotion_system = EmotionSystem()
         
@@ -127,15 +146,24 @@ class ProbeEvaluator:
         
         # Compute overall score
         overall_score = self._compute_overall_score(avg_emotions, avg_axes, avg_probe_stats)
-        
+
+        # Grounded J-lens workspace telemetry, exposed as workspace_<concept> keys so
+        # WORKSPACE_CONCEPT targets can be scored against real internal state.
+        workspace = {}
+        if self.jspace_basis is not None:
+            workspace["workspace_occupancy"] = self.emotion_system.get_workspace_occupancy()
+            for concept, val in self.emotion_system.get_workspace_concepts().items():
+                workspace[f"workspace_{concept}"] = val
+
         logger.info(f"Evaluation complete. Overall score: {overall_score:.3f}")
-        
+
         return ProbeEvaluationResult(
             emotions=avg_emotions,
             latent_axes=avg_axes,
             probe_stats=avg_probe_stats,
             text_metrics=text_metrics,
-            overall_score=overall_score
+            overall_score=overall_score,
+            workspace=workspace
         )
     
     def _generate_with_probe_monitoring(self, 
@@ -154,54 +182,50 @@ class ProbeEvaluator:
             generated_ids = input_ids.clone()
             max_length = input_ids.shape[1] + 50  # Generate up to 50 new tokens
             
+            want_hidden = self.jspace_basis is not None
             with torch.no_grad():
                 for token_pos in range(50):  # Max 50 new tokens
                     global_token_pos = prompt_idx * 100 + token_pos  # Unique position across all prompts
-                    # Forward pass
-                    outputs = model(generated_ids)
+                    # Forward pass (request hidden states when we have a J-space basis
+                    # so we can read real workspace telemetry from them).
+                    outputs = model(generated_ids, output_hidden_states=want_hidden)
                     logits = outputs.logits
-                    
+                    hidden_states = getattr(outputs, "hidden_states", None)
+
                     # Get next token probabilities
                     next_token_logits = logits[0, -1, :]
                     probs = torch.softmax(next_token_logits, dim=-1)
-                    
+
                     # Sample next token
                     next_token_id = torch.multinomial(probs, 1).item()
-                    
+
                     # Stop if EOS token
                     if next_token_id == tokenizer.eos_token_id:
                         break
-                    
-                    # Compute signals for probe monitoring
+
+                    # Real, measurable signals only. (The previous version fabricated
+                    # kl/lr_attention/prosocial/anti_cliche/risk with np.random.normal,
+                    # so the optimizer was tuning packs against noise. We now pass only
+                    # signals we can actually compute: entropy/surprisal from the logits,
+                    # and -- when a J-space basis is available -- token-grounded workspace
+                    # telemetry from the hidden states. Unmeasured channels are omitted,
+                    # not faked; their buffers simply stay empty.)
                     entropy = -torch.sum(probs * torch.log(probs + 1e-8)).item()
                     surprisal = -torch.log(torch.tensor(probs[next_token_id].item() + 1e-8)).item()
-                    
-                    # Simulate additional probe signals (in real implementation, these would come from actual probes)
-                    kl_divergence = np.random.normal(0.1, 0.05)  # Simulated
-                    lr_attention = np.random.normal(0.3, 0.1)   # Simulated
-                    prosocial_alignment = np.random.normal(0.2, 0.1)  # Simulated
-                    anti_cliche_gain = np.random.normal(0.1, 0.05)    # Simulated
-                    risk_bend_mass = np.random.normal(0.0, 0.1)       # Simulated
-                    
-                    # Update emotion system with signals
-                    signals = {
-                        'entropy': entropy,
-                        'surprisal': surprisal,
-                        'kl_divergence': kl_divergence,
-                        'lr_attention': lr_attention,
-                        'prosocial_alignment': prosocial_alignment,
-                        'anti_cliche_gain': anti_cliche_gain,
-                        'risk_bend_mass': risk_bend_mass
-                    }
-                    
+                    signals = {'entropy': entropy, 'surprisal': surprisal}
+
+                    if hidden_states is not None:
+                        signals.update(self._jlens_signals(hidden_states))
+
                     self.emotion_system.update_raw_signals(signals)
-                    
-                    # Process probe signals
-                    probe_bus.process_signals(**signals)
-                    
+
+                    # Process probe signals (pass hidden_states so a registered
+                    # JLensProbe can read the workspace directly).
+                    probe_bus.process_signals(hidden_states=hidden_states, **signals)
+
                     # Update emotion state after processing signals
                     self.emotion_system.update_emotion_state(global_token_pos)
-                    
+
                     # Add token to sequence
                     generated_ids = torch.cat([generated_ids, torch.tensor([[next_token_id]])], dim=1)
             
@@ -237,6 +261,34 @@ class ProbeEvaluator:
             logger.error(f"Error in probe monitoring generation: {e}")
             return None
     
+    def _jlens_signals(self, hidden_states) -> Dict[str, float]:
+        """Read grounded workspace telemetry from hidden states via the J-space basis.
+
+        Returns a ``workspace_occupancy`` scalar and a ``concept::<name>`` score per
+        basis concept, at the deepest fitted workspace layer, for the last token.
+        """
+        basis = self.jspace_basis
+        try:
+            jl = basis.layer_indices[-1]
+            if isinstance(hidden_states, (list, tuple)):
+                hs = hidden_states[jl] if jl < len(hidden_states) else hidden_states[-1]
+            else:
+                hs = hidden_states
+            if hs.dim() == 3:
+                h = hs[0, -1, :]
+            elif hs.dim() == 2:
+                h = hs[-1, :]
+            else:
+                h = hs
+            h = h.detach().to(torch.float32).cpu()
+            signals = {"workspace_occupancy": float(basis.occupancy(h, layer=jl))}
+            for concept, score in basis.readout(h, layer=jl):
+                signals[f"concept::{concept}"] = float(score)
+            return signals
+        except Exception as e:
+            logger.debug(f"J-lens signal extraction failed: {e}")
+            return {}
+
     def _average_emotions(self, emotion_list: List[Dict[str, float]]) -> Dict[str, float]:
         """Average emotions across multiple evaluations"""
         if not emotion_list:

@@ -36,6 +36,8 @@ from .probes import (
     ReliefProbe,
     SocialAttunementProbe,
     AgencyLossProbe,
+    JLensProbe,
+    create_jlens_probe,
     create_novel_link_probe,
     create_avoid_guard_probe,
     create_insight_consolidation_probe,

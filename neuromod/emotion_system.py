@@ -35,9 +35,15 @@ class EmotionState:
     
     # Discrete emotions (probabilities and intensities)
     emotions: Dict[str, Dict[str, float]]  # emotion_name -> {probability, intensity}
-    
+
     # Raw probe statistics for debugging
     probe_stats: Dict[str, Any]
+
+    # Grounded J-lens workspace telemetry (from JLensProbe / issue #97).
+    # workspace_occupancy: fraction of activation lying in the J-space (0-1).
+    # workspace_concepts: window-averaged lens score per tracked concept.
+    workspace_occupancy: float = 0.0
+    workspace_concepts: Optional[Dict[str, float]] = None
 
 
 class EmotionSystem:
@@ -72,6 +78,10 @@ class EmotionSystem:
         self.prosocial_alignment_buffer = deque(maxlen=window_size)
         self.anti_cliche_buffer = deque(maxlen=window_size)
         self.risk_bend_buffer = deque(maxlen=window_size)
+
+        # Grounded J-lens workspace telemetry buffers (from JLensProbe).
+        self.workspace_occupancy_buffer = deque(maxlen=window_size)
+        self.workspace_concept_buffers: Dict[str, deque] = {}
         
         # Probe event counters for rate calculations
         self.probe_events = {
@@ -317,6 +327,14 @@ class EmotionSystem:
                 self.anti_cliche_buffer.append(probe_event.metadata['anti_cliche_gain'])
             if 'risk_bend_mass' in probe_event.metadata:
                 self.risk_bend_buffer.append(probe_event.metadata['risk_bend_mass'])
+            # Grounded J-lens telemetry (JLensProbe fires with these each token)
+            if 'workspace_occupancy' in probe_event.metadata:
+                self.workspace_occupancy_buffer.append(
+                    float(probe_event.metadata['workspace_occupancy']))
+            if 'concept_scores' in probe_event.metadata:
+                for name, val in probe_event.metadata['concept_scores'].items():
+                    self.workspace_concept_buffers.setdefault(
+                        name, deque(maxlen=self.window_size)).append(float(val))
     
     def update_raw_signals(self, signals: Dict[str, float]):
         """
@@ -340,6 +358,16 @@ class EmotionSystem:
         if 'risk_bend_mass' in signals:
             self.risk_bend_buffer.append(signals['risk_bend_mass'])
         
+        # Grounded J-lens workspace telemetry (from JLensProbe raw_signals):
+        # a workspace_occupancy scalar plus one concept::<name> score per concept.
+        if 'workspace_occupancy' in signals:
+            self.workspace_occupancy_buffer.append(float(signals['workspace_occupancy']))
+        for key, val in signals.items():
+            if isinstance(key, str) and key.startswith('concept::'):
+                name = key.split('::', 1)[1]
+                self.workspace_concept_buffers.setdefault(
+                    name, deque(maxlen=self.window_size)).append(float(val))
+
         # Update vector projections if hidden state is provided
         if 'hidden_state' in signals:
             hidden_state = signals['hidden_state']
@@ -475,6 +503,14 @@ class EmotionSystem:
                 # Adjust certainty upward (mania involves overconfidence)
                 certainty = certainty + (0.3 * projections['mania'])
         
+        # Grounded refinement: workspace occupancy (J-lens) informs Integration.
+        # The workspace is the seat of deliberate, coherent reasoning, so more of the
+        # activation lying inside it nudges Integration up. Guarded so this is a no-op
+        # when no J-lens telemetry has been fed (occupancy buffer empty).
+        if len(self.workspace_occupancy_buffer) > 0:
+            occ = self._compute_window_average(self.workspace_occupancy_buffer)
+            integration = integration + 0.3 * (occ - 0.5)
+
         # Debug raw values before clamping
         print(f"   Raw values: arousal={arousal:.3f}, valence={valence:.3f}, certainty={certainty:.3f}")
         if self.current_projections:
@@ -609,9 +645,11 @@ class EmotionSystem:
             sociality=axes['sociality'],
             risk_preference=axes['risk_preference'],
             emotions=emotions,
-            probe_stats=probe_stats
+            probe_stats=probe_stats,
+            workspace_occupancy=self.get_workspace_occupancy(),
+            workspace_concepts=self.get_workspace_concepts()
         )
-        
+
         # Update current state and history
         self.current_state = state
         self.emotion_history.append(state)
@@ -670,7 +708,11 @@ class EmotionSystem:
         self.prosocial_alignment_buffer.clear()
         self.anti_cliche_buffer.clear()
         self.risk_bend_buffer.clear()
-        
+
+        # Clear grounded J-lens telemetry buffers
+        self.workspace_occupancy_buffer.clear()
+        self.workspace_concept_buffers.clear()
+
         # Clear probe events
         for events in self.probe_events.values():
             events.clear()
@@ -682,10 +724,19 @@ class EmotionSystem:
         # Clear current projections
         self.current_projections = {}
     
+    def get_workspace_occupancy(self) -> float:
+        """Window-averaged J-space occupancy (fraction of activation in the workspace)."""
+        return self._compute_window_average(self.workspace_occupancy_buffer)
+
+    def get_workspace_concepts(self) -> Dict[str, float]:
+        """Window-averaged J-lens score per tracked concept (grounded workspace contents)."""
+        return {name: float(np.mean(buf))
+                for name, buf in self.workspace_concept_buffers.items() if len(buf) > 0}
+
     def get_average_projections(self) -> Dict[str, float]:
         """
         Get rolling average of vector projections over the window.
-        
+
         Returns:
             Dictionary mapping trait names to average alignment scores
         """
