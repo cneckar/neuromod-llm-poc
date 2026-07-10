@@ -1200,6 +1200,114 @@
           0.9
         ]
       }
+    },
+    "caa_steer_full": {
+      "name": "caa_steer_full",
+      "description": "A/B arm (full): CAA 'associative' steering vector added with mode='full' -- full=whole vector (legacy-equivalent), jspace=workspace-restricted, complement=outside-workspace control. The three packs differ only by mode, so running them head-to-head isolates J-space restriction as the single variable (issue #97).",
+      "effects": [
+        {
+          "effect": "caa_steering",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {
+            "mode": "full",
+            "steering_type": "associative",
+            "concepts": [
+              "creative",
+              "associative",
+              "novel",
+              "literal"
+            ],
+            "layers": "workspace_band",
+            "match_magnitude": true
+          }
+        }
+      ],
+      "j_space": {
+        "concepts": [
+          "creative",
+          "associative",
+          "novel",
+          "literal"
+        ],
+        "band": [
+          0.25,
+          0.9
+        ],
+        "mode": "full"
+      }
+    },
+    "caa_steer_jspace": {
+      "name": "caa_steer_jspace",
+      "description": "A/B arm (jspace): CAA 'associative' steering vector added with mode='jspace' -- full=whole vector (legacy-equivalent), jspace=workspace-restricted, complement=outside-workspace control. The three packs differ only by mode, so running them head-to-head isolates J-space restriction as the single variable (issue #97).",
+      "effects": [
+        {
+          "effect": "caa_steering",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {
+            "mode": "jspace",
+            "steering_type": "associative",
+            "concepts": [
+              "creative",
+              "associative",
+              "novel",
+              "literal"
+            ],
+            "layers": "workspace_band",
+            "match_magnitude": true
+          }
+        }
+      ],
+      "j_space": {
+        "concepts": [
+          "creative",
+          "associative",
+          "novel",
+          "literal"
+        ],
+        "band": [
+          0.25,
+          0.9
+        ],
+        "mode": "jspace"
+      }
+    },
+    "caa_steer_complement": {
+      "name": "caa_steer_complement",
+      "description": "A/B arm (complement): CAA 'associative' steering vector added with mode='complement' -- full=whole vector (legacy-equivalent), jspace=workspace-restricted, complement=outside-workspace control. The three packs differ only by mode, so running them head-to-head isolates J-space restriction as the single variable (issue #97).",
+      "effects": [
+        {
+          "effect": "caa_steering",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {
+            "mode": "complement",
+            "steering_type": "associative",
+            "concepts": [
+              "creative",
+              "associative",
+              "novel",
+              "literal"
+            ],
+            "layers": "workspace_band",
+            "match_magnitude": true
+          }
+        }
+      ],
+      "j_space": {
+        "concepts": [
+          "creative",
+          "associative",
+          "novel",
+          "literal"
+        ],
+        "band": [
+          0.25,
+          0.9
+        ],
+        "mode": "complement"
+      }
     }
   },
   "metadata": {

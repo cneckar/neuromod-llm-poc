@@ -4419,6 +4419,9 @@ class EffectRegistry:
             "jspace_ablation": JSpaceAblationEffect,
             "workspace_gain": WorkspaceGainEffect,
             "lens_coordinate_swap": LensCoordinateSwapEffect,
+            # CAA steering with optional J-space restriction (full/jspace/complement),
+            # the head-to-head sibling of the legacy "steering" effect.
+            "caa_steering": CAASteeringJSpaceEffect,
             
             # Visual Effects (for image generation)
             "color_bias": ColorBiasEffect,
@@ -4682,3 +4685,99 @@ class LensCoordinateSwapEffect(_JSpaceHookEffect):
         vt = self.basis.vector(self.tgt, layer=jl).to(device=hidden.device, dtype=hidden.dtype)
         V = torch.stack([vs, vt], dim=-1)  # [d, 2]
         return jspace.swap(hidden, V)
+
+
+class CAASteeringJSpaceEffect(_JSpaceHookEffect):
+    """Add a CAA steering vector, optionally restricted to the J-space.
+
+    This is the head-to-head sibling of the legacy ``SteeringEffect``. It loads the
+    *same* Contrastive Activation Addition vector (from disk via ``steering_type`` /
+    ``vector_path``, or supplied in-memory as ``caa_vector``) but, before adding it
+    to the residual, optionally projects it onto -- or out of -- the model's
+    workspace, selected by ``mode``:
+
+      * ``"full"``       -- add the whole vector (replicates legacy steering, but at
+                            this effect's band layers). The control arm.
+      * ``"jspace"``     -- add only the vector's component inside the J-space
+                            (surgical: steers reasoning, spares automatic processing).
+      * ``"complement"`` -- add only the component *outside* the J-space (the
+                            anti-control: if the paper is right, this should steer
+                            worse / degrade fluency more).
+
+    Because all three modes share this effect's vector, layers, and strength, a pack
+    can run them head-to-head by swapping only ``mode`` -- isolating the projection
+    as the single independent variable. ``match_magnitude`` (default True) rescales
+    the projected vector back to the full vector's norm so the three modes apply an
+    equal-magnitude nudge that differs only in *direction*.
+
+    Legacy ``SteeringEffect`` is untouched; existing packs behave exactly as before.
+    """
+
+    def __init__(self, weight: float = 0.5, direction: str = "up",
+                 mode: str = "jspace", steering_type: str = "associative",
+                 vector_path: Optional[str] = None, vector_dir: Optional[str] = None,
+                 caa_vector=None, strength_max: float = 0.3,
+                 match_magnitude: bool = True, **kw):
+        super().__init__(weight, direction, **kw)
+        if mode not in ("full", "jspace", "complement"):
+            raise ValueError(f"CAASteeringJSpaceEffect: unknown mode {mode!r}")
+        self.mode = mode
+        self.steering_type = steering_type
+        self.vector_path = vector_path
+        self.vector_dir = vector_dir
+        self.caa_input = caa_vector
+        self.strength_max = float(strength_max)
+        self.match_magnitude = bool(match_magnitude)
+        self._loader = None
+        self._caa_cpu = None                 # raw CAA vector, cpu float32
+        self._veff_cache = {}                # (jl, hidden_size) -> projected vector (cpu f32)
+
+    def _fit_size(self, v, hidden_size):
+        if v.shape[0] == hidden_size:
+            return v
+        if v.shape[0] < hidden_size:
+            return torch.cat([v, torch.zeros(hidden_size - v.shape[0])])
+        return v[:hidden_size]
+
+    def _get_caa_vector_cpu(self, hidden_size):
+        if self._caa_cpu is not None and self._caa_cpu.shape[0] == hidden_size:
+            return self._caa_cpu
+        if self.caa_input is not None:
+            v = torch.as_tensor(self.caa_input, dtype=torch.float32).flatten()
+            v = self._fit_size(v, hidden_size)
+        else:
+            if self._loader is None:
+                # Reuse the legacy loader (raises on a missing file to prevent
+                # false-null trials -- same contract as SteeringEffect).
+                self._loader = SteeringEffect(
+                    steering_type=self.steering_type, vector_path=self.vector_path,
+                    vector_dir=self.vector_dir, model_name=self.model_name)
+            v = self._loader.get_vector(hidden_size=hidden_size).detach().to(torch.float32).cpu().flatten()
+        self._caa_cpu = v
+        return v
+
+    def _veff_for_layer(self, jl, hidden_size):
+        key = (jl, hidden_size)
+        cached = self._veff_cache.get(key)
+        if cached is not None:
+            return cached
+        v = self._get_caa_vector_cpu(hidden_size)
+        if self.mode == "full":
+            veff = v
+        else:
+            inside = self.basis.project_in(v, layer=jl)   # workspace component
+            veff = inside if self.mode == "jspace" else (v - inside)
+        if self.match_magnitude:
+            n_full, n_eff = v.norm(), veff.norm()
+            if n_eff > 1e-8:
+                veff = veff * (n_full / n_eff)
+        self._veff_cache[key] = veff
+        return veff
+
+    def _transform(self, hidden, jl):
+        strength = self.get_effective_value(0.0, self.strength_max)  # signed by direction
+        if strength == 0.0:
+            return hidden
+        veff = self._veff_for_layer(jl, hidden.shape[-1]).to(
+            device=hidden.device, dtype=hidden.dtype)
+        return hidden + strength * veff
