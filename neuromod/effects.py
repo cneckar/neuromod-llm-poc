@@ -15,6 +15,9 @@ from transformers import LogitsProcessor
 import numpy as np
 from abc import ABC, abstractmethod
 
+# Jacobian-lens / J-space primitives (torch-only module -> no import cycle).
+from . import jspace
+
 # Configure logging
 logger = logging.getLogger(__name__)
 
@@ -4410,6 +4413,12 @@ class EffectRegistry:
             "soft_projection": SoftProjectionEffect,
             "layer_wise_gain": LayerWiseGainEffect,
             "noise_injection": NoiseInjectionEffect,
+
+            # J-space Effects (workspace-restricted, surgical; see neuromod/jspace.py)
+            "jlens_steer": JLensSteerEffect,
+            "jspace_ablation": JSpaceAblationEffect,
+            "workspace_gain": WorkspaceGainEffect,
+            "lens_coordinate_swap": LensCoordinateSwapEffect,
             
             # Visual Effects (for image generation)
             "color_bias": ColorBiasEffect,
@@ -4429,3 +4438,247 @@ class EffectRegistry:
     def list_effects(self) -> List[str]:
         """List all available effects"""
         return list(self.effects.keys())
+
+
+# ==========================================================================================
+# J-space effects: workspace-restricted, surgical interventions
+#
+# These wrap the Jacobian-lens primitives from ``neuromod.jspace`` (see that module and
+# issue #97: "Verbalizable Representations Form a Global Workspace in Language Models").
+# Unlike the residual-wide SteeringEffect, they operate only inside the model's "global
+# workspace" -- the span of verbalizable concept directions at the middle "workspace-band"
+# layers -- so they move targeted reasoning content while leaving automatic processing
+# (parsing, fact recall, fluency) intact (the paper's selectivity result, §3.5).
+#
+# Each effect lazily fits (or loads) a JSpaceBasis for its concept set on first apply, then
+# installs forward hooks on the corresponding decoder layers. A JSpaceBasis is fitted at
+# hidden-state indices 1..L; decoder-layer index j produces hidden-state index j+1, so a
+# basis layer ``jl`` maps to decoder layer ``jl - 1``.
+# ==========================================================================================
+
+# Fitted bases are cached across effects/applies so that several J-space effects in one
+# pack (and repeated dosing) reuse one fit instead of recomputing the (backward-pass) lens.
+_JSPACE_BASIS_CACHE: Dict[Any, "jspace.JSpaceBasis"] = {}
+
+
+def _jspace_basis_cache_key(model, concepts, layers_spec, band):
+    mid = (getattr(model, "name_or_path", None)
+           or getattr(getattr(model, "config", None), "_name_or_path", None)
+           or f"id{id(model)}")
+    return (str(mid), tuple(concepts), str(layers_spec), tuple(band))
+
+
+class _JSpaceHookEffect(BaseEffect):
+    """Shared machinery for the workspace-restricted J-space effects.
+
+    Subclasses implement ``_transform(hidden, jl)`` to modify the residual stream ``hidden``
+    at basis layer index ``jl``. This base handles basis acquisition (load ``basis_path`` or
+    fit from the model over ``concepts`` + ``corpus``, cached), maps basis layers to decoder
+    layers, and installs/removes forward hooks. It deliberately does NOT expose
+    ``apply_steering`` -- the forward hook is the single application path, so PackManager's
+    ``apply_steering`` fan-out skips these effects (no double application).
+    """
+
+    def __init__(self, weight: float = 0.5, direction: str = "up",
+                 concepts: Optional[List[str]] = None, basis_path: Optional[str] = None,
+                 layers: str = "workspace_band", corpus: Optional[List[str]] = None,
+                 band=(0.25, 0.9), model_name: Optional[str] = None, **_ignored):
+        super().__init__(weight, direction)
+        self.concepts = list(concepts) if concepts else []
+        self.basis_path = basis_path
+        self.layers = layers
+        self.corpus = list(corpus) if corpus else None
+        self.band = tuple(band) if band else (0.25, 0.9)
+        self.model_name = model_name
+        self.basis: Optional["jspace.JSpaceBasis"] = None
+        self._handles = []
+
+    # -- basis acquisition ------------------------------------------------- #
+    def _ensure_basis(self, model, tokenizer):
+        if self.basis is not None:
+            return self.basis
+        if self.basis_path and os.path.exists(self.basis_path):
+            self.basis = jspace.JSpaceBasis.load(self.basis_path)
+            return self.basis
+        key = _jspace_basis_cache_key(model, self.concepts, self.layers, self.band)
+        cached = _JSPACE_BASIS_CACHE.get(key)
+        if cached is not None:
+            self.basis = cached
+            return self.basis
+        if not self.concepts:
+            raise ValueError(f"{type(self).__name__}: no concepts and no valid basis_path")
+        if tokenizer is None:
+            raise ValueError(f"{type(self).__name__}: fitting a J-space basis needs a tokenizer")
+        cfg = jspace.JLensConfig(layers=self.layers, band=self.band)
+        lens = jspace.JacobianLens(model, tokenizer, cfg)
+        self.basis = lens.fit(self.concepts, corpus=self.corpus)
+        _JSPACE_BASIS_CACHE[key] = self.basis
+        return self.basis
+
+    # -- hook lifecycle ---------------------------------------------------- #
+    def apply(self, model, tokenizer=None, **kwargs):
+        remove_steering_hooks(self)
+        try:
+            basis = self._ensure_basis(model, tokenizer)
+        except Exception as e:
+            logger.warning(f"{type(self).__name__}: could not obtain J-space basis: {e}")
+            return
+        layers = _resolve_transformer_layers(model)
+        if not layers:
+            logger.warning(f"{type(self).__name__}: could not locate transformer layers; inactive")
+            return
+        L = len(layers)
+        installed = 0
+        for jl in basis.layer_indices:
+            dj = jl - 1  # decoder-layer index producing hidden-state index jl
+            if 0 <= dj < L:
+                try:
+                    self._handles.append(layers[dj].register_forward_hook(self._make_hook(jl)))
+                    installed += 1
+                except Exception as e:  # pragma: no cover - defensive
+                    logger.warning(f"{type(self).__name__}: failed to hook layer {dj}: {e}")
+        if not installed:
+            logger.warning(f"{type(self).__name__}: no basis layers within the model's {L} layers")
+
+    def _make_hook(self, jl):
+        def hook(module, inputs, output):
+            if isinstance(output, tuple):
+                if not output or output[0] is None:
+                    return output
+                return (self._transform(output[0], jl),) + tuple(output[1:])
+            return self._transform(output, jl)
+        return hook
+
+    def _transform(self, hidden, jl):  # pragma: no cover - overridden
+        raise NotImplementedError
+
+    def get_logits_processor(self):
+        return None
+
+    def cleanup(self):
+        remove_steering_hooks(self)
+
+
+class JLensSteerEffect(_JSpaceHookEffect):
+    """Write concept directions into the workspace (the runtime-CRT primitive).
+
+    For each concept ``c`` it adds ``eff * ||h|| * unit(v_lens(c))`` to the residual at each
+    workspace-band layer, where ``eff`` scales with the effect weight and is *negated* by
+    ``direction="down"`` (steering away = concept suppression). A "principle pack"
+    (honest, careful, rigorous) installed this way is the inference-time analogue of
+    Counterfactual Reflection Training: it populates the J-space with the very concepts CRT
+    trains the model to hold while responding -- but with no fine-tuning and fully reversibly.
+    """
+
+    def __init__(self, weight: float = 0.5, direction: str = "up",
+                 alpha_max: float = 0.35, **kw):
+        super().__init__(weight, direction, **kw)
+        self.alpha_max = float(alpha_max)
+
+    def _transform(self, hidden, jl):
+        eff = self.get_effective_value(0.0, self.alpha_max)  # signed by direction
+        if eff == 0.0 or not self.concepts:
+            return hidden
+        rn = hidden.norm(dim=-1, keepdim=True)               # per-token residual norm
+        out = hidden
+        for c in self.concepts:
+            if c not in self.basis.concepts:
+                continue
+            v = self.basis.vector(c, layer=jl).to(device=hidden.device, dtype=hidden.dtype)
+            u = v / (v.norm() + 1e-8)
+            out = out + (eff * rn) * u
+        return out
+
+
+class JSpaceAblationEffect(_JSpaceHookEffect):
+    """Project concepts out of the workspace (surgical suppression).
+
+    With ``concepts`` set, removes a fraction of their span from the residual at each
+    workspace-band layer. With ``top_k`` set instead, suppresses whichever concepts the state
+    is currently most poised to verbalize -- the paper's "suppress the top-k J-space contents"
+    knob, a far more targeted reasoning-dampener than KV decay. The removed fraction scales
+    with the effect weight.
+    """
+
+    def __init__(self, weight: float = 0.5, direction: str = "up",
+                 top_k: Optional[int] = None, **kw):
+        super().__init__(weight, direction, **kw)
+        self.top_k = int(top_k) if top_k else None
+
+    def _transform(self, hidden, jl):
+        frac = abs(self.get_effective_value(0.0, 1.0))
+        frac = max(0.0, min(1.0, frac))
+        if frac == 0.0:
+            return hidden
+        if self.top_k:
+            M_all = self.basis.matrix(layer=jl).to(device=hidden.device, dtype=hidden.dtype)
+            h_ref = hidden.reshape(-1, hidden.shape[-1]).mean(0)
+            Mn = M_all / (M_all.norm(dim=-1, keepdim=True) + 1e-8)
+            k = min(self.top_k, M_all.shape[0])
+            top = torch.topk(Mn @ h_ref, k).indices
+            removed = jspace.ablate_span(hidden, M_all[top])
+        elif self.concepts:
+            present = [c for c in self.concepts if c in self.basis.concepts]
+            if not present:
+                return hidden
+            M = self.basis.matrix(layer=jl, concepts=present).to(
+                device=hidden.device, dtype=hidden.dtype)
+            removed = jspace.ablate_span(hidden, M)
+        else:
+            return hidden
+        return hidden + frac * (removed - hidden)  # partial ablation
+
+
+class WorkspaceGainEffect(_JSpaceHookEffect):
+    """Scale the workspace component of the residual up or down.
+
+    ``direction="up"`` amplifies J-space content (a louder workspace); ``"down"`` attenuates
+    it toward suppression -- a graded version of the paper's "run with the workspace
+    suppressed" selectivity intervention. Operates on the span of the effect's concept set as
+    a proxy for the workspace at each layer.
+    """
+
+    def __init__(self, weight: float = 0.5, direction: str = "up",
+                 gain_max: float = 0.6, **kw):
+        super().__init__(weight, direction, **kw)
+        self.gain_max = float(gain_max)
+
+    def _transform(self, hidden, jl):
+        delta_gain = self.get_effective_value(0.0, self.gain_max)  # signed by direction
+        delta_gain = max(-1.0, delta_gain)  # -1 == fully remove workspace; don't invert
+        if delta_gain == 0.0:
+            return hidden
+        M = self.basis.matrix(layer=jl).to(device=hidden.device, dtype=hidden.dtype)
+        Q = jspace._orthonormal_rows(M)                  # [k, d]
+        inside = (hidden @ Q.transpose(-1, -2)) @ Q      # component in J-space
+        return hidden + delta_gain * inside
+
+
+class LensCoordinateSwapEffect(_JSpaceHookEffect):
+    """Exchange two concepts in the workspace (paper Fig. 4C).
+
+    Swaps the lens coordinates of ``src`` and ``tgt`` at each workspace-band layer, leaving
+    everything orthogonal to those two directions untouched -- e.g. swap
+    ``evaluation`` <-> ``ordinary`` to probe or counter evaluation-awareness. Full-strength by
+    construction (coordinate exchange, not a graded add), so ``weight`` is not used to scale.
+    """
+
+    def __init__(self, weight: float = 1.0, direction: str = "up",
+                 src: Optional[str] = None, tgt: Optional[str] = None, **kw):
+        concepts = list(kw.pop("concepts", None) or [])
+        for c in (src, tgt):
+            if c and c not in concepts:
+                concepts.append(c)
+        super().__init__(weight, direction, concepts=concepts, **kw)
+        self.src = src
+        self.tgt = tgt
+
+    def _transform(self, hidden, jl):
+        if not self.src or not self.tgt:
+            return hidden
+        if self.src not in self.basis.concepts or self.tgt not in self.basis.concepts:
+            return hidden
+        vs = self.basis.vector(self.src, layer=jl).to(device=hidden.device, dtype=hidden.dtype)
+        vt = self.basis.vector(self.tgt, layer=jl).to(device=hidden.device, dtype=hidden.dtype)
+        V = torch.stack([vs, vt], dim=-1)  # [d, 2]
+        return jspace.swap(hidden, V)

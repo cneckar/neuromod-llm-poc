@@ -34,11 +34,18 @@ class EffectConfig:
 
 @dataclass
 class Pack:
-    """A neuromodulation pack with multiple effects"""
+    """A neuromodulation pack with multiple effects.
+
+    ``j_space`` is optional, declarative metadata marking a pack as
+    workspace-restricted (see neuromod/jspace.py). It may carry shared config for
+    the pack's J-space effects -- e.g. ``{"concepts": [...], "basis_path": ...,
+    "band": [0.25, 0.9]}`` -- and defaults to None for all pre-existing packs.
+    """
     name: str
     description: str
     effects: List[EffectConfig]
-    
+    j_space: Optional[Dict[str, Any]] = None
+
     def __post_init__(self):
         # Validate effect configurations
         for effect_config in self.effects:
@@ -46,7 +53,7 @@ class Pack:
                 raise ValueError(f"Effect must be EffectConfig, got {type(effect_config)}")
             if effect_config.weight < 0.0 or effect_config.weight > 1.0:
                 raise ValueError(f"Effect weight must be 0.0-1.0, got {effect_config.weight}")
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Pack':
         """Create Pack from dictionary"""
@@ -54,7 +61,8 @@ class Pack:
         return cls(
             name=data['name'],
             description=data['description'],
-            effects=effects
+            effects=effects,
+            j_space=data.get('j_space')
         )
 
 class PackManager:
@@ -253,7 +261,7 @@ class PackRegistry:
             raise ValueError(f"Unknown pack: {pack_name}")
         
         pack = self.packs[pack_name]
-        return {
+        info = {
             "name": pack.name,
             "description": pack.description,
             "effects": [
@@ -266,6 +274,9 @@ class PackRegistry:
                 for effect in pack.effects
             ]
         }
+        if pack.j_space is not None:
+            info["j_space"] = pack.j_space
+        return info
         
     def add_pack(self, pack: Pack):
         """Add a new pack to the registry"""
@@ -281,21 +292,27 @@ class PackRegistry:
         if output_path is None:
             output_path = self.config_path
         
+        def _pack_dict(pack):
+            d = {
+                "name": pack.name,
+                "description": pack.description,
+                "effects": [
+                    {
+                        "effect": effect.effect,
+                        "weight": effect.weight,
+                        "direction": effect.direction,
+                        "parameters": effect.parameters
+                    }
+                    for effect in pack.effects
+                ]
+            }
+            if pack.j_space is not None:
+                d["j_space"] = pack.j_space
+            return d
+
         config = {
             "packs": {
-                pack_name: {
-                    "name": pack.name,
-                    "description": pack.description,
-                    "effects": [
-                        {
-                            "effect": effect.effect,
-                            "weight": effect.weight,
-                            "direction": effect.direction,
-                            "parameters": effect.parameters
-                        }
-                        for effect in pack.effects
-                    ]
-                }
+                pack_name: _pack_dict(pack)
                 for pack_name, pack in self.packs.items()
             }
         }

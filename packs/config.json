@@ -1135,6 +1135,71 @@
           "parameters": {}
         }
       ]
+    },
+    "principle_reflection": {
+      "name": "principle_reflection",
+      "description": "Runtime Counterfactual Reflection: holds ethical/analytic principles (honest, careful, harmless, rigorous) in the model's workspace during generation via J-lens steering -- an inference-time analogue of CRT (issue #97), with no fine-tuning and fully reversible.",
+      "effects": [
+        {
+          "effect": "jlens_steer",
+          "weight": 0.5,
+          "direction": "up",
+          "parameters": {
+            "concepts": [
+              "honest",
+              "careful",
+              "harmless",
+              "rigorous"
+            ],
+            "layers": "workspace_band"
+          }
+        }
+      ],
+      "j_space": {
+        "concepts": [
+          "honest",
+          "careful",
+          "harmless",
+          "rigorous"
+        ],
+        "band": [
+          0.25,
+          0.9
+        ],
+        "note": "Principle set installed into the J-space; ablating these reverts the effect (the causal check from the CRT results)."
+      }
+    },
+    "workspace_suppress": {
+      "name": "workspace_suppress",
+      "description": "Selectivity probe: attenuates the model's workspace content (deliberate reasoning) while leaving parsing/fluency intact, per the paper's suppression result (\u00a73.5). Diagnostic, not a 'drug'.",
+      "effects": [
+        {
+          "effect": "workspace_gain",
+          "weight": 0.7,
+          "direction": "down",
+          "parameters": {
+            "concepts": [
+              "reasoning",
+              "plan",
+              "inference",
+              "calculation"
+            ],
+            "layers": "workspace_band"
+          }
+        }
+      ],
+      "j_space": {
+        "concepts": [
+          "reasoning",
+          "plan",
+          "inference",
+          "calculation"
+        ],
+        "band": [
+          0.25,
+          0.9
+        ]
+      }
     }
   },
   "metadata": {
