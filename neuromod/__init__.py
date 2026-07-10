@@ -15,6 +15,7 @@ from .emotion_system import EmotionSystem, EmotionState
 from .effects import EffectRegistry
 from .model_support import ModelSupportManager, create_model_support
 from .neuromod_factory import create_neuromod_tool, cleanup_neuromod_tool
+from .jspace import JacobianLens, JSpaceBasis, JLensConfig
 from .probes import (
     ProbeBus, 
     ProbeListener, 
