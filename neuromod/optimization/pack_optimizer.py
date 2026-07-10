@@ -66,23 +66,28 @@ class OptimizationResult:
 class PackOptimizer:
     """Main pack optimization engine"""
     
-    def __init__(self, 
+    def __init__(self,
                  model_manager: ModelSupportManager,
                  evaluation_framework: EvaluationFramework = None,
-                 config: OptimizationConfig = None):
+                 config: OptimizationConfig = None,
+                 jspace_basis=None):
         """
         Initialize pack optimizer.
-        
+
         Args:
             model_manager: Model support manager for loading models
             evaluation_framework: Framework for evaluating pack effects
             config: Optimization configuration (model_name should be set in config)
                    CRITICAL: model_name in config must match the model used for final evaluation.
                    Do not use test models (e.g., DialoGPT) for production optimization.
+            jspace_basis: Optional fitted JSpaceBasis. When provided, the probe
+                   evaluator reports grounded workspace telemetry, enabling
+                   WORKSPACE_CONCEPT targets to be scored on real internal state.
         """
         self.model_manager = model_manager
         self.evaluation_framework = evaluation_framework or EvaluationFramework()
-        self.probe_evaluator = ProbeEvaluator(model_manager)
+        self.probe_evaluator = ProbeEvaluator(model_manager, jspace_basis=jspace_basis)
+        self.jspace_basis = jspace_basis
         self.config = config or OptimizationConfig()
         self.pack_registry = PackRegistry()
         # Get model_name from config (removed hardcoded DialoGPT)
@@ -409,9 +414,17 @@ class PackOptimizer:
                     else:
                         actual_value = 0.0
                     actual_metrics.metrics[target_spec.name] = actual_value
-            
+
             # Compute loss using target's loss function
-            loss = target.compute_loss(actual_metrics.get_all_metrics())
+            all_values = actual_metrics.get_all_metrics()
+            # Grounded J-lens objective: inject WORKSPACE_CONCEPT actuals by their
+            # exact target name (workspace_<concept>) from the evaluator's telemetry.
+            # Done here rather than via BehavioralMetrics.metrics, whose
+            # get_all_metrics() force-prefixes keys with "metric_".
+            for target_spec in target.targets:
+                if target_spec.target_type.value == "workspace_concept":
+                    all_values[target_spec.name] = result.workspace.get(target_spec.name, 0.0)
+            loss = target.compute_loss(all_values)
             
             logger.debug(f"Pack evaluation: loss={loss:.4f}, emotions={result.emotions}")
             

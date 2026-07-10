@@ -16,6 +16,10 @@ from .effects import EffectRegistry
 from .model_support import ModelSupportManager, create_model_support
 from .neuromod_factory import create_neuromod_tool, cleanup_neuromod_tool
 from .jspace import JacobianLens, JSpaceBasis, JLensConfig
+from .jspace_control import (
+    WorkspaceController, WorkspaceTarget, SelfExplorationSession,
+    SelfExplorationReport, measure_workspace,
+)
 from .probes import (
     ProbeBus, 
     ProbeListener, 
